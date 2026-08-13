@@ -1,0 +1,242 @@
+// SPMA — Schema Prisma
+// Fonte de verdade do modelo físico. Deriva de SPMA_Especificacao_Cliente_v2.md
+// e das decisões em .specs/STATE.md (AD-001 a AD-033).
+//
+// Convenções:
+// - Nomes de tabela seguem o documento do cliente (TB_*), via @@map.
+// - Enums para TP_Usuario e Status (' ' em andamento / 'E' encerrado é modelado como enum EM_ANDAMENTO/ENCERRADO).
+// - Campos de questionário (P1..P32, PG1..PG25, PA1..PA36) NÃO são colunas individuais aqui:
+//   ver nota "Estratégia de armazenamento das respostas" no fim do arquivo.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────
+
+enum TipoUsuario {
+  AM // Administrador Master
+  GT // Gestor Turismo
+  VT // Visualizador Turismo
+  GO // Gestor Ofertante
+  VO // Visualizador Ofertante
+  AL // Aluno
+}
+
+enum StatusFormulario {
+  EM_ANDAMENTO // corresponde a ' ' no documento original
+  ENCERRADO    // corresponde a 'E'
+}
+
+// ─────────────────────────────────────────────────────────────
+// USUÁRIO  (AD-007, AD-008, AD-009, AD-010, AD-011, AD-012)
+// ─────────────────────────────────────────────────────────────
+
+model Usuario {
+  cpf          String      @id @map("CPF_Usuario") @db.VarChar(11)
+  nome         String?     @map("NM_Usuario") @db.VarChar(255)
+  email        String?     @map("Email_Usuario") @db.VarChar(255)
+  tipo         TipoUsuario @map("TP_Usuario")
+
+  // GO/VO vinculam-se a um Ofertante; AM/GT/VT e AL ficam null (AD-012).
+  cdOfertante  Int?        @map("CD_Ofertante")
+  ofertante    Ofertante?  @relation("UsuarioOfertante", fields: [cdOfertante], references: [cdOfertante])
+
+  // Autenticação (AD-005, AD-010, AD-030)
+  senhaHash    String?     @map("Senha_Hash") @db.VarChar(255) // null até cadastrar no 1º acesso
+  primeiraVez  Boolean     @default(true) @map("Primeira_Vez")
+
+  // Rate limiting de login (AD-028) — contadores por conta
+  tentativasFalhas    Int       @default(0) @map("Tentativas_Falhas")
+  bloqueadoAte        DateTime? @map("Bloqueado_Ate")
+
+  // Auditoria
+  dataCriacao  DateTime    @default(now()) @map("Data_Criacao")
+  criadoPor    String?     @map("Criado_Por") @db.VarChar(11)
+  criador      Usuario?    @relation("Cascata", fields: [criadoPor], references: [cpf])
+  criados      Usuario[]   @relation("Cascata")
+
+  // Relações de domínio
+  avaliacoes       AvaliacaoAluno[] @relation("AlunoAvaliacoes")
+  cursosCriados    PreCurso[]       @relation("GoCursos")
+  posCursosCriados PosCurso[]       @relation("GoPosCursos")
+  sessoes          Sessao[]
+
+  @@index([cdOfertante])
+  @@index([tipo])
+  @@map("TB_Usuario")
+}
+
+// ─────────────────────────────────────────────────────────────
+// SESSÃO  (AD-031: httpOnly/secure/sameSite, rotação, expiração)
+// ─────────────────────────────────────────────────────────────
+
+model Sessao {
+  id            String    @id @default(uuid()) @map("ID_Sessao")
+  cpfUsuario    String    @map("CPF_Usuario") @db.VarChar(11)
+  usuario       Usuario   @relation(fields: [cpfUsuario], references: [cpf], onDelete: Cascade)
+
+  criadaEm      DateTime  @default(now()) @map("Criada_Em")
+  ultimaAtividade DateTime @default(now()) @map("Ultima_Atividade")
+  expiraEm      DateTime  @map("Expira_Em")
+
+  @@index([cpfUsuario])
+  @@map("TB_Sessao")
+}
+
+// ─────────────────────────────────────────────────────────────
+// OFERTANTE  (AD-014)
+// ─────────────────────────────────────────────────────────────
+
+model Ofertante {
+  cdOfertante    Int      @id @default(autoincrement()) @map("CD_Ofertante")
+  nome           String   @map("NM_Ofertante") @db.VarChar(255)
+  responsavel    String?  @map("Resp_Ofertante") @db.VarChar(255)
+  email          String?  @map("Email_Ofertante") @db.VarChar(255)
+  telefone       String?  @map("Tel_Ofertante") @db.VarChar(50)
+  uf             String   @map("UF_Ofertante") @db.VarChar(2)
+  municipio      String?  @map("Municipio_Ofertante") @db.VarChar(255)
+
+  dataCriacao    DateTime @default(now()) @map("Data_Criacao")
+  criadoPor      String?  @map("Criado_Por") @db.VarChar(11)
+
+  usuarios       Usuario[] @relation("UsuarioOfertante")
+  verbas         Verba[]
+
+  @@map("TB_Ofertante")
+}
+
+// ─────────────────────────────────────────────────────────────
+// VERBA  (AD-015: pertence ao Ofertante, 1:N com Curso; AD-016: teto <=)
+// ─────────────────────────────────────────────────────────────
+
+model Verba {
+  cdVerba        Int        @id @default(autoincrement()) @map("CD_Verba")
+  cdOfertante    Int        @map("CD_Ofertante")
+  ofertante      Ofertante  @relation(fields: [cdOfertante], references: [cdOfertante])
+
+  dtVerba        DateTime?  @map("DT_Verba") @db.Date
+  vlVerba        Decimal    @map("VL_Verba") @db.Decimal(10, 2) // valor TOTAL da verba
+
+  dataCriacao    DateTime   @default(now()) @map("Data_Criacao")
+
+  // 1 verba : N cursos (a FK fica no curso). AD-015.
+  cursos         PreCurso[]
+
+  @@index([cdOfertante])
+  @@map("TB_Verba")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PRÉ-CURSO  (AD-017, AD-018, AD-019)
+// CD_Curso é PK autoincremento — NÃO é FK (bug corrigido).
+// ─────────────────────────────────────────────────────────────
+
+model PreCurso {
+  cdCurso        Int              @id @default(autoincrement()) @map("CD_Curso")
+  cdOfertante    Int              @map("CD_Ofertante")
+
+  // Verba que custeia este curso + valor alocado (AD-015, AD-016)
+  cdVerba        Int              @map("CD_Verba")
+  verba          Verba            @relation(fields: [cdVerba], references: [cdVerba])
+  vlCursoAlocado Decimal          @map("VL_Curso_Alocado") @db.Decimal(10, 2)
+
+  status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
+
+  // Respostas do questionário de pré-curso (P1..P32 + condicionais + Likert).
+  // Armazenadas como JSON validado por Zod na aplicação. Ver nota no fim.
+  respostas      Json?            @map("Respostas")
+
+  dataCriacao       DateTime      @default(now()) @map("Data_Criacao")
+  criadoPor         String        @map("Criado_Por") @db.VarChar(11)
+  criador           Usuario       @relation("GoCursos", fields: [criadoPor], references: [cpf])
+  dataEncerramento  DateTime?     @map("Data_Encerramento")
+
+  posCurso       PosCurso?
+  avaliacoes     AvaliacaoAluno[]
+
+  @@index([cdOfertante])
+  @@index([cdVerba])
+  @@map("TB_Pre_Curso")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PÓS-CURSO  (AD-017, AD-018: agora COM encerramento pelo GO)
+// ─────────────────────────────────────────────────────────────
+
+model PosCurso {
+  cdCurso        Int              @id @map("CD_Curso")
+  preCurso       PreCurso         @relation(fields: [cdCurso], references: [cdCurso], onDelete: Cascade)
+
+  status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
+
+  // Respostas PG1..PG25 + condicional. JSON validado por Zod.
+  respostas      Json?            @map("Respostas")
+
+  dataCriacao          DateTime   @default(now()) @map("Data_Criacao")
+  criadoPor            String     @map("Criado_Por") @db.VarChar(11)
+  criador              Usuario    @relation("GoPosCursos", fields: [criadoPor], references: [cpf])
+  dataUltimaAtualizacao DateTime  @updatedAt @map("Data_Ultima_Atualizacao")
+  dataEncerramento     DateTime?  @map("Data_Encerramento")
+
+  @@map("TB_Pos_Curso")
+}
+
+// ─────────────────────────────────────────────────────────────
+// AVALIAÇÃO DO ALUNO  (AD-018, AD-020, AD-022, AD-023)
+// Chave composta (CPF + CD_Curso). Aluno pode ter vários cursos ao
+// longo do tempo, mas só um em andamento por vez — regra aplicada na
+// camada de aplicação (AD-022), não por constraint física.
+// ─────────────────────────────────────────────────────────────
+
+model AvaliacaoAluno {
+  cpf            String           @map("CPF") @db.VarChar(11)
+  cdCurso        Int              @map("CD_Curso")
+
+  aluno          Usuario          @relation("AlunoAvaliacoes", fields: [cpf], references: [cpf])
+  curso          PreCurso         @relation(fields: [cdCurso], references: [cdCurso])
+
+  status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
+
+  // Gate da Parte 2 (AD-023): dados pessoais/motivação completos.
+  parte1Completa Boolean          @default(false) @map("Parte1_Completa")
+
+  // Respostas PA1..PA36 + condicionais + Likert. JSON validado por Zod.
+  respostas      Json?            @map("Respostas")
+
+  dataCriacao       DateTime      @default(now()) @map("Data_Criacao")
+  dataEncerramento  DateTime?     @map("Data_Encerramento")
+
+  @@id([cpf, cdCurso])
+  @@index([cdCurso])
+  @@map("TB_Avaliacao_Aluno")
+}
+
+// ─────────────────────────────────────────────────────────────
+// NOTA — Estratégia de armazenamento das respostas dos questionários
+// ─────────────────────────────────────────────────────────────
+// Os três questionários somam ~125 campos, muitos condicionais e de
+// seleção múltipla. Duas abordagens foram consideradas:
+//
+//   (A) Uma coluna por pergunta  → ~125 colunas, esquema rígido,
+//       migration a cada ajuste de questionário.
+//   (B) Um campo JSON por formulário, com a FORMA validada por Zod na
+//       aplicação (schema por formulário, compartilhado cliente/servidor,
+//       AD-004) → esquema físico enxuto, flexível a ajustes de perguntas,
+//       validação forte na borda.
+//
+// Adotada: (B). O JSON guarda { "P9": "Sim", "P9_Qual": "...", ... } e o
+// Zod é a autoridade de forma/obrigatoriedade/condicionais (REQ-SEC-17).
+// Consultas analíticas do dashboard (feature adiada, AD-024) podem, se
+// necessário, materializar campos-chave em colunas/tabelas derivadas na
+// época — decisão deixada para a feature de dashboard.
+//
+// Esta é uma decisão de modelagem que o agente deve confirmar/registrar
+// como AD no Design da primeira feature de formulário, não antes.

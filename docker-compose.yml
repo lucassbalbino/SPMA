@@ -1,0 +1,31 @@
+# MySQL local para desenvolvimento do SPMA.
+# Sobe com:   docker compose up -d
+# Derruba:    docker compose down
+# Reseta tudo (apaga o banco):  docker compose down -v
+#
+# O usuário 'spma' recebe privilégios amplos para permitir que o Prisma
+# crie/destrua o shadow database usado por `prisma migrate dev`.
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: spma-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_dev_only
+      MYSQL_DATABASE: spma
+      MYSQL_USER: spma
+      MYSQL_PASSWORD: spma_dev_only
+    ports:
+      - "3306:3306"
+    volumes:
+      - spma_mysql_data:/var/lib/mysql
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_dev_only"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  spma_mysql_data:

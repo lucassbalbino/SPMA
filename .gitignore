@@ -1,0 +1,36 @@
+# dependências
+/node_modules
+/.pnp
+.pnp.js
+
+# testes
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# produção
+/build
+
+# ambiente — NUNCA comitar segredos
+.env
+.env*.local
+.env.production
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editor / SO
+.DS_Store
+*.pem
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# prisma
+# (o schema É versionado; migrations também. Apenas artefatos locais ficam de fora.)
+
+# docker — dados do banco ficam em volume nomeado, não em pasta; nada a ignorar aqui
