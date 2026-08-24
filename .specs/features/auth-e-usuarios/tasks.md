@@ -309,9 +309,9 @@ T8 → T11
 - Skill: NONE
 
 **Done when**:
-- [ ] Senha com menos de 8 caracteres rejeitada
-- [ ] Confirmação diferente da senha rejeitada
-- [ ] Payload válido passa
+- [x] Senha com menos de 8 caracteres rejeitada
+- [x] Confirmação diferente da senha rejeitada
+- [x] Payload válido passa
 
 **Tests**: unit
 **Gate**: quick
