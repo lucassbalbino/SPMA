@@ -621,10 +621,10 @@ T23
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-AU-05: GO autenticado cria AL → 201, `criadoPor`/`dataCriacao` registrados
-- [ ] e2e CA-AU-06: GO autenticado forja criação de GT → 403, nenhum usuário criado
-- [ ] e2e REQ-AU-08: GO cria GO/VO → `cdOfertante` do novo usuário é sempre o do criador, mesmo se o payload enviar outro valor
-- [ ] e2e: sem sessão válida → 401
+- [x] e2e CA-AU-05: GO autenticado cria AL → 201, `criadoPor`/`dataCriacao` registrados
+- [x] e2e CA-AU-06: GO autenticado forja criação de GT → 403, nenhum usuário criado
+- [x] e2e REQ-AU-08: GO cria GO/VO → `cdOfertante` do novo usuário é sempre o do criador, mesmo se o payload enviar outro valor
+- [x] e2e: sem sessão válida → 401
 
 **Tests**: e2e
 **Gate**: full
