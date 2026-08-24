@@ -260,10 +260,10 @@ T8 → T11
 - Skill: NONE
 
 **Done when**:
-- [ ] CPFs válidos conhecidos retornam `true`
-- [ ] CPF com dígito verificador alterado retorna `false`
-- [ ] CPFs com todos os dígitos iguais (ex.: `111.111.111-11`) retornam `false`
-- [ ] CPF com tamanho incorreto retorna `false`
+- [x] CPFs válidos conhecidos retornam `true`
+- [x] CPF com dígito verificador alterado retorna `false`
+- [x] CPFs com todos os dígitos iguais (ex.: `111.111.111-11`) retornam `false`
+- [x] CPF com tamanho incorreto retorna `false`
 
 **Tests**: unit
 **Gate**: quick
