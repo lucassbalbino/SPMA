@@ -174,8 +174,8 @@ T6 → T7
 - Skill: NONE
 
 **Done when**:
-- [ ] `npx playwright install --with-deps chromium` concluído
-- [ ] `npm run test:e2e` executa (0 testes, exit 0)
+- [x] `npx playwright install --with-deps chromium` concluído
+- [x] `npm run test:e2e` executa (0 testes, exit 0)
 
 **Tests**: none
 **Gate**: build
