@@ -95,8 +95,8 @@ T6 → T7
 
 #### T2: Instalar e configurar Prisma
 
-**What**: Instalar `prisma`/`@prisma/client` 7.9.1, confirmar `prisma/schema.prisma` (já existe, sem alterações), rodar `prisma generate`, adicionar scripts `db:generate`/`db:migrate` no `package.json`.
-**Where**: `package.json`
+**What**: Instalar `prisma`/`@prisma/client` 7.9.1 + `@prisma/adapter-mysql2`. Prisma 7 exige: (1) `prisma.config.ts` na raiz carregando `DATABASE_URL` (schema não aceita mais `datasource.url` - erro P1012); (2) `generator client` em `schema.prisma` com `provider = "prisma-client"` (não mais `prisma-client-js`) e `output` explícito; (3) todo `PrismaClient` instanciado com `{ adapter }` via `@prisma/adapter-mysql2`, sem fallback. Ajustar SOMENTE o bloco `datasource`/`generator` de `prisma/schema.prisma` (remover `url` do datasource, atualizar `generator`) - os modelos de domínio (`Usuario`, `Sessao`, `Ofertante`, etc.) não mudam. Decisão confirmada com o usuário em Execute - ver design.md Tech Decisions ("Configuração do Prisma 7"). Rodar `prisma generate`, adicionar scripts `db:generate`/`db:migrate` no `package.json`.
+**Where**: `package.json`, `prisma.config.ts`, `prisma/schema.prisma` (só o cabeçalho `datasource`/`generator`)
 **Depends on**: T1
 **Reuses**: `prisma/schema.prisma` (modelos já definidos - ver design.md Code Reuse Analysis)
 **Requirement**: infraestrutura
@@ -108,11 +108,12 @@ T6 → T7
 **Done when**:
 - [ ] `npx prisma generate` executa sem erro
 - [ ] `npx prisma validate` passa
+- [ ] Nenhum model/enum de domínio alterado (diff de `schema.prisma` restrito ao bloco `datasource`/`generator`)
 
 **Tests**: none
 **Gate**: build
 
-**Commit**: `chore(scaffold): configure Prisma client`
+**Commit**: `chore(scaffold): configure Prisma 7 client with driver adapter`
 
 ---
 
@@ -209,7 +210,7 @@ T6 → T7
 
 #### T7: `prisma/seed.ts` - semente do Administrador Master
 
-**What**: Script idempotente que cria o primeiro AM (`senhaHash: null`, `primeiraVez: true`) se nenhum `Usuario` com `tipo='AM'` existir; CPF/nome via variáveis de ambiente (`SEED_AM_CPF`, `SEED_AM_NOME`).
+**What**: Script idempotente que cria o primeiro AM (`senhaHash: null`, `primeiraVez: true`) se nenhum `Usuario` com `tipo='AM'` existir; CPF/nome via variáveis de ambiente (`SEED_AM_CPF`, `SEED_AM_NOME`). Instancia seu próprio `PrismaClient` com o driver adapter do Prisma 7 (`@prisma/adapter-mysql2`, via T2) - script standalone, não usa o singleton de `lib/db/prisma.ts` (que só existe a partir de T15, fase posterior).
 **Where**: `prisma/seed.ts`
 **Depends on**: T2, T6
 **Reuses**: nenhum (validação de formato de CPF é mínima/inline aqui - a regra módulo-11 completa em `lib/validation/cpf.ts` só existe a partir de T8; se necessário, revisitar o import depois é troca de uma linha)
@@ -421,10 +422,10 @@ T17 → T18
 
 #### T15: `lib/db/prisma.ts` - singleton do Prisma Client
 
-**What**: Singleton que evita múltiplas instâncias em hot-reload de dev.
+**What**: Singleton que evita múltiplas instâncias em hot-reload de dev. Instancia `PrismaClient` com `{ adapter }` via `@prisma/adapter-mysql2` (obrigatório no Prisma 7, sem fallback - ver design.md Tech Decisions).
 **Where**: `src/lib/db/prisma.ts`
 **Depends on**: T2
-**Reuses**: `@prisma/client` gerado em T2
+**Reuses**: client gerado em T2 (`provider = "prisma-client"`, caminho de `output` do schema)
 **Requirement**: infraestrutura
 
 **Tools**:
