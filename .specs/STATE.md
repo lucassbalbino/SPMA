@@ -7,10 +7,15 @@ Este arquivo é a fonte de verdade das decisões travadas. Não reabrir uma AD s
 
 ## Handoff (snapshot)
 
-- **Fase atual:** SPECIFY concluída (documento cliente aprovado + alterações do cliente integradas). Próximo: portar para `.specs/features/*/spec.md` no formato da skill, feature a feature.
-- **Primeira feature sugerida:** `auth-e-usuarios` (fundação, sem dependências).
-- **Features mapeadas (ordem sugerida):** auth-e-usuarios → cadastro-ofertante-verba → formulario-pre-curso → formulario-pos-curso → avaliacao-aluno → dashboard (adiada).
-- **Pendências abertas:** nenhuma de domínio, exceto os indicadores do dashboard (feature adiada por decisão AD-024).
+- **Fase atual:** `auth-e-usuarios` em EXECUTE, **Lote 1 (Fase 0 - bootstrap) BLOQUEADO** esperando ação do usuário fora do agente. Spec/Design/Tasks aprovados e validados (`validate_tasks.py`: 0 erros). 30 tarefas em 5 fases, empacotadas em 4 lotes (Lote 1=Fase 0, Lote 2=Fase 1, Lote 3=Fases 2+3, Lote 4=Fase 4) - usuário confirmou uso de sub-agentes.
+- **BLOQUEIO ATIVO:** Docker Desktop não sobe nesta máquina porque o WSL2 não está instalado. Usuário vai rodar `wsl --install` como administrador e reiniciar a máquina. **Ao retomar a sessão**: primeiro confirmar que `docker compose up -d` sobe o MySQL normalmente (healthcheck OK), só então continuar T6/T7.
+- **Progresso da Fase 0 (7 tarefas):** T1 (Next.js 16.3.2), T2 (Prisma 7 + driver adapter), T3 (Tailwind+shadcn), T4 (Vitest), T5 (Playwright) - **concluídas e commitadas**. T6 (banco de teste `spma_test`) e T7 (seed do AM) - **bloqueadas**, aguardando o MySQL do docker-compose ficar acessível.
+- **Correção descoberta durante T2 (já registrada em design.md e tasks.md):** Prisma 7 exige `prisma.config.ts` (a `DATABASE_URL` não fica mais em `schema.prisma`), `generator` com `provider = "prisma-client"` + `output`, e todo `PrismaClient` instanciado com `{ adapter }`. O pacote certo é **`@prisma/adapter-mariadb`** (não `@prisma/adapter-mysql2`, que não existe no npm - texto do T2/T7/T15 em tasks.md já corrigido). Client gerado em `src/generated/prisma` (gitignored). Nenhum model/enum de domínio mudou.
+- **Arquivos da feature:** `.specs/features/auth-e-usuarios/{spec.md,design.md,tasks.md}`.
+- **Decisões locais tomadas durante Design/Tasks (não viraram AD por serem só desta feature):** stack de testes = Vitest (unit/integration) + Playwright (e2e); banco de teste dedicado `spma_test` no mesmo MySQL do docker-compose; TTL de sessão fixo de 60min (placeholder até `seguranca-transversal` formalizar REQ-SEC-09); adoção do Prisma 7 (config+adapter) em vez de fixar 6.x.
+- **Limpeza feita nesta sessão:** removidos dois arquivos órfãos na raiz do repo (`schema.prisma` e `env.example`, cópias extraviadas de `spec.md`/`STATE.md` do commit inicial) - ver commits `10edaad` e `816b5ee`.
+- **Próxima feature após `auth-e-usuarios`:** `seguranca-transversal` (spec pronta, cobre CSRF/headers/rate-limit por IP/mascaramento de log que ficaram fora do escopo desta feature de propósito).
+- **Pendências abertas:** nenhuma de domínio, exceto os indicadores do dashboard (feature adiada por decisão AD-024) - e o bloqueio de WSL2/Docker acima.
 
 ---
 
@@ -33,8 +38,8 @@ A regra condicional (ex.: "P9='Sim' exige P9.Qual") é escrita uma vez e validad
 **AD-005 — Autenticação: sessão própria CPF + senha, hash com bcrypt/argon2.**
 Não usar provider externo (Auth.js/OAuth): o login é CPF+senha interno com "cadastra senha no 1º acesso", fluxo custom mais simples que encaixar num framework de social login.
 
-**AD-006 — Biblioteca de componentes visuais: EM ABERTO (decisão de Design).**
-shadcn/ui vs Material vs CSS próprio fica para a fase de Design da primeira feature com UI.
+**AD-006 — Biblioteca de componentes visuais: shadcn/ui + Tailwind CSS.**
+Decidido no Design de `auth-e-usuarios` (primeira feature com UI). Componentes copiados para o projeto (não é dependência de runtime), boa integração com Server Components do App Router, curva de aprendizado baixa — bom encaixe para dev solo júnior (AD-002).
 
 ### Perfis, Autenticação e Autorização
 
