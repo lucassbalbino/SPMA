@@ -285,9 +285,9 @@ T8 → T11
 - Skill: NONE
 
 **Done when**:
-- [ ] CPF inválido rejeitado pelo schema
-- [ ] Senha vazia rejeitada
-- [ ] Payload válido passa
+- [x] CPF inválido rejeitado pelo schema
+- [x] Senha vazia rejeitada
+- [x] Payload válido passa
 
 **Tests**: unit
 **Gate**: quick
