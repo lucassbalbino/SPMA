@@ -333,9 +333,9 @@ T8 → T11
 - Skill: NONE
 
 **Done when**:
-- [ ] CPF inválido rejeitado
-- [ ] `tipo` fora do enum `TipoUsuario` rejeitado
-- [ ] Payload válido para cada `tipo` passa
+- [x] CPF inválido rejeitado
+- [x] `tipo` fora do enum `TipoUsuario` rejeitado
+- [x] Payload válido para cada `tipo` passa
 
 **Tests**: unit
 **Gate**: quick
