@@ -2,10 +2,15 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: true,
+  globalSetup: "./e2e/global-setup.ts",
+  // Specs share one real `spma_test` database with mutable state (login
+  // attempt counters, created users, sessions) - serial execution avoids
+  // cross-spec interference. Revisit if the suite grows slow enough to
+  // need per-test data isolation instead.
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
     baseURL: "http://localhost:3000",
@@ -18,8 +23,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    command: "npm run dev:test",
     url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
+    timeout: 60_000,
   },
 });
