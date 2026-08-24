@@ -598,8 +598,8 @@ T23
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: após logout, o cookie de sessão anterior não autentica mais requisições protegidas
-- [ ] e2e: logout sem sessão ativa não gera erro 500 (idempotente/401 tratado)
+- [x] e2e: após logout, o cookie de sessão anterior não autentica mais requisições protegidas
+- [x] e2e: logout sem sessão ativa não gera erro 500 (idempotente/401 tratado — escolhido 401, documentado no route handler)
 
 **Tests**: e2e
 **Gate**: full
