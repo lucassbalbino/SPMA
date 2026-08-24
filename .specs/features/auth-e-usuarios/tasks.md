@@ -405,9 +405,9 @@ T8 → T11
 - Skill: NONE
 
 **Done when**:
-- [ ] Hash de uma senha não é igual ao texto original nem reversível por inspeção simples
-- [ ] `verifyPassword` retorna `true` para a senha correta e `false` para incorreta
-- [ ] Dois hashes da mesma senha são diferentes entre si (salt)
+- [x] Hash de uma senha não é igual ao texto original nem reversível por inspeção simples
+- [x] `verifyPassword` retorna `true` para a senha correta e `false` para incorreta
+- [x] Dois hashes da mesma senha são diferentes entre si (salt)
 
 **Tests**: unit
 **Gate**: quick
