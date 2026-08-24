@@ -646,9 +646,9 @@ T23
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO sem `cdOfertante` cadastra Ofertante → 201, usuário passa a ter `cdOfertante` preenchido
-- [ ] e2e: GO que já tem `cdOfertante` tentando cadastrar outro → rejeitado (403 ou 409, escolha documentada no código)
-- [ ] e2e: perfil diferente de GO tentando usar a rota → 403
+- [x] e2e: GO sem `cdOfertante` cadastra Ofertante → 201, usuário passa a ter `cdOfertante` preenchido
+- [x] e2e: GO que já tem `cdOfertante` tentando cadastrar outro → rejeitado (escolhido 409, documentado no route handler)
+- [x] e2e: perfil diferente de GO tentando usar a rota → 403
 
 **Tests**: e2e
 **Gate**: full
