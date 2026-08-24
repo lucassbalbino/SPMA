@@ -152,7 +152,7 @@ T6 → T7
 - Skill: NONE
 
 **Done when**:
-- [ ] `npm run test:unit` executa (0 testes, exit 0)
+- [x] `npm run test:unit` executa (0 testes, exit 0)
 
 **Tests**: none
 **Gate**: build
