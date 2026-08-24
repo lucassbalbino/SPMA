@@ -509,10 +509,10 @@ T17 → T18
 - Skill: NONE
 
 **Done when**:
-- [ ] Teste unitário (mock de `session.ts`, `next/navigation.redirect`, `next/headers.cookies`): sessão ausente/expirada dispara redirect para `/login`
-- [ ] Teste unitário: `primeiraVez=true` dispara redirect para `/primeiro-acesso`
-- [ ] Teste unitário: GO com `cdOfertante=null` dispara redirect para `/cadastro-ofertante`
-- [ ] Teste unitário: usuário válido, sem pendências, não dispara nenhum redirect
+- [x] Teste unitário (mock de `session.ts`, `next/navigation.redirect`, `next/headers.cookies`): sessão ausente/expirada dispara redirect para `/login`
+- [x] Teste unitário: `primeiraVez=true` dispara redirect para `/primeiro-acesso`
+- [x] Teste unitário: GO com `cdOfertante=null` dispara redirect para `/cadastro-ofertante`
+- [x] Teste unitário: usuário válido, sem pendências, não dispara nenhum redirect
 
 **Tests**: unit
 **Gate**: quick
