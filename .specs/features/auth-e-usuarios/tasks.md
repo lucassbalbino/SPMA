@@ -546,13 +546,13 @@ T23
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-AU-01: CPF+senha corretos → 200, cookie de sessão com `HttpOnly`, `Secure`, `SameSite=Lax` no header `Set-Cookie`
-- [ ] e2e CA-AU-02 (gatilho): conta com `senhaHash=null` → sessão "pendente" criada, resposta indica necessidade de definir senha
-- [ ] e2e CA-AU-03: CPF com dígito verificador inválido → erro específico de CPF inválido, sem tocar o banco
-- [ ] e2e CA-AU-04: CPF inexistente e CPF existente com senha errada → mesma resposta (corpo e status) nos dois casos
-- [ ] e2e CA-AU-08: 5 falhas consecutivas → 6ª tentativa (mesmo com senha certa) rejeitada com a mesma mensagem genérica
-- [ ] e2e CA-AU-09: login rotaciona o id de sessão (cookie anterior, se enviado, deixa de ser aceito)
-- [ ] e2e CA-AU-10: resposta de login não contém `senhaHash` nem `senha`
+- [x] e2e CA-AU-01: CPF+senha corretos → 200, cookie de sessão com `HttpOnly`, `Secure`, `SameSite=Lax` no header `Set-Cookie`
+- [x] e2e CA-AU-02 (gatilho): conta com `senhaHash=null` → sessão "pendente" criada, resposta indica necessidade de definir senha
+- [x] e2e CA-AU-03: CPF com dígito verificador inválido → erro específico de CPF inválido, sem tocar o banco (a parte "sem tocar o banco" não é observável por HTTP: garantida por construção — `safeParse` e o retorno 400 precedem o primeiro acesso ao Prisma em `route.ts`)
+- [x] e2e CA-AU-04: CPF inexistente e CPF existente com senha errada → mesma resposta (corpo e status) nos dois casos
+- [x] e2e CA-AU-08: 5 falhas consecutivas → 6ª tentativa (mesmo com senha certa) rejeitada com a mesma mensagem genérica
+- [x] e2e CA-AU-09: login rotaciona o id de sessão (cookie anterior, se enviado, deixa de ser aceito)
+- [x] e2e CA-AU-10: resposta de login não contém `senhaHash` nem `senha`
 
 **Tests**: e2e
 **Gate**: full
