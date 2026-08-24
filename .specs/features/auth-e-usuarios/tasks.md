@@ -484,10 +484,10 @@ T17 → T18
 - Skill: NONE
 
 **Done when**:
-- [ ] Teste de integração: `criarSessao` grava linha em `TB_Sessao` com `expiraEm` ~60min no futuro
-- [ ] Teste de integração: `rotacionarSessao` remove a sessão anterior e cria uma nova com id diferente
-- [ ] Teste de integração: `buscarSessaoValida` retorna `null` para id inexistente e para sessão com `expiraEm` no passado
-- [ ] Teste de integração: `destruirSessao` remove a linha
+- [x] Teste de integração: `criarSessao` grava linha em `TB_Sessao` com `expiraEm` ~60min no futuro
+- [x] Teste de integração: `rotacionarSessao` remove a sessão anterior e cria uma nova com id diferente
+- [x] Teste de integração: `buscarSessaoValida` retorna `null` para id inexistente e para sessão com `expiraEm` no passado
+- [x] Teste de integração: `destruirSessao` remove a linha
 
 **Tests**: integration
 **Gate**: full
