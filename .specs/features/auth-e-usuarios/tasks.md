@@ -200,11 +200,13 @@ T6 → T7
 - Skill: NONE
 
 **Done when**:
-- [ ] `npx prisma migrate deploy` com `DATABASE_URL` de `.env.test` cria o schema em `spma_test`
-- [ ] `scripts/db-test-reset.ts` executado manualmente limpa as tabelas sem erro
+- [x] `npx prisma migrate deploy` com `DATABASE_URL` de `.env.test` cria o schema em `spma_test`
+- [x] `scripts/db-test-reset.ts` executado manualmente limpa as tabelas sem erro
 
 **Tests**: none
 **Gate**: build
+
+**Nota de execução**: nenhuma migration existia ainda no projeto (`prisma/migrations/` vazio) - `prisma migrate deploy` só aplica migrations existentes, não gera novas. Rodado `npx prisma migrate dev --name init` contra o banco `spma` (dev) para gerar a migration inicial (README passo 4); o resultado (`prisma/migrations/20260824194330_init/`) é commitado junto com T6, já que é o artefato que T6 precisa para `migrate deploy` funcionar em `spma_test`. `scripts/db-test-reset.ts` precisou de `tsx` (novo devDependency) para rodar: o client gerado pelo Prisma 7 (`output` customizado) usa imports relativos sem extensão (estilo bundler), que a execução nativa de TS do Node (sem bundler) não resolve. `SET FOREIGN_KEY_CHECKS` precisou ser envolvido em `prisma.$transaction(...)` - sem isso, cada `$executeRawUnsafe` podia pegar uma conexão diferente do pool do driver adapter, perdendo o efeito do `SET` entre um comando e outro.
 
 **Commit**: `chore(scaffold): add spma_test database and integration test config`
 
