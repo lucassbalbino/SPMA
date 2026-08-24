@@ -460,9 +460,9 @@ T17 → T18
 - Skill: NONE
 
 **Done when**:
-- [ ] Teste de integração (contra `spma_test`): 5 chamadas a `registrarFalha` setam `bloqueadoAte` ~15min no futuro
-- [ ] `estaBloqueado` retorna `true` enquanto `bloqueadoAte > now`, `false` após expirar
-- [ ] `resetarTentativas` zera `tentativasFalhas` e limpa `bloqueadoAte`
+- [x] Teste de integração (contra `spma_test`): 5 chamadas a `registrarFalha` setam `bloqueadoAte` ~15min no futuro
+- [x] `estaBloqueado` retorna `true` enquanto `bloqueadoAte > now`, `false` após expirar
+- [x] `resetarTentativas` zera `tentativasFalhas` e limpa `bloqueadoAte`
 
 **Tests**: integration
 **Gate**: full
