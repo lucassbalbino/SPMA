@@ -106,12 +106,14 @@ T6 → T7
 - Skill: NONE
 
 **Done when**:
-- [ ] `npx prisma generate` executa sem erro
-- [ ] `npx prisma validate` passa
-- [ ] Nenhum model/enum de domínio alterado (diff de `schema.prisma` restrito ao bloco `datasource`/`generator`)
+- [x] `npx prisma generate` executa sem erro
+- [x] `npx prisma validate` passa
+- [x] Nenhum model/enum de domínio alterado (diff de `schema.prisma` restrito ao bloco `datasource`/`generator`)
 
 **Tests**: none
 **Gate**: build
+
+**Nota de execução**: o pacote `@prisma/adapter-mysql2` citado no `What` não existe no registro npm. O adapter oficial da Prisma para MySQL é `@prisma/adapter-mariadb` (driver `mariadb`, compatível com o protocolo MySQL — confirmado na doc oficial `prisma.io/docs/orm/overview/databases/mysql`). `output` do generator definido como `../src/generated/prisma` (não especificado no design; caminho gerado dentro de `src/`, ignorado no git, acessível via alias `@/generated/prisma/*`). T7 e T15 devem usar `@prisma/adapter-mariadb`, não `@prisma/adapter-mysql2`.
 
 **Commit**: `chore(scaffold): configure Prisma 7 client with driver adapter`
 

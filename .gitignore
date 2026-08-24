@@ -38,5 +38,6 @@ yarn-error.log*
 
 # prisma
 # (o schema É versionado; migrations também. Apenas artefatos locais ficam de fora.)
+/src/generated/
 
 # docker — dados do banco ficam em volume nomeado, não em pasta; nada a ignorar aqui

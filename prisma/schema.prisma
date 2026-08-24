@@ -9,12 +9,12 @@
 //   ver nota "Estratégia de armazenamento das respostas" no fim do arquivo.
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // ─────────────────────────────────────────────────────────────
