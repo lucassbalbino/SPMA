@@ -574,9 +574,9 @@ T23
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-AU-02: usuário em 1º acesso, ao concluir, tem `primeiraVez=false` e `senhaHash` preenchido no banco
-- [ ] e2e: sem sessão válida → 401, não altera nenhum usuário
-- [ ] e2e: senha menor que 8 caracteres → rejeitada, `primeiraVez` continua `true`
+- [x] e2e CA-AU-02: usuário em 1º acesso, ao concluir, tem `primeiraVez=false` e `senhaHash` preenchido no banco
+- [x] e2e: sem sessão válida → 401, não altera nenhum usuário
+- [x] e2e: senha menor que 8 caracteres → rejeitada, `primeiraVez` continua `true`
 
 **Tests**: e2e
 **Gate**: full
