@@ -26,6 +26,8 @@ export default defineConfig({
     command: "npm run dev:test",
     url: "http://localhost:3000",
     reuseExistingServer: false,
-    timeout: 60_000,
+    // Bumped from 60s after Batch 3 saw one flaky boot right at the
+    // threshold (passed on immediate retry, nothing else held the port).
+    timeout: 90_000,
   },
 });
