@@ -437,8 +437,8 @@ T17 → T18
 - Skill: NONE
 
 **Done when**:
-- [ ] Import repetido do módulo não cria nova conexão (padrão `globalThis` documentado no arquivo)
-- [ ] `npx tsc --noEmit` passa
+- [x] Import repetido do módulo não cria nova conexão (padrão `globalThis` documentado no arquivo)
+- [x] `npx tsc --noEmit` passa
 
 **Tests**: none
 **Gate**: build
