@@ -225,9 +225,9 @@ T6 → T7
 - Skill: NONE
 
 **Done when**:
-- [ ] Rodar duas vezes seguidas não duplica o AM (idempotência)
-- [ ] AM criado tem `senhaHash=null`, `primeiraVez=true`, `tipo='AM'`
-- [ ] Teste de integração cobre: primeira execução cria; segunda execução não duplica
+- [x] Rodar duas vezes seguidas não duplica o AM (idempotência)
+- [x] AM criado tem `senhaHash=null`, `primeiraVez=true`, `tipo='AM'`
+- [x] Teste de integração cobre: primeira execução cria; segunda execução não duplica
 
 **Tests**: integration
 **Gate**: full
