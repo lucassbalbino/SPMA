@@ -380,10 +380,10 @@ T8 → T11
 - Skill: NONE
 
 **Done when**:
-- [ ] `podeCriar` cobre as 6x6 combinações da matriz (AM→todos; GT→GT/VT/GO; GO→GO/VO/AL; VT/VO/AL→nenhum)
-- [ ] `resolverOfertante` ignora `cdOfertanteInformado` quando criador é GO (usa o próprio `cdOfertante`)
-- [ ] `resolverOfertante` usa `cdOfertanteInformado` quando criador é AM/GT e alvo é GO/VO
-- [ ] `resolverOfertante` retorna `null` para alvo AM/GT/VT/AL
+- [x] `podeCriar` cobre as 6x6 combinações da matriz (AM→todos; GT→GT/VT/GO; GO→GO/VO/AL; VT/VO/AL→nenhum)
+- [x] `resolverOfertante` ignora `cdOfertanteInformado` quando criador é GO (usa o próprio `cdOfertante`)
+- [x] `resolverOfertante` usa `cdOfertanteInformado` quando criador é AM/GT e alvo é GO/VO
+- [x] `resolverOfertante` retorna `null` para alvo AM/GT/VT/AL
 
 **Tests**: unit
 **Gate**: quick
