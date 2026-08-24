@@ -129,8 +129,8 @@ T6 → T7
 - Skill: NONE
 
 **Done when**:
-- [ ] `npm run build` compila com os componentes shadcn importáveis
-- [ ] `Button`, `Input`, `Label`, `Form`, `Card` disponíveis em `src/components/ui/`
+- [x] `npm run build` compila com os componentes shadcn importáveis
+- [x] `Button`, `Input`, `Label`, `Form`, `Card` disponíveis em `src/components/ui/` (SPEC_DEVIATION: shadcn "form" foi descontinuado upstream — registry entry vazia; instalado `field` no lugar, sucessor oficial do shadcn/ui para blocos de formulário)
 
 **Tests**: none
 **Gate**: build
