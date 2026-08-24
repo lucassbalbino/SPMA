@@ -357,8 +357,8 @@ T8 → T11
 - Skill: NONE
 
 **Done when**:
-- [ ] `nome` e `uf` obrigatórios; `uf` com 2 caracteres
-- [ ] Payload válido passa
+- [x] `nome` e `uf` obrigatórios; `uf` com 2 caracteres
+- [x] Payload válido passa
 
 **Tests**: unit
 **Gate**: quick
