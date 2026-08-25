@@ -48,6 +48,9 @@ test("CA-AU-02: define a senha, desativa primeiraVez e passa a autenticar com el
   });
 
   expect(res.status()).toBe(200);
+  // CA-AU-10: senha nunca exposta - este é o único endpoint com dados de
+  // usuário sem essa asserção antes deste fix (validation.md, Fix 2).
+  expect(await res.text()).not.toMatch(/senhaHash|\$argon2/i);
 
   const usuario = getUsuario(CPF_DEFINE_SENHA);
   expect(usuario?.primeiraVez).toBe(false);
