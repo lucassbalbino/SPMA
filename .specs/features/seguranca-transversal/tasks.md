@@ -66,9 +66,9 @@ T1 → T4
 - Skill: NONE
 
 **Done when**:
-- [ ] `npx prisma validate` passa
-- [ ] Migration aplicada em `spma_test` sem erro
-- [ ] Nenhum model/enum existente alterado (diff restrito à adição do novo model)
+- [x] `npx prisma validate` passa
+- [x] Migration aplicada em `spma_test` sem erro
+- [x] Nenhum model/enum existente alterado (diff restrito à adição do novo model)
 
 **Tests**: none
 **Gate**: build

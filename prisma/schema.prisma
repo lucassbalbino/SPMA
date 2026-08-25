@@ -92,6 +92,20 @@ model Sessao {
 }
 
 // ─────────────────────────────────────────────────────────────
+// TENTATIVA DE LOGIN POR IP  (REQ-SEC-03: rate limit por origem,
+// independente do CPF - complementa TB_Usuario.Tentativas_Falhas)
+// ─────────────────────────────────────────────────────────────
+
+model TentativaLoginIp {
+  ip           String    @id @map("IP") @db.VarChar(45)
+  tentativas   Int       @default(0) @map("Tentativas")
+  bloqueadoAte DateTime? @map("Bloqueado_Ate")
+  atualizadoEm DateTime  @updatedAt @map("Atualizado_Em")
+
+  @@map("TB_Tentativa_Login_Ip")
+}
+
+// ─────────────────────────────────────────────────────────────
 // OFERTANTE  (AD-014)
 // ─────────────────────────────────────────────────────────────
 
