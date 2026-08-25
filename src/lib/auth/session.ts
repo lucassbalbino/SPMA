@@ -7,9 +7,10 @@
 import { cookies } from "next/headers";
 import { prisma } from "../db/prisma";
 import type { SessaoModel, UsuarioModel } from "../../generated/prisma/models";
+import { COOKIE_SESSAO } from "./session-cookie";
 
-/** Nome do cookie de sessão. Reutilizado pelo proxy de redirect (T30). */
-export const COOKIE_SESSAO = "spma_sessao";
+/** Nome do cookie de sessão - definido em ./session-cookie.ts (sem dependência de Prisma, ver esse arquivo), reexportado aqui para não mudar a API que as rotas já usam. */
+export { COOKIE_SESSAO };
 
 /**
  * TTL fixo de 60 minutos. `Sessao.expiraEm` é NOT NULL e precisa de um valor

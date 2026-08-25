@@ -813,7 +813,7 @@ T25 → T29
 **What**: Proxy Next.js 16 (Node.js runtime por padrão) que redireciona para `/login` quando a rota está no grupo protegido e não há cookie de sessão presente - só UX, não autoridade (ver design.md).
 **Where**: `src/proxy.ts`
 **Depends on**: T17
-**Reuses**: nome do cookie definido em `lib/auth/session.ts`
+**Reuses**: nome do cookie, extraído para `lib/auth/session-cookie.ts` (ver nota de execução)
 **Requirement**: REQ-AU-12 (suporte), REQ-SEC-14 (não substitui a checagem em `requireSession`)
 
 **Tools**:
@@ -821,8 +821,10 @@ T25 → T29
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: requisição sem cookie a uma rota protegida é redirecionada para `/login` antes mesmo de renderizar o layout
-- [ ] Confirmado por leitura de código que `proxy.ts` não faz nenhuma chamada a `prisma`/banco (mantém-se "thin")
+- [x] e2e: requisição sem cookie a uma rota protegida é redirecionada para `/login` (`e2e/proxy.spec.ts`, 4 rotas via `page.goto`+`toHaveURL` e 1 via `request.get` checando status 307 + header `location`). **Spec-precision gap**: "antes mesmo de renderizar o layout" não é observável por HTTP (o layout `(protegido)`/`(onboarding)` produziria o mesmo redirect por conta própria) — evidência é a ordem de execução documentada do Next 16 (`node_modules/next/dist/docs/.../proxy.md`, "Execution order": Proxy roda antes das rotas de filesystem), citada no comentário do arquivo de teste
+- [x] Confirmado por leitura de código que `proxy.ts` não faz nenhuma chamada a `prisma`/banco: importa só `next/server` e `@/lib/auth/session-cookie` (zero dependências)
+
+**Nota de execução**: `lib/auth/session.ts` importava `lib/db/prisma.ts` no top-level (instancia `PrismaClient` na carga do módulo) — importar `COOKIE_SESSAO` de lá arrastaria um client de banco para dentro do proxy mesmo sem nenhuma chamada de fato, contra o princípio "thin proxy". Extraído para `src/lib/auth/session-cookie.ts` (zero dependências), reexportado por `session.ts` para não mudar a API que as rotas de login/logout já usam (`npm run typecheck`/`test:unit` confirmam nenhuma quebra).
 
 **Tests**: e2e
 **Gate**: full
