@@ -681,7 +681,7 @@ T25 → T29
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: fluxo completo pela UI real (não só API) cobre CA-AU-01, CA-AU-03, CA-AU-04
+- [x] e2e: fluxo completo pela UI real (não só API) cobre CA-AU-01, CA-AU-03, CA-AU-04
 
 **Tests**: e2e
 **Gate**: full
