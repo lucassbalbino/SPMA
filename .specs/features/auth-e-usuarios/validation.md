@@ -1,12 +1,27 @@
 # auth-e-usuarios Validation
 
+## Validation: auth-e-usuarios - PASS ✅
+
+Veredito final da feature, após o orquestrador aplicar o último fix (`4c683c9`) e reexecutar o gate completo por conta própria - ver "Resolução final" abaixo para a evidência e o porquê deste passo não teve um 4º Verifier independente.
+
 **Date**: 2026-08-25
 **Spec**: `.specs/features/auth-e-usuarios/spec.md`
 **Diff range**: `816b5ee..HEAD` (HEAD = `6a03c0a`), branch `main` — 42 commits, 96 arquivos
 **Verifier**: independent sub-agent (author ≠ verifier), agente novo sem contexto das iterações 1 e 2
 **Iteração**: 3 de no máximo 3 do ciclo fix→re-verify
 
-**Verdict**: ❌ FAIL — um mutante sobrevivente, severidade **Minor**. O fix da iteração 2 (`24cef5b`) está correto e foi confirmado empiricamente: o mutante M8 daquela iteração agora morre, pela linha exata que o commit acrescentou. O gate completo passa com 137 testes. O achado novo é que **o mesmo padrão de asserção parcial que a iteração 2 fechou em `/api/auth/primeiro-acesso` continua aberto no endpoint irmão `/api/auth/login`**, numa variante mais estreita: lá a metade "senha" de CA-AU-10 só está travada *dentro* do objeto `usuario`, não no corpo inteiro. Nenhum defeito de produção; o fix é uma linha de teste.
+**Verdict (iteração 3, como reportado pelo Verifier)**: ❌ FAIL — um mutante sobrevivente, severidade **Minor**. O fix da iteração 2 (`24cef5b`) está correto e foi confirmado empiricamente: o mutante M8 daquela iteração agora morre, pela linha exata que o commit acrescentou. O gate completo passa com 137 testes. O achado novo é que **o mesmo padrão de asserção parcial que a iteração 2 fechou em `/api/auth/primeiro-acesso` continua aberto no endpoint irmão `/api/auth/login`**, numa variante mais estreita: lá a metade "senha" de CA-AU-10 só está travada *dentro* do objeto `usuario`, não no corpo inteiro. Nenhum defeito de produção; o fix é uma linha de teste.
+
+---
+
+## Resolução final (orquestrador, pós-iteração 3)
+
+O ciclo automático fix→re-verify se esgotou no limite de 3 iterações do processo (`implement.md`/`sub-agents.md`), todas sem nenhum defeito de produção — só refinamentos sucessivos de onde a asserção de CA-AU-10 alcança dentro do corpo da resposta. Situação escalada ao usuário, que optou por: o orquestrador aplica o último fix e fecha a feature, sem um 4º Verifier independente.
+
+- **Fix aplicado**: `4c683c9` — `e2e/login.spec.ts`, teste `"CA-AU-10: resposta de login não expõe senha nem hash"` (linha ~219-224): acrescentada `expect(texto).not.toContain(SENHA)` ao lado da checagem de hash já existente sobre o corpo inteiro, fechando exatamente a lacuna que o mutante M2b da iteração 3 explorava.
+- **Gate re-executado pelo orquestrador após o fix** (rodado eu mesmo, não delegado): `npm run lint`, `npm run typecheck`, `npm run build` (limpos após remover um `.next`/`next-env.d.ts` corrompidos por um restart anterior do host - artefatos gerados, sem relação com o código), `npm run test:unit` (87/87), `npm run test:integration` (14/14), `npm run test:e2e` (36/36, confirmado linha a linha na saída do comando, incluindo o caso de CA-AU-10 com a nova asserção). Total **137 testes**, igual à contagem da iteração 3 - o fix acrescenta uma asserção a um teste já existente, não um caso novo.
+- **Não coberto por um 4º Verifier independente** (author≠verifier não se aplica a este último passo) — decisão explícita do usuário, registrada aqui para rastreabilidade. As 3 iterações anteriores, essas sim, foram cada uma um agente fresco sem contexto das anteriores.
+- **Veredito final da feature**: ✅ **PASS** — todas as 12 REQ-AU e 10 CA-AU cobertas com evidência `file:line` (seções abaixo, produzidas pela iteração 3), gate limpo, e o único gap conhecido nas 3 rodadas (alcance da asserção de CA-AU-10) fechado pelo commit `4c683c9`.
 
 ---
 
@@ -94,7 +109,7 @@ Todas as citações abaixo foram reconferidas **nesta iteração**, linha a linh
 | M6 | Autoria registrada errada | `src/app/api/usuarios/route.ts:53` | `criadoPor: criador.cpf` → `criadoPor: dados.cpf` | ✅ Killed — 2 falhas: `e2e/usuarios.spec.ts:63` (API) e `e2e/usuarios-novo-page.spec.ts:28` (UI) |
 | M7 | Login bem-sucedido não zera o contador | `src/app/api/auth/login/route.ts:62` | `await resetarTentativas(cpf);` comentado | ✅ Killed — `e2e/login.spec.ts:164`. Nota: `test:integration` sozinho **não** pega (14/14 verdes) — a chamada vive na rota, não na lib |
 
-**Result**: 8 injetadas, **7 killed, 1 survived** — ❌ FAIL
+**Resultado do sensor (iteração 3)**: 8 injetadas, **7 killed, 1 survived** — mutante fechado depois pelo commit `4c683c9` (ver Resolução final acima)
 
 ### M2b — mutante sobrevivente, análise
 
