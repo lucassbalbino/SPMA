@@ -44,3 +44,32 @@ export function requireOfertanteVinculado(usuario: {
     redirect("/cadastro-ofertante");
   }
 }
+
+/**
+ * Guarda de escopo por Ofertante (REQ-SEC-14, AD-012), reutilizável por
+ * qualquer rota futura que exponha um recurso escopado por Ofertante (a
+ * próxima feature, `ofertante-e-verba`, é a primeira consumidora real - ver
+ * design.md Riscos). Função pura, mesmo estilo de `podeCriar` em
+ * `cascata.ts`: recebe os dados já carregados, não consulta nada.
+ *
+ * AM/GT/VT são os perfis de escopo nacional (AD-012, mesmo grupo que fica com
+ * `cdOfertante` sempre null - ver schema.prisma) e sempre podem acessar
+ * qualquer Ofertante. GO/VO só acessam o próprio Ofertante vinculado. AL tem
+ * escopo pelo curso, não pelo Ofertante (AD-012), e nunca acessa por essa via.
+ */
+export function podeAcessarOfertante(
+  usuario: { tipo: TipoUsuario; cdOfertante: number | null },
+  cdOfertanteAlvo: number,
+): boolean {
+  switch (usuario.tipo) {
+    case "AM":
+    case "GT":
+    case "VT":
+      return true;
+    case "GO":
+    case "VO":
+      return usuario.cdOfertante === cdOfertanteAlvo;
+    case "AL":
+      return false;
+  }
+}

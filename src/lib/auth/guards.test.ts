@@ -3,6 +3,7 @@
 // desvio cada guarda dispara, não o acesso ao banco.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  podeAcessarOfertante,
   requireOfertanteVinculado,
   requirePrimeiroAcessoConcluido,
   requireSession,
@@ -92,5 +93,65 @@ describe("requireOfertanteVinculado", () => {
     requireOfertanteVinculado({ tipo: "AL", cdOfertante: null });
 
     expect(redirect).not.toHaveBeenCalled();
+  });
+});
+
+describe("podeAcessarOfertante", () => {
+  it("AM sempre pode acessar, para qualquer cdOfertanteAlvo", () => {
+    expect(
+      podeAcessarOfertante({ tipo: "AM", cdOfertante: null }, 1),
+    ).toBe(true);
+    expect(
+      podeAcessarOfertante({ tipo: "AM", cdOfertante: null }, 999),
+    ).toBe(true);
+  });
+
+  it("GT sempre pode acessar, para qualquer cdOfertanteAlvo", () => {
+    expect(
+      podeAcessarOfertante({ tipo: "GT", cdOfertante: null }, 1),
+    ).toBe(true);
+    expect(
+      podeAcessarOfertante({ tipo: "GT", cdOfertante: null }, 999),
+    ).toBe(true);
+  });
+
+  // VT não está nomeado no texto do critério de aceite, mas AD-012 agrupa
+  // AM/GT/VT como escopo nacional (o mesmo grupo que fica com cdOfertante
+  // sempre null - ver schema.prisma) - TipoUsuario é exaustivo, então VT
+  // precisa de um ramo correto, não só compilar.
+  it("VT sempre pode acessar, para qualquer cdOfertanteAlvo (AD-012: escopo nacional)", () => {
+    expect(
+      podeAcessarOfertante({ tipo: "VT", cdOfertante: null }, 1),
+    ).toBe(true);
+  });
+
+  it("GO vinculado ao ofertante 1 pedindo o ofertante 2: false", () => {
+    expect(
+      podeAcessarOfertante({ tipo: "GO", cdOfertante: 1 }, 2),
+    ).toBe(false);
+  });
+
+  it("GO vinculado ao ofertante 1 pedindo o ofertante 1: true", () => {
+    expect(
+      podeAcessarOfertante({ tipo: "GO", cdOfertante: 1 }, 1),
+    ).toBe(true);
+  });
+
+  it("VO vinculado ao ofertante 1 pedindo o ofertante 2: false", () => {
+    expect(
+      podeAcessarOfertante({ tipo: "VO", cdOfertante: 1 }, 2),
+    ).toBe(false);
+  });
+
+  it("VO vinculado ao ofertante 1 pedindo o ofertante 1: true", () => {
+    expect(
+      podeAcessarOfertante({ tipo: "VO", cdOfertante: 1 }, 1),
+    ).toBe(true);
+  });
+
+  it("AL nunca pode acessar por essa via, mesmo com cdOfertanteAlvo coincidente", () => {
+    expect(
+      podeAcessarOfertante({ tipo: "AL", cdOfertante: null }, 1),
+    ).toBe(false);
   });
 });

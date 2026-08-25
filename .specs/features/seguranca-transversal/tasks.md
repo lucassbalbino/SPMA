@@ -210,10 +210,10 @@ T1 → T4
 - Skill: NONE
 
 **Done when**:
-- [ ] AM e GT: `true` para qualquer `cdOfertanteAlvo`
-- [ ] GO/VO vinculado ao ofertante 1 pedindo ofertante 2: `false`
-- [ ] GO/VO vinculado ao ofertante 1 pedindo ofertante 1: `true`
-- [ ] AL: sempre `false`
+- [x] AM e GT: `true` para qualquer `cdOfertanteAlvo`
+- [x] GO/VO vinculado ao ofertante 1 pedindo ofertante 2: `false`
+- [x] GO/VO vinculado ao ofertante 1 pedindo ofertante 1: `true`
+- [x] AL: sempre `false`
 
 **Tests**: unit
 **Gate**: quick
