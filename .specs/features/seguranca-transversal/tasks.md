@@ -187,8 +187,8 @@ T1 → T4
 - Skill: NONE
 
 **Done when**:
-- [ ] Extrai o token corretamente de uma string de cookies com múltiplos cookies
-- [ ] Devolve `{}` quando `spma_csrf` não está presente
+- [x] Extrai o token corretamente de uma string de cookies com múltiplos cookies
+- [x] Devolve `{}` quando `spma_csrf` não está presente
 
 **Tests**: unit
 **Gate**: quick
