@@ -33,7 +33,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | --- | --- | --- |
 | Quick | After tasks with unit tests only | `npm run test:unit` |
 | Full | After tasks with integration/e2e tests | `npm run test:unit && npm run test:integration && npm run test:e2e` |
-| Build | After phase completion or config/scaffold-only tasks | `npm run lint && npm run typecheck && npm run build` |
+| Build | After phase completion or config/scaffold-only tasks | `npm run lint && npm run build && npm run typecheck` (nesta ordem - Next.js 16 gera tipos globais como `LayoutProps` durante o build; `typecheck` antes de um build prévio falha em checkout limpo/CI, achado do Verifier na iteração 3, seção E4 de `validation.md`) |
 
 npm scripts to create in T1/T4/T5:
 - `lint` → `next lint`
