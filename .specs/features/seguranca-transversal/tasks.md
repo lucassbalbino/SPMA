@@ -90,9 +90,9 @@ T1 → T4
 - Skill: NONE
 
 **Done when**:
-- [ ] CPF de 11 dígitos mascarado corretamente
-- [ ] CPF formatado (com pontuação) também mascarado corretamente
-- [ ] Entrada mais curta que o esperado não lança exceção (edge case defensivo - log nunca pode derrubar o processo)
+- [x] CPF de 11 dígitos mascarado corretamente
+- [x] CPF formatado (com pontuação) também mascarado corretamente
+- [x] Entrada mais curta que o esperado não lança exceção (edge case defensivo - log nunca pode derrubar o processo)
 
 **Tests**: unit
 **Gate**: quick
