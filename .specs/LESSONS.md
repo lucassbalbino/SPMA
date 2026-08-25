@@ -44,6 +44,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SPEC_DEVIATION - src/lib/auth/guards.ts:7-9 (routes)
 - last seen: 2026-08-25T13:30:54Z
 
+### L-006 - When a spec forbids several forms of the same secret, assert every form the spec names; matching only the hashed form leaves a plaintext leak undetected.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: auth-e-usuarios
+- evidence: e2e/primeiro-acesso.spec.ts:53 (mutant M8) (tests)
+- last seen: 2026-08-25T18:50:12Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
