@@ -114,8 +114,8 @@ T1 → T4
 - Skill: NONE
 
 **Done when**:
-- [ ] `verifyPassword(DUMMY_HASH, "qualquer coisa")` resolve `false` sem lançar
-- [ ] Nenhuma função existente de `password.ts` alterada
+- [x] `verifyPassword(DUMMY_HASH, "qualquer coisa")` resolve `false` sem lançar
+- [x] Nenhuma função existente de `password.ts` alterada
 
 **Tests**: unit
 **Gate**: quick

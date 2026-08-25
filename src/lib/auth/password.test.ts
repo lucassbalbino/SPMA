@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hashPassword, verifyPassword } from "./password";
+import { DUMMY_HASH, hashPassword, verifyPassword } from "./password";
 
 describe("hashPassword", () => {
   it("gera um hash diferente do texto original", async () => {
@@ -39,5 +39,13 @@ describe("verifyPassword", () => {
     const hash = await hashPassword(senha);
 
     await expect(verifyPassword(hash, "senhaErrada456")).resolves.toBe(false);
+  });
+});
+
+describe("DUMMY_HASH", () => {
+  it("é aceito por verifyPassword e resolve false sem lançar, para qualquer senha informada", async () => {
+    await expect(
+      verifyPassword(DUMMY_HASH, "qualquer coisa"),
+    ).resolves.toBe(false);
   });
 });
