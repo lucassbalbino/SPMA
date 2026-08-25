@@ -162,10 +162,10 @@ T1 → T4
 - Skill: NONE
 
 **Done when**:
-- [ ] `verificarCSRF` retorna `true` quando cookie e header coincidem
-- [ ] `verificarCSRF` retorna `false` quando o header está ausente
-- [ ] `verificarCSRF` retorna `false` quando cookie e header têm valores diferentes (inclusive tamanhos diferentes, sem lançar exceção do `timingSafeEqual`)
-- [ ] `verificarCSRF` retorna `false` quando o cookie está ausente
+- [x] `verificarCSRF` retorna `true` quando cookie e header coincidem
+- [x] `verificarCSRF` retorna `false` quando o header está ausente
+- [x] `verificarCSRF` retorna `false` quando cookie e header têm valores diferentes (inclusive tamanhos diferentes, sem lançar exceção do `timingSafeEqual`)
+- [x] `verificarCSRF` retorna `false` quando o cookie está ausente
 
 **Tests**: unit
 **Gate**: quick
