@@ -729,10 +729,12 @@ T25 → T29
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-AU-02 completo pela UI: usuário em 1º acesso define senha, é liberado para o restante do sistema
+- [x] e2e CA-AU-02 completo pela UI: usuário em 1º acesso define senha, é liberado para o restante do sistema
 
 **Tests**: e2e
 **Gate**: full
+
+**Nota de execução**: path real é `src/app/(onboarding)/primeiro-acesso/page.tsx` + `src/app/(onboarding)/layout.tsx` (novo, guarda só com `requireSession()`), não `src/app/(protegido)/...` como declarado acima - ver nota de execução de T25 (self-redirect loop confirmado empiricamente). Mesma URL final `/primeiro-acesso`; `primeiro-acesso.schema` e os componentes shadcn são reusados exatamente como previsto.
 
 **Commit**: `feat(auth): add primeiro-acesso page`
 
