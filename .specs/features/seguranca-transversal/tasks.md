@@ -137,10 +137,10 @@ T1 → T4
 - Skill: NONE
 
 **Done when**:
-- [ ] `obterIpCliente` extrai o primeiro IP de uma lista `x-forwarded-for` com múltiplos IPs (proxy encadeado)
-- [ ] `obterIpCliente` retorna `"desconhecido"` quando o header está ausente
-- [ ] IP sem histórico não está bloqueado
-- [ ] IP com 20 falhas fica bloqueado por `BLOQUEIO_MS`, contra `spma_test` real
+- [x] `obterIpCliente` extrai o primeiro IP de uma lista `x-forwarded-for` com múltiplos IPs (proxy encadeado)
+- [x] `obterIpCliente` retorna `"desconhecido"` quando o header está ausente
+- [x] IP sem histórico não está bloqueado
+- [x] IP com 20 falhas fica bloqueado por `BLOQUEIO_MS`, contra `spma_test` real
 
 **Tests**: integration
 **Gate**: full
