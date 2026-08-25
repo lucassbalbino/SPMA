@@ -753,10 +753,12 @@ T25 → T29
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-AU-07 completo pela UI: GO sem Ofertante é barrado, cadastra, e passa a acessar o restante do sistema
+- [x] e2e CA-AU-07 completo pela UI: GO sem Ofertante é barrado, cadastra, e passa a acessar o restante do sistema
 
 **Tests**: e2e
 **Gate**: full
+
+**Nota de execução**: path real é `src/app/(onboarding)/cadastro-ofertante/page.tsx`, não `src/app/(protegido)/...` como declarado acima - mesma causa e mesma resolução de T26 (ver nota de execução de T25). Reusa o `(onboarding)/layout.tsx` já criado em T26, sem arquivo de layout novo.
 
 **Commit**: `feat(auth): add cadastro-ofertante page`
 
