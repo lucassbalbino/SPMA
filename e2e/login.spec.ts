@@ -218,6 +218,10 @@ test("CA-AU-10: resposta de login não expõe senha nem hash", async () => {
 
   expect(texto).not.toContain("$argon2");
   expect(texto).not.toMatch(/senhaHash/i);
+  // Verifier iteração 3: a checagem de hash acima já cobre o corpo inteiro,
+  // mas a de senha em texto puro só olhava corpo.usuario - um vazamento em
+  // qualquer outro lugar da resposta passaria batido. Alinhando as duas.
+  expect(texto).not.toContain(SENHA);
   expect(corpo.usuario).not.toHaveProperty("senhaHash");
   expect(corpo.usuario).not.toHaveProperty("senha");
 
