@@ -777,7 +777,7 @@ T25 → T29
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: usuários de perfis diferentes (AM vs AL, por exemplo) veem conteúdo/opções diferentes no painel
+- [x] e2e: usuários de perfis diferentes (AM vs AL, por exemplo) veem conteúdo/opções diferentes no painel
 
 **Tests**: e2e
 **Gate**: full
