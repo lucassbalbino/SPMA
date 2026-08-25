@@ -799,7 +799,7 @@ T25 → T29
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-AU-05 completo pela UI: GO logado só vê GO/VO/AL como opções e consegue criar um AL
+- [x] e2e CA-AU-05 completo pela UI: GO logado só vê GO/VO/AL como opções e consegue criar um AL
 
 **Tests**: e2e
 **Gate**: full
