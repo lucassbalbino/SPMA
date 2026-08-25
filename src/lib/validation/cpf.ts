@@ -12,6 +12,15 @@ function calcularDigitoVerificador(digitos: number[]): number {
   return resto < 2 ? 0 : 11 - resto;
 }
 
+/**
+ * Forma canônica de um CPF (somente dígitos). Usada para gravar e buscar no
+ * banco, para que "529.982.247-25" e "52998224725" sejam sempre o mesmo
+ * registro independente de como foram digitados.
+ */
+export function normalizarCPF(cpf: string): string {
+  return cpf.replace(/\D/g, "");
+}
+
 export function validarCPF(cpf: string): boolean {
   const apenasDigitos = cpf.replace(/\D/g, "");
 

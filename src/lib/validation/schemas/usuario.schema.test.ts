@@ -38,4 +38,16 @@ describe("usuarioSchema", () => {
       expect(result.success).toBe(true);
     },
   );
+
+  it("normaliza CPF formatado para somente dígitos (garante o mesmo valor gravado independente da formatação)", () => {
+    const result = usuarioSchema.safeParse({
+      ...basePayload,
+      tipo: TipoUsuario.AL,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.cpf).toBe("11144477735");
+    }
+  });
 });

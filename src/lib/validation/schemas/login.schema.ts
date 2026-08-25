@@ -1,8 +1,11 @@
 import { z } from "zod";
-import { validarCPF } from "../cpf";
+import { normalizarCPF, validarCPF } from "../cpf";
 
 export const loginSchema = z.object({
-  cpf: z.string().refine(validarCPF, { message: "CPF inválido" }),
+  cpf: z
+    .string()
+    .refine(validarCPF, { message: "CPF inválido" })
+    .transform(normalizarCPF),
   senha: z.string().min(1, { message: "Senha é obrigatória" }),
 });
 

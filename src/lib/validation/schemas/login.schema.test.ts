@@ -28,4 +28,16 @@ describe("loginSchema", () => {
 
     expect(result.success).toBe(true);
   });
+
+  it("normaliza CPF formatado para somente dígitos (mesmo CPF de login independente da formatação)", () => {
+    const result = loginSchema.safeParse({
+      cpf: "111.444.777-35",
+      senha: "qualquerSenha1",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.cpf).toBe("11144477735");
+    }
+  });
 });
