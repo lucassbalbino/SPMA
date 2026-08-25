@@ -14,6 +14,14 @@ describe("validarCPF", () => {
     expect(validarCPF("529.982.247-25")).toBe(true);
   });
 
+  it("retorna true para CPF válido cujo 1º dígito verificador nasce de resto 1 (regra: resto < 2 → dígito 0)", () => {
+    expect(validarCPF("52601815906")).toBe(true);
+  });
+
+  it("retorna true para CPF válido cujo 2º dígito verificador nasce de resto 1 (regra: resto < 2 → dígito 0)", () => {
+    expect(validarCPF("35379907580")).toBe(true);
+  });
+
   it("retorna false para CPF com dígito verificador alterado", () => {
     // último dígito de um CPF válido (111.444.777-35) trocado de 5 para 6
     expect(validarCPF("111.444.777-36")).toBe(false);
