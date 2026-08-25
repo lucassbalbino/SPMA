@@ -703,12 +703,14 @@ T25 → T29
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: visitar qualquer rota protegida sem sessão → redireciona para `/login`
-- [ ] e2e: sessão válida mas `primeiraVez=true` → redireciona para `/primeiro-acesso` mesmo tentando acessar outra rota protegida diretamente
-- [ ] e2e: `primeiraVez=false` mas GO sem `cdOfertante` → redireciona para `/cadastro-ofertante`
+- [x] e2e: visitar qualquer rota protegida sem sessão → redireciona para `/login`
+- [x] e2e: sessão válida mas `primeiraVez=true` → redireciona para `/primeiro-acesso` mesmo tentando acessar outra rota protegida diretamente
+- [x] e2e: `primeiraVez=false` mas GO sem `cdOfertante` → redireciona para `/cadastro-ofertante`
 
 **Tests**: e2e
 **Gate**: full
+
+**Nota de execução**: confirmado empiricamente (curl direto ao dev server) que `/primeiro-acesso` e `/cadastro-ofertante` NÃO podem viver sob este mesmo `(protegido)/layout.tsx` como design.md original descrevia: como os dois guards redirecionam incondicionalmente para essas rotas sempre que a pendência existe, visitar a própria rota-alvo (ex.: `/primeiro-acesso` com `primeiraVez=true`) faz o guard redirecionar para si mesma - Server Components não expõem o pathname da requisição atual (`next/headers` não tem isso; só `usePathname`, client-side), então o layout não tem como pular o guard "estou indo exatamente para lá". Resultado observado: HTTP 307 com `location: /primeiro-acesso` ao pedir `/primeiro-acesso` - loop infinito no mundo real. Resolução: `/primeiro-acesso` (T26) e `/cadastro-ofertante` (T27) passam a viver em `src/app/(onboarding)/`, grupo irmão guardado só por `requireSession()` (mesmas URLs finais - grupos de rota não aparecem na URL). `src/app/(protegido)/layout.tsx` continua chamando as três guardas exatamente na ordem definida. Um stub mínimo de `/painel` (`src/app/(protegido)/painel/page.tsx`, substituído em T28) foi adicionado neste commit: o App Router não invoca o layout de um segmento sem uma página folha casando com a URL, então o guard chain só é testável e2e com pelo menos uma rota real sob `(protegido)`.
 
 **Commit**: `feat(auth): wire route guards into protected layout`
 
