@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 7,
+  "next_id": 10,
   "lessons": [
     {
       "id": "L-001",
@@ -112,6 +112,60 @@
       ],
       "created": "2026-08-25T18:50:12Z",
       "last_seen": "2026-08-25T18:50:12Z"
+    },
+    {
+      "id": "L-007",
+      "key": "surviving_mutant::assert a forbidden secret s absence against the whole serialized response body not a property of one nested object or a leak placed elsewhere in the payload survives",
+      "text": "Assert a forbidden secret's absence against the whole serialized response body, not a property of one nested object, or a leak placed elsewhere in the payload survives.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "auth-e-usuarios"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M2b - e2e/login.spec.ts:222 (tests)"
+      ],
+      "created": "2026-08-25T20:00:33Z",
+      "last_seen": "2026-08-25T20:00:33Z"
+    },
+    {
+      "id": "L-008",
+      "key": "gate_fail::order the gate so the build runs before typecheck whenever the framework generates global types into its build directory",
+      "text": "Order the gate so the build runs before typecheck whenever the framework generates global types into its build directory.",
+      "signal": "gate_fail",
+      "scope": "tooling",
+      "status": "candidate",
+      "features": [
+        "auth-e-usuarios"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "E4 - src/app/layout.tsx:20 (tooling)"
+      ],
+      "created": "2026-08-25T20:00:33Z",
+      "last_seen": "2026-08-25T20:00:33Z"
+    },
+    {
+      "id": "L-009",
+      "key": "gate_fail::pin database connection options that survive a cold server auth cache so the suite does not silently depend on a warm cache after a restart",
+      "text": "Pin database connection options that survive a cold server auth cache, so the suite does not silently depend on a warm cache after a restart.",
+      "signal": "gate_fail",
+      "scope": "tooling",
+      "status": "candidate",
+      "features": [
+        "auth-e-usuarios"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "E3 - .env.test:3 (tooling)"
+      ],
+      "created": "2026-08-25T20:00:34Z",
+      "last_seen": "2026-08-25T20:00:34Z"
     }
   ]
 }

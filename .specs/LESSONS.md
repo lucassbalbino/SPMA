@@ -50,6 +50,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: e2e/primeiro-acesso.spec.ts:53 (mutant M8) (tests)
 - last seen: 2026-08-25T18:50:12Z
 
+### L-007 - Assert a forbidden secret's absence against the whole serialized response body, not a property of one nested object, or a leak placed elsewhere in the payload survives.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: auth-e-usuarios
+- evidence: M2b - e2e/login.spec.ts:222 (tests)
+- last seen: 2026-08-25T20:00:33Z
+
+### L-008 - Order the gate so the build runs before typecheck whenever the framework generates global types into its build directory.
+- signal: `gate_fail` · recurrence: 1 feature(s) · scope: `tooling` · harmful: 0
+- features: auth-e-usuarios
+- evidence: E4 - src/app/layout.tsx:20 (tooling)
+- last seen: 2026-08-25T20:00:33Z
+
+### L-009 - Pin database connection options that survive a cold server auth cache, so the suite does not silently depend on a warm cache after a restart.
+- signal: `gate_fail` · recurrence: 1 feature(s) · scope: `tooling` · harmful: 0
+- features: auth-e-usuarios
+- evidence: E3 - .env.test:3 (tooling)
+- last seen: 2026-08-25T20:00:34Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
