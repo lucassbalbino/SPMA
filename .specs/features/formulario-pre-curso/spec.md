@@ -297,7 +297,7 @@ Mesmo enunciado e mesma escala do Bloco 6.
 | PC-12 | P1: Encerramento | Tasks T6, T7, T10 | In Tasks |
 | PC-13 | P1: Consulta e listagem escopadas | Tasks T6, T10 | In Tasks |
 | PC-14 | P1: Consulta e listagem escopadas | Tasks T5, T8 | In Tasks |
-| PC-15 | P1: Consulta e listagem escopadas | Tasks T2, T5, T6, T7, T10 | In Tasks |
+| PC-15 | P1: Consulta e listagem escopadas | Tasks T2, T5, T6, T7, T10 | Implementing (T2 done) |
 
 **ID format:** `PC-NN` (Pré-Curso).
 

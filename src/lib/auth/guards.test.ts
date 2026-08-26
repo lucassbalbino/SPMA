@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   podeAcessarOfertante,
   podeEditarOfertante,
+  podeGerenciarPreCurso,
   podeGerenciarVerba,
   requireOfertanteVinculado,
   requirePrimeiroAcessoConcluido,
@@ -214,5 +215,37 @@ describe("podeGerenciarVerba", () => {
 
   it("AL não pode gerenciar Verba", () => {
     expect(podeGerenciarVerba("AL")).toBe(false);
+  });
+});
+
+describe("podeGerenciarPreCurso", () => {
+  it("GO vinculado ao ofertante alvo pode gerenciar", () => {
+    expect(podeGerenciarPreCurso({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);
+  });
+
+  it("GO vinculado a outro ofertante não pode gerenciar", () => {
+    expect(podeGerenciarPreCurso({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
+  });
+
+  // Diferente de podeEditarOfertante/podeGerenciarVerba: nem AM nem GT
+  // escrevem pré-curso, só o GO dono (seção 4 do documento fonte).
+  it("AM não pode gerenciar, mesmo sendo autoridade global", () => {
+    expect(podeGerenciarPreCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("GT não pode gerenciar", () => {
+    expect(podeGerenciarPreCurso({ tipo: "GT", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("VT não pode gerenciar", () => {
+    expect(podeGerenciarPreCurso({ tipo: "VT", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("VO não pode gerenciar, mesmo o próprio ofertante", () => {
+    expect(podeGerenciarPreCurso({ tipo: "VO", cdOfertante: 1 }, 1)).toBe(false);
+  });
+
+  it("AL não pode gerenciar", () => {
+    expect(podeGerenciarPreCurso({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
   });
 });

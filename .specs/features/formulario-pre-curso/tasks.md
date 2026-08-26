@@ -121,9 +121,9 @@ T4 → T10
 - Skill: NONE
 
 **Done when**:
-- [ ] GO vinculado ao `cdOfertanteAlvo` → `true`
-- [ ] GO vinculado a outro Ofertante → `false`
-- [ ] AM/GT/VT/VO/AL → `false` para qualquer alvo
+- [x] GO vinculado ao `cdOfertanteAlvo` → `true`
+- [x] GO vinculado a outro Ofertante → `false`
+- [x] AM/GT/VT/VO/AL → `false` para qualquer alvo
 
 **Tests**: unit
 **Gate**: quick
