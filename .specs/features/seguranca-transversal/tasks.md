@@ -287,9 +287,9 @@ T8 (independente de T9, T10, T11 - todos independentes entre si nesta fase)
 - Skill: NONE
 
 **Done when**:
-- [ ] `GET /login` recebe `Content-Security-Policy` com um nonce diferente a cada requisição
-- [ ] Rotas antes protegidas continuam redirecionando para `/login` sem cookie de sessão (comportamento existente preservado)
-- [ ] `proxy.ts` continua sem importar nada de `lib/db/prisma.ts` (checagem por leitura de código)
+- [x] `GET /login` recebe `Content-Security-Policy` com um nonce diferente a cada requisição
+- [x] Rotas antes protegidas continuam redirecionando para `/login` sem cookie de sessão (comportamento existente preservado)
+- [x] `proxy.ts` continua sem importar nada de `lib/db/prisma.ts` (checagem por leitura de código)
 
 **Tests**: none
 **Gate**: build
