@@ -355,6 +355,7 @@ T8 → T16
 - [x] integration: IP com 20 falhas registradas é bloqueado mesmo com credenciais corretas
 - [x] e2e: resposta de login bem-sucedido inclui `Set-Cookie` para `spma_csrf` além de `spma_sessao`
 - [x] Testes existentes de `auth-e-usuarios` para este arquivo continuam verdes (137 testes prévios não regridem)
+- [x] **Fix pós-Verifier (iteração 1)**: o teste de timing em `e2e/login.spec.ts:301-351` não discriminava a remoção do `DUMMY_HASH` (mutante M5 sobreviveu - achado do Verifier, `validation.md`). Sob `next dev` o ruído de framework (~180-400ms) domina o custo real do argon2 (~73ms), então nenhuma calibração de tolerância no teste de tempo de parede resolve isso de forma confiável. Fechado com um teste determinístico e imune a ruído: `src/app/api/auth/login/route.integration.test.ts` faz spy em `verifyPassword` e prova, por chamada (não por tempo), que ela roda contra `DUMMY_HASH` quando o CPF não existe e contra o hash real quando existe - reproduz e mata o mutante M5. O teste de timing existente fica como evidência complementar (documentado como tal no novo arquivo), não é o único guarda-chuva de REQ-SEC-04 nem foi enfraquecido/removido.
 
 **Tests**: e2e
 **Gate**: full
