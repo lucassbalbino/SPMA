@@ -241,8 +241,8 @@ T8 (independente de T9, T10, T11 - todos independentes entre si nesta fase)
 - Skill: NONE
 
 **Done when**:
-- [ ] Handler que lança uma exceção qualquer é capturado e devolve 500 com `erro` genérico + `idCorrelacao` (uuid), nunca a mensagem/stack original no corpo da resposta
-- [ ] Handler que responde normalmente (não lança) passa através sem alteração
+- [x] Handler que lança uma exceção qualquer é capturado e devolve 500 com `erro` genérico + `idCorrelacao` (uuid), nunca a mensagem/stack original no corpo da resposta
+- [x] Handler que responde normalmente (não lança) passa através sem alteração
 
 **Tests**: unit
 **Gate**: quick
