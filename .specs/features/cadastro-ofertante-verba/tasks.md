@@ -164,10 +164,10 @@ T3 → T5
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-OV-03: GO vinculado ao Ofertante A edita o Ofertante A, alteração persiste
-- [ ] e2e CA-OV-04: GO vinculado ao Ofertante A tenta editar o Ofertante B, recebe 403, Ofertante B inalterado
-- [ ] e2e CA-OV-06: GO consulta o próprio Ofertante (200) e o de outro (403)
-- [ ] e2e CA-OV-15: GT forjando edição/consulta de um Ofertante qualquer nunca é bloqueado por escopo (AM/GT têm escopo nacional) - variante GO forjando outro Ofertante é o CA-OV-04/06 acima
+- [x] e2e CA-OV-03: GO vinculado ao Ofertante A edita o Ofertante A, alteração persiste
+- [x] e2e CA-OV-04: GO vinculado ao Ofertante A tenta editar o Ofertante B, recebe 403, Ofertante B inalterado
+- [x] e2e CA-OV-06: GO consulta o próprio Ofertante (200) e o de outro (403)
+- [x] e2e CA-OV-15: GT forjando edição/consulta de um Ofertante qualquer nunca é bloqueado por escopo (AM/GT têm escopo nacional) - variante GO forjando outro Ofertante é o CA-OV-04/06 acima
 
 **Tests**: e2e
 **Gate**: full
