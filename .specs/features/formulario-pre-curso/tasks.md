@@ -174,8 +174,8 @@ T4 → T10
 - Skill: NONE
 
 **Done when**:
-- [ ] os 5 arquivos existem em `src/components/ui/` e exportam os componentes
-- [ ] `npm run build && npm run typecheck` passam com os novos componentes presentes (mesmo antes de qualquer tela os importar)
+- [x] os 5 arquivos existem em `src/components/ui/` e exportam os componentes
+- [x] `npm run build && npm run typecheck` passam com os novos componentes presentes (mesmo antes de qualquer tela os importar)
 
 **Tests**: none (camada de scaffold — matriz confirma "none")
 **Gate**: build
