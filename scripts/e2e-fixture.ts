@@ -102,6 +102,18 @@ async function executar(
     case "listarOfertantesPorNome":
       return prisma.ofertante.findMany({ where: { nome: argumento as string } });
 
+    // `db-test-reset.ts` não trunca TB_Tentativa_Login_Ip (tabela independente
+    // de usuário, sem FK) - specs que testam o limite por IP (REQ-SEC-03)
+    // limpam o próprio IP de teste antes/depois para não depender de estado
+    // deixado por uma execução anterior.
+    case "deleteTentativasIp": {
+      const ips = argumento as string[];
+      const { count } = await prisma.tentativaLoginIp.deleteMany({
+        where: { ip: { in: ips } },
+      });
+      return { count };
+    }
+
     default:
       throw new Error(`Comando desconhecido: ${comando}`);
   }

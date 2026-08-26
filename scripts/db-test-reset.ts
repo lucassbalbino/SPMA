@@ -17,6 +17,12 @@ const DOMAIN_TABLES = [
   "TB_Ofertante",
   "TB_Sessao",
   "TB_Usuario",
+  // Rate-limit por IP (REQ-SEC-03, seguranca-transversal): sem tabela nesta
+  // lista, o bucket "desconhecido" (chamadas sem x-forwarded-for) acumula
+  // falhas de execuções anteriores e pode ultrapassar o limite entre
+  // rodadas, bloqueando logins legítimos de specs que não têm nada a ver
+  // com rate-limit.
+  "TB_Tentativa_Login_Ip",
 ];
 
 async function main() {

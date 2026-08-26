@@ -88,3 +88,8 @@ export function getOfertante(cdOfertante: number): OfertantePersistido | null {
 export function listarOfertantesPorNome(nome: string): OfertantePersistido[] {
   return executar<OfertantePersistido[]>("listarOfertantesPorNome", nome);
 }
+
+/** Limpa o registro de rate-limit por IP (REQ-SEC-03) dos IPs de teste informados. */
+export function deleteTentativasIp(ips: string[]): void {
+  executar("deleteTentativasIp", ips);
+}

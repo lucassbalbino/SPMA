@@ -351,10 +351,10 @@ T8 → T16
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e/integration: CPF inexistente e CPF existente+senha errada respondem com corpo e status idênticos (já existia) e tempo de resposta na mesma ordem de grandeza (diferença bem menor que o custo de um `argon2.verify`, tolerância generosa para evitar flakiness)
-- [ ] integration: IP com 20 falhas registradas é bloqueado mesmo com credenciais corretas
-- [ ] e2e: resposta de login bem-sucedido inclui `Set-Cookie` para `spma_csrf` além de `spma_sessao`
-- [ ] Testes existentes de `auth-e-usuarios` para este arquivo continuam verdes (137 testes prévios não regridem)
+- [x] e2e/integration: CPF inexistente e CPF existente+senha errada respondem com corpo e status idênticos (já existia) e tempo de resposta na mesma ordem de grandeza (diferença bem menor que o custo de um `argon2.verify`, tolerância generosa para evitar flakiness)
+- [x] integration: IP com 20 falhas registradas é bloqueado mesmo com credenciais corretas
+- [x] e2e: resposta de login bem-sucedido inclui `Set-Cookie` para `spma_csrf` além de `spma_sessao`
+- [x] Testes existentes de `auth-e-usuarios` para este arquivo continuam verdes (137 testes prévios não regridem)
 
 **Tests**: e2e
 **Gate**: full
