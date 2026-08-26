@@ -376,9 +376,9 @@ T8 → T16
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: POST sem token CSRF (ou com token divergente do cookie) é rejeitado com 403 genérico, sem alterar `senhaHash`
-- [ ] e2e: POST direto à API com `senha !== confirmacaoSenha` (bypassando qualquer validação client-side) é rejeitado com 400 - prova concreta de CA-SEC-17 usando a regra condicional já existente nesta rota (substitui o exemplo P9/P9.Qual, que pertence a uma feature futura - ver design.md Riscos)
-- [ ] Testes existentes deste arquivo continuam verdes após atualização do helper e2e (T19/T20)
+- [x] e2e: POST sem token CSRF (ou com token divergente do cookie) é rejeitado com 403 genérico, sem alterar `senhaHash`
+- [x] e2e: POST direto à API com `senha !== confirmacaoSenha` (bypassando qualquer validação client-side) é rejeitado com 400 - prova concreta de CA-SEC-17 usando a regra condicional já existente nesta rota (substitui o exemplo P9/P9.Qual, que pertence a uma feature futura - ver design.md Riscos)
+- [ ] Testes existentes deste arquivo continuam verdes após atualização do helper e2e (T19/T20) - **ainda vermelho de propósito**: os 3 testes pré-existentes deste arquivo, mais `e2e/logout.spec.ts:24` (usa esta rota como sonda de "rota protegida" genérica) e `e2e/primeiro-acesso-page.spec.ts:21` (fetch client-side ainda não anexa CSRF) falham com 403/erro em vez do status esperado - regressão documentada em design.md (Riscos) e explicitamente diferida para T18-T20 (Fase 4, fora deste batch). Nenhuma outra falha fora dessas 5 foi observada na suíte completa.
 
 **Tests**: e2e
 **Gate**: full
