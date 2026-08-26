@@ -14,9 +14,11 @@ describe("comTratamentoDeErro", () => {
   it("captura exceção não tratada e devolve 500 genérico com idCorrelacao, nunca a mensagem original", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const handler = comTratamentoDeErro(async () => {
-      throw new Error("detalhe sensível interno do banco");
-    });
+    const handler = comTratamentoDeErro(
+      async (_request: Request): Promise<Response> => {
+        throw new Error("detalhe sensível interno do banco");
+      },
+    );
 
     const resposta = await handler(new Request("http://localhost/api/x"));
     const corpo = await resposta.json();
@@ -32,9 +34,11 @@ describe("comTratamentoDeErro", () => {
   it("mascara qualquer CPF reconhecível no log de servidor, sem expor o CPF completo", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const handler = comTratamentoDeErro(async () => {
-      throw new Error("Usuario 52998224725 causou violação de unicidade");
-    });
+    const handler = comTratamentoDeErro(
+      async (_request: Request): Promise<Response> => {
+        throw new Error("Usuario 52998224725 causou violação de unicidade");
+      },
+    );
 
     await handler(new Request("http://localhost/api/x"));
 
@@ -46,7 +50,7 @@ describe("comTratamentoDeErro", () => {
   });
 
   it("handler que responde normalmente (não lança) passa através sem alteração", async () => {
-    const handler = comTratamentoDeErro(async () =>
+    const handler = comTratamentoDeErro(async (_request: Request) =>
       NextResponse.json({ ok: true }, { status: 200 }),
     );
 
