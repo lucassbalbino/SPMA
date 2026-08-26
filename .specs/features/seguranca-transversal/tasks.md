@@ -400,8 +400,10 @@ T8 → T16
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: POST sem token CSRF válido é rejeitado com 403, sessão permanece ativa
-- [ ] e2e: POST com CSRF válido remove `spma_sessao` e `spma_csrf` (ambos com `Max-Age=0`/`Expires` no passado)
+- [x] e2e: POST sem token CSRF válido é rejeitado com 403, sessão permanece ativa
+- [x] e2e: POST com CSRF válido remove `spma_sessao` e `spma_csrf` (ambos com `Max-Age=0`/`Expires` no passado)
+
+Nota: os 2 testes pré-existentes deste arquivo (que só enviam o cookie de sessão) agora falham com 403 - mesma regressão documentada em T13/design.md (Riscos), diferida para T18-T20 (Fase 4). `api/auth/logout` não é usado por nenhum outro spec e2e (verificado por busca), então esta mudança não tem efeito cruzado além deste arquivo.
 
 **Tests**: e2e
 **Gate**: full
