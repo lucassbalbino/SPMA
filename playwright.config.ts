@@ -2,6 +2,12 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  // e2e/helpers/http.test.ts (T19, seguranca-transversal) is a Vitest unit
+  // test for pure helpers, not a Playwright spec - it lives under
+  // e2e/helpers/ but must not be picked up by Playwright's default
+  // testMatch (which would try to import "vitest" as a Playwright test and
+  // fail on the CJS/ESM mismatch).
+  testIgnore: "**/helpers/**",
   globalSetup: "./e2e/global-setup.ts",
   // Specs share one real `spma_test` database with mutable state (login
   // attempt counters, created users, sessions) - serial execution avoids

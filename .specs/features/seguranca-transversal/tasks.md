@@ -560,8 +560,8 @@ T19 → T20
 - Skill: NONE
 
 **Done when**:
-- [ ] `npm run test:e2e` verde nos 6 arquivos (nenhuma quebra causada pela exigência de CSRF introduzida nas Phases 2-3)
-- [ ] Contagem total de testes e2e não diminui em relação ao HEAD anterior a esta feature (nenhuma exclusão silenciosa de teste)
+- [x] `npm run test:e2e` verde nos 6 arquivos (nenhuma quebra causada pela exigência de CSRF introduzida nas Phases 2-3)
+- [x] Contagem total de testes e2e não diminui em relação ao HEAD anterior a esta feature (nenhuma exclusão silenciosa de teste)
 
 **Tests**: e2e
 **Gate**: full

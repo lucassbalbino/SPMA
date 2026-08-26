@@ -1,21 +1,20 @@
 // e2e de POST /api/auth/primeiro-acesso (T20). Cobre CA-AU-02 e os erros
 // listados no task: sem sessão válida e senha fora da política mínima.
 //
-// Nota (seguranca-transversal, T13): a rota agora exige CSRF (REQ-SEC-15).
-// Os 3 testes originais abaixo enviam só o cookie de sessão e ficam
-// vermelhos até o helper e2e de CSRF (T19) e a atualização deste arquivo
-// (T20, Fase 4) - regressão documentada e aceita em design.md (Riscos).
-// Os 2 testes novos no fim do arquivo (CA-SEC-15/CA-SEC-17) já constroem o
-// cabeçalho CSRF manualmente, sem depender do helper que ainda não existe.
+// Nota (seguranca-transversal, T13/T20): a rota exige CSRF (REQ-SEC-15),
+// checado antes até da sessão (design.md). Chamadas autenticadas usam
+// `cabecalhosAutenticados` (T19); CA-SEC-15 é a exceção deliberada (prova a
+// rejeição por CSRF ausente/divergente, então não pode anexar um token
+// válido).
 import { expect, test } from "@playwright/test";
 import { deleteUsuarios, getUsuario, upsertUsuario } from "./helpers/db";
 import {
   cabecalhoCookie,
-  cookiesDaResposta,
+  cabecalhosAutenticados,
+  idCsrfDaResposta,
   idSessaoDaResposta,
   novoCliente,
 } from "./helpers/http";
-import type { APIResponse } from "@playwright/test";
 
 const NOVA_SENHA = "NovaSenha123";
 
@@ -46,12 +45,6 @@ async function abrirSessaoDePrimeiroAcesso(cpf: string): Promise<string> {
     throw new Error(`Login de 1º acesso não emitiu sessão para ${cpf}`);
   }
   return idSessao;
-}
-
-/** Valor do cookie de CSRF emitido pela resposta, ou null se não houver. */
-function idCsrfDaResposta(res: APIResponse): string | null {
-  const match = cookiesDaResposta(res).match(/spma_csrf=([^;\s]+)/);
-  return match ? match[1] : null;
 }
 
 /**
@@ -89,12 +82,14 @@ test.afterAll(() => {
 });
 
 test("CA-AU-02: define a senha, desativa primeiraVez e passa a autenticar com ela", async () => {
-  const idSessao = await abrirSessaoDePrimeiroAcesso(CPF_DEFINE_SENHA);
+  const { idSessao, idCsrf } = await abrirSessaoDePrimeiroAcessoComCsrf(
+    CPF_DEFINE_SENHA,
+  );
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/primeiro-acesso", {
     data: { senha: NOVA_SENHA, confirmacaoSenha: NOVA_SENHA },
-    headers: cabecalhoCookie(idSessao),
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(200);
@@ -125,16 +120,29 @@ test("CA-AU-02: define a senha, desativa primeiraVez e passa a autenticar com el
 
 test("sem sessão válida retorna 401 e não altera nenhum usuário", async () => {
   const antes = getUsuario(CPF_SEM_SESSAO);
+  // REQ-SEC-15: CSRF é checado antes da sessão, então mesmo este cenário de
+  // sessão ausente/inválida precisa de um par CSRF autoconsistente
+  // (cookie == header) para alcançar a checagem de sessão que este teste
+  // prova - double-submit não tem estado no servidor, então o valor não
+  // precisa vir de um login real.
+  const csrfArbitrario = "csrf-arbitrario-sem-sessao";
 
   const semCookie = await novoCliente();
   const resSemCookie = await semCookie.post("/api/auth/primeiro-acesso", {
     data: { senha: NOVA_SENHA, confirmacaoSenha: NOVA_SENHA },
+    headers: {
+      Cookie: `spma_csrf=${csrfArbitrario}`,
+      "x-csrf-token": csrfArbitrario,
+    },
   });
 
   const cookieInvalido = await novoCliente();
   const resCookieInvalido = await cookieInvalido.post("/api/auth/primeiro-acesso", {
     data: { senha: NOVA_SENHA, confirmacaoSenha: NOVA_SENHA },
-    headers: cabecalhoCookie("00000000-0000-4000-8000-000000000000"),
+    headers: cabecalhosAutenticados(
+      "00000000-0000-4000-8000-000000000000",
+      csrfArbitrario,
+    ),
   });
 
   expect(resSemCookie.status()).toBe(401);
@@ -150,12 +158,14 @@ test("sem sessão válida retorna 401 e não altera nenhum usuário", async () =
 });
 
 test("senha com menos de 8 caracteres é rejeitada e primeiraVez continua true", async () => {
-  const idSessao = await abrirSessaoDePrimeiroAcesso(CPF_SENHA_CURTA);
+  const { idSessao, idCsrf } = await abrirSessaoDePrimeiroAcessoComCsrf(
+    CPF_SENHA_CURTA,
+  );
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/primeiro-acesso", {
     data: { senha: "Curta1", confirmacaoSenha: "Curta1" },
-    headers: cabecalhoCookie(idSessao),
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(400);
@@ -206,10 +216,7 @@ test("CA-SEC-17: POST direto à API com senha diferente de confirmacaoSenha é r
     // payload que viola a regra condicional já existente no schema
     // (senha === confirmacaoSenha) - CA-SEC-17.
     data: { senha: NOVA_SENHA, confirmacaoSenha: "OutraSenhaTotalmente1" },
-    headers: {
-      Cookie: `spma_sessao=${idSessao}; spma_csrf=${idCsrf}`,
-      "x-csrf-token": idCsrf,
-    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(400);

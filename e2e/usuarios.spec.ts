@@ -1,11 +1,13 @@
 // e2e de POST /api/usuarios (T22). Cobre CA-AU-05, CA-AU-06, REQ-AU-08
 // (escopo resolvido no servidor) e o acesso sem sessão.
 //
-// Nota (seguranca-transversal, T15): a rota agora exige CSRF (REQ-SEC-15).
-// Os testes originais abaixo enviam só o cookie de sessão e ficam vermelhos
-// até o helper e2e de CSRF (T19) e a atualização deste arquivo (T20, Fase
-// 4) - regressão documentada e aceita em design.md (Riscos). Os 2 testes
-// novos no fim do arquivo já constroem o cabeçalho CSRF manualmente.
+// Nota (seguranca-transversal, T15/T20): a rota exige CSRF (REQ-SEC-15),
+// checado antes até da sessão/permissão (design.md). CA-AU-06 esperava 403
+// por permissão negada; com CSRF ausente ele "passava" pelo mesmo status
+// código por um motivo errado (interceptado pelo CSRF) - anexar
+// `cabecalhosAutenticados` faz a checagem voltar a ser exercitada pelo
+// motivo original (podeCriar). CA-SEC-15 é a exceção deliberada (prova a
+// rejeição por CSRF ausente), então não pode anexar um token válido.
 import { expect, test } from "@playwright/test";
 import {
   criarOfertante,
@@ -15,11 +17,11 @@ import {
 } from "./helpers/db";
 import {
   cabecalhoCookie,
-  cookiesDaResposta,
+  cabecalhosAutenticados,
+  idCsrfDaResposta,
   idSessaoDaResposta,
   novoCliente,
 } from "./helpers/http";
-import type { APIResponse } from "@playwright/test";
 
 const SENHA = "SenhaValida123";
 
@@ -58,12 +60,6 @@ async function sessaoDoGo(): Promise<string> {
   return id;
 }
 
-/** Valor do cookie de CSRF emitido pela resposta, ou null se não houver. */
-function idCsrfDaResposta(res: APIResponse): string | null {
-  const match = cookiesDaResposta(res).match(/spma_csrf=([^;\s]+)/);
-  return match ? match[1] : null;
-}
-
 /** Mesmo login de `sessaoDoGo`, mas também devolve o token de CSRF emitido. */
 async function sessaoDoGoComCsrf(): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
@@ -99,12 +95,12 @@ test.afterAll(() => {
 });
 
 test("CA-AU-05: GO autenticado cria AL e a autoria fica registrada", async () => {
-  const idSessao = await sessaoDoGo();
+  const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
   const cliente = await novoCliente();
 
   const res = await cliente.post("/api/usuarios", {
     data: { cpf: CPF_NOVO_AL, nome: "Aluno Novo", tipo: "AL" },
-    headers: cabecalhoCookie(idSessao),
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(201);
@@ -122,12 +118,12 @@ test("CA-AU-05: GO autenticado cria AL e a autoria fica registrada", async () =>
 });
 
 test("CA-AU-06: GO que forja a criação de um GT recebe 403 e nada é criado", async () => {
-  const idSessao = await sessaoDoGo();
+  const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
   const cliente = await novoCliente();
 
   const res = await cliente.post("/api/usuarios", {
     data: { cpf: CPF_FORJADO_GT, nome: "GT Forjado", tipo: "GT" },
-    headers: cabecalhoCookie(idSessao),
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(403);
@@ -137,7 +133,7 @@ test("CA-AU-06: GO que forja a criação de um GT recebe 403 e nada é criado", 
 });
 
 test("REQ-AU-08: GO criando GO/VO herda o próprio ofertante, ignorando o payload", async () => {
-  const idSessao = await sessaoDoGo();
+  const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
   const cliente = await novoCliente();
 
   const resGo = await cliente.post("/api/usuarios", {
@@ -148,7 +144,7 @@ test("REQ-AU-08: GO criando GO/VO herda o próprio ofertante, ignorando o payloa
       // Valor forjado: o servidor tem de ignorá-lo.
       cdOfertante: cdOfertanteAlheio,
     },
-    headers: cabecalhoCookie(idSessao),
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   const resVo = await cliente.post("/api/usuarios", {
@@ -158,7 +154,7 @@ test("REQ-AU-08: GO criando GO/VO herda o próprio ofertante, ignorando o payloa
       tipo: "VO",
       cdOfertante: cdOfertanteAlheio,
     },
-    headers: cabecalhoCookie(idSessao),
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(resGo.status()).toBe(201);
@@ -173,15 +169,29 @@ test("REQ-AU-08: GO criando GO/VO herda o próprio ofertante, ignorando o payloa
 });
 
 test("sem sessão válida retorna 401 e não cria usuário", async () => {
+  // REQ-SEC-15: CSRF é checado antes da sessão, então mesmo este cenário de
+  // sessão ausente/inválida precisa de um par CSRF autoconsistente
+  // (cookie == header) para alcançar a checagem de sessão que este teste
+  // prova - double-submit não tem estado no servidor, então o valor não
+  // precisa vir de um login real.
+  const csrfArbitrario = "csrf-arbitrario-sem-sessao";
+
   const semCookie = await novoCliente();
   const resSemCookie = await semCookie.post("/api/usuarios", {
     data: { cpf: CPF_SEM_SESSAO, nome: "Sem Sessão", tipo: "AL" },
+    headers: {
+      Cookie: `spma_csrf=${csrfArbitrario}`,
+      "x-csrf-token": csrfArbitrario,
+    },
   });
 
   const cookieInvalido = await novoCliente();
   const resCookieInvalido = await cookieInvalido.post("/api/usuarios", {
     data: { cpf: CPF_SEM_SESSAO, nome: "Sem Sessão", tipo: "AL" },
-    headers: cabecalhoCookie("00000000-0000-4000-8000-000000000000"),
+    headers: cabecalhosAutenticados(
+      "00000000-0000-4000-8000-000000000000",
+      csrfArbitrario,
+    ),
   });
 
   expect(resSemCookie.status()).toBe(401);
@@ -209,10 +219,7 @@ test("CA-SEC-15: POST sem token CSRF válido é rejeitado com 403, nenhum usuár
 
 test("REQ-SEC-11: POST com CPF já existente devolve erro genérico + idCorrelacao, nunca o erro cru do Prisma", async () => {
   const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
-  const headers = {
-    Cookie: `spma_sessao=${idSessao}; spma_csrf=${idCsrf}`,
-    "x-csrf-token": idCsrf,
-  };
+  const headers = cabecalhosAutenticados(idSessao, idCsrf);
 
   const clientePrimeiro = await novoCliente();
   const primeiro = await clientePrimeiro.post("/api/usuarios", {

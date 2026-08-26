@@ -1,31 +1,24 @@
 // e2e de POST /api/auth/logout (T21).
 //
-// Nota (seguranca-transversal, T14): a rota agora exige CSRF (REQ-SEC-15).
-// Os 2 testes originais abaixo enviam só o cookie de sessão e ficam
-// vermelhos até o helper e2e de CSRF (T19) e a atualização deste arquivo
-// (T20, Fase 4) - regressão documentada e aceita em design.md (Riscos). Os
-// 2 testes novos no fim do arquivo já constroem o cabeçalho CSRF
-// manualmente, sem depender do helper que ainda não existe.
+// Nota (seguranca-transversal, T14/T20): a rota exige CSRF (REQ-SEC-15),
+// checado antes até da sessão (design.md). Chamadas autenticadas usam
+// `cabecalhosAutenticados` (T19); CA-SEC-15 é a exceção deliberada (prova a
+// rejeição por CSRF ausente, então não pode anexar um token válido).
 import { expect, test } from "@playwright/test";
 import { deleteUsuarios, getSessao, getUsuario, upsertUsuario } from "./helpers/db";
 import {
   cabecalhoCookie,
+  cabecalhosAutenticados,
   cookiesDaResposta,
+  idCsrfDaResposta,
   idSessaoDaResposta,
   novoCliente,
 } from "./helpers/http";
-import type { APIResponse } from "@playwright/test";
 
 const SENHA = "SenhaValida123";
 const CPF_LOGOUT = "20070080097";
 const CPF_LOGOUT_CSRF = "20090040007";
 const CPFS = [CPF_LOGOUT, CPF_LOGOUT_CSRF];
-
-/** Valor do cookie de CSRF emitido pela resposta, ou null se não houver. */
-function idCsrfDaResposta(res: APIResponse): string | null {
-  const match = cookiesDaResposta(res).match(/spma_csrf=([^;\s]+)/);
-  return match ? match[1] : null;
-}
 
 test.beforeAll(() => {
   deleteUsuarios(CPFS);
@@ -43,11 +36,13 @@ test("após o logout o cookie anterior não autentica mais uma rota protegida", 
     data: { cpf: CPF_LOGOUT, senha: SENHA },
   });
   const idSessao = idSessaoDaResposta(login);
+  const idCsrf = idCsrfDaResposta(login);
   expect(idSessao).not.toBeNull();
+  expect(idCsrf).not.toBeNull();
 
   const clienteLogout = await novoCliente();
   const logout = await clienteLogout.post("/api/auth/logout", {
-    headers: cabecalhoCookie(idSessao!),
+    headers: cabecalhosAutenticados(idSessao!, idCsrf!),
   });
 
   expect(logout.status()).toBe(200);
@@ -60,11 +55,13 @@ test("após o logout o cookie anterior não autentica mais uma rota protegida", 
 
   const senhaHashAntes = getUsuario(CPF_LOGOUT)?.senhaHash;
 
-  // O mesmo cookie, agora, não autentica uma rota protegida de verdade.
+  // O mesmo cookie de sessão, agora, não autentica uma rota protegida de
+  // verdade - o par CSRF em si continua válido (double-submit não depende
+  // da sessão), só a sessão que caiu.
   const clienteProtegido = await novoCliente();
   const protegida = await clienteProtegido.post("/api/auth/primeiro-acesso", {
     data: { senha: "OutraSenha123", confirmacaoSenha: "OutraSenha123" },
-    headers: cabecalhoCookie(idSessao!),
+    headers: cabecalhosAutenticados(idSessao!, idCsrf!),
   });
 
   expect(protegida.status()).toBe(401);
@@ -77,12 +74,27 @@ test("após o logout o cookie anterior não autentica mais uma rota protegida", 
 });
 
 test("logout sem sessão ativa é tratado com 401, sem erro 500", async () => {
+  // REQ-SEC-15: CSRF é checado antes da sessão, então mesmo este cenário de
+  // sessão ausente/inválida precisa de um par CSRF autoconsistente
+  // (cookie == header) para alcançar a checagem de sessão que este teste
+  // prova - double-submit não tem estado no servidor, então o valor não
+  // precisa vir de um login real.
+  const csrfArbitrario = "csrf-arbitrario-sem-sessao";
+
   const semCookie = await novoCliente();
-  const resSemCookie = await semCookie.post("/api/auth/logout");
+  const resSemCookie = await semCookie.post("/api/auth/logout", {
+    headers: {
+      Cookie: `spma_csrf=${csrfArbitrario}`,
+      "x-csrf-token": csrfArbitrario,
+    },
+  });
 
   const cookieInvalido = await novoCliente();
   const resCookieInvalido = await cookieInvalido.post("/api/auth/logout", {
-    headers: cabecalhoCookie("00000000-0000-4000-8000-000000000000"),
+    headers: cabecalhosAutenticados(
+      "00000000-0000-4000-8000-000000000000",
+      csrfArbitrario,
+    ),
   });
 
   expect(resSemCookie.status()).toBe(401);
@@ -127,10 +139,7 @@ test("REQ-SEC-15: logout com CSRF válido remove spma_sessao e spma_csrf (ambos 
 
   const clienteLogout = await novoCliente();
   const res = await clienteLogout.post("/api/auth/logout", {
-    headers: {
-      Cookie: `spma_sessao=${idSessao}; spma_csrf=${idCsrf}`,
-      "x-csrf-token": idCsrf!,
-    },
+    headers: cabecalhosAutenticados(idSessao!, idCsrf!),
   });
 
   expect(res.status()).toBe(200);

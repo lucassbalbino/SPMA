@@ -1,12 +1,14 @@
 // e2e de POST /api/ofertantes (T23) - auto-cadastro do Ofertante pelo GO
 // sem vínculo (REQ-AU-09).
 //
-// Nota (seguranca-transversal, T16): a rota agora exige CSRF (REQ-SEC-15).
-// Os testes originais abaixo enviam só o cookie de sessão e ficam vermelhos
-// até o helper e2e de CSRF (T19) e a atualização deste arquivo (T20, Fase
-// 4) - regressão documentada e aceita em design.md (Riscos). O teste novo
-// no fim do arquivo já é escrito sabendo que não precisa de CSRF válido
-// (é o próprio caso que prova a exigência).
+// Nota (seguranca-transversal, T16/T20): a rota exige CSRF (REQ-SEC-15),
+// checado antes até da sessão/permissão (design.md). "perfil diferente de
+// GO" esperava 403 por permissão negada; com CSRF ausente ele "passava"
+// pelo mesmo código de status por um motivo errado (interceptado pelo
+// CSRF) - anexar `cabecalhosAutenticados` faz a checagem voltar a ser
+// exercitada pelo motivo original (`usuario.tipo !== "GO"`). CA-SEC-15 é a
+// exceção deliberada (prova a rejeição por CSRF ausente), então não pode
+// anexar um token válido.
 import { expect, test } from "@playwright/test";
 import {
   criarOfertante,
@@ -16,7 +18,13 @@ import {
   listarOfertantesPorNome,
   upsertUsuario,
 } from "./helpers/db";
-import { cabecalhoCookie, idSessaoDaResposta, novoCliente } from "./helpers/http";
+import {
+  cabecalhoCookie,
+  cabecalhosAutenticados,
+  idCsrfDaResposta,
+  idSessaoDaResposta,
+  novoCliente,
+} from "./helpers/http";
 
 const SENHA = "SenhaValida123";
 
@@ -47,6 +55,22 @@ async function logar(cpf: string): Promise<string> {
 
   if (!id) throw new Error(`Login não emitiu sessão para ${cpf}`);
   return id;
+}
+
+/** Mesmo login de `logar`, mas também devolve o token de CSRF emitido. */
+async function logarComCsrf(
+  cpf: string,
+): Promise<{ idSessao: string; idCsrf: string }> {
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+  const idSessao = idSessaoDaResposta(res);
+  const idCsrf = idCsrfDaResposta(res);
+  await cliente.dispose();
+
+  if (!idSessao || !idCsrf) {
+    throw new Error(`Login não emitiu sessão/CSRF para ${cpf}`);
+  }
+  return { idSessao, idCsrf };
 }
 
 test.beforeAll(() => {
@@ -90,13 +114,13 @@ test.afterAll(() => {
 });
 
 test("GO sem ofertante cadastra o seu e passa a ter cdOfertante preenchido", async () => {
-  const idSessao = await logar(CPF_GO_SEM_OFERTANTE);
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO_SEM_OFERTANTE);
   expect(getUsuario(CPF_GO_SEM_OFERTANTE)?.cdOfertante).toBeNull();
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/ofertantes", {
     data: { nome: NOME_OFERTANTE_NOVO, uf: "SP", municipio: "Santos" },
-    headers: cabecalhoCookie(idSessao),
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(201);
@@ -110,12 +134,12 @@ test("GO sem ofertante cadastra o seu e passa a ter cdOfertante preenchido", asy
 });
 
 test("GO que já tem ofertante recebe 409 e o vínculo não muda", async () => {
-  const idSessao = await logar(CPF_GO_COM_OFERTANTE);
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO_COM_OFERTANTE);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/ofertantes", {
     data: { nome: NOME_OFERTANTE_DUPLICADO, uf: "BA" },
-    headers: cabecalhoCookie(idSessao),
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(409);
@@ -126,12 +150,12 @@ test("GO que já tem ofertante recebe 409 e o vínculo não muda", async () => {
 });
 
 test("perfil diferente de GO recebe 403 e nada é criado", async () => {
-  const idSessao = await logar(CPF_ALUNO);
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_ALUNO);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/ofertantes", {
     data: { nome: NOME_OFERTANTE_DE_ALUNO, uf: "PR" },
-    headers: cabecalhoCookie(idSessao),
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(403);
@@ -142,9 +166,20 @@ test("perfil diferente de GO recebe 403 e nada é criado", async () => {
 });
 
 test("sem sessão válida retorna 401 e nada é criado", async () => {
+  // REQ-SEC-15: CSRF é checado antes da sessão, então mesmo este cenário de
+  // sessão ausente precisa de um par CSRF autoconsistente (cookie == header)
+  // para alcançar a checagem de sessão que este teste prova - double-submit
+  // não tem estado no servidor, então o valor não precisa vir de um login
+  // real.
+  const csrfArbitrario = "csrf-arbitrario-sem-sessao";
+
   const cliente = await novoCliente();
   const res = await cliente.post("/api/ofertantes", {
     data: { nome: "Ofertante Sem Sessao", uf: "RS" },
+    headers: {
+      Cookie: `spma_csrf=${csrfArbitrario}`,
+      "x-csrf-token": csrfArbitrario,
+    },
   });
 
   expect(res.status()).toBe(401);
