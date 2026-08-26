@@ -1,8 +1,14 @@
 // POST /api/usuarios - criação em cascata (REQ-AU-05, REQ-AU-06, REQ-AU-07,
-// REQ-AU-08, REQ-SEC-15, REQ-SEC-11).
+// REQ-AU-08, REQ-SEC-15, REQ-SEC-11, REQ-OV-04).
 //
 // A permissão é reavaliada aqui, no servidor, a cada request (AD-033):
 // o que a interface mostra ou deixa de mostrar não vale como autorização.
+//
+// SPEC_DEVIATION: REQ-OV-04 também cita "atualiza" um usuário com
+// `cdOfertante`, mas não existe rota de edição de `Usuario` na base hoje -
+// nenhuma feature construiu isso ainda. A checagem de existência do
+// Ofertante abaixo cobre só o caminho de criação, que é o único que existe.
+// Se uma rota de edição for criada no futuro, ela precisa da mesma checagem.
 //
 // Não usa `requireSession()` (que redireciona): rota de API responde 401 -
 // ver comentário em lib/auth/guards.ts.
@@ -50,6 +56,17 @@ async function criarUsuario(request: Request) {
   // O escopo do novo usuário é resolvido no servidor: quando o criador é GO,
   // o `cdOfertante` que veio no payload é ignorado (REQ-AU-08).
   const cdOfertante = resolverOfertante(criador, dados.tipo, dados.cdOfertante);
+
+  // REQ-OV-04: erro claro quando o Ofertante informado não existe, em vez de
+  // deixar a constraint de FK do MySQL virar um 500 genérico via
+  // `comTratamentoDeErro`.
+  if (cdOfertante !== null) {
+    const ofertante = await prisma.ofertante.findUnique({ where: { cdOfertante } });
+
+    if (!ofertante) {
+      return NextResponse.json({ erro: "Ofertante informado não existe" }, { status: 400 });
+    }
+  }
 
   // CPF duplicado (violação de unicidade, `cpf` é @id) lança uma exceção do
   // Prisma não tratada aqui de propósito - `comTratamentoDeErro` (REQ-SEC-11)

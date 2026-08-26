@@ -33,6 +33,9 @@ const CPF_FORJADO_GT = "30040050009";
 const CPF_SEM_SESSAO = "30050060007";
 const CPF_SEM_CSRF = "30091002052";
 const CPF_DUPLICADO = "30092003079";
+const CPF_AM_CRIADOR = "70105006068";
+const CPF_NOVO_GO_OFERTANTE_VALIDO = "70206007000";
+const CPF_NOVO_GO_OFERTANTE_INVALIDO = "70307008053";
 
 const CPFS = [
   CPF_GO_CRIADOR,
@@ -43,6 +46,9 @@ const CPFS = [
   CPF_SEM_SESSAO,
   CPF_SEM_CSRF,
   CPF_DUPLICADO,
+  CPF_AM_CRIADOR,
+  CPF_NOVO_GO_OFERTANTE_VALIDO,
+  CPF_NOVO_GO_OFERTANTE_INVALIDO,
 ];
 
 let cdOfertanteDoGo: number;
@@ -76,6 +82,22 @@ async function sessaoDoGoComCsrf(): Promise<{ idSessao: string; idCsrf: string }
   return { idSessao, idCsrf };
 }
 
+/** Login do AM criador com CSRF, usado nos testes de REQ-OV-04. */
+async function sessaoDoAmComCsrf(): Promise<{ idSessao: string; idCsrf: string }> {
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/auth/login", {
+    data: { cpf: CPF_AM_CRIADOR, senha: SENHA },
+  });
+  const idSessao = idSessaoDaResposta(res);
+  const idCsrf = idCsrfDaResposta(res);
+  await cliente.dispose();
+
+  if (!idSessao || !idCsrf) {
+    throw new Error("Login do AM criador não emitiu sessão/CSRF");
+  }
+  return { idSessao, idCsrf };
+}
+
 test.beforeAll(() => {
   deleteUsuarios(CPFS);
   cdOfertanteDoGo = criarOfertante({ nome: "Ofertante do GO", uf: "SP" }).cdOfertante;
@@ -88,6 +110,7 @@ test.beforeAll(() => {
     primeiraVez: false,
     cdOfertante: cdOfertanteDoGo,
   });
+  upsertUsuario({ cpf: CPF_AM_CRIADOR, tipo: "AM", senha: SENHA, primeiraVez: false });
 });
 
 test.afterAll(() => {
@@ -251,4 +274,46 @@ test("REQ-SEC-11: POST com CPF já existente devolve erro genérico + idCorrelac
 
   await clientePrimeiro.dispose();
   await clienteSegundo.dispose();
+});
+
+test("REQ-OV-04: AM criando GO com cdOfertante existente funciona normalmente", async () => {
+  const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/usuarios", {
+    data: {
+      cpf: CPF_NOVO_GO_OFERTANTE_VALIDO,
+      nome: "Novo GO Ofertante Válido",
+      tipo: "GO",
+      cdOfertante: cdOfertanteAlheio,
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(201);
+  expect(getUsuario(CPF_NOVO_GO_OFERTANTE_VALIDO)?.cdOfertante).toBe(cdOfertanteAlheio);
+
+  await cliente.dispose();
+});
+
+test("CA-OV-05: AM criando GO com cdOfertante inexistente recebe 400 claro, não um 500 genérico", async () => {
+  const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/usuarios", {
+    data: {
+      cpf: CPF_NOVO_GO_OFERTANTE_INVALIDO,
+      nome: "Novo GO Ofertante Inválido",
+      tipo: "GO",
+      cdOfertante: 999999999,
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  const corpo = await res.json();
+  expect(corpo.erro).toBe("Ofertante informado não existe");
+  expect(getUsuario(CPF_NOVO_GO_OFERTANTE_INVALIDO)).toBeNull();
+
+  await cliente.dispose();
 });

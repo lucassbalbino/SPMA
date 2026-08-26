@@ -256,9 +256,9 @@ T3 → T7
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-OV-05: AM criando um GO com `cdOfertante` inexistente recebe 400 com mensagem clara, não um 500 genérico
-- [ ] e2e: criação de GO/VO com `cdOfertante` existente continua funcionando (nenhum teste de `auth-e-usuarios` para esta rota regride)
-- [ ] SPEC_DEVIATION documentado no código: REQ-OV-04 também cita "atualiza", mas não existe rota de edição de `Usuario` na base hoje - a checagem cobre só o caminho de criação, que é o único existente
+- [x] e2e CA-OV-05: AM criando um GO com `cdOfertante` inexistente recebe 400 com mensagem clara, não um 500 genérico
+- [x] e2e: criação de GO/VO com `cdOfertante` existente continua funcionando (nenhum teste de `auth-e-usuarios` para esta rota regride)
+- [x] SPEC_DEVIATION documentado no código: REQ-OV-04 também cita "atualiza", mas não existe rota de edição de `Usuario` na base hoje - a checagem cobre só o caminho de criação, que é o único existente
 
 **Tests**: e2e
 **Gate**: full
