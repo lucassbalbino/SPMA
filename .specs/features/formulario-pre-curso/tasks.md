@@ -145,12 +145,12 @@ T4 → T10
 - Skill: NONE
 
 **Done when**:
-- [ ] os 56 campos completos e nenhum condicional disparado → `completo=true`, `pendentes=[]`
-- [ ] `publicoInstituicaoExecutora="Empresa contratada"` sem `publicoInstituicaoExecutoraNome` → `pendentes` inclui a chave, `completo=false` (CA-04 do documento fonte)
-- [ ] `infraEspecificaNecessidade="Sim"` sem as 3 perguntas condicionais → as 3 chaves aparecem em `pendentes`
-- [ ] `infraEspecificaNecessidade="Não"` → as 3 perguntas condicionais NÃO aparecem em `pendentes` mesmo vazias (gate não se aplica)
-- [ ] cada um dos 5 campos com opção "Outro/Outra" selecionada sem o texto condicional correspondente preenchido → a chave de texto aparece em `pendentes` (5 casos, um por campo)
-- [ ] um item de infraestrutura com valor `0` é tratado como preenchido, não como pendência (edge case da spec)
+- [x] os 56 campos completos e nenhum condicional disparado → `completo=true`, `pendentes=[]`
+- [x] `publicoInstituicaoExecutora="Empresa contratada"` sem `publicoInstituicaoExecutoraNome` → `pendentes` inclui a chave, `completo=false` (CA-04 do documento fonte)
+- [x] `infraEspecificaNecessidade="Sim"` sem as 3 perguntas condicionais → as 3 chaves aparecem em `pendentes`
+- [x] `infraEspecificaNecessidade="Não"` → as 3 perguntas condicionais NÃO aparecem em `pendentes` mesmo vazias (gate não se aplica)
+- [x] cada um dos 5 campos com opção "Outro/Outra" selecionada sem o texto condicional correspondente preenchido → a chave de texto aparece em `pendentes` (5 casos, um por campo)
+- [x] um item de infraestrutura com valor `0` é tratado como preenchido, não como pendência (edge case da spec)
 
 **Tests**: unit
 **Gate**: quick
