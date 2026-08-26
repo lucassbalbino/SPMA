@@ -68,6 +68,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: E3 - .env.test:3 (tooling)
 - last seen: 2026-08-25T20:00:34Z
 
+### L-010 - A timing-attack test must calibrate its tolerance against the operation it protects (measure the crypto cost in-test), not a wide fixed ratio: under a dev server, framework overhead dwarfs the signal and a band like 0.2-5 passes with and without the normalization.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e/timing-tests` · harmful: 0
+- features: seguranca-transversal
+- evidence: e2e/login.spec.ts:349-350 (mutant M5) (e2e/timing-tests)
+- last seen: 2026-08-26T18:22:38Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

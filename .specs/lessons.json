@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 10,
+  "next_id": 11,
   "lessons": [
     {
       "id": "L-001",
@@ -166,6 +166,24 @@
       ],
       "created": "2026-08-25T20:00:34Z",
       "last_seen": "2026-08-25T20:00:34Z"
+    },
+    {
+      "id": "L-010",
+      "key": "surviving_mutant::a timing attack test must calibrate its tolerance against the operation it protects measure the crypto cost in test not a wide fixed ratio under a dev server framework overhead dwarfs the signal and a band like 0 2 5 passes with and without the normalization",
+      "text": "A timing-attack test must calibrate its tolerance against the operation it protects (measure the crypto cost in-test), not a wide fixed ratio: under a dev server, framework overhead dwarfs the signal and a band like 0.2-5 passes with and without the normalization.",
+      "signal": "surviving_mutant",
+      "scope": "e2e/timing-tests",
+      "status": "candidate",
+      "features": [
+        "seguranca-transversal"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "e2e/login.spec.ts:349-350 (mutant M5) (e2e/timing-tests)"
+      ],
+      "created": "2026-08-26T18:22:38Z",
+      "last_seen": "2026-08-26T18:22:38Z"
     }
   ]
 }
