@@ -615,7 +615,7 @@ T13 → T22
 - Skill: NONE
 
 **Done when**:
-- [ ] Os três grupos de asserção (headers, URLs, console/rede) passam para o fluxo completo login→primeiro-acesso
+- [x] Os três grupos de asserção (headers, URLs, console/rede) passam para o fluxo completo login→primeiro-acesso
 
 **Tests**: e2e
 **Gate**: full
