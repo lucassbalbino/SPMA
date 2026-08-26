@@ -13,6 +13,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { TIPOS_PERMITIDOS } from "@/lib/auth/cascata";
 import { usuarioSchema } from "@/lib/validation/schemas/usuario.schema";
+import { headerCSRF } from "@/lib/security/csrf-client";
 import type { TipoUsuario } from "@/generated/prisma/enums";
 
 export function NovoUsuarioForm({ tipoCriador }: { tipoCriador: TipoUsuario }) {
@@ -45,7 +46,7 @@ export function NovoUsuarioForm({ tipoCriador }: { tipoCriador: TipoUsuario }) {
     try {
       const res = await fetch("/api/usuarios", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...headerCSRF() },
         body: JSON.stringify(entrada.data),
       });
       const corpo = await res.json();

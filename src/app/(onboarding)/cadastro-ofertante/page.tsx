@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ofertanteSchema } from "@/lib/validation/schemas/ofertante.schema";
+import { headerCSRF } from "@/lib/security/csrf-client";
 
 export default function CadastroOfertantePage() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function CadastroOfertantePage() {
     try {
       const res = await fetch("/api/ofertantes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...headerCSRF() },
         body: JSON.stringify(entrada.data),
       });
       const corpo = await res.json();

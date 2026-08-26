@@ -515,7 +515,7 @@ T19 → T20
 - Skill: NONE
 
 **Done when**:
-- [ ] Os 3 formulários continuam funcionando ponta a ponta pela UI (fluxo de primeiro acesso, cadastro de ofertante e criação de usuário) - cobertos pelos e2e `*-page.spec.ts` já existentes, que devem continuar verdes
+- [x] Os 3 formulários continuam funcionando ponta a ponta pela UI (fluxo de primeiro acesso, cadastro de ofertante e criação de usuário) - cobertos pelos e2e `*-page.spec.ts` já existentes, que devem continuar verdes
 
 **Tests**: e2e
 **Gate**: full

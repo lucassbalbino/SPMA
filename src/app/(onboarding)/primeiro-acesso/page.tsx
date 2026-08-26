@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { primeiroAcessoSchema } from "@/lib/validation/schemas/primeiro-acesso.schema";
+import { headerCSRF } from "@/lib/security/csrf-client";
 
 export default function PrimeiroAcessoPage() {
   const router = useRouter();
@@ -35,7 +36,7 @@ export default function PrimeiroAcessoPage() {
     try {
       const res = await fetch("/api/auth/primeiro-acesso", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...headerCSRF() },
         body: JSON.stringify(entrada.data),
       });
       const corpo = await res.json();
