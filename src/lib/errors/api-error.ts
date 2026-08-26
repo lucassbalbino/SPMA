@@ -20,7 +20,11 @@ function mascararCPFsNoTexto(texto: string): string {
  * tratada, loga no servidor com CPF mascarado e devolve ao cliente apenas o
  * erro genérico + id de correlação - nunca a mensagem/stack original.
  */
+// `any[]` é necessário aqui: a assinatura de um Route Handler varia (com ou
+// sem `{ params }`), e só `any[]` deixa `H` ser inferido a partir de qualquer
+// uma delas sem quebrar a variância de parâmetros de função do TypeScript.
 export function comTratamentoDeErro<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   H extends (...args: any[]) => Promise<Response>,
 >(handler: H): H {
   return (async (...args: Parameters<H>) => {
