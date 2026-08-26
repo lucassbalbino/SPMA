@@ -74,6 +74,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: e2e/login.spec.ts:349-350 (mutant M5) (e2e/timing-tests)
 - last seen: 2026-08-26T18:22:38Z
 
+### L-011 - To prove a timing-normalization side effect, assert which operation ran with which argument (e.g. spy the crypto call and check the value passed), not a wall-clock ratio: under a dev server, framework overhead can dwarf the crypto signal so no tolerance band discriminates the mutation, while a call-based assertion is immune to that noise. Supersedes L-010, which prescribed calibrating the wall-clock band instead - that approach was tried and failed the same mutation.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e/timing-tests` · harmful: 0
+- features: seguranca-transversal
+- evidence: src/app/api/auth/login/route.integration.test.ts (mutant M5, iteration 2) (e2e/timing-tests)
+- last seen: 2026-08-26T18:51:01Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 11,
+  "next_id": 12,
   "lessons": [
     {
       "id": "L-001",
@@ -184,6 +184,24 @@
       ],
       "created": "2026-08-26T18:22:38Z",
       "last_seen": "2026-08-26T18:22:38Z"
+    },
+    {
+      "id": "L-011",
+      "key": "surviving_mutant::to prove a timing normalization side effect assert which operation ran with which argument e g spy the crypto call and check the value passed not a wall clock ratio under a dev server framework overhead can dwarf the crypto signal so no tolerance band discriminates the mutation while a call based assertion is immune to that noise supersedes l 010 which prescribed calibrating the wall clock band instead that approach was tried and failed the same mutation",
+      "text": "To prove a timing-normalization side effect, assert which operation ran with which argument (e.g. spy the crypto call and check the value passed), not a wall-clock ratio: under a dev server, framework overhead can dwarf the crypto signal so no tolerance band discriminates the mutation, while a call-based assertion is immune to that noise. Supersedes L-010, which prescribed calibrating the wall-clock band instead - that approach was tried and failed the same mutation.",
+      "signal": "surviving_mutant",
+      "scope": "e2e/timing-tests",
+      "status": "candidate",
+      "features": [
+        "seguranca-transversal"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/app/api/auth/login/route.integration.test.ts (mutant M5, iteration 2) (e2e/timing-tests)"
+      ],
+      "created": "2026-08-26T18:51:01Z",
+      "last_seen": "2026-08-26T18:51:01Z"
     }
   ]
 }
