@@ -109,6 +109,14 @@ test("CA-AU-01: CPF e senha corretos autenticam e emitem cookie de sessão prote
   expect(cookies).toMatch(/HttpOnly/i);
   expect(cookies).toMatch(/Secure/i);
   expect(cookies).toMatch(/SameSite=Lax/i);
+  // REQ-SEC-09: expiração por inatividade é sliding window no banco
+  // (expiraEm), não um prazo fixo no cookie - o cookie de sessão vira
+  // cookie de sessão do navegador (sem Expires/Max-Age).
+  const cookieSessao = cookies
+    .split("\n")
+    .find((linha) => linha.startsWith("spma_sessao="));
+  expect(cookieSessao).not.toMatch(/Expires=/i);
+  expect(cookieSessao).not.toMatch(/Max-Age=/i);
 
   // A sessão emitida existe de fato no banco, ligada a este CPF.
   const idSessao = idSessaoDaResposta(res);

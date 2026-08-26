@@ -490,10 +490,10 @@ T19 → T20
 - Skill: NONE
 
 **Done when**:
-- [ ] integration: `buscarSessaoValida` chamado duas vezes com intervalo empurra `expiraEm` para frente na segunda chamada
-- [ ] integration: sessão com `expiraEm` no passado continua retornando `null` (comportamento existente preservado)
-- [ ] Cookie emitido por `setCookieSessao` não carrega mais o atributo `Expires`/`Max-Age` (checagem via `Set-Cookie` em teste e2e existente ou novo)
-- [ ] Testes existentes de `session.integration.test.ts` continuam verdes
+- [x] integration: `buscarSessaoValida` chamado duas vezes com intervalo empurra `expiraEm` para frente na segunda chamada
+- [x] integration: sessão com `expiraEm` no passado continua retornando `null` (comportamento existente preservado)
+- [x] Cookie emitido por `setCookieSessao` não carrega mais o atributo `Expires`/`Max-Age` (checagem via `Set-Cookie` em teste e2e existente ou novo)
+- [x] Testes existentes de `session.integration.test.ts` continuam verdes
 
 **Tests**: integration
 **Gate**: full

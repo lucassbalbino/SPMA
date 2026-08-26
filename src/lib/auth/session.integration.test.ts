@@ -79,6 +79,38 @@ describe("session (integration)", () => {
     expect(encontrada).toBeNull();
   });
 
+  it("buscarSessaoValida estende expiraEm a cada leitura vigente (sliding window - REQ-SEC-09)", async () => {
+    const sessao = await criarSessao(CPF_SESSAO);
+    const primeiraLeitura = await buscarSessaoValida(sessao.id);
+    expect(primeiraLeitura).not.toBeNull();
+
+    // Recua expiraEm no banco para simular o tempo passando entre leituras,
+    // sem depender de um sleep real no teste.
+    await prisma.sessao.update({
+      where: { id: sessao.id },
+      data: { expiraEm: new Date(Date.now() + 1000) },
+    });
+
+    const antesSegundaLeitura = Date.now();
+    const segundaLeitura = await buscarSessaoValida(sessao.id);
+    const depoisSegundaLeitura = Date.now();
+
+    expect(segundaLeitura).not.toBeNull();
+    expect(segundaLeitura!.sessao.expiraEm.getTime()).toBeGreaterThanOrEqual(
+      antesSegundaLeitura + SESSAO_TTL_MS,
+    );
+    expect(segundaLeitura!.sessao.expiraEm.getTime()).toBeLessThanOrEqual(
+      depoisSegundaLeitura + SESSAO_TTL_MS,
+    );
+
+    const persistida = await prisma.sessao.findUniqueOrThrow({
+      where: { id: sessao.id },
+    });
+    expect(persistida.expiraEm.getTime()).toBe(
+      segundaLeitura!.sessao.expiraEm.getTime(),
+    );
+  });
+
   it("buscarSessaoValida retorna null para sessão com expiraEm no passado", async () => {
     const expirada = await prisma.sessao.create({
       data: {

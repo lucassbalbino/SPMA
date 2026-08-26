@@ -48,7 +48,12 @@ export async function rotacionarSessao(
   return criarSessao(cpf);
 }
 
-/** Sessão válida = existe no banco e ainda não expirou. */
+/**
+ * Sessão válida = existe no banco e ainda não expirou. Toda leitura vigente
+ * estende `expiraEm` para `now + SESSAO_TTL_MS` (sliding window de
+ * inatividade - REQ-SEC-09): a janela é renovada a cada requisição
+ * autenticada, não fixa desde o login.
+ */
 export async function buscarSessaoValida(
   id: string,
 ): Promise<SessaoComUsuario | null> {
@@ -61,7 +66,12 @@ export async function buscarSessaoValida(
     return null;
   }
 
-  const { usuario, ...sessao } = registro;
+  const { usuario } = registro;
+  const sessao = await prisma.sessao.update({
+    where: { id },
+    data: { expiraEm: new Date(Date.now() + SESSAO_TTL_MS) },
+  });
+
   return { usuario, sessao };
 }
 
@@ -75,15 +85,23 @@ export async function obterSessao(): Promise<SessaoComUsuario | null> {
 // Reason: no Next.js 16 `cookies()` é assíncrono (ver
 // node_modules/next/dist/docs/01-app/03-api-reference/04-functions/cookies.md),
 // então o helper precisa ser async. Atributos do cookie inalterados.
+//
+// `expiraEm` não é mais usado para fixar `expires` no cookie (REQ-SEC-09):
+// vira cookie de sessão do navegador (some ao fechar o navegador, sem prazo
+// fixo), porque Server Components não conseguem reemitir `Set-Cookie` a cada
+// leitura para fazer o cookie "deslizar" junto com o sliding window. A
+// autoridade de expiração passa a ser inteiramente `Sessao.expiraEm` no
+// banco (ver `buscarSessaoValida`). Parâmetro mantido para não alterar a
+// assinatura consumida por `login/route.ts`.
 export async function setCookieSessao(
   id: string,
   expiraEm: Date,
 ): Promise<void> {
+  void expiraEm;
   (await cookies()).set(COOKIE_SESSAO, id, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
     path: "/",
-    expires: expiraEm,
   });
 }
