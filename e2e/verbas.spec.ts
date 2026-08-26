@@ -90,7 +90,7 @@ test("GO não pode criar Verba (só a consome)", async () => {
   await cliente.dispose();
 });
 
-test("CA-OV-09: criação de Verba com Ofertante inexistente é rejeitada com 400", async () => {
+test("CA-OV-09: criação de Verba com Ofertante inexistente é rejeitada com 400 claro", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CPF_GT);
 
   const cliente = await novoCliente();
@@ -100,6 +100,7 @@ test("CA-OV-09: criação de Verba com Ofertante inexistente é rejeitada com 40
   });
 
   expect(res.status()).toBe(400);
+  expect((await res.json()).erro).toBe("Ofertante informado não existe");
 
   await cliente.dispose();
 });

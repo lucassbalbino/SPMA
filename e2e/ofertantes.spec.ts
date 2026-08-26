@@ -260,12 +260,27 @@ test("CA-OV-01: GT pré-cadastra um Ofertante sem se vincular a ele", async () =
   await cliente.dispose();
 });
 
-test("CA-OV-02: pré-cadastro administrativo sem nome é rejeitado com 400", async () => {
+test("CA-OV-02: pré-cadastro administrativo com nome vazio é rejeitado com 400 indicando o campo", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CPF_AM);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/ofertantes", {
-    data: { uf: "MG" },
+    data: { nome: "", uf: "MG" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  expect((await res.json()).erro).toBe("Nome é obrigatório");
+
+  await cliente.dispose();
+});
+
+test("CA-OV-02: pré-cadastro administrativo sem UF é rejeitado com 400", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AM);
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/ofertantes", {
+    data: { nome: "Ofertante Sem Uf" },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 

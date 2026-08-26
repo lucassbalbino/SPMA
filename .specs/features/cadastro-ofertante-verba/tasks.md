@@ -89,6 +89,7 @@ Phases são ordenadas e rodam sequencialmente. **8 tarefas no total** → cabe n
 - [x] Verba sem nenhum curso vinculado: `saldoDisponivel === valorTotal` (CA-OV-10)
 - [x] Verba com um curso de valor alocado X: `saldoDisponivel === valorTotal - X` (CA-OV-11)
 - [x] `validarNovoValorTotal` retorna `true` quando o novo valor iguala o já alocado (permite igualdade, AD-016) e `false` quando é menor
+- [x] **Fix pós-Verifier (iteração 1)**: `validarAlocacao(cdVerba, valorProposto)` estava faltando - REQ-OV-12/CA-OV-12/CA-OV-13 tratam da alocação a um CURSO (comparação contra o saldo disponível ATUAL), distinto de `validarNovoValorTotal` (que trata da edição do valor TOTAL da verba, CA-OV-14). Adicionado em `src/lib/verba/saldo.ts`, testado em `saldo.integration.test.ts` (igualdade aceita/AD-016 e valor acima do saldo rejeitado, com `saldoDisponivel` retornado). Achado do Verifier, `validation.md` iteração 1.
 
 **Tests**: integration
 **Gate**: full

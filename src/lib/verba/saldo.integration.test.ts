@@ -4,7 +4,7 @@
 // exercitar a agregação.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/prisma";
-import { calcularSaldoVerba, validarNovoValorTotal } from "./saldo";
+import { calcularSaldoVerba, validarAlocacao, validarNovoValorTotal } from "./saldo";
 
 const CPF_GO_SALDO = "91092093010";
 
@@ -82,5 +82,19 @@ describe("saldo da verba (integration)", () => {
     const valido = await validarNovoValorTotal(cdVerbaComCurso, 3999.99);
 
     expect(valido).toBe(false);
+  });
+
+  it("CA-OV-12: validarAlocacao aceita uma alocação que iguala o saldo disponível (AD-016)", async () => {
+    const resultado = await validarAlocacao(cdVerbaComCurso, 6000);
+
+    expect(resultado.valido).toBe(true);
+    expect(resultado.saldoDisponivel.toNumber()).toBe(6000);
+  });
+
+  it("CA-OV-13: validarAlocacao rejeita uma alocação acima do saldo disponível e informa o saldo", async () => {
+    const resultado = await validarAlocacao(cdVerbaComCurso, 6000.01);
+
+    expect(resultado.valido).toBe(false);
+    expect(resultado.saldoDisponivel.toNumber()).toBe(6000);
   });
 });

@@ -52,3 +52,24 @@ export async function validarNovoValorTotal(
 
   return new Prisma.Decimal(novoValorTotal).greaterThanOrEqualTo(totalAlocado);
 }
+
+/**
+ * Usado na alocação de um valor a um curso (REQ-OV-12/CA-OV-12/CA-OV-13): um
+ * valor proposto só é válido se não exceder o saldo disponível ATUAL da
+ * Verba (RN-10/CA-16 do documento fonte). Igualar o saldo a zero é permitido
+ * (AD-016). `saldoDisponivel` no retorno é o saldo antes da alocação
+ * proposta - a rota chamadora (a criação de curso em si, escopo de
+ * `formulario-pre-curso`) usa isso para informar o saldo ao usuário quando
+ * rejeita.
+ */
+export async function validarAlocacao(
+  cdVerba: number,
+  valorProposto: number,
+): Promise<{ valido: boolean; saldoDisponivel: Prisma.Decimal }> {
+  const { saldoDisponivel } = await calcularSaldoVerba(cdVerba);
+
+  return {
+    valido: new Prisma.Decimal(valorProposto).lessThanOrEqualTo(saldoDisponivel),
+    saldoDisponivel,
+  };
+}

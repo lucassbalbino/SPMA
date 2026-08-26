@@ -93,7 +93,7 @@ test("GO de outro Ofertante recebe 403 ao consultar a Verba", async () => {
   await cliente.dispose();
 });
 
-test("CA-OV-12: edição que iguala o valor total ao já alocado é aceita (saldo zero)", async () => {
+test("AD-016: edição que iguala o valor total ao já alocado é aceita (mesma regra de igualdade de CA-OV-12/14, aplicada à edição)", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CPF_GT);
 
   const cliente = await novoCliente();
