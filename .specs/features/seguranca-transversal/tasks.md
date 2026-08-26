@@ -450,7 +450,9 @@ Nota: 3 testes pré-existentes deste arquivo (CA-AU-05, REQ-AU-08, "sem sessão 
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: POST sem token CSRF válido é rejeitado com 403, nenhum ofertante criado
+- [x] e2e: POST sem token CSRF válido é rejeitado com 403, nenhum ofertante criado
+
+Nota: 3 testes pré-existentes deste arquivo agora falham com 403 - mesma regressão documentada em T13-T15, diferida para T18-T20. "perfil diferente de GO recebe 403" continua "passando", agora por interceptação do CSRF em vez da checagem de perfil que originalmente exercitava - mesmo padrão observado em T15/CA-AU-06.
 
 **Tests**: e2e
 **Gate**: full

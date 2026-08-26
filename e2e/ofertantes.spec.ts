@@ -1,5 +1,12 @@
 // e2e de POST /api/ofertantes (T23) - auto-cadastro do Ofertante pelo GO
 // sem vínculo (REQ-AU-09).
+//
+// Nota (seguranca-transversal, T16): a rota agora exige CSRF (REQ-SEC-15).
+// Os testes originais abaixo enviam só o cookie de sessão e ficam vermelhos
+// até o helper e2e de CSRF (T19) e a atualização deste arquivo (T20, Fase
+// 4) - regressão documentada e aceita em design.md (Riscos). O teste novo
+// no fim do arquivo já é escrito sabendo que não precisa de CSRF válido
+// (é o próprio caso que prova a exigência).
 import { expect, test } from "@playwright/test";
 import {
   criarOfertante,
@@ -16,12 +23,19 @@ const SENHA = "SenhaValida123";
 const CPF_GO_SEM_OFERTANTE = "30060070005";
 const CPF_GO_COM_OFERTANTE = "30070080003";
 const CPF_ALUNO = "30080090001";
+const CPF_GO_SEM_CSRF = "30095001069";
 
 const NOME_OFERTANTE_NOVO = "Ofertante Auto Cadastrado";
 const NOME_OFERTANTE_DUPLICADO = "Ofertante Duplicado";
 const NOME_OFERTANTE_DE_ALUNO = "Ofertante De Aluno";
+const NOME_OFERTANTE_SEM_CSRF = "Ofertante Sem Csrf";
 
-const CPFS = [CPF_GO_SEM_OFERTANTE, CPF_GO_COM_OFERTANTE, CPF_ALUNO];
+const CPFS = [
+  CPF_GO_SEM_OFERTANTE,
+  CPF_GO_COM_OFERTANTE,
+  CPF_ALUNO,
+  CPF_GO_SEM_CSRF,
+];
 
 let cdOfertanteExistente: number;
 
@@ -61,6 +75,13 @@ test.beforeAll(() => {
     tipo: "AL",
     senha: SENHA,
     primeiraVez: false,
+  });
+  upsertUsuario({
+    cpf: CPF_GO_SEM_CSRF,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    cdOfertante: null,
   });
 });
 
@@ -128,6 +149,22 @@ test("sem sessão válida retorna 401 e nada é criado", async () => {
 
   expect(res.status()).toBe(401);
   expect(listarOfertantesPorNome("Ofertante Sem Sessao")).toHaveLength(0);
+
+  await cliente.dispose();
+});
+
+test("CA-SEC-15: POST sem token CSRF válido é rejeitado com 403, nenhum ofertante criado", async () => {
+  const idSessao = await logar(CPF_GO_SEM_CSRF);
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/ofertantes", {
+    data: { nome: NOME_OFERTANTE_SEM_CSRF, uf: "SC" },
+    headers: cabecalhoCookie(idSessao),
+  });
+
+  expect(res.status()).toBe(403);
+  expect(listarOfertantesPorNome(NOME_OFERTANTE_SEM_CSRF)).toHaveLength(0);
+  expect(getUsuario(CPF_GO_SEM_CSRF)?.cdOfertante).toBeNull();
 
   await cliente.dispose();
 });

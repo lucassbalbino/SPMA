@@ -1,5 +1,5 @@
 // POST /api/ofertantes - auto-cadastro do Ofertante pelo GO (REQ-AU-09,
-// AD-014).
+// AD-014, REQ-SEC-15, REQ-SEC-11).
 //
 // Escolhas documentadas (o task admite 403 ou 409 para o segundo caso):
 // - perfil diferente de GO            -> 403 (não é dele essa rota)
@@ -12,8 +12,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { obterSessao } from "@/lib/auth/session";
 import { ofertanteSchema } from "@/lib/validation/schemas/ofertante.schema";
+import { verificarCSRF } from "@/lib/security/csrf";
+import { comTratamentoDeErro } from "@/lib/errors/api-error";
 
-export async function POST(request: Request) {
+async function criarOfertante(request: Request) {
+  // REQ-SEC-15: mutação autenticada por cookie exige token anti-CSRF válido,
+  // checado antes da sessão (design.md - RH -> CSRF -> Guard).
+  if (!(await verificarCSRF(request))) {
+    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
+  }
+
   const sessao = await obterSessao();
 
   if (!sessao) {
@@ -73,3 +81,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ofertante }, { status: 201 });
 }
+
+export const POST = comTratamentoDeErro(criarOfertante);
