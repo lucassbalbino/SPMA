@@ -121,3 +121,8 @@ export function criarPreCurso(dados: {
 }): { cdCurso: number } {
   return executar<{ cdCurso: number }>("criarPreCurso", dados);
 }
+
+/** Chamar antes de `deleteUsuarios` quando o teste criou PreCurso de fixture (FK para o CPF criador). */
+export function deletePreCursosPorOfertante(cdOfertantes: number[]): void {
+  executar("deletePreCursosPorOfertante", cdOfertantes);
+}

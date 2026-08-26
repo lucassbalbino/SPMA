@@ -130,6 +130,17 @@ async function executar(
       return prisma.preCurso.create({ data: dados });
     }
 
+    // Limpa PreCurso de teste antes de `deleteUsuarios` - `PreCurso.criadoPor`
+    // é FK para Usuario, então um PreCurso de fixture bloquearia a exclusão
+    // do usuário de teste que o criou.
+    case "deletePreCursosPorOfertante": {
+      const cdOfertantes = argumento as number[];
+      const { count } = await prisma.preCurso.deleteMany({
+        where: { cdOfertante: { in: cdOfertantes } },
+      });
+      return { count };
+    }
+
     // `db-test-reset.ts` não trunca TB_Tentativa_Login_Ip (tabela independente
     // de usuário, sem FK) - specs que testam o limite por IP (REQ-SEC-03)
     // limpam o próprio IP de teste antes/depois para não depender de estado

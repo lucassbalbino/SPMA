@@ -225,10 +225,10 @@ T3 → T7
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-OV-10/11: `GET` de uma Verba recém-criada devolve `saldoDisponivel` igual ao valor total; após um curso alocado (criado via Prisma direto no fixture do teste, já que a rota de curso ainda não existe), devolve o saldo reduzido
-- [ ] e2e CA-OV-12: edição definindo o novo valor total exatamente igual ao já alocado é aceita, saldo resultante zero
-- [ ] e2e CA-OV-14: edição tentando reduzir o valor total abaixo do já alocado é rejeitada com 409, valor original preservado
-- [ ] e2e: leitura/edição fora do escopo do Ofertante (GO de outro ofertante) recebe 403
+- [x] e2e CA-OV-10/11: `GET` de uma Verba recém-criada devolve `saldoDisponivel` igual ao valor total; após um curso alocado (criado via Prisma direto no fixture do teste, já que a rota de curso ainda não existe), devolve o saldo reduzido
+- [x] e2e CA-OV-12: edição definindo o novo valor total exatamente igual ao já alocado é aceita, saldo resultante zero
+- [x] e2e CA-OV-14: edição tentando reduzir o valor total abaixo do já alocado é rejeitada com 409, valor original preservado
+- [x] e2e: leitura/edição fora do escopo do Ofertante (GO de outro ofertante) recebe 403
 
 **Tests**: e2e
 **Gate**: full
