@@ -425,8 +425,10 @@ Nota: os 2 testes pré-existentes deste arquivo (que só enviam o cookie de sess
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: POST sem token CSRF válido é rejeitado com 403, nenhum usuário criado
-- [ ] integration/e2e: POST com CPF já existente (violação de unicidade no banco, hoje não tratada) devolve o erro genérico + `idCorrelacao` de `comTratamentoDeErro`, nunca o erro cru do Prisma - prova concreta de REQ-SEC-11 usando um caminho de exceção real já existente na base
+- [x] e2e: POST sem token CSRF válido é rejeitado com 403, nenhum usuário criado
+- [x] integration/e2e: POST com CPF já existente (violação de unicidade no banco, hoje não tratada) devolve o erro genérico + `idCorrelacao` de `comTratamentoDeErro`, nunca o erro cru do Prisma - prova concreta de REQ-SEC-11 usando um caminho de exceção real já existente na base
+
+Nota: 3 testes pré-existentes deste arquivo (CA-AU-05, REQ-AU-08, "sem sessão válida") agora falham com 403 - mesma regressão documentada em T13/T14, diferida para T18-T20. Um 4º teste pré-existente (CA-AU-06, que já esperava 403 por outro motivo - permissão negada) continua "passando", mas agora por interceptação do CSRF antes da checagem de permissão - anotado para quando T20 atualizar este arquivo, não é uma falha nova.
 
 **Tests**: e2e
 **Gate**: full

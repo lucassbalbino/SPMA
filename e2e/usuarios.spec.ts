@@ -1,5 +1,11 @@
 // e2e de POST /api/usuarios (T22). Cobre CA-AU-05, CA-AU-06, REQ-AU-08
 // (escopo resolvido no servidor) e o acesso sem sessão.
+//
+// Nota (seguranca-transversal, T15): a rota agora exige CSRF (REQ-SEC-15).
+// Os testes originais abaixo enviam só o cookie de sessão e ficam vermelhos
+// até o helper e2e de CSRF (T19) e a atualização deste arquivo (T20, Fase
+// 4) - regressão documentada e aceita em design.md (Riscos). Os 2 testes
+// novos no fim do arquivo já constroem o cabeçalho CSRF manualmente.
 import { expect, test } from "@playwright/test";
 import {
   criarOfertante,
@@ -7,7 +13,13 @@ import {
   getUsuario,
   upsertUsuario,
 } from "./helpers/db";
-import { cabecalhoCookie, idSessaoDaResposta, novoCliente } from "./helpers/http";
+import {
+  cabecalhoCookie,
+  cookiesDaResposta,
+  idSessaoDaResposta,
+  novoCliente,
+} from "./helpers/http";
+import type { APIResponse } from "@playwright/test";
 
 const SENHA = "SenhaValida123";
 
@@ -17,6 +29,8 @@ const CPF_NOVO_GO = "30020030002";
 const CPF_NOVO_VO = "30030040000";
 const CPF_FORJADO_GT = "30040050009";
 const CPF_SEM_SESSAO = "30050060007";
+const CPF_SEM_CSRF = "30091002052";
+const CPF_DUPLICADO = "30092003079";
 
 const CPFS = [
   CPF_GO_CRIADOR,
@@ -25,6 +39,8 @@ const CPFS = [
   CPF_NOVO_VO,
   CPF_FORJADO_GT,
   CPF_SEM_SESSAO,
+  CPF_SEM_CSRF,
+  CPF_DUPLICADO,
 ];
 
 let cdOfertanteDoGo: number;
@@ -40,6 +56,28 @@ async function sessaoDoGo(): Promise<string> {
 
   if (!id) throw new Error("Login do GO criador não emitiu sessão");
   return id;
+}
+
+/** Valor do cookie de CSRF emitido pela resposta, ou null se não houver. */
+function idCsrfDaResposta(res: APIResponse): string | null {
+  const match = cookiesDaResposta(res).match(/spma_csrf=([^;\s]+)/);
+  return match ? match[1] : null;
+}
+
+/** Mesmo login de `sessaoDoGo`, mas também devolve o token de CSRF emitido. */
+async function sessaoDoGoComCsrf(): Promise<{ idSessao: string; idCsrf: string }> {
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/auth/login", {
+    data: { cpf: CPF_GO_CRIADOR, senha: SENHA },
+  });
+  const idSessao = idSessaoDaResposta(res);
+  const idCsrf = idCsrfDaResposta(res);
+  await cliente.dispose();
+
+  if (!idSessao || !idCsrf) {
+    throw new Error("Login do GO criador não emitiu sessão/CSRF");
+  }
+  return { idSessao, idCsrf };
 }
 
 test.beforeAll(() => {
@@ -152,4 +190,58 @@ test("sem sessão válida retorna 401 e não cria usuário", async () => {
 
   await semCookie.dispose();
   await cookieInvalido.dispose();
+});
+
+test("CA-SEC-15: POST sem token CSRF válido é rejeitado com 403, nenhum usuário criado", async () => {
+  const idSessao = await sessaoDoGo();
+  const cliente = await novoCliente();
+
+  const res = await cliente.post("/api/usuarios", {
+    data: { cpf: CPF_SEM_CSRF, nome: "Sem CSRF", tipo: "AL" },
+    headers: cabecalhoCookie(idSessao),
+  });
+
+  expect(res.status()).toBe(403);
+  expect(getUsuario(CPF_SEM_CSRF)).toBeNull();
+
+  await cliente.dispose();
+});
+
+test("REQ-SEC-11: POST com CPF já existente devolve erro genérico + idCorrelacao, nunca o erro cru do Prisma", async () => {
+  const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
+  const headers = {
+    Cookie: `spma_sessao=${idSessao}; spma_csrf=${idCsrf}`,
+    "x-csrf-token": idCsrf,
+  };
+
+  const clientePrimeiro = await novoCliente();
+  const primeiro = await clientePrimeiro.post("/api/usuarios", {
+    data: { cpf: CPF_DUPLICADO, nome: "Primeiro Cadastro", tipo: "AL" },
+    headers,
+  });
+  expect(primeiro.status()).toBe(201);
+
+  // Mesmo CPF de novo: viola a unicidade (`cpf` é @id) - exceção real do
+  // Prisma, não tratada na rota, capturada por `comTratamentoDeErro`.
+  const clienteSegundo = await novoCliente();
+  const segundo = await clienteSegundo.post("/api/usuarios", {
+    data: { cpf: CPF_DUPLICADO, nome: "Segundo Cadastro", tipo: "AL" },
+    headers,
+  });
+
+  expect(segundo.status()).toBe(500);
+  const corpo = await segundo.json();
+  expect(corpo.erro).toBe("Erro interno. Contate o suporte informando o código.");
+  expect(corpo.idCorrelacao).toMatch(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+  );
+  // Nunca o erro cru do Prisma (nome de constraint, classe do erro, etc.)
+  // no corpo devolvido ao cliente.
+  const texto = JSON.stringify(corpo);
+  expect(texto).not.toMatch(/prisma/i);
+  expect(texto).not.toMatch(/constraint/i);
+  expect(texto).not.toMatch(/unique/i);
+
+  await clientePrimeiro.dispose();
+  await clienteSegundo.dispose();
 });

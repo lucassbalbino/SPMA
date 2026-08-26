@@ -1,5 +1,5 @@
 // POST /api/usuarios - criação em cascata (REQ-AU-05, REQ-AU-06, REQ-AU-07,
-// REQ-AU-08).
+// REQ-AU-08, REQ-SEC-15, REQ-SEC-11).
 //
 // A permissão é reavaliada aqui, no servidor, a cada request (AD-033):
 // o que a interface mostra ou deixa de mostrar não vale como autorização.
@@ -11,8 +11,16 @@ import { prisma } from "@/lib/db/prisma";
 import { podeCriar, resolverOfertante } from "@/lib/auth/cascata";
 import { obterSessao } from "@/lib/auth/session";
 import { usuarioSchema } from "@/lib/validation/schemas/usuario.schema";
+import { verificarCSRF } from "@/lib/security/csrf";
+import { comTratamentoDeErro } from "@/lib/errors/api-error";
 
-export async function POST(request: Request) {
+async function criarUsuario(request: Request) {
+  // REQ-SEC-15: mutação autenticada por cookie exige token anti-CSRF válido,
+  // checado antes da sessão (design.md - RH -> CSRF -> Guard).
+  if (!(await verificarCSRF(request))) {
+    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
+  }
+
   const sessao = await obterSessao();
 
   if (!sessao) {
@@ -43,6 +51,10 @@ export async function POST(request: Request) {
   // o `cdOfertante` que veio no payload é ignorado (REQ-AU-08).
   const cdOfertante = resolverOfertante(criador, dados.tipo, dados.cdOfertante);
 
+  // CPF duplicado (violação de unicidade, `cpf` é @id) lança uma exceção do
+  // Prisma não tratada aqui de propósito - `comTratamentoDeErro` (REQ-SEC-11)
+  // é quem a converte num 500 genérico com id de correlação, nunca o erro
+  // cru do Prisma no corpo da resposta.
   const usuario = await prisma.usuario.create({
     data: {
       cpf: dados.cpf,
@@ -69,3 +81,5 @@ export async function POST(request: Request) {
     { status: 201 },
   );
 }
+
+export const POST = comTratamentoDeErro(criarUsuario);
