@@ -283,12 +283,12 @@ Mesmo enunciado e mesma escala do Bloco 6.
 
 | Requirement ID | Story | Phase | Status |
 |---|---|---|---|
-| PC-01 | P1: Criação | Tasks T1, T5, T9 | In Tasks |
+| PC-01 | P1: Criação | Tasks T1, T5, T9 | Implementing (T1 done) |
 | PC-02 | P1: Criação | Tasks T5, T9 | In Tasks |
 | PC-03 | P1: Criação | Tasks T5, T9 | In Tasks |
 | PC-04 | P1: Preenchimento incremental | Tasks T6, T10 | In Tasks |
-| PC-05 | P1: Preenchimento incremental | Tasks T1, T6, T10 | In Tasks |
-| PC-06 | P1: Preenchimento incremental | Tasks T1, T6, T10 | In Tasks |
+| PC-05 | P1: Preenchimento incremental | Tasks T1, T6, T10 | Implementing (T1 done) |
+| PC-06 | P1: Preenchimento incremental | Tasks T1, T6, T10 | Implementing (T1 done) |
 | PC-07 | P1: Regras condicionais | Tasks T3, T7, T10 | In Tasks |
 | PC-08 | P1: Regras condicionais | Tasks T3, T7, T10 | In Tasks |
 | PC-09 | P1: Regras condicionais | Tasks T3, T7, T10 | In Tasks |
