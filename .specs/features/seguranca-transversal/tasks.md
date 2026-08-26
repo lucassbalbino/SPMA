@@ -264,8 +264,8 @@ T8 (independente de T9, T10, T11 - todos independentes entre si nesta fase)
 - Skill: NONE
 
 **Done when**:
-- [ ] `npm run build` compila sem erro
-- [ ] Cada header listado presente na resposta de `GET /login` (verificado manualmente ou por `curl -I`)
+- [x] `npm run build` compila sem erro
+- [x] Cada header listado presente na resposta de `GET /login` (verificado manualmente ou por `curl -I`)
 
 **Tests**: none
 **Gate**: build
