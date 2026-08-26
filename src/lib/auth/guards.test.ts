@@ -4,6 +4,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   podeAcessarOfertante,
+  podeEditarOfertante,
+  podeGerenciarVerba,
   requireOfertanteVinculado,
   requirePrimeiroAcessoConcluido,
   requireSession,
@@ -153,5 +155,64 @@ describe("podeAcessarOfertante", () => {
     expect(
       podeAcessarOfertante({ tipo: "AL", cdOfertante: null }, 1),
     ).toBe(false);
+  });
+});
+
+describe("podeEditarOfertante", () => {
+  it("AM sempre pode editar, para qualquer cdOfertanteAlvo", () => {
+    expect(podeEditarOfertante({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
+    expect(podeEditarOfertante({ tipo: "AM", cdOfertante: null }, 999)).toBe(true);
+  });
+
+  it("GT sempre pode editar, para qualquer cdOfertanteAlvo", () => {
+    expect(podeEditarOfertante({ tipo: "GT", cdOfertante: null }, 1)).toBe(true);
+  });
+
+  it("GO vinculado ao ofertante 1 pode editar o ofertante 1", () => {
+    expect(podeEditarOfertante({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);
+  });
+
+  it("GO vinculado ao ofertante 1 não pode editar o ofertante 2", () => {
+    expect(podeEditarOfertante({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
+  });
+
+  // Diferença chave frente a podeAcessarOfertante: VT lê qualquer Ofertante,
+  // mas "somente leitura" é a própria definição do perfil - nunca edita.
+  it("VT nunca pode editar, mesmo tendo acesso de leitura nacional", () => {
+    expect(podeEditarOfertante({ tipo: "VT", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("VO nunca pode editar, mesmo o próprio ofertante", () => {
+    expect(podeEditarOfertante({ tipo: "VO", cdOfertante: 1 }, 1)).toBe(false);
+  });
+
+  it("AL nunca pode editar", () => {
+    expect(podeEditarOfertante({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
+  });
+});
+
+describe("podeGerenciarVerba", () => {
+  it("AM pode gerenciar Verba", () => {
+    expect(podeGerenciarVerba("AM")).toBe(true);
+  });
+
+  it("GT pode gerenciar Verba", () => {
+    expect(podeGerenciarVerba("GT")).toBe(true);
+  });
+
+  it("GO não pode gerenciar Verba (só a consome, não a cria/edita)", () => {
+    expect(podeGerenciarVerba("GO")).toBe(false);
+  });
+
+  it("VO não pode gerenciar Verba", () => {
+    expect(podeGerenciarVerba("VO")).toBe(false);
+  });
+
+  it("VT não pode gerenciar Verba", () => {
+    expect(podeGerenciarVerba("VT")).toBe(false);
+  });
+
+  it("AL não pode gerenciar Verba", () => {
+    expect(podeGerenciarVerba("AL")).toBe(false);
   });
 });

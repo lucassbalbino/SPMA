@@ -110,8 +110,8 @@ Phases são ordenadas e rodam sequencialmente. **8 tarefas no total** → cabe n
 - Skill: NONE
 
 **Done when**:
-- [ ] `podeEditarOfertante`: AM/GT `true` para qualquer alvo; GO vinculado ao alvo `true`; GO de outro ofertante `false`; VT `false` (diferença chave frente a `podeAcessarOfertante`); VO/AL `false`
-- [ ] `podeGerenciarVerba`: AM/GT `true`; GO/VO/VT/AL `false`
+- [x] `podeEditarOfertante`: AM/GT `true` para qualquer alvo; GO vinculado ao alvo `true`; GO de outro ofertante `false`; VT `false` (diferença chave frente a `podeAcessarOfertante`); VO/AL `false`
+- [x] `podeGerenciarVerba`: AM/GT `true`; GO/VO/VT/AL `false`
 
 **Tests**: unit
 **Gate**: quick

@@ -46,10 +46,9 @@ export function requireOfertanteVinculado(usuario: {
 }
 
 /**
- * Guarda de escopo por Ofertante (REQ-SEC-14, AD-012), reutilizável por
- * qualquer rota futura que exponha um recurso escopado por Ofertante (a
- * próxima feature, `ofertante-e-verba`, é a primeira consumidora real - ver
- * design.md Riscos). Função pura, mesmo estilo de `podeCriar` em
+ * Guarda de LEITURA por escopo de Ofertante (REQ-SEC-14, REQ-OV-05/07,
+ * AD-012), consumida por `cadastro-ofertante-verba` em toda rota de consulta
+ * de Ofertante/Verba. Função pura, mesmo estilo de `podeCriar` em
  * `cascata.ts`: recebe os dados já carregados, não consulta nada.
  *
  * AM/GT/VT são os perfis de escopo nacional (AD-012, mesmo grupo que fica com
@@ -72,4 +71,37 @@ export function podeAcessarOfertante(
     case "AL":
       return false;
   }
+}
+
+/**
+ * Guarda de ESCRITA sobre um Ofertante (REQ-OV-02/03). Deliberadamente
+ * separada de `podeAcessarOfertante`: aquela devolve `true` para VT (leitura
+ * nacional), e VT nunca deve poder editar - "somente leitura" é a própria
+ * definição do perfil. AM/GT sempre podem editar qualquer Ofertante; GO só o
+ * próprio; VT/VO/AL nunca.
+ */
+export function podeEditarOfertante(
+  usuario: { tipo: TipoUsuario; cdOfertante: number | null },
+  cdOfertanteAlvo: number,
+): boolean {
+  switch (usuario.tipo) {
+    case "AM":
+    case "GT":
+      return true;
+    case "GO":
+      return usuario.cdOfertante === cdOfertanteAlvo;
+    case "VT":
+    case "VO":
+    case "AL":
+      return false;
+  }
+}
+
+/**
+ * Guarda de ESCRITA sobre Verba (REQ-OV-08/09). O documento fonte (seção
+ * 3.4) atribui a criação da Verba ao Gestor Turismo; o Gestor Ofertante a
+ * consome (aloca a cursos, feature futura) mas não a cria nem a edita.
+ */
+export function podeGerenciarVerba(tipo: TipoUsuario): boolean {
+  return tipo === "AM" || tipo === "GT";
 }
