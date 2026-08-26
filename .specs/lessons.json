@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 12,
+  "next_id": 16,
   "lessons": [
     {
       "id": "L-001",
@@ -202,6 +202,78 @@
       ],
       "created": "2026-08-26T18:51:01Z",
       "last_seen": "2026-08-26T18:51:01Z"
+    },
+    {
+      "id": "L-012",
+      "key": "ac_gap::name every acceptance criterion in some task s done when list a traceability row mapping a requirement to a task does not by itself create coverage",
+      "text": "Name every acceptance criterion in some task's Done-when list; a traceability row mapping a requirement to a task does not by itself create coverage.",
+      "signal": "ac_gap",
+      "scope": "specs",
+      "status": "candidate",
+      "features": [
+        "cadastro-ofertante-verba"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CA-OV-13 - .specs/features/cadastro-ofertante-verba/tasks.md:330 (claimed by T2, absent from every Done-when) (specs)"
+      ],
+      "created": "2026-08-26T20:34:15Z",
+      "last_seen": "2026-08-26T20:34:15Z"
+    },
+    {
+      "id": "L-013",
+      "key": "spec_precision_gap::when a criterion requires a clear or specific error assert the exact error message not only the http status code",
+      "text": "When a criterion requires a clear or specific error, assert the exact error message, not only the HTTP status code.",
+      "signal": "spec_precision_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "cadastro-ofertante-verba"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CA-OV-09 - e2e/verbas.spec.ts:102 (tests)"
+      ],
+      "created": "2026-08-26T20:34:16Z",
+      "last_seen": "2026-08-26T20:34:16Z"
+    },
+    {
+      "id": "L-014",
+      "key": "spec_precision_gap::assert every conjunct of a multi part criterion proving the action succeeded leaves the resulting state half unverified",
+      "text": "Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.",
+      "signal": "spec_precision_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "cadastro-ofertante-verba"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CA-OV-12 - e2e/verbas-id.spec.ts:96-115 (tests)"
+      ],
+      "created": "2026-08-26T20:34:16Z",
+      "last_seen": "2026-08-26T20:34:16Z"
+    },
+    {
+      "id": "L-015",
+      "key": "spec_deviation::when a requirement names an action with no existing target in the codebase implement the half that exists mark the other half spec deviation at the call site and carry it into traceability instead of reporting the requirement closed",
+      "text": "When a requirement names an action with no existing target in the codebase, implement the half that exists, mark the other half SPEC_DEVIATION at the call site, and carry it into traceability instead of reporting the requirement closed.",
+      "signal": "spec_deviation",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "cadastro-ofertante-verba"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPEC_DEVIATION - src/app/api/usuarios/route.ts:6-11 (routes)"
+      ],
+      "created": "2026-08-26T20:34:16Z",
+      "last_seen": "2026-08-26T20:34:16Z"
     }
   ]
 }

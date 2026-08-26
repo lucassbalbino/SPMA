@@ -80,6 +80,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: src/app/api/auth/login/route.integration.test.ts (mutant M5, iteration 2) (e2e/timing-tests)
 - last seen: 2026-08-26T18:51:01Z
 
+### L-012 - Name every acceptance criterion in some task's Done-when list; a traceability row mapping a requirement to a task does not by itself create coverage.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs` · harmful: 0
+- features: cadastro-ofertante-verba
+- evidence: CA-OV-13 - .specs/features/cadastro-ofertante-verba/tasks.md:330 (claimed by T2, absent from every Done-when) (specs)
+- last seen: 2026-08-26T20:34:15Z
+
+### L-013 - When a criterion requires a clear or specific error, assert the exact error message, not only the HTTP status code.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: cadastro-ofertante-verba
+- evidence: CA-OV-09 - e2e/verbas.spec.ts:102 (tests)
+- last seen: 2026-08-26T20:34:16Z
+
+### L-014 - Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: cadastro-ofertante-verba
+- evidence: CA-OV-12 - e2e/verbas-id.spec.ts:96-115 (tests)
+- last seen: 2026-08-26T20:34:16Z
+
+### L-015 - When a requirement names an action with no existing target in the codebase, implement the half that exists, mark the other half SPEC_DEVIATION at the call site, and carry it into traceability instead of reporting the requirement closed.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: cadastro-ofertante-verba
+- evidence: SPEC_DEVIATION - src/app/api/usuarios/route.ts:6-11 (routes)
+- last seen: 2026-08-26T20:34:16Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
