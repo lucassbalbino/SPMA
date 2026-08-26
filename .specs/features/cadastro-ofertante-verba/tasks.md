@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/cadastro-ofertante-verba/design.md`
-**Status**: Approved
+**Status**: In Progress
 
 ---
 
@@ -62,9 +62,9 @@ Phases são ordenadas e rodam sequencialmente. **8 tarefas no total** → cabe n
 - Skill: NONE
 
 **Done when**:
-- [ ] `verbaSchema` rejeita `vlVerba` zero ou negativo
-- [ ] `verbaSchema` rejeita `cdOfertante` ausente ou não-positivo
-- [ ] `edicaoVerbaSchema` aceita payload sem `cdOfertante` e rejeita `vlVerba` não-positivo
+- [x] `verbaSchema` rejeita `vlVerba` zero ou negativo
+- [x] `verbaSchema` rejeita `cdOfertante` ausente ou não-positivo
+- [x] `edicaoVerbaSchema` aceita payload sem `cdOfertante` e rejeita `vlVerba` não-positivo
 
 **Tests**: unit
 **Gate**: quick
