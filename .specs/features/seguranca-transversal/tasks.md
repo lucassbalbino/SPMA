@@ -593,7 +593,7 @@ T13 → T22
 - Skill: NONE
 
 **Done when**:
-- [ ] CA-SEC-15: POST sem token → 403; POST com token divergente → 403; POST com token correto → 200
+- [x] CA-SEC-15: POST sem token → 403; POST com token divergente → 403; POST com token correto → 200
 
 **Tests**: e2e
 **Gate**: full
