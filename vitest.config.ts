@@ -9,7 +9,10 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    // e2e/helpers/**: helpers puros (sem browser/servidor) usados pelos specs
+    // Playwright - T19 (seguranca-transversal) exige teste unitário direto
+    // para eles, então precisam ser descobertos por este runner também.
+    include: ["src/**/*.test.ts", "e2e/helpers/**/*.test.ts"],
     exclude: ["**/*.integration.test.ts", "**/node_modules/**"],
     passWithNoTests: true,
   },

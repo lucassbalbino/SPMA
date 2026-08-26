@@ -537,8 +537,8 @@ T19 → T20
 - Skill: NONE
 
 **Done when**:
-- [ ] `idCsrfDaResposta` extrai corretamente o valor do cookie `spma_csrf` de uma resposta de login
-- [ ] `cabecalhosAutenticados` produz um objeto com `Cookie` e `x-csrf-token` consistentes entre si
+- [x] `idCsrfDaResposta` extrai corretamente o valor do cookie `spma_csrf` de uma resposta de login
+- [x] `cabecalhosAutenticados` produz um objeto com `Cookie` e `x-csrf-token` consistentes entre si
 
 **Tests**: unit
 **Gate**: quick
