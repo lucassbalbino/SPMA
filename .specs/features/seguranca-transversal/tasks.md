@@ -311,8 +311,8 @@ T8 (independente de T9, T10, T11 - todos independentes entre si nesta fase)
 - Skill: NONE
 
 **Done when**:
-- [ ] `npm run build` compila sem erro
-- [ ] Nenhum dos dois componentes referencia `error.message` ou `error.stack` no JSX renderizado
+- [x] `npm run build` compila sem erro
+- [x] Nenhum dos dois componentes referencia `error.message` ou `error.stack` no JSX renderizado
 
 **Tests**: none
 **Gate**: build
