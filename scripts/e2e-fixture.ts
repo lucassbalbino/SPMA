@@ -102,6 +102,34 @@ async function executar(
     case "listarOfertantesPorNome":
       return prisma.ofertante.findMany({ where: { nome: argumento as string } });
 
+    case "criarVerba": {
+      const dados = argumento as {
+        cdOfertante: number;
+        vlVerba: number;
+        dtVerba?: string;
+      };
+      return prisma.verba.create({
+        data: {
+          cdOfertante: dados.cdOfertante,
+          vlVerba: dados.vlVerba,
+          dtVerba: dados.dtVerba ? new Date(dados.dtVerba) : undefined,
+        },
+      });
+    }
+
+    case "getVerba":
+      return prisma.verba.findUnique({ where: { cdVerba: argumento as number } });
+
+    case "criarPreCurso": {
+      const dados = argumento as {
+        cdOfertante: number;
+        cdVerba: number;
+        vlCursoAlocado: number;
+        criadoPor: string;
+      };
+      return prisma.preCurso.create({ data: dados });
+    }
+
     // `db-test-reset.ts` não trunca TB_Tentativa_Login_Ip (tabela independente
     // de usuário, sem FK) - specs que testam o limite por IP (REQ-SEC-03)
     // limpam o próprio IP de teste antes/depois para não depender de estado

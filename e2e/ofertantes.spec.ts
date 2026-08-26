@@ -32,20 +32,29 @@ const CPF_GO_SEM_OFERTANTE = "30060070005";
 const CPF_GO_COM_OFERTANTE = "30070080003";
 const CPF_ALUNO = "30080090001";
 const CPF_GO_SEM_CSRF = "30095001069";
+const CPF_AM = "30104005009";
+const CPF_GT = "30204006007";
+const CPF_GO_LISTAGEM = "30304007005";
 
 const NOME_OFERTANTE_NOVO = "Ofertante Auto Cadastrado";
 const NOME_OFERTANTE_DUPLICADO = "Ofertante Duplicado";
 const NOME_OFERTANTE_DE_ALUNO = "Ofertante De Aluno";
 const NOME_OFERTANTE_SEM_CSRF = "Ofertante Sem Csrf";
+const NOME_OFERTANTE_POR_AM = "Ofertante Pre Cadastrado Por Am";
+const NOME_OFERTANTE_POR_GT = "Ofertante Pre Cadastrado Por Gt";
 
 const CPFS = [
   CPF_GO_SEM_OFERTANTE,
   CPF_GO_COM_OFERTANTE,
   CPF_ALUNO,
   CPF_GO_SEM_CSRF,
+  CPF_AM,
+  CPF_GT,
+  CPF_GO_LISTAGEM,
 ];
 
 let cdOfertanteExistente: number;
+let cdOfertanteListagem: number;
 
 async function logar(cpf: string): Promise<string> {
   const cliente = await novoCliente();
@@ -106,6 +115,20 @@ test.beforeAll(() => {
     senha: SENHA,
     primeiraVez: false,
     cdOfertante: null,
+  });
+  upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
+
+  cdOfertanteListagem = criarOfertante({
+    nome: "Ofertante Da Listagem",
+    uf: "RJ",
+  }).cdOfertante;
+  upsertUsuario({
+    cpf: CPF_GO_LISTAGEM,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    cdOfertante: cdOfertanteListagem,
   });
 });
 
@@ -200,6 +223,99 @@ test("CA-SEC-15: POST sem token CSRF válido é rejeitado com 403, nenhum oferta
   expect(res.status()).toBe(403);
   expect(listarOfertantesPorNome(NOME_OFERTANTE_SEM_CSRF)).toHaveLength(0);
   expect(getUsuario(CPF_GO_SEM_CSRF)?.cdOfertante).toBeNull();
+
+  await cliente.dispose();
+});
+
+test("CA-OV-01: AM pré-cadastra um Ofertante sem se vincular a ele", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AM);
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/ofertantes", {
+    data: { nome: NOME_OFERTANTE_POR_AM, uf: "MG" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(201);
+  expect(listarOfertantesPorNome(NOME_OFERTANTE_POR_AM)).toHaveLength(1);
+  // AM não tem cdOfertante - o pré-cadastro não vincula ninguém.
+  expect(getUsuario(CPF_AM)?.cdOfertante).toBeNull();
+
+  await cliente.dispose();
+});
+
+test("CA-OV-01: GT pré-cadastra um Ofertante sem se vincular a ele", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GT);
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/ofertantes", {
+    data: { nome: NOME_OFERTANTE_POR_GT, uf: "RS" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(201);
+  expect(listarOfertantesPorNome(NOME_OFERTANTE_POR_GT)).toHaveLength(1);
+  expect(getUsuario(CPF_GT)?.cdOfertante).toBeNull();
+
+  await cliente.dispose();
+});
+
+test("CA-OV-02: pré-cadastro administrativo sem nome é rejeitado com 400", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AM);
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/ofertantes", {
+    data: { uf: "MG" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+
+  await cliente.dispose();
+});
+
+test("CA-OV-07: GT lista todos os Ofertantes (inclui o da listagem de teste)", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GT);
+
+  const cliente = await novoCliente();
+  const res = await cliente.get("/api/ofertantes", {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(200);
+  const corpo = await res.json();
+  expect(
+    corpo.ofertantes.some((o: { cdOfertante: number }) => o.cdOfertante === cdOfertanteListagem),
+  ).toBe(true);
+
+  await cliente.dispose();
+});
+
+test("CA-OV-07: GO vinculado ao Ofertante A lista só o Ofertante A", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO_LISTAGEM);
+
+  const cliente = await novoCliente();
+  const res = await cliente.get("/api/ofertantes", {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(200);
+  const corpo = await res.json();
+  expect(corpo.ofertantes).toHaveLength(1);
+  expect(corpo.ofertantes[0].cdOfertante).toBe(cdOfertanteListagem);
+
+  await cliente.dispose();
+});
+
+test("listagem: Aluno não tem acesso (403)", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_ALUNO);
+
+  const cliente = await novoCliente();
+  const res = await cliente.get("/api/ofertantes", {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(403);
 
   await cliente.dispose();
 });

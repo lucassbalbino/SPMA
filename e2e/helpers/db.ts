@@ -37,6 +37,12 @@ export type UsuarioPersistido = {
 
 export type SessaoPersistida = { id: string; cpfUsuario: string; expiraEm: string };
 export type OfertantePersistido = { cdOfertante: number; nome: string; uf: string };
+export type VerbaPersistida = {
+  cdVerba: number;
+  cdOfertante: number;
+  vlVerba: string;
+  dtVerba: string | null;
+};
 
 function executar<T>(comando: string, argumento?: unknown): T {
   const argumentoBase64 = Buffer.from(JSON.stringify(argumento ?? null)).toString(
@@ -92,4 +98,26 @@ export function listarOfertantesPorNome(nome: string): OfertantePersistido[] {
 /** Limpa o registro de rate-limit por IP (REQ-SEC-03) dos IPs de teste informados. */
 export function deleteTentativasIp(ips: string[]): void {
   executar("deleteTentativasIp", ips);
+}
+
+export function criarVerba(dados: {
+  cdOfertante: number;
+  vlVerba: number;
+  dtVerba?: string;
+}): VerbaPersistida {
+  return executar<VerbaPersistida>("criarVerba", dados);
+}
+
+export function getVerba(cdVerba: number): VerbaPersistida | null {
+  return executar<VerbaPersistida | null>("getVerba", cdVerba);
+}
+
+/** Insere um Pré-Curso direto no banco (a rota de criação é `formulario-pre-curso`, ainda não implementada) - só para alocar valor de uma Verba nos testes de saldo. */
+export function criarPreCurso(dados: {
+  cdOfertante: number;
+  cdVerba: number;
+  vlCursoAlocado: number;
+  criadoPor: string;
+}): { cdCurso: number } {
+  return executar<{ cdCurso: number }>("criarPreCurso", dados);
 }

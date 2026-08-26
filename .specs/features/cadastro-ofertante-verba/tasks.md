@@ -139,10 +139,10 @@ T3 → T5
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-OV-01: AM e GT autenticados criam Ofertante com nome+UF válidos, sem qualquer `cdOfertante` próprio alterado
-- [ ] e2e CA-OV-02: cadastro sem nome ou sem UF é rejeitado com 400
-- [ ] e2e CA-OV-07: GT lista todos os Ofertantes; GO vinculado ao Ofertante A lista só o Ofertante A
-- [ ] e2e: comportamento existente de auto-cadastro do GO (201/409/403) continua idêntico - nenhum teste de `auth-e-usuarios` para esta rota regride
+- [x] e2e CA-OV-01: AM e GT autenticados criam Ofertante com nome+UF válidos, sem qualquer `cdOfertante` próprio alterado
+- [x] e2e CA-OV-02: cadastro sem nome ou sem UF é rejeitado com 400
+- [x] e2e CA-OV-07: GT lista todos os Ofertantes; GO vinculado ao Ofertante A lista só o Ofertante A
+- [x] e2e: comportamento existente de auto-cadastro do GO (201/409/403) continua idêntico - nenhum teste de `auth-e-usuarios` para esta rota regride
 
 **Tests**: e2e
 **Gate**: full
