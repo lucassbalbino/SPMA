@@ -86,9 +86,9 @@ Phases são ordenadas e rodam sequencialmente. **8 tarefas no total** → cabe n
 - Skill: NONE
 
 **Done when**:
-- [ ] Verba sem nenhum curso vinculado: `saldoDisponivel === valorTotal` (CA-OV-10)
-- [ ] Verba com um curso de valor alocado X: `saldoDisponivel === valorTotal - X` (CA-OV-11)
-- [ ] `validarNovoValorTotal` retorna `true` quando o novo valor iguala o já alocado (permite igualdade, AD-016) e `false` quando é menor
+- [x] Verba sem nenhum curso vinculado: `saldoDisponivel === valorTotal` (CA-OV-10)
+- [x] Verba com um curso de valor alocado X: `saldoDisponivel === valorTotal - X` (CA-OV-11)
+- [x] `validarNovoValorTotal` retorna `true` quando o novo valor iguala o já alocado (permite igualdade, AD-016) e `false` quando é menor
 
 **Tests**: integration
 **Gate**: full
