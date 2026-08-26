@@ -200,10 +200,10 @@ T3 → T7
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e CA-OV-08: GT cria Verba com valor positivo para Ofertante existente, Verba criada e vinculada
-- [ ] e2e CA-OV-09: criação de Verba com `cdOfertante` inexistente é rejeitada com 400 claro
-- [ ] e2e: GO sem perfil AM/GT tentando criar Verba recebe 403
-- [ ] e2e: listagem escopada - GT vê todas, GO vinculado ao Ofertante A vê só as do Ofertante A
+- [x] e2e CA-OV-08: GT cria Verba com valor positivo para Ofertante existente, Verba criada e vinculada
+- [x] e2e CA-OV-09: criação de Verba com `cdOfertante` inexistente é rejeitada com 400 claro
+- [x] e2e: GO sem perfil AM/GT tentando criar Verba recebe 403
+- [x] e2e: listagem escopada - GT vê todas, GO vinculado ao Ofertante A vê só as do Ofertante A
 
 **Tests**: e2e
 **Gate**: full
