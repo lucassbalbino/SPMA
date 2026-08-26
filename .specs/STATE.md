@@ -136,3 +136,8 @@ Cabeçalhos de segurança padrão (CSP, X-Content-Type-Options, etc.) e proteç�
 
 **AD-033 — Autorização verificada no servidor em toda rota, sempre.**
 A cascata de criação (AD-009), o escopo por ofertante/curso (AD-012) e o 403 (AD-013) são reavaliados no backend a cada request — nunca confiar em estado do cliente nem em ocultação de menu.
+
+### Formulários — armazenamento de respostas
+
+**AD-034 — Respostas dos questionários (Pré-Curso, Pós-Curso, Avaliação do Aluno) armazenadas como um único campo `Json?` por formulário, com a FORMA validada por Zod na aplicação (não uma coluna por pergunta).**
+Formaliza, no Design de `formulario-pre-curso` (primeira feature de formulário), a decisão já registrada como nota em `prisma/schema.prisma` ("Estratégia de armazenamento das respostas dos questionários"). Motivo: os três questionários somam ~125 campos, muitos condicionais/seleção múltipla — uma coluna por pergunta geraria migration a cada ajuste de questionário; o schema físico fica enxuto e a validação forte acontece na borda (schema Zod único, cliente/servidor, AD-004). Trade-off aceito: consultas analíticas (dashboard, feature adiada por AD-024) não conseguem agregar por campo individual via SQL puro sem materializar colunas/tabelas derivadas — decisão deixada para quando a feature de dashboard existir. Vale para `TB_Pre_Curso.Respostas`, `TB_Pos_Curso.Respostas`, `TB_Avaliacao_Aluno.Respostas` (as três já modeladas assim no schema).
