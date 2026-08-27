@@ -177,4 +177,19 @@ describe("validarCompletudePreCurso", () => {
     expect(resultado.completo).toBe(false);
     expect(resultado.pendentes).toContain("qualifNomeCurso");
   });
+
+  it("pendência condicional aparece mesmo com a maioria dos outros campos sempre-obrigatórios também ausentes (preenchimento bem no início)", () => {
+    // Regressão: `validarCompletudePreCurso` chegou a delegar a regra
+    // condicional a um `.superRefine` sobre o schema base - o Zod pula esse
+    // callback quando o schema base já tem qualquer issue, então com vários
+    // campos ausentes ao mesmo tempo (o estado normal de um preenchimento
+    // incremental) a pendência condicional nunca aparecia até o resto do
+    // formulário estar quase completo.
+    const resultado = validarCompletudePreCurso({
+      publicoInstituicaoExecutora: "Empresa contratada",
+    });
+
+    expect(resultado.completo).toBe(false);
+    expect(resultado.pendentes).toContain("publicoInstituicaoExecutoraNome");
+  });
 });

@@ -10,97 +10,75 @@ const INSTITUICOES_QUE_EXIGEM_NOME = new Set([
   "Parceria entre Entidade Responsável e Entidade Executora",
 ]);
 
-// `.superRefine` sobre o schema "cheio" (não-partial): os 47 campos sempre
-// obrigatórios já são checados pelo próprio `respostasPreCursoSchema`; aqui
-// só entram as 9 chaves condicionais (REQ-PC-07: 1, REQ-PC-08: 3, REQ-PC-09:
-// 5) que o schema base deixa opcionais por padrão.
-const respostasCompletasSchema = respostasPreCursoSchema.superRefine(
-  (dados, ctx) => {
-    // REQ-PC-07 (CA-04 do documento fonte)
-    if (
-      INSTITUICOES_QUE_EXIGEM_NOME.has(dados.publicoInstituicaoExecutora) &&
-      !dados.publicoInstituicaoExecutoraNome
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["publicoInstituicaoExecutoraNome"],
-        message:
-          "Obrigatório quando a instituição executora é Empresa contratada ou Parceria",
-      });
-    }
+// As 9 chaves condicionais (REQ-PC-07: 1, REQ-PC-08: 3, REQ-PC-09: 5) - as
+// outras 47 chaves sempre-obrigatórias já são checadas por
+// `respostasPreCursoSchema.safeParse`. Roda contra o objeto bruto (não o
+// resultado do Zod): encadear isso como `.superRefine` no schema base
+// parecia mais direto, mas o Zod PULA o callback de `superRefine` quando o
+// schema base já produziu qualquer issue (confirmado empiricamente) - com
+// mais de 1 dos 47 campos sempre-obrigatórios ausentes ao mesmo tempo (o
+// estado normal de um preenchimento incremental), as 3 regras condicionais
+// nunca chegavam a rodar e ficavam fora de `pendentes`. Rodar as duas
+// checagens em paralelo e unir os resultados evita essa dependência do
+// comportamento interno do Zod.
+function pendenciasCondicionais(respostas: unknown): string[] {
+  const dados = (
+    typeof respostas === "object" && respostas !== null ? respostas : {}
+  ) as Record<string, unknown>;
+  const pendentes: string[] = [];
 
-    // REQ-PC-08
-    if (dados.infraEspecificaNecessidade === "Sim") {
-      if (!dados.infraEspecificaDisponibilidade) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["infraEspecificaDisponibilidade"],
-          message: "Obrigatório quando há necessidade de equipamentos específicos",
-        });
-      }
-      if (!dados.infraEspecificaSuficiencia) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["infraEspecificaSuficiencia"],
-          message: "Obrigatório quando há necessidade de equipamentos específicos",
-        });
-      }
-      if (!dados.infraEspecificaManutencao) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["infraEspecificaManutencao"],
-          message: "Obrigatório quando há necessidade de equipamentos específicos",
-        });
-      }
-    }
+  // REQ-PC-07 (CA-04 do documento fonte)
+  if (
+    INSTITUICOES_QUE_EXIGEM_NOME.has(dados.publicoInstituicaoExecutora as string) &&
+    !dados.publicoInstituicaoExecutoraNome
+  ) {
+    pendentes.push("publicoInstituicaoExecutoraNome");
+  }
 
-    // REQ-PC-09 - os 5 campos "Outro/Outra" do Dicionário de Campos.
-    if (dados.qualifVinculoPrograma === "Outro" && !dados.qualifVinculoProgramaOutro) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["qualifVinculoProgramaOutro"],
-        message: "Obrigatório quando o vínculo a programa é Outro",
-      });
+  // REQ-PC-08
+  if (dados.infraEspecificaNecessidade === "Sim") {
+    if (!dados.infraEspecificaDisponibilidade) {
+      pendentes.push("infraEspecificaDisponibilidade");
     }
-    if (
-      dados.qualifCaracteristicas.includes("Outra") &&
-      !dados.qualifCaracteristicasOutra
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["qualifCaracteristicasOutra"],
-        message: "Obrigatório quando as características incluem Outra",
-      });
+    if (!dados.infraEspecificaSuficiencia) {
+      pendentes.push("infraEspecificaSuficiencia");
     }
-    if (
-      dados.docenteFormaContratacao === "Outra" &&
-      !dados.docenteFormaContratacaoOutra
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["docenteFormaContratacaoOutra"],
-        message: "Obrigatório quando a forma de contratação é Outra",
-      });
+    if (!dados.infraEspecificaManutencao) {
+      pendentes.push("infraEspecificaManutencao");
     }
-    if (
-      dados.divulgacaoEstrategias.includes("Outra") &&
-      !dados.divulgacaoEstrategiasOutra
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["divulgacaoEstrategiasOutra"],
-        message: "Obrigatório quando as estratégias de divulgação incluem Outra",
-      });
-    }
-    if (dados.suporteEstrategias.includes("Outra") && !dados.suporteEstrategiasOutra) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["suporteEstrategiasOutra"],
-        message: "Obrigatório quando as estratégias de suporte incluem Outra",
-      });
-    }
-  },
-);
+  }
+
+  // REQ-PC-09 - os 5 campos "Outro/Outra" do Dicionário de Campos.
+  if (dados.qualifVinculoPrograma === "Outro" && !dados.qualifVinculoProgramaOutro) {
+    pendentes.push("qualifVinculoProgramaOutro");
+  }
+  if (
+    Array.isArray(dados.qualifCaracteristicas) &&
+    dados.qualifCaracteristicas.includes("Outra") &&
+    !dados.qualifCaracteristicasOutra
+  ) {
+    pendentes.push("qualifCaracteristicasOutra");
+  }
+  if (dados.docenteFormaContratacao === "Outra" && !dados.docenteFormaContratacaoOutra) {
+    pendentes.push("docenteFormaContratacaoOutra");
+  }
+  if (
+    Array.isArray(dados.divulgacaoEstrategias) &&
+    dados.divulgacaoEstrategias.includes("Outra") &&
+    !dados.divulgacaoEstrategiasOutra
+  ) {
+    pendentes.push("divulgacaoEstrategiasOutra");
+  }
+  if (
+    Array.isArray(dados.suporteEstrategias) &&
+    dados.suporteEstrategias.includes("Outra") &&
+    !dados.suporteEstrategiasOutra
+  ) {
+    pendentes.push("suporteEstrategiasOutra");
+  }
+
+  return pendentes;
+}
 
 export interface ResultadoCompletude {
   completo: boolean;
@@ -108,15 +86,12 @@ export interface ResultadoCompletude {
 }
 
 export function validarCompletudePreCurso(respostas: unknown): ResultadoCompletude {
-  const resultado = respostasCompletasSchema.safeParse(respostas);
+  const resultadoBase = respostasPreCursoSchema.safeParse(respostas);
+  const pendentesBase = resultadoBase.success
+    ? []
+    : resultadoBase.error.issues.map((issue) => issue.path.join("."));
 
-  if (resultado.success) {
-    return { completo: true, pendentes: [] };
-  }
+  const pendentes = [...new Set([...pendentesBase, ...pendenciasCondicionais(respostas)])];
 
-  const pendentes = [
-    ...new Set(resultado.error.issues.map((issue) => issue.path.join("."))),
-  ];
-
-  return { completo: false, pendentes };
+  return { completo: pendentes.length === 0, pendentes };
 }

@@ -265,3 +265,21 @@ export const respostasPreCursoParcialSchema = respostasPreCursoSchema.partial();
 export type RespostasPreCursoParcial = z.infer<
   typeof respostasPreCursoParcialSchema
 >;
+
+// Edge case da spec (planejamento): término anterior ao início é rejeitado
+// na gravação (400), não só no encerramento. Só se aplica quando as duas
+// datas estão presentes no estado final (a gravação parcial pode legitimamente
+// setar uma data antes da outra) - por isso a rota de PATCH chama isto
+// contra o JSON já mesclado (existente + patch), não contra o corpo bruto
+// da requisição. Comparação lexicográfica é válida porque `z.iso.date()`
+// garante o formato `YYYY-MM-DD`.
+export function ordemDatasValida(dados: {
+  planejDataInicioPrevista?: string;
+  planejDataTerminoPrevista?: string;
+}): boolean {
+  if (!dados.planejDataInicioPrevista || !dados.planejDataTerminoPrevista) {
+    return true;
+  }
+
+  return dados.planejDataTerminoPrevista >= dados.planejDataInicioPrevista;
+}

@@ -129,6 +129,52 @@ test("REQ-PC-06: valor de infraestrutura fora de 0-5 é rejeitado com 400, nada 
   await cliente.dispose();
 });
 
+test("edge case (Planejamento): término anterior ao início é rejeitado com 400, nada persistido", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const antes = getPreCurso(cdCursoEmAndamento);
+
+  const cliente = await novoCliente();
+  const res = await cliente.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
+    data: {
+      planejDataInicioPrevista: "2026-06-01",
+      planejDataTerminoPrevista: "2026-03-01",
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  const depois = getPreCurso(cdCursoEmAndamento);
+  expect(depois?.respostas).toEqual(antes?.respostas);
+
+  await cliente.dispose();
+});
+
+test("edge case (Planejamento): a ordem também é validada contra o estado mesclado quando as datas chegam em PATCHs separados", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+
+  const clienteInicio = await novoCliente();
+  const resInicio = await clienteInicio.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
+    data: { planejDataInicioPrevista: "2026-06-01" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect(resInicio.status()).toBe(200);
+  await clienteInicio.dispose();
+
+  const antes = getPreCurso(cdCursoEmAndamento);
+
+  const clienteTermino = await novoCliente();
+  const resTermino = await clienteTermino.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
+    data: { planejDataTerminoPrevista: "2026-03-01" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(resTermino.status()).toBe(400);
+  const depois = getPreCurso(cdCursoEmAndamento);
+  expect(depois?.respostas).toEqual(antes?.respostas);
+
+  await clienteTermino.dispose();
+});
+
 test("REQ-PC-12: gravação em pré-curso ENCERRADO é rejeitada com 409, dado inalterado", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
   const antes = getPreCurso(cdCursoEncerrado);

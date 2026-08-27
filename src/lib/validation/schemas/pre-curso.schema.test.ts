@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   criarPreCursoSchema,
+  ordemDatasValida,
   respostasPreCursoSchema,
 } from "./pre-curso.schema";
 
@@ -292,6 +293,48 @@ describe("respostasPreCursoSchema", () => {
       });
 
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe("ordemDatasValida (edge case: término antes do início)", () => {
+    it("término anterior ao início -> inválido", () => {
+      expect(
+        ordemDatasValida({
+          planejDataInicioPrevista: "2026-06-01",
+          planejDataTerminoPrevista: "2026-03-01",
+        }),
+      ).toBe(false);
+    });
+
+    it("término igual ao início -> válido", () => {
+      expect(
+        ordemDatasValida({
+          planejDataInicioPrevista: "2026-06-01",
+          planejDataTerminoPrevista: "2026-06-01",
+        }),
+      ).toBe(true);
+    });
+
+    it("término posterior ao início -> válido", () => {
+      expect(
+        ordemDatasValida({
+          planejDataInicioPrevista: "2026-03-01",
+          planejDataTerminoPrevista: "2026-06-01",
+        }),
+      ).toBe(true);
+    });
+
+    it("só uma das datas presente -> válido (regra não se aplica ainda)", () => {
+      expect(
+        ordemDatasValida({ planejDataInicioPrevista: "2026-06-01" }),
+      ).toBe(true);
+      expect(
+        ordemDatasValida({ planejDataTerminoPrevista: "2026-03-01" }),
+      ).toBe(true);
+    });
+
+    it("nenhuma das datas presente -> válido", () => {
+      expect(ordemDatasValida({})).toBe(true);
     });
   });
 });

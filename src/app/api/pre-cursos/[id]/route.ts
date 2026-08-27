@@ -5,7 +5,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { obterSessao } from "@/lib/auth/session";
 import { podeAcessarOfertante, podeGerenciarPreCurso } from "@/lib/auth/guards";
-import { respostasPreCursoSchema } from "@/lib/validation/schemas/pre-curso.schema";
+import {
+  ordemDatasValida,
+  respostasPreCursoSchema,
+} from "@/lib/validation/schemas/pre-curso.schema";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
 
@@ -92,6 +95,17 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
   const respostasAtuais =
     (preCursoExistente.respostas as Record<string, unknown> | null) ?? {};
   const respostasMescladas = { ...respostasAtuais, ...entrada.data };
+
+  // Edge case da spec (Planejamento): a validação roda contra o estado
+  // MESCLADO, não só o corpo do PATCH - cobre tanto as duas datas chegando
+  // no mesmo PATCH quanto uma data setada num PATCH anterior e a outra
+  // agora.
+  if (!ordemDatasValida(respostasMescladas)) {
+    return NextResponse.json(
+      { erro: "Data de término não pode ser anterior à data de início" },
+      { status: 400 },
+    );
+  }
 
   const preCurso = await prisma.preCurso.update({
     where: { cdCurso },
