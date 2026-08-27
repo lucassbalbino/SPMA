@@ -283,27 +283,27 @@ Mesmo enunciado e mesma escala do Bloco 6.
 
 | Requirement ID | Story | Phase | Status |
 |---|---|---|---|
-| PC-01 | P1: Criação | Tasks T1, T5, T9 | Implementing (T1, T5 done) |
-| PC-02 | P1: Criação | Tasks T5, T9 | Implementing (T5 done) |
-| PC-03 | P1: Criação | Tasks T5, T9 | Implementing (T5 done) |
-| PC-04 | P1: Preenchimento incremental | Tasks T6, T10 | Implementing (T6 done) |
-| PC-05 | P1: Preenchimento incremental | Tasks T1, T6, T10 | Implementing (T1, T6 done) |
-| PC-06 | P1: Preenchimento incremental | Tasks T1, T6, T10 | Implementing (T1, T6 done) |
-| PC-07 | P1: Regras condicionais | Tasks T3, T7, T10 | Implementing (T3, T7 done) |
-| PC-08 | P1: Regras condicionais | Tasks T3, T7, T10 | Implementing (T3, T7 done) |
-| PC-09 | P1: Regras condicionais | Tasks T3, T7, T10 | Implementing (T3, T7 done) |
-| PC-10 | P1: Encerramento | Tasks T3, T7, T10 | Implementing (T3, T7 done) |
-| PC-11 | P1: Encerramento | Tasks T7, T10 | Implementing (T7 done) |
-| PC-12 | P1: Encerramento | Tasks T6, T7, T10 | Implementing (T6, T7 done) |
-| PC-13 | P1: Consulta e listagem escopadas | Tasks T6, T10 | Implementing (T6 done) |
-| PC-14 | P1: Consulta e listagem escopadas | Tasks T5, T8 | Implementing (T5 done) |
-| PC-15 | P1: Consulta e listagem escopadas | Tasks T2, T5, T6, T7, T10 | Implementing (T2, T5, T6, T7 done) |
+| PC-01 | P1: Criação | Tasks T1, T5, T9 | ✅ Verified |
+| PC-02 | P1: Criação | Tasks T5, T9 | ✅ Verified |
+| PC-03 | P1: Criação | Tasks T5, T9 | ✅ Verified |
+| PC-04 | P1: Preenchimento incremental | Tasks T6, T10 | ✅ Verified |
+| PC-05 | P1: Preenchimento incremental | Tasks T1, T6, T10 | ⚠️ Verified (spec-precision gap: PATCH 400 body doesn't literally name the field — inherited, cross-cutting, out of scope) |
+| PC-06 | P1: Preenchimento incremental | Tasks T1, T6, T10 | ✅ Verified |
+| PC-07 | P1: Regras condicionais | Tasks T3, T7, T10 | ✅ Verified |
+| PC-08 | P1: Regras condicionais | Tasks T3, T7, T10 | ✅ Verified |
+| PC-09 | P1: Regras condicionais | Tasks T3, T7, T10 | ✅ Verified |
+| PC-10 | P1: Encerramento | Tasks T3, T7, T10 | ✅ Verified |
+| PC-11 | P1: Encerramento | Tasks T7, T10 | ✅ Verified |
+| PC-12 | P1: Encerramento | Tasks T6, T7, T10 | ✅ Verified |
+| PC-13 | P1: Consulta e listagem escopadas | Tasks T6, T10 | ✅ Verified |
+| PC-14 | P1: Consulta e listagem escopadas | Tasks T5, T8 | ✅ Verified |
+| PC-15 | P1: Consulta e listagem escopadas | Tasks T2, T5, T6, T7, T10 | ✅ Verified |
 
 **ID format:** `PC-NN` (Pré-Curso).
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 15 total, 15 mapped to tasks (T1–T10), 0 unmapped. Todos ainda "In Tasks"/"Implementing" — nenhum "Verified" até o Verifier rodar ao final do Execute.
+**Coverage:** 15 total, 15 mapped to tasks (T1–T10), 0 unmapped. Todos "Verified" pelo Verifier (iteração 2, `.specs/features/formulario-pre-curso/validation.md`) — PC-05 com uma ressalva de precisão de spec (herdada, fora de escopo).
 
 ---
 
