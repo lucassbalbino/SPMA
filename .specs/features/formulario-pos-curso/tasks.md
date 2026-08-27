@@ -114,8 +114,8 @@ T6 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] `podeGerenciarPosCurso` exportado de `guards.ts`
-- [ ] teste unitário confirma que `podeGerenciarPosCurso` se comporta identicamente a `podeGerenciarPreCurso` nos mesmos casos (GO vinculado ao Ofertante-alvo → `true`; GO de outro Ofertante → `false`; AM/GT/VT/VO/AL → `false` para qualquer alvo)
+- [x] `podeGerenciarPosCurso` exportado de `guards.ts`
+- [x] teste unitário confirma que `podeGerenciarPosCurso` se comporta identicamente a `podeGerenciarPreCurso` nos mesmos casos (GO vinculado ao Ofertante-alvo → `true`; GO de outro Ofertante → `false`; AM/GT/VT/VO/AL → `false` para qualquer alvo)
 
 **Tests**: unit
 **Gate**: quick

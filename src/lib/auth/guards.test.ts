@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   podeAcessarOfertante,
   podeEditarOfertante,
+  podeGerenciarPosCurso,
   podeGerenciarPreCurso,
   podeGerenciarVerba,
   requireOfertanteVinculado,
@@ -247,5 +248,42 @@ describe("podeGerenciarPreCurso", () => {
 
   it("AL não pode gerenciar", () => {
     expect(podeGerenciarPreCurso({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
+  });
+});
+
+// PosCurso não tem CD_Ofertante próprio - `cdOfertanteAlvo` aqui é sempre o
+// do PreCurso pai. Alias de podeGerenciarPreCurso (design.md), não uma nova
+// função - os casos abaixo confirmam que o comportamento é idêntico.
+describe("podeGerenciarPosCurso", () => {
+  it("é o mesmo comportamento de podeGerenciarPreCurso (alias, não uma função nova)", () => {
+    expect(podeGerenciarPosCurso).toBe(podeGerenciarPreCurso);
+  });
+
+  it("GO vinculado ao ofertante do PreCurso pai pode gerenciar", () => {
+    expect(podeGerenciarPosCurso({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);
+  });
+
+  it("GO vinculado a outro ofertante não pode gerenciar", () => {
+    expect(podeGerenciarPosCurso({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
+  });
+
+  it("AM não pode gerenciar, mesmo sendo autoridade global", () => {
+    expect(podeGerenciarPosCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("GT não pode gerenciar", () => {
+    expect(podeGerenciarPosCurso({ tipo: "GT", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("VT não pode gerenciar", () => {
+    expect(podeGerenciarPosCurso({ tipo: "VT", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("VO não pode gerenciar, mesmo o próprio ofertante", () => {
+    expect(podeGerenciarPosCurso({ tipo: "VO", cdOfertante: 1 }, 1)).toBe(false);
+  });
+
+  it("AL não pode gerenciar", () => {
+    expect(podeGerenciarPosCurso({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
   });
 });

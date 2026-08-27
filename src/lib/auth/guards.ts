@@ -118,3 +118,12 @@ export function podeGerenciarPreCurso(
 ): boolean {
   return usuario.tipo === "GO" && usuario.cdOfertante === cdOfertanteAlvo;
 }
+
+/**
+ * Guarda de ESCRITA sobre PosCurso (REQ-PO-14). Mesma regra de
+ * `podeGerenciarPreCurso` - o `cdOfertanteAlvo` aqui é o do PreCurso pai
+ * (PosCurso não tem CD_Ofertante próprio). Alias, não uma função nova: se
+ * essa regra um dia divergir da do Pré-Curso, separe-a em vez de reaproveitar
+ * este alias.
+ */
+export const podeGerenciarPosCurso = podeGerenciarPreCurso;
