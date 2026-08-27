@@ -104,6 +104,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SPEC_DEVIATION - src/app/api/usuarios/route.ts:6-11 (routes)
 - last seen: 2026-08-26T20:34:16Z
 
+### L-016 - A Zod .superRefine chained directly on a base object schema is skipped whenever the base schema already has validation issues, so completeness/pendency-listing logic built that way under-reports conditional gaps during a partial fill; evaluate conditional rules independently of base-field failures instead of via baseSchema.superRefine(...).
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `validation` · harmful: 0
+- features: formulario-pre-curso
+- evidence: src/lib/pre-curso/completude.ts:17 (validation)
+- last seen: 2026-08-27T13:30:17Z
+
+### L-017 - A cross-field ordering/relational rule explicitly listed as a spec edge case (e.g., end-date must not precede start-date) needs its own Zod .refine/.superRefine check; grep for evidence of each listed edge case's implementation before marking a task done, since independent per-field validation never catches it.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `validation` · harmful: 0
+- features: formulario-pre-curso
+- evidence: spec.md edge case: planejDataTerminoPrevista < planejDataInicioPrevista (validation)
+- last seen: 2026-08-27T13:30:18Z
+
+### L-018 - Returning only entrada.error.issues[0]?.message on a 400 does not satisfy an AC requiring field identification in the error response - Zod's default issue message omits the field path, so include issue.path alongside the message when the spec explicitly demands identifying the failing field.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: formulario-pre-curso
+- evidence: REQ-PC-05, src/app/api/pre-cursos/[id]/route.ts:86 (routes)
+- last seen: 2026-08-27T13:30:18Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

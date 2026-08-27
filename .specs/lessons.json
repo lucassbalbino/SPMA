@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 16,
+  "next_id": 19,
   "lessons": [
     {
       "id": "L-001",
@@ -274,6 +274,60 @@
       ],
       "created": "2026-08-26T20:34:16Z",
       "last_seen": "2026-08-26T20:34:16Z"
+    },
+    {
+      "id": "L-016",
+      "key": "spec_precision_gap::a zod superrefine chained directly on a base object schema is skipped whenever the base schema already has validation issues so completeness pendency listing logic built that way under reports conditional gaps during a partial fill evaluate conditional rules independently of base field failures instead of via baseschema superrefine",
+      "text": "A Zod .superRefine chained directly on a base object schema is skipped whenever the base schema already has validation issues, so completeness/pendency-listing logic built that way under-reports conditional gaps during a partial fill; evaluate conditional rules independently of base-field failures instead of via baseSchema.superRefine(...).",
+      "signal": "spec_precision_gap",
+      "scope": "validation",
+      "status": "candidate",
+      "features": [
+        "formulario-pre-curso"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/lib/pre-curso/completude.ts:17 (validation)"
+      ],
+      "created": "2026-08-27T13:30:17Z",
+      "last_seen": "2026-08-27T13:30:17Z"
+    },
+    {
+      "id": "L-017",
+      "key": "ac_gap::a cross field ordering relational rule explicitly listed as a spec edge case e g end date must not precede start date needs its own zod refine superrefine check grep for evidence of each listed edge case s implementation before marking a task done since independent per field validation never catches it",
+      "text": "A cross-field ordering/relational rule explicitly listed as a spec edge case (e.g., end-date must not precede start-date) needs its own Zod .refine/.superRefine check; grep for evidence of each listed edge case's implementation before marking a task done, since independent per-field validation never catches it.",
+      "signal": "ac_gap",
+      "scope": "validation",
+      "status": "candidate",
+      "features": [
+        "formulario-pre-curso"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec.md edge case: planejDataTerminoPrevista < planejDataInicioPrevista (validation)"
+      ],
+      "created": "2026-08-27T13:30:18Z",
+      "last_seen": "2026-08-27T13:30:18Z"
+    },
+    {
+      "id": "L-018",
+      "key": "spec_precision_gap::returning only entrada error issues 0 message on a 400 does not satisfy an ac requiring field identification in the error response zod s default issue message omits the field path so include issue path alongside the message when the spec explicitly demands identifying the failing field",
+      "text": "Returning only entrada.error.issues[0]?.message on a 400 does not satisfy an AC requiring field identification in the error response - Zod's default issue message omits the field path, so include issue.path alongside the message when the spec explicitly demands identifying the failing field.",
+      "signal": "spec_precision_gap",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "formulario-pre-curso"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "REQ-PC-05, src/app/api/pre-cursos/[id]/route.ts:86 (routes)"
+      ],
+      "created": "2026-08-27T13:30:18Z",
+      "last_seen": "2026-08-27T13:30:18Z"
     }
   ]
 }
