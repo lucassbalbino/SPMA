@@ -137,6 +137,11 @@ export function getPreCurso(cdCurso: number): PreCursoPersistido | null {
   return executar<PreCursoPersistido | null>("getPreCurso", cdCurso);
 }
 
+/** Marca um PreCurso de fixture como ENCERRADO direto no banco (REQ-PC-12), sem depender da rota de encerramento. */
+export function encerrarPreCursoFixture(cdCurso: number): PreCursoPersistido {
+  return executar<PreCursoPersistido>("encerrarPreCursoFixture", cdCurso);
+}
+
 /** Chamar antes de `deleteUsuarios` quando o teste criou PreCurso de fixture (FK para o CPF criador). */
 export function deletePreCursosPorOfertante(cdOfertantes: number[]): void {
   executar("deletePreCursosPorOfertante", cdOfertantes);

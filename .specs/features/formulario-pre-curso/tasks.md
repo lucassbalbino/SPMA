@@ -226,12 +226,12 @@ T4 → T10
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO grava um bloco parcial (ex.: Bloco 1 — Identificação) → 200, os demais campos continuam ausentes/nulos
-- [ ] e2e: GO grava um segundo bloco em seguida → o primeiro bloco continua presente na resposta seguinte (merge raso comprovado, REQ-PC-04)
-- [ ] e2e: valor de infraestrutura fora de 0–5 → 400, nada persistido
-- [ ] e2e: GO tenta gravar num pré-curso já `ENCERRADO` → 409, dado inalterado (REQ-PC-12)
-- [ ] e2e: GO de outro Ofertante tenta ler ou gravar → 403 em ambos
-- [ ] e2e: VO (perfil de leitura) consulta → 200; VO tenta gravar → 403
+- [x] e2e: GO grava um bloco parcial (ex.: Bloco 1 — Identificação) → 200, os demais campos continuam ausentes/nulos
+- [x] e2e: GO grava um segundo bloco em seguida → o primeiro bloco continua presente na resposta seguinte (merge raso comprovado, REQ-PC-04)
+- [x] e2e: valor de infraestrutura fora de 0–5 → 400, nada persistido
+- [x] e2e: GO tenta gravar num pré-curso já `ENCERRADO` → 409, dado inalterado (REQ-PC-12)
+- [x] e2e: GO de outro Ofertante tenta ler ou gravar → 403 em ambos
+- [x] e2e: VO (perfil de leitura) consulta → 200; VO tenta gravar → 403
 
 **Tests**: e2e
 **Gate**: full

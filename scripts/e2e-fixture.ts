@@ -123,6 +123,17 @@ async function executar(
     case "getPreCurso":
       return prisma.preCurso.findUnique({ where: { cdCurso: argumento as number } });
 
+    // Marca um PreCurso de fixture como ENCERRADO direto no banco - usado
+    // pelos e2e que precisam testar o gate de somente-leitura (REQ-PC-12)
+    // sem depender da rota de encerramento (T7) já estar implementada.
+    case "encerrarPreCursoFixture": {
+      const cdCurso = argumento as number;
+      return prisma.preCurso.update({
+        where: { cdCurso },
+        data: { status: "ENCERRADO", dataEncerramento: new Date() },
+      });
+    }
+
     case "criarPreCurso": {
       const dados = argumento as {
         cdOfertante: number;
