@@ -207,9 +207,9 @@ Chaves em camelCase, prefixo `pos` seguido do bloco, para uso direto como propri
 
 | Requirement ID | Story | Tasks | Status |
 |---|---|---|---|
-| PO-01 | P1: Criação | T1, T4, T8 | Implementing (T1 done) |
-| PO-02 | P1: Criação | T4 | In Tasks |
-| PO-03 | P1: Criação | T4 | In Tasks |
+| PO-01 | P1: Criação | T1, T4, T8 | Implementing (T1, T4 done) |
+| PO-02 | P1: Criação | T4 | Implementing (T4 done) |
+| PO-03 | P1: Criação | T4 | Implementing (T4 done) |
 | PO-04 | P1: Preenchimento incremental | T5, T9 | In Tasks |
 | PO-05 | P1: Preenchimento incremental | T1, T5, T9 | Implementing (T1 done) |
 | PO-06 | P1: Preenchimento incremental (edge case) | T1, T5, T9 | Implementing (T1 done) |
@@ -218,7 +218,7 @@ Chaves em camelCase, prefixo `pos` seguido do bloco, para uso direto como propri
 | PO-09 | P1: Encerramento | T3, T6, T9 | In Tasks |
 | PO-10 | P1: Encerramento | T3, T6, T9 | In Tasks |
 | PO-11 | P1: Consulta e listagem escopadas | T5, T9 | In Tasks |
-| PO-12 | P1: Consulta e listagem escopadas | T4, T7 | In Tasks |
+| PO-12 | P1: Consulta e listagem escopadas | T4, T7 | Implementing (T4 done) |
 | PO-13 | P1: Consulta e listagem escopadas | T2, T4, T5, T6, T9 | In Tasks |
 | PO-14 | P1: Consulta e listagem escopadas | T2, T4, T5, T6 | In Tasks |
 

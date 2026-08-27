@@ -146,13 +146,34 @@ async function executar(
 
     // Limpa PreCurso de teste antes de `deleteUsuarios` - `PreCurso.criadoPor`
     // é FK para Usuario, então um PreCurso de fixture bloquearia a exclusão
-    // do usuário de teste que o criou.
+    // do usuário de teste que o criou. `PosCurso.cdCurso` tem `onDelete:
+    // Cascade` para `PreCurso.cdCurso` - apagar o PreCurso já remove o
+    // PosCurso associado, sem precisar de um comando de limpeza próprio.
     case "deletePreCursosPorOfertante": {
       const cdOfertantes = argumento as number[];
       const { count } = await prisma.preCurso.deleteMany({
         where: { cdOfertante: { in: cdOfertantes } },
       });
       return { count };
+    }
+
+    case "getPosCurso":
+      return prisma.posCurso.findUnique({ where: { cdCurso: argumento as number } });
+
+    // Marca um PosCurso de fixture como ENCERRADO direto no banco - usado
+    // pelos e2e que precisam testar o gate de somente-leitura (REQ-PO-08)
+    // sem depender da rota de encerramento (T6) já estar implementada.
+    case "encerrarPosCursoFixture": {
+      const cdCurso = argumento as number;
+      return prisma.posCurso.update({
+        where: { cdCurso },
+        data: { status: "ENCERRADO", dataEncerramento: new Date() },
+      });
+    }
+
+    case "criarPosCurso": {
+      const dados = argumento as { cdCurso: number; criadoPor: string };
+      return prisma.posCurso.create({ data: dados });
     }
 
     // `db-test-reset.ts` não trunca TB_Tentativa_Login_Ip (tabela independente

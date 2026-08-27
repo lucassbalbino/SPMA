@@ -166,12 +166,12 @@ T6 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO cria Pós-Curso informando o `cdCurso` de um Pré-Curso do próprio Ofertante (em qualquer status) → 201, `status=EM_ANDAMENTO`, `respostas=null`
-- [ ] e2e: `cdCurso` que já tem Pós-Curso → 409, nenhum novo registro criado
-- [ ] e2e: `cdCurso` inexistente → 404
-- [ ] e2e: `cdCurso` de um Pré-Curso de outro Ofertante → 403, nenhum registro criado
-- [ ] e2e: GO vinculado ao Ofertante A lista só os Pós-Cursos do Ofertante A; GT lista todos
-- [ ] e2e: AL tentando criar ou listar → 403
+- [x] e2e: GO cria Pós-Curso informando o `cdCurso` de um Pré-Curso do próprio Ofertante (em qualquer status) → 201, `status=EM_ANDAMENTO`, `respostas=null`
+- [x] e2e: `cdCurso` que já tem Pós-Curso → 409, nenhum novo registro criado
+- [x] e2e: `cdCurso` inexistente → 404
+- [x] e2e: `cdCurso` de um Pré-Curso de outro Ofertante → 403, nenhum registro criado
+- [x] e2e: GO vinculado ao Ofertante A lista só os Pós-Cursos do Ofertante A; GT lista todos
+- [x] e2e: AL tentando criar ou listar → 403
 
 **Tests**: e2e
 **Gate**: full

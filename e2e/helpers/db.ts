@@ -142,7 +142,29 @@ export function encerrarPreCursoFixture(cdCurso: number): PreCursoPersistido {
   return executar<PreCursoPersistido>("encerrarPreCursoFixture", cdCurso);
 }
 
-/** Chamar antes de `deleteUsuarios` quando o teste criou PreCurso de fixture (FK para o CPF criador). */
+/** Chamar antes de `deleteUsuarios` quando o teste criou PreCurso de fixture (FK para o CPF criador). Também remove o PosCurso associado (onDelete: Cascade). */
 export function deletePreCursosPorOfertante(cdOfertantes: number[]): void {
   executar("deletePreCursosPorOfertante", cdOfertantes);
+}
+
+export type PosCursoPersistido = {
+  cdCurso: number;
+  status: "EM_ANDAMENTO" | "ENCERRADO";
+  respostas: Record<string, unknown> | null;
+  criadoPor: string;
+  dataEncerramento: string | null;
+};
+
+/** Insere um Pós-Curso direto no banco - atalho de fixture para os e2e de `formulario-pos-curso` que não precisam exercitar a rota de criação (T4) em si. */
+export function criarPosCurso(dados: { cdCurso: number; criadoPor: string }): PosCursoPersistido {
+  return executar<PosCursoPersistido>("criarPosCurso", dados);
+}
+
+export function getPosCurso(cdCurso: number): PosCursoPersistido | null {
+  return executar<PosCursoPersistido | null>("getPosCurso", cdCurso);
+}
+
+/** Marca um PosCurso de fixture como ENCERRADO direto no banco (REQ-PO-08), sem depender da rota de encerramento. */
+export function encerrarPosCursoFixture(cdCurso: number): PosCursoPersistido {
+  return executar<PosCursoPersistido>("encerrarPosCursoFixture", cdCurso);
 }
