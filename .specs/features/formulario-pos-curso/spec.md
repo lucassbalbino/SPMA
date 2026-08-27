@@ -207,20 +207,20 @@ Chaves em camelCase, prefixo `pos` seguido do bloco, para uso direto como propri
 
 | Requirement ID | Story | Tasks | Status |
 |---|---|---|---|
-| PO-01 | P1: Criação | T1, T4, T8 | Implementing (all tasks done) |
-| PO-02 | P1: Criação | T4 | Implementing (all tasks done) |
-| PO-03 | P1: Criação | T4 | Implementing (all tasks done) |
-| PO-04 | P1: Preenchimento incremental | T5, T9 | Implementing (all tasks done) |
-| PO-05 | P1: Preenchimento incremental | T1, T5, T9 | Implementing (all tasks done) |
-| PO-06 | P1: Preenchimento incremental (edge case) | T1, T5, T9 | Implementing (all tasks done) |
-| PO-07 | P1: Regra condicional | T3, T6, T9 | Implementing (all tasks done) |
-| PO-08 | P1: Encerramento | T5, T6 | Implementing (all tasks done) |
-| PO-09 | P1: Encerramento | T3, T6, T9 | Implementing (all tasks done) |
-| PO-10 | P1: Encerramento | T3, T6, T9 | Implementing (all tasks done) |
-| PO-11 | P1: Consulta e listagem escopadas | T5, T9 | Implementing (all tasks done) |
-| PO-12 | P1: Consulta e listagem escopadas | T4, T7 | Implementing (all tasks done) |
-| PO-13 | P1: Consulta e listagem escopadas | T2, T4, T5, T6, T9 | Implementing (all tasks done) |
-| PO-14 | P1: Consulta e listagem escopadas | T2, T4, T5, T6 | Implementing (all tasks done) |
+| PO-01 | P1: Criação | T1, T4, T8 | ✅ Verified |
+| PO-02 | P1: Criação | T4 | ✅ Verified |
+| PO-03 | P1: Criação | T4 | ✅ Verified |
+| PO-04 | P1: Preenchimento incremental | T5, T9 | ✅ Verified |
+| PO-05 | P1: Preenchimento incremental | T1, T5, T9 | ✅ Verified |
+| PO-06 | P1: Preenchimento incremental (edge case) | T1, T5, T9 | ✅ Verified |
+| PO-07 | P1: Regra condicional | T3, T6, T9 | ✅ Verified |
+| PO-08 | P1: Encerramento | T5, T6 | ✅ Verified |
+| PO-09 | P1: Encerramento | T3, T6, T9 | ✅ Verified |
+| PO-10 | P1: Encerramento | T3, T6, T9 | ✅ Verified |
+| PO-11 | P1: Consulta e listagem escopadas | T5, T9 | ✅ Verified |
+| PO-12 | P1: Consulta e listagem escopadas | T4, T7 | ✅ Verified |
+| PO-13 | P1: Consulta e listagem escopadas | T2, T4, T5, T6, T9 | ✅ Verified |
+| PO-14 | P1: Consulta e listagem escopadas | T2, T4, T5, T6 | ✅ Verified |
 
 **ID format:** `PO-NN` (Pós-Curso).
 
