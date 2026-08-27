@@ -3,11 +3,14 @@
 // desvio cada guarda dispara, não o acesso ao banco.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  podeAcessarAvaliacao,
   podeAcessarOfertante,
   podeEditarOfertante,
+  podeGerenciarAvaliacao,
   podeGerenciarPosCurso,
   podeGerenciarPreCurso,
   podeGerenciarVerba,
+  podeMatricularAluno,
   requireOfertanteVinculado,
   requirePrimeiroAcessoConcluido,
   requireSession,
@@ -285,5 +288,126 @@ describe("podeGerenciarPosCurso", () => {
 
   it("AL não pode gerenciar", () => {
     expect(podeGerenciarPosCurso({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
+  });
+});
+
+// AvaliacaoAluno não tem CD_Ofertante próprio - `cdOfertanteAlvo` aqui é
+// sempre o do PreCurso (curso) em que o Aluno está sendo matriculado. Alias
+// de podeGerenciarPreCurso (design.md), mesmo padrão de podeGerenciarPosCurso.
+describe("podeMatricularAluno", () => {
+  it("é o mesmo comportamento de podeGerenciarPreCurso (alias, não uma função nova)", () => {
+    expect(podeMatricularAluno).toBe(podeGerenciarPreCurso);
+  });
+
+  it("GO vinculado ao ofertante do curso pode matricular", () => {
+    expect(podeMatricularAluno({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);
+  });
+
+  it("GO vinculado a outro ofertante não pode matricular", () => {
+    expect(podeMatricularAluno({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
+  });
+
+  it("AM não pode matricular, mesmo sendo autoridade global", () => {
+    expect(podeMatricularAluno({ tipo: "AM", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("GT não pode matricular", () => {
+    expect(podeMatricularAluno({ tipo: "GT", cdOfertante: null }, 1)).toBe(false);
+  });
+});
+
+// Primeira guarda de identidade pura do projeto (design.md Tech Decisions):
+// não checa perfil de gestão, só se o CPF autenticado é o dono do registro.
+describe("podeGerenciarAvaliacao", () => {
+  it("AL com CPF igual ao da avaliação pode gerenciar", () => {
+    expect(
+      podeGerenciarAvaliacao({ tipo: "AL", cpf: "52998224725" }, "52998224725"),
+    ).toBe(true);
+  });
+
+  it("AL com CPF diferente do da avaliação não pode gerenciar", () => {
+    expect(
+      podeGerenciarAvaliacao({ tipo: "AL", cpf: "11144477735" }, "52998224725"),
+    ).toBe(false);
+  });
+
+  it("GO (mesmo tendo feito a matrícula) não pode gerenciar", () => {
+    expect(
+      podeGerenciarAvaliacao({ tipo: "GO", cpf: "52998224725" }, "52998224725"),
+    ).toBe(false);
+  });
+
+  it("AM não pode gerenciar, mesmo sendo autoridade global", () => {
+    expect(
+      podeGerenciarAvaliacao({ tipo: "AM", cpf: "52998224725" }, "52998224725"),
+    ).toBe(false);
+  });
+});
+
+describe("podeAcessarAvaliacao", () => {
+  it("AL com CPF igual ao alvo pode acessar, independente do cdOfertante", () => {
+    expect(
+      podeAcessarAvaliacao(
+        { tipo: "AL", cpf: "52998224725", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: 1 },
+      ),
+    ).toBe(true);
+  });
+
+  it("AL com CPF diferente do alvo não pode acessar", () => {
+    expect(
+      podeAcessarAvaliacao(
+        { tipo: "AL", cpf: "11144477735", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: 1 },
+      ),
+    ).toBe(false);
+  });
+
+  it("GO vinculado ao cdOfertante do alvo pode acessar", () => {
+    expect(
+      podeAcessarAvaliacao(
+        { tipo: "GO", cpf: "11144477735", cdOfertante: 1 },
+        { cpfAluno: "52998224725", cdOfertante: 1 },
+      ),
+    ).toBe(true);
+  });
+
+  it("GO vinculado a outro Ofertante não pode acessar", () => {
+    expect(
+      podeAcessarAvaliacao(
+        { tipo: "GO", cpf: "11144477735", cdOfertante: 2 },
+        { cpfAluno: "52998224725", cdOfertante: 1 },
+      ),
+    ).toBe(false);
+  });
+
+  it("VO vinculado ao cdOfertante do alvo pode acessar", () => {
+    expect(
+      podeAcessarAvaliacao(
+        { tipo: "VO", cpf: "11144477735", cdOfertante: 1 },
+        { cpfAluno: "52998224725", cdOfertante: 1 },
+      ),
+    ).toBe(true);
+  });
+
+  it("AM/GT/VT sempre podem acessar, para qualquer alvo", () => {
+    expect(
+      podeAcessarAvaliacao(
+        { tipo: "AM", cpf: "11144477735", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: 1 },
+      ),
+    ).toBe(true);
+    expect(
+      podeAcessarAvaliacao(
+        { tipo: "GT", cpf: "11144477735", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: 1 },
+      ),
+    ).toBe(true);
+    expect(
+      podeAcessarAvaliacao(
+        { tipo: "VT", cpf: "11144477735", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: 1 },
+      ),
+    ).toBe(true);
   });
 });

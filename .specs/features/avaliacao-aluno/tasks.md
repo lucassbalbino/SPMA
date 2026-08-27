@@ -118,9 +118,9 @@ T1 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] `podeMatricularAluno` exportado e se comporta identicamente a `podeGerenciarPreCurso` (GO do Ofertante-alvo → `true`; GO de outro Ofertante → `false`; AM/GT/VT/VO/AL → `false`)
-- [ ] `podeGerenciarAvaliacao`: AL com CPF igual ao da avaliação → `true`; AL com CPF diferente → `false`; qualquer perfil não-AL (incluindo o GO que matriculou) → `false`
-- [ ] `podeAcessarAvaliacao`: AL com CPF igual ao alvo → `true` independente do `cdOfertante`; AL com CPF diferente → `false`; GO/VO do `cdOfertante` do alvo → `true`; GO/VO de outro Ofertante → `false`; AM/GT/VT → `true` para qualquer alvo
+- [x] `podeMatricularAluno` exportado e se comporta identicamente a `podeGerenciarPreCurso` (GO do Ofertante-alvo → `true`; GO de outro Ofertante → `false`; AM/GT/VT/VO/AL → `false`)
+- [x] `podeGerenciarAvaliacao`: AL com CPF igual ao da avaliação → `true`; AL com CPF diferente → `false`; qualquer perfil não-AL (incluindo o GO que matriculou) → `false`
+- [x] `podeAcessarAvaliacao`: AL com CPF igual ao alvo → `true` independente do `cdOfertante`; AL com CPF diferente → `false`; GO/VO do `cdOfertante` do alvo → `true`; GO/VO de outro Ofertante → `false`; AM/GT/VT → `true` para qualquer alvo
 
 **Tests**: unit
 **Gate**: quick

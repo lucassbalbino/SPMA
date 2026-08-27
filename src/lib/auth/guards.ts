@@ -127,3 +127,42 @@ export function podeGerenciarPreCurso(
  * este alias.
  */
 export const podeGerenciarPosCurso = podeGerenciarPreCurso;
+
+/**
+ * Guarda de criação da matrícula (AvaliacaoAluno) - AVAL-06. Mesma regra de
+ * `podeGerenciarPreCurso` - o `cdOfertanteAlvo` aqui é o do curso em que o
+ * Aluno está sendo matriculado. Alias, mesmo raciocínio de
+ * `podeGerenciarPosCurso`.
+ */
+export const podeMatricularAluno = podeGerenciarPreCurso;
+
+/**
+ * Guarda de ESCRITA sobre a própria AvaliacaoAluno (AVAL-09/18) - primeira
+ * guarda de identidade pura do projeto: nenhum perfil de gestão escreve
+ * respostas ou encerra, só a própria pessoa (seção 6 do documento fonte,
+ * "preenchido pelo próprio aluno"; seção 3.7, "acionada pelo aluno"). O GO
+ * que fez a matrícula não tem essa autoridade.
+ */
+export function podeGerenciarAvaliacao(
+  usuario: { tipo: TipoUsuario; cpf: string },
+  cpfAvaliacao: string,
+): boolean {
+  return usuario.tipo === "AL" && usuario.cpf === cpfAvaliacao;
+}
+
+/**
+ * Guarda de LEITURA sobre AvaliacaoAluno (AVAL-20/21/23). Combina duas
+ * autoridades: o próprio Aluno (por identidade) e o escopo por Ofertante já
+ * usado em Pré-Curso/Pós-Curso (`podeAcessarOfertante`), porque o mesmo
+ * recurso é lido tanto pelo dono quanto pela gestão do Ofertante do curso.
+ */
+export function podeAcessarAvaliacao(
+  usuario: { tipo: TipoUsuario; cpf: string; cdOfertante: number | null },
+  alvo: { cpfAluno: string; cdOfertante: number },
+): boolean {
+  if (usuario.tipo === "AL") {
+    return usuario.cpf === alvo.cpfAluno;
+  }
+
+  return podeAcessarOfertante(usuario, alvo.cdOfertante);
+}
