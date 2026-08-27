@@ -207,7 +207,7 @@ Chaves em camelCase, prefixo `pos` seguido do bloco, para uso direto como propri
 
 | Requirement ID | Story | Tasks | Status |
 |---|---|---|---|
-| PO-01 | P1: Criação | T1, T4, T8 | Implementing (T1, T4 done) |
+| PO-01 | P1: Criação | T1, T4, T8 | Implementing (T1, T4, T8 done) |
 | PO-02 | P1: Criação | T4 | Implementing (T4 done) |
 | PO-03 | P1: Criação | T4 | Implementing (T4 done) |
 | PO-04 | P1: Preenchimento incremental | T5, T9 | Implementing (T5 done) |

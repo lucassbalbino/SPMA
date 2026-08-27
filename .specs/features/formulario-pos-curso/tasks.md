@@ -273,9 +273,9 @@ T6 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO cria um Pós-Curso escolhendo um Pré-Curso elegível do próprio Ofertante → redireciona para a tela de preenchimento (T9)
-- [ ] e2e: seletor de Pré-Curso mostra só os do próprio Ofertante do GO autenticado que ainda não têm Pós-Curso (um Pré-Curso já com Pós-Curso não aparece na lista)
-- [ ] e2e: quando não há nenhum Pré-Curso elegível, a tela mostra uma mensagem informativa em vez de um formulário vazio
+- [x] e2e: GO cria um Pós-Curso escolhendo um Pré-Curso elegível do próprio Ofertante → redireciona para a tela de preenchimento (T9)
+- [x] e2e: seletor de Pré-Curso mostra só os do próprio Ofertante do GO autenticado que ainda não têm Pós-Curso (um Pré-Curso já com Pós-Curso não aparece na lista)
+- [x] e2e: quando não há nenhum Pré-Curso elegível, a tela mostra uma mensagem informativa em vez de um formulário vazio
 
 **Tests**: e2e
 **Gate**: full
