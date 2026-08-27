@@ -131,7 +131,7 @@ T1 → T9
 
 #### T3: `src/lib/avaliacao/completude.ts`
 
-**What**: `validarCompletudeParte1(respostas: unknown): { completo: boolean; pendentes: string[] }` — schema dedicado das 7 chaves sempre-obrigatórias de Parte 1 via `.safeParse` + função pura para os 2 condicionais (`avalProfissAtividadeEspecifica` se `avalProfissAtuaTurismo="Sim"`; `avalExperienciaTipoCursoAnterior` se `avalExperienciaCursoAnterior="Sim"`), unindo os dois conjuntos de pendências. `validarCompletudeParte2(respostas: unknown): { completo: boolean; pendentes: string[] }` — se `avalParticipConcluiuCurso` ausente, pendente sozinho; se `="Não"`, exige só `avalParticipMotivoNaoConclusao`; se `="Sim"`, roda um schema dedicado das 22 chaves restantes via `.safeParse` (`avalGeralComentariosFinais` nunca entra). `validarCompletudeAvaliacao(respostas: unknown)` — união das duas acima, usada só no encerramento. Nenhuma função encadeia `.superRefine` no schema base (ver design.md Approach Exploration §2 e lição L-016 de `formulario-pre-curso`).
+**What**: `validarCompletudeParte1(respostas: unknown): { completo: boolean; pendentes: string[] }` — schema dedicado das 17 chaves sempre-obrigatórias de Parte 1 (as 19 chaves menos os 2 condicionais) via `.safeParse` + função pura para os 2 condicionais (`avalProfissAtividadeEspecifica` se `avalProfissAtuaTurismo="Sim"`; `avalExperienciaTipoCursoAnterior` se `avalExperienciaCursoAnterior="Sim"`), unindo os dois conjuntos de pendências. `validarCompletudeParte2(respostas: unknown): { completo: boolean; pendentes: string[] }` — se `avalParticipConcluiuCurso` ausente, pendente sozinho; se `="Não"`, exige só `avalParticipMotivoNaoConclusao`; se `="Sim"`, roda um schema dedicado das 22 chaves restantes via `.safeParse` (`avalGeralComentariosFinais` nunca entra). `validarCompletudeAvaliacao(respostas: unknown)` — união das duas acima, usada só no encerramento. Nenhuma função encadeia `.superRefine` no schema base (ver design.md Approach Exploration §2 e lição L-016 de `formulario-pre-curso`).
 **Where**: `src/lib/avaliacao/completude.ts`
 **Depends on**: T1
 **Reuses**: `respostasAvaliacaoSchema`/tipos de `avaliacao.schema.ts` (T1); a técnica (não o código) de `src/lib/pos-curso/completude.ts`
@@ -142,15 +142,15 @@ T1 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] `validarCompletudeParte1`: as 7 chaves diretas preenchidas + `avalProfissAtuaTurismo="Não"` + `avalExperienciaCursoAnterior="Não"` → `completo=true`
-- [ ] `validarCompletudeParte1`: `avalProfissAtuaTurismo="Sim"` sem `avalProfissAtividadeEspecifica` → pendente inclui a chave; idem para `avalExperienciaCursoAnterior="Sim"` sem `avalExperienciaTipoCursoAnterior`
-- [ ] `validarCompletudeParte1`: campo condicional aparece em `pendentes` mesmo com a maioria dos outros campos de Parte 1 também ausentes (prova direta contra a lição L-016 — testado desde o início)
-- [ ] `validarCompletudeParte2`: `avalParticipConcluiuCurso="Não"` + `avalParticipMotivoNaoConclusao` preenchido → `completo=true`, mesmo com as 22 chaves restantes todas ausentes
-- [ ] `validarCompletudeParte2`: `avalParticipConcluiuCurso="Não"` sem `avalParticipMotivoNaoConclusao` → `completo=false`, pendente é só essa chave (as 22 não aparecem)
-- [ ] `validarCompletudeParte2`: `avalParticipConcluiuCurso="Sim"` com as 22 chaves preenchidas → `completo=true`
-- [ ] `validarCompletudeParte2`: `avalParticipConcluiuCurso="Sim"` com 1 das 22 chaves ausente → `completo=false`, pendente lista exatamente essa chave
-- [ ] `validarCompletudeParte2`: `avalGeralComentariosFinais` ausente nunca aparece em `pendentes`, mesmo com `avalParticipConcluiuCurso="Sim"` e todo o resto preenchido
-- [ ] `validarCompletudeAvaliacao`: une pendências de Parte 1 e Parte 2 corretamente (caso com uma pendência de cada)
+- [x] `validarCompletudeParte1`: as 17 chaves sempre-obrigatórias preenchidas + `avalProfissAtuaTurismo="Não"` + `avalExperienciaCursoAnterior="Não"` → `completo=true`
+- [x] `validarCompletudeParte1`: `avalProfissAtuaTurismo="Sim"` sem `avalProfissAtividadeEspecifica` → pendente inclui a chave; idem para `avalExperienciaCursoAnterior="Sim"` sem `avalExperienciaTipoCursoAnterior`
+- [x] `validarCompletudeParte1`: campo condicional aparece em `pendentes` mesmo com a maioria dos outros campos de Parte 1 também ausentes (prova direta contra a lição L-016 — testado desde o início)
+- [x] `validarCompletudeParte2`: `avalParticipConcluiuCurso="Não"` + `avalParticipMotivoNaoConclusao` preenchido → `completo=true`, mesmo com as 22 chaves restantes todas ausentes
+- [x] `validarCompletudeParte2`: `avalParticipConcluiuCurso="Não"` sem `avalParticipMotivoNaoConclusao` → `completo=false`, pendente é só essa chave (as 22 não aparecem)
+- [x] `validarCompletudeParte2`: `avalParticipConcluiuCurso="Sim"` com as 22 chaves preenchidas → `completo=true`
+- [x] `validarCompletudeParte2`: `avalParticipConcluiuCurso="Sim"` com 1 das 22 chaves ausente → `completo=false`, pendente lista exatamente essa chave
+- [x] `validarCompletudeParte2`: `avalGeralComentariosFinais` ausente nunca aparece em `pendentes`, mesmo com `avalParticipConcluiuCurso="Sim"` e todo o resto preenchido
+- [x] `validarCompletudeAvaliacao`: une pendências de Parte 1 e Parte 2 corretamente (caso com uma pendência de cada)
 
 **Tests**: unit
 **Gate**: quick
