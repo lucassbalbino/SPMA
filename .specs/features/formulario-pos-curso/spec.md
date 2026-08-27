@@ -218,7 +218,7 @@ Chaves em camelCase, prefixo `pos` seguido do bloco, para uso direto como propri
 | PO-09 | P1: Encerramento | T3, T6, T9 | Implementing (T3, T6 done) |
 | PO-10 | P1: Encerramento | T3, T6, T9 | Implementing (T3, T6 done) |
 | PO-11 | P1: Consulta e listagem escopadas | T5, T9 | Implementing (T5 done) |
-| PO-12 | P1: Consulta e listagem escopadas | T4, T7 | Implementing (T4 done) |
+| PO-12 | P1: Consulta e listagem escopadas | T4, T7 | Implementing (T4, T7 done) |
 | PO-13 | P1: Consulta e listagem escopadas | T2, T4, T5, T6, T9 | In Tasks |
 | PO-14 | P1: Consulta e listagem escopadas | T2, T4, T5, T6 | In Tasks |
 

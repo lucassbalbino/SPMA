@@ -249,9 +249,9 @@ T6 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO vinculado ao Ofertante A vê só os Pós-Cursos do Ofertante A na tela
-- [ ] e2e: GT vê todos os Pós-Cursos cadastrados
-- [ ] e2e: cada item lista o status atual e linka para a tela de detalhe (T9)
+- [x] e2e: GO vinculado ao Ofertante A vê só os Pós-Cursos do Ofertante A na tela
+- [x] e2e: GT vê todos os Pós-Cursos cadastrados
+- [x] e2e: cada item lista o status atual e linka para a tela de detalhe (T9)
 
 **Tests**: e2e
 **Gate**: full
