@@ -253,10 +253,10 @@ T4 → T10
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: pré-curso com os 56 campos completos e condicionais satisfeitos → 200, `status=ENCERRADO`, `dataEncerramento` preenchida (CA-05 do documento fonte)
-- [ ] e2e: pré-curso com 1 campo obrigatório faltando → 400, `pendentes` lista a chave, `status` permanece `EM_ANDAMENTO`
-- [ ] e2e: segunda tentativa de encerrar um pré-curso já `ENCERRADO` → 409
-- [ ] e2e: após o encerramento, uma tentativa de `PATCH` em `/api/pre-cursos/[id]` (T6) recebe 409 (fecha REQ-PC-12 fim-a-fim)
+- [x] e2e: pré-curso com os 56 campos completos e condicionais satisfeitos → 200, `status=ENCERRADO`, `dataEncerramento` preenchida (CA-05 do documento fonte)
+- [x] e2e: pré-curso com 1 campo obrigatório faltando → 400, `pendentes` lista a chave, `status` permanece `EM_ANDAMENTO`
+- [x] e2e: segunda tentativa de encerrar um pré-curso já `ENCERRADO` → 409
+- [x] e2e: após o encerramento, uma tentativa de `PATCH` em `/api/pre-cursos/[id]` (T6) recebe 409 (fecha REQ-PC-12 fim-a-fim)
 
 **Tests**: e2e
 **Gate**: full

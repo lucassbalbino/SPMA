@@ -289,15 +289,15 @@ Mesmo enunciado e mesma escala do Bloco 6.
 | PC-04 | P1: Preenchimento incremental | Tasks T6, T10 | Implementing (T6 done) |
 | PC-05 | P1: Preenchimento incremental | Tasks T1, T6, T10 | Implementing (T1, T6 done) |
 | PC-06 | P1: Preenchimento incremental | Tasks T1, T6, T10 | Implementing (T1, T6 done) |
-| PC-07 | P1: Regras condicionais | Tasks T3, T7, T10 | Implementing (T3 done) |
-| PC-08 | P1: Regras condicionais | Tasks T3, T7, T10 | Implementing (T3 done) |
-| PC-09 | P1: Regras condicionais | Tasks T3, T7, T10 | Implementing (T3 done) |
-| PC-10 | P1: Encerramento | Tasks T3, T7, T10 | Implementing (T3 done) |
-| PC-11 | P1: Encerramento | Tasks T7, T10 | In Tasks |
-| PC-12 | P1: Encerramento | Tasks T6, T7, T10 | Implementing (T6 done) |
+| PC-07 | P1: Regras condicionais | Tasks T3, T7, T10 | Implementing (T3, T7 done) |
+| PC-08 | P1: Regras condicionais | Tasks T3, T7, T10 | Implementing (T3, T7 done) |
+| PC-09 | P1: Regras condicionais | Tasks T3, T7, T10 | Implementing (T3, T7 done) |
+| PC-10 | P1: Encerramento | Tasks T3, T7, T10 | Implementing (T3, T7 done) |
+| PC-11 | P1: Encerramento | Tasks T7, T10 | Implementing (T7 done) |
+| PC-12 | P1: Encerramento | Tasks T6, T7, T10 | Implementing (T6, T7 done) |
 | PC-13 | P1: Consulta e listagem escopadas | Tasks T6, T10 | Implementing (T6 done) |
 | PC-14 | P1: Consulta e listagem escopadas | Tasks T5, T8 | Implementing (T5 done) |
-| PC-15 | P1: Consulta e listagem escopadas | Tasks T2, T5, T6, T7, T10 | Implementing (T2, T5, T6 done) |
+| PC-15 | P1: Consulta e listagem escopadas | Tasks T2, T5, T6, T7, T10 | Implementing (T2, T5, T6, T7 done) |
 
 **ID format:** `PC-NN` (Pré-Curso).
 
