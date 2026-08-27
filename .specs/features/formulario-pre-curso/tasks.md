@@ -280,9 +280,9 @@ T4 → T10
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO vinculado ao Ofertante A vê só os pré-cursos do Ofertante A na tela
-- [ ] e2e: GT vê todos os pré-cursos cadastrados
-- [ ] e2e: cada item lista o status atual e linka para a tela de detalhe (T10)
+- [x] e2e: GO vinculado ao Ofertante A vê só os pré-cursos do Ofertante A na tela
+- [x] e2e: GT vê todos os pré-cursos cadastrados
+- [x] e2e: cada item lista o status atual e linka para a tela de detalhe (T10)
 
 **Tests**: e2e
 **Gate**: full
