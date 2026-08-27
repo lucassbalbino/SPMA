@@ -205,28 +205,28 @@ Chaves em camelCase, prefixo `pos` seguido do bloco, para uso direto como propri
 
 ## Requirement Traceability
 
-| Requirement ID | Story | Phase | Status |
+| Requirement ID | Story | Tasks | Status |
 |---|---|---|---|
-| PO-01 | P1: Criação | Design | Pending |
-| PO-02 | P1: Criação | Design | Pending |
-| PO-03 | P1: Criação | Design | Pending |
-| PO-04 | P1: Preenchimento incremental | Design | Pending |
-| PO-05 | P1: Preenchimento incremental | Design | Pending |
-| PO-06 | P1: Preenchimento incremental (edge case) | Design | Pending |
-| PO-07 | P1: Regra condicional | Design | Pending |
-| PO-08 | P1: Encerramento | Design | Pending |
-| PO-09 | P1: Encerramento | Design | Pending |
-| PO-10 | P1: Encerramento | Design | Pending |
-| PO-11 | P1: Consulta e listagem escopadas | Design | Pending |
-| PO-12 | P1: Consulta e listagem escopadas | Design | Pending |
-| PO-13 | P1: Consulta e listagem escopadas | Design | Pending |
-| PO-14 | P1: Consulta e listagem escopadas | Design | Pending |
+| PO-01 | P1: Criação | T1, T4, T8 | Implementing (T1 done) |
+| PO-02 | P1: Criação | T4 | In Tasks |
+| PO-03 | P1: Criação | T4 | In Tasks |
+| PO-04 | P1: Preenchimento incremental | T5, T9 | In Tasks |
+| PO-05 | P1: Preenchimento incremental | T1, T5, T9 | Implementing (T1 done) |
+| PO-06 | P1: Preenchimento incremental (edge case) | T1, T5, T9 | Implementing (T1 done) |
+| PO-07 | P1: Regra condicional | T3, T6, T9 | In Tasks |
+| PO-08 | P1: Encerramento | T5, T6 | In Tasks |
+| PO-09 | P1: Encerramento | T3, T6, T9 | In Tasks |
+| PO-10 | P1: Encerramento | T3, T6, T9 | In Tasks |
+| PO-11 | P1: Consulta e listagem escopadas | T5, T9 | In Tasks |
+| PO-12 | P1: Consulta e listagem escopadas | T4, T7 | In Tasks |
+| PO-13 | P1: Consulta e listagem escopadas | T2, T4, T5, T6, T9 | In Tasks |
+| PO-14 | P1: Consulta e listagem escopadas | T2, T4, T5, T6 | In Tasks |
 
 **ID format:** `PO-NN` (Pós-Curso).
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 14 total, 0 mapped to tasks yet (Design/Tasks ainda não rodaram).
+**Coverage:** 14 total, 14 mapped to tasks (T1-T9), 0 unmapped.
 
 ---
 

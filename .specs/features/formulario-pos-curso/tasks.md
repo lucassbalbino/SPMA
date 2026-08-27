@@ -86,13 +86,13 @@ T6 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] `criarPosCursoSchema` rejeita `cdCurso` ausente/não-positivo
-- [ ] `respostasPosCursoSchema` tem exatamente 26 chaves (teste de contagem — mitigação do risco de transcrição divergir da spec)
-- [ ] cada campo de seleção única rejeita um valor fora do seu enum
-- [ ] campos de seleção múltipla aceitam array de strings dentre as opções válidas, rejeitam item fora do enum, e rejeitam lista vazia `[]` como não-preenchido
-- [ ] os 5 campos de valor monetário (`posFinValorTotalExecutado`, `posFinValorDespesaDocentes`, `posFinValorDespesaMaterialDidatico`, `posFinValorDespesaInfraestrutura`, `posFinValorDevolvido`) rejeitam valor negativo e aceitam `0`
-- [ ] `respostasPosCursoSchema.partial()` aceita `{}` e aceita um subconjunto de 1 campo válido (forma do PATCH parcial)
-- [ ] `datasReaisEmOrdem`: término anterior ao início → `false`; término igual ao início → `true`; término posterior → `true`; só uma das datas presente → `true`; nenhuma presente → `true`
+- [x] `criarPosCursoSchema` rejeita `cdCurso` ausente/não-positivo
+- [x] `respostasPosCursoSchema` tem exatamente 26 chaves (teste de contagem — mitigação do risco de transcrição divergir da spec)
+- [x] cada campo de seleção única rejeita um valor fora do seu enum
+- [x] campos de seleção múltipla aceitam array de strings dentre as opções válidas, rejeitam item fora do enum, e rejeitam lista vazia `[]` como não-preenchido
+- [x] os 5 campos de valor monetário (`posFinValorTotalExecutado`, `posFinValorDespesaDocentes`, `posFinValorDespesaMaterialDidatico`, `posFinValorDespesaInfraestrutura`, `posFinValorDevolvido`) rejeitam valor negativo e aceitam `0`
+- [x] `respostasPosCursoSchema.partial()` aceita `{}` e aceita um subconjunto de 1 campo válido (forma do PATCH parcial)
+- [x] `datasReaisEmOrdem`: término anterior ao início → `false`; término igual ao início → `true`; término posterior → `true`; só uma das datas presente → `true`; nenhuma presente → `true`
 
 **Tests**: unit
 **Gate**: quick
