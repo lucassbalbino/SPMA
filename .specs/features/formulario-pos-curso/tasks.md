@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/formulario-pos-curso/design.md`
-**Status**: Draft
+**Status**: Done
 
 ---
 
@@ -297,12 +297,12 @@ T6 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO abre um Pós-Curso `EM_ANDAMENTO`, preenche um bloco e salva rascunho → permanece na tela, dado persistido (confirmado num reload)
-- [ ] e2e: GO preenche `posExecHouveAlteracaoPlanejamento="Sim"` sem `posExecAlteracaoDetalhe`, tenta encerrar → bloqueado, a pendência é exibida referenciando o campo
-- [ ] e2e: GO preenche os 26 campos (incluindo o condicional aplicável) e encerra → tela reflete `status=ENCERRADO`, campos desabilitados (somente leitura)
-- [ ] e2e: GO reabre um Pós-Curso já `ENCERRADO` → nenhum campo é editável, botão "Salvar rascunho"/"Encerrar" ausentes ou desabilitados
-- [ ] e2e: VO (perfil de leitura) abre a tela de um Pós-Curso do próprio Ofertante → vê os dados, sem controles de edição
-- [ ] e2e: GO de outro Ofertante tentando acessar a URL diretamente → página de não encontrado/negado
+- [x] e2e: GO abre um Pós-Curso `EM_ANDAMENTO`, preenche um bloco e salva rascunho → permanece na tela, dado persistido (confirmado num reload)
+- [x] e2e: GO preenche `posExecHouveAlteracaoPlanejamento="Sim"` sem `posExecAlteracaoDetalhe`, tenta encerrar → bloqueado, a pendência é exibida referenciando o campo
+- [x] e2e: GO preenche os 26 campos (incluindo o condicional aplicável) e encerra → tela reflete `status=ENCERRADO`, campos desabilitados (somente leitura)
+- [x] e2e: GO reabre um Pós-Curso já `ENCERRADO` → nenhum campo é editável, botão "Salvar rascunho"/"Encerrar" ausentes ou desabilitados
+- [x] e2e: VO (perfil de leitura) abre a tela de um Pós-Curso do próprio Ofertante → vê os dados, sem controles de edição
+- [x] e2e: GO de outro Ofertante tentando acessar a URL diretamente → página de não encontrado/negado
 
 **Tests**: e2e
 **Gate**: full
