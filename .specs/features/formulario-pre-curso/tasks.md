@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/formulario-pre-curso/design.md`
-**Status**: Draft
+**Status**: Done
 
 ---
 
@@ -328,12 +328,12 @@ T4 → T10
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO abre um pré-curso `EM_ANDAMENTO`, preenche um bloco e salva rascunho → permanece na tela, dado persistido (confirmado num reload)
-- [ ] e2e: GO preenche `publicoInstituicaoExecutora="Empresa contratada"` sem o nome da instituição, tenta encerrar → bloqueado, a pendência é exibida referenciando o campo (REQ-PC-07/CA-04)
-- [ ] e2e: GO preenche os 56 campos (incluindo condicionais aplicáveis) e encerra → tela reflete `status=ENCERRADO`, campos desabilitados (somente leitura)
-- [ ] e2e: GO reabre um pré-curso já `ENCERRADO` → nenhum campo é editável, botão "Salvar rascunho"/"Encerrar" ausentes ou desabilitados
-- [ ] e2e: VO (perfil de leitura) abre a tela de um pré-curso do próprio Ofertante → vê os dados, sem controles de edição
-- [ ] e2e: GO de outro Ofertante tentando acessar a URL diretamente → página de não encontrado/negado (fecha REQ-PC-13/15 na camada de UI)
+- [x] e2e: GO abre um pré-curso `EM_ANDAMENTO`, preenche um bloco e salva rascunho → permanece na tela, dado persistido (confirmado num reload)
+- [x] e2e: GO preenche `publicoInstituicaoExecutora="Empresa contratada"` sem o nome da instituição, tenta encerrar → bloqueado, a pendência é exibida referenciando o campo (REQ-PC-07/CA-04)
+- [x] e2e: GO preenche os 56 campos (incluindo condicionais aplicáveis) e encerra → tela reflete `status=ENCERRADO`, campos desabilitados (somente leitura)
+- [x] e2e: GO reabre um pré-curso já `ENCERRADO` → nenhum campo é editável, botão "Salvar rascunho"/"Encerrar" ausentes ou desabilitados
+- [x] e2e: VO (perfil de leitura) abre a tela de um pré-curso do próprio Ofertante → vê os dados, sem controles de edição
+- [x] e2e: GO de outro Ofertante tentando acessar a URL diretamente → página de não encontrado/negado (fecha REQ-PC-13/15 na camada de UI)
 
 **Tests**: e2e
 **Gate**: full
