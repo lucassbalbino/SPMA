@@ -193,14 +193,14 @@ T6 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO grava um bloco parcial (ex.: Bloco 1 — Acompanhamento Pedagógico) → 200, os demais campos continuam ausentes/nulos
-- [ ] e2e: GO grava um segundo bloco em seguida → o primeiro bloco continua presente na resposta seguinte (merge raso comprovado)
-- [ ] e2e: `posExecDataTerminoReal` anterior a `posExecDataInicioReal` no mesmo PATCH → 400, nada persistido
-- [ ] e2e: a ordem também é validada contra o estado mesclado quando as datas chegam em PATCHs separados → 400
-- [ ] e2e: valor monetário negativo → 400, nada persistido
-- [ ] e2e: GO tenta gravar num Pós-Curso já `ENCERRADO` → 409, dado inalterado
-- [ ] e2e: GO de outro Ofertante tenta ler ou gravar → 403 em ambos
-- [ ] e2e: VO (perfil de leitura) consulta → 200; VO tenta gravar → 403
+- [x] e2e: GO grava um bloco parcial (ex.: Bloco 1 — Acompanhamento Pedagógico) → 200, os demais campos continuam ausentes/nulos
+- [x] e2e: GO grava um segundo bloco em seguida → o primeiro bloco continua presente na resposta seguinte (merge raso comprovado)
+- [x] e2e: `posExecDataTerminoReal` anterior a `posExecDataInicioReal` no mesmo PATCH → 400, nada persistido
+- [x] e2e: a ordem também é validada contra o estado mesclado quando as datas chegam em PATCHs separados → 400
+- [x] e2e: valor monetário negativo → 400, nada persistido
+- [x] e2e: GO tenta gravar num Pós-Curso já `ENCERRADO` → 409, dado inalterado
+- [x] e2e: GO de outro Ofertante tenta ler ou gravar → 403 em ambos
+- [x] e2e: VO (perfil de leitura) consulta → 200; VO tenta gravar → 403
 
 **Tests**: e2e
 **Gate**: full
