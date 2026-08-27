@@ -213,7 +213,7 @@ Chaves em camelCase, prefixo `pos` seguido do bloco, para uso direto como propri
 | PO-04 | P1: Preenchimento incremental | T5, T9 | In Tasks |
 | PO-05 | P1: Preenchimento incremental | T1, T5, T9 | Implementing (T1 done) |
 | PO-06 | P1: Preenchimento incremental (edge case) | T1, T5, T9 | Implementing (T1 done) |
-| PO-07 | P1: Regra condicional | T3, T6, T9 | In Tasks |
+| PO-07 | P1: Regra condicional | T3, T6, T9 | Implementing (T3 done) |
 | PO-08 | P1: Encerramento | T5, T6 | In Tasks |
 | PO-09 | P1: Encerramento | T3, T6, T9 | In Tasks |
 | PO-10 | P1: Encerramento | T3, T6, T9 | In Tasks |

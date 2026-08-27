@@ -137,12 +137,12 @@ T6 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] os 26 campos completos e `posExecHouveAlteracaoPlanejamento="Não"` → `completo=true`, `pendentes=[]`
-- [ ] `posExecHouveAlteracaoPlanejamento="Sim"` sem `posExecAlteracaoDetalhe` → `pendentes` inclui a chave, `completo=false`
-- [ ] `posExecHouveAlteracaoPlanejamento="Não"` → `posExecAlteracaoDetalhe` NÃO aparece em `pendentes` mesmo vazio (gate não se aplica)
-- [ ] `posFinValorDevolvido=0` é tratado como preenchido, não como pendência (edge case da spec)
-- [ ] pendência condicional aparece mesmo com a maioria dos outros 25 campos também ausentes (prova direta de que a técnica evita a lição registrada — testado aqui desde o início, não como correção posterior)
-- [ ] campo sempre-obrigatório ausente (não condicional) também aparece em `pendentes`
+- [x] os 26 campos completos e `posExecHouveAlteracaoPlanejamento="Não"` → `completo=true`, `pendentes=[]`
+- [x] `posExecHouveAlteracaoPlanejamento="Sim"` sem `posExecAlteracaoDetalhe` → `pendentes` inclui a chave, `completo=false`
+- [x] `posExecHouveAlteracaoPlanejamento="Não"` → `posExecAlteracaoDetalhe` NÃO aparece em `pendentes` mesmo vazio (gate não se aplica)
+- [x] `posFinValorDevolvido=0` é tratado como preenchido, não como pendência (edge case da spec)
+- [x] pendência condicional aparece mesmo com a maioria dos outros 25 campos também ausentes (prova direta de que a técnica evita a lição registrada — testado aqui desde o início, não como correção posterior)
+- [x] campo sempre-obrigatório ausente (não condicional) também aparece em `pendentes`
 
 **Tests**: unit
 **Gate**: quick
