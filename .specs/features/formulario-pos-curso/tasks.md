@@ -222,10 +222,10 @@ T6 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: Pós-Curso com os 26 campos completos e condicional satisfeito → 200, `status=ENCERRADO`, `dataEncerramento` preenchida
-- [ ] e2e: Pós-Curso com 1 campo obrigatório faltando → 400, `pendentes` lista a chave, `status` permanece `EM_ANDAMENTO`
-- [ ] e2e: segunda tentativa de encerrar um Pós-Curso já `ENCERRADO` → 409
-- [ ] e2e: após o encerramento, uma tentativa de `PATCH` em `/api/pos-cursos/[cdCurso]` (T5) recebe 409 (fecha REQ-PO-08 fim-a-fim)
+- [x] e2e: Pós-Curso com os 26 campos completos e condicional satisfeito → 200, `status=ENCERRADO`, `dataEncerramento` preenchida
+- [x] e2e: Pós-Curso com 1 campo obrigatório faltando → 400, `pendentes` lista a chave, `status` permanece `EM_ANDAMENTO`
+- [x] e2e: segunda tentativa de encerrar um Pós-Curso já `ENCERRADO` → 409
+- [x] e2e: após o encerramento, uma tentativa de `PATCH` em `/api/pos-cursos/[cdCurso]` (T5) recebe 409 (fecha REQ-PO-08 fim-a-fim)
 
 **Tests**: e2e
 **Gate**: full
