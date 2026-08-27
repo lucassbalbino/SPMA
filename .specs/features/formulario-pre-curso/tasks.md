@@ -304,9 +304,9 @@ T4 → T10
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO cria um pré-curso escolhendo uma Verba do próprio Ofertante com valor dentro do saldo → redireciona para a tela de preenchimento (T10)
-- [ ] e2e: valor acima do saldo disponível → mensagem de erro exibida com o saldo informado, nenhuma navegação
-- [ ] e2e: seletor de Verba mostra só as Verbas do Ofertante do GO autenticado
+- [x] e2e: GO cria um pré-curso escolhendo uma Verba do próprio Ofertante com valor dentro do saldo → redireciona para a tela de preenchimento (T10)
+- [x] e2e: valor acima do saldo disponível → mensagem de erro exibida com o saldo informado, nenhuma navegação
+- [x] e2e: seletor de Verba mostra só as Verbas do Ofertante do GO autenticado
 
 **Tests**: e2e
 **Gate**: full
