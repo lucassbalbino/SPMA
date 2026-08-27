@@ -120,6 +120,9 @@ async function executar(
     case "getVerba":
       return prisma.verba.findUnique({ where: { cdVerba: argumento as number } });
 
+    case "getPreCurso":
+      return prisma.preCurso.findUnique({ where: { cdCurso: argumento as number } });
+
     case "criarPreCurso": {
       const dados = argumento as {
         cdOfertante: number;

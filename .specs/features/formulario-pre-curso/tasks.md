@@ -199,12 +199,12 @@ T4 → T10
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO cria pré-curso com `vlCursoAlocado` dentro do saldo disponível → 201, `status=EM_ANDAMENTO`, `respostas=null`
-- [ ] e2e: `vlCursoAlocado` acima do saldo disponível → 400 com `saldoDisponivel` no corpo, nenhum registro criado (REQ-PC-02)
-- [ ] e2e: `vlCursoAlocado` igual ao saldo disponível → 201 (AD-016, uso de até 100%)
-- [ ] e2e: `cdVerba` de uma Verba de outro Ofertante → 403, nenhum registro criado (REQ-PC-03)
-- [ ] e2e: GO vinculado ao Ofertante A lista só os pré-cursos do Ofertante A; GT lista todos
-- [ ] e2e: AL tentando criar ou listar → 403
+- [x] e2e: GO cria pré-curso com `vlCursoAlocado` dentro do saldo disponível → 201, `status=EM_ANDAMENTO`, `respostas=null`
+- [x] e2e: `vlCursoAlocado` acima do saldo disponível → 400 com `saldoDisponivel` no corpo, nenhum registro criado (REQ-PC-02)
+- [x] e2e: `vlCursoAlocado` igual ao saldo disponível → 201 (AD-016, uso de até 100%)
+- [x] e2e: `cdVerba` de uma Verba de outro Ofertante → 403, nenhum registro criado (REQ-PC-03)
+- [x] e2e: GO vinculado ao Ofertante A lista só os pré-cursos do Ofertante A; GT lista todos
+- [x] e2e: AL tentando criar ou listar → 403
 
 **Tests**: e2e
 **Gate**: full

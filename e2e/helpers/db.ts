@@ -112,7 +112,18 @@ export function getVerba(cdVerba: number): VerbaPersistida | null {
   return executar<VerbaPersistida | null>("getVerba", cdVerba);
 }
 
-/** Insere um Pré-Curso direto no banco (a rota de criação é `formulario-pre-curso`, ainda não implementada) - só para alocar valor de uma Verba nos testes de saldo. */
+export type PreCursoPersistido = {
+  cdCurso: number;
+  cdOfertante: number;
+  cdVerba: number;
+  vlCursoAlocado: string;
+  status: "EM_ANDAMENTO" | "ENCERRADO";
+  respostas: Record<string, unknown> | null;
+  criadoPor: string;
+  dataEncerramento: string | null;
+};
+
+/** Insere um Pré-Curso direto no banco - usado tanto pelos testes de saldo (`cadastro-ofertante-verba`) quanto como atalho de fixture nos e2e de `formulario-pre-curso`. */
 export function criarPreCurso(dados: {
   cdOfertante: number;
   cdVerba: number;
@@ -120,6 +131,10 @@ export function criarPreCurso(dados: {
   criadoPor: string;
 }): { cdCurso: number } {
   return executar<{ cdCurso: number }>("criarPreCurso", dados);
+}
+
+export function getPreCurso(cdCurso: number): PreCursoPersistido | null {
+  return executar<PreCursoPersistido | null>("getPreCurso", cdCurso);
 }
 
 /** Chamar antes de `deleteUsuarios` quando o teste criou PreCurso de fixture (FK para o CPF criador). */
