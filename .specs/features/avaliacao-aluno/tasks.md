@@ -204,16 +204,16 @@ T1 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: o próprio Aluno grava um bloco parcial de Parte 1 → 200, `parte1Completa` permanece `false`, os demais campos continuam ausentes
-- [ ] e2e: o próprio Aluno completa as 19 chaves de Parte 1 (2 condicionais incluídas) → 200, `parte1Completa=true` na mesma resposta
-- [ ] e2e: tentativa de gravar uma chave de Parte 2 enquanto `parte1Completa` resultante é `false` → 400, nada persistido (nem as chaves de Parte 1 do mesmo PATCH)
-- [ ] e2e: com Parte 1 já completa, gravação de uma chave de Parte 2 isolada → 200
-- [ ] e2e: gravação parcial de Parte 2 sem preencher todas as 25 chaves é aceita enquanto `EM_ANDAMENTO` (a obrigatoriedade condicional não bloqueia PATCH intermediário)
-- [ ] e2e: o GO que fez a matrícula tenta gravar → 403
-- [ ] e2e: outro Aluno (CPF diferente) tenta gravar → 403
-- [ ] e2e: gravação num registro já `ENCERRADO` → 409, dado inalterado
-- [ ] e2e: o próprio Aluno consulta a própria avaliação → 200; consulta de outro CPF → 403
-- [ ] e2e: GO/VO do Ofertante do curso consultam → 200; GO/VO de outro Ofertante → 403; AM/GT/VT → 200 em qualquer avaliação
+- [x] e2e: o próprio Aluno grava um bloco parcial de Parte 1 → 200, `parte1Completa` permanece `false`, os demais campos continuam ausentes
+- [x] e2e: o próprio Aluno completa as 19 chaves de Parte 1 (2 condicionais incluídas) → 200, `parte1Completa=true` na mesma resposta
+- [x] e2e: tentativa de gravar uma chave de Parte 2 enquanto `parte1Completa` resultante é `false` → 400, nada persistido (nem as chaves de Parte 1 do mesmo PATCH)
+- [x] e2e: com Parte 1 já completa, gravação de uma chave de Parte 2 isolada → 200
+- [x] e2e: gravação parcial de Parte 2 sem preencher todas as 25 chaves é aceita enquanto `EM_ANDAMENTO` (a obrigatoriedade condicional não bloqueia PATCH intermediário)
+- [x] e2e: o GO que fez a matrícula tenta gravar → 403
+- [x] e2e: outro Aluno (CPF diferente) tenta gravar → 403
+- [x] e2e: gravação num registro já `ENCERRADO` → 409, dado inalterado
+- [x] e2e: o próprio Aluno consulta a própria avaliação → 200; consulta de outro CPF → 403
+- [x] e2e: GO/VO do Ofertante do curso consultam → 200; GO/VO de outro Ofertante → 403; AM/GT/VT → 200 em qualquer avaliação
 
 **Tests**: e2e
 **Gate**: full
