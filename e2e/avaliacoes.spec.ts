@@ -161,7 +161,8 @@ test("AVAL-02 (400): CPF corresponde a um usuário que não é Aluno", async () 
   await cliente.dispose();
 });
 
-test("AVAL-03 (409): par (CPF, cdCurso) já matriculado, nenhum novo registro", async () => {
+test("AVAL-03 (409): par (CPF, cdCurso) já matriculado, nenhum novo registro, registro existente inalterado", async () => {
+  const antes = getAvaliacao(CPF_AL_JA_MATRICULADO, cdCursoJaComAvaliacao);
   const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
 
   const cliente = await novoCliente();
@@ -172,9 +173,13 @@ test("AVAL-03 (409): par (CPF, cdCurso) já matriculado, nenhum novo registro", 
 
   expect(res.status()).toBe(409);
   await cliente.dispose();
+
+  const depois = getAvaliacao(CPF_AL_JA_MATRICULADO, cdCursoJaComAvaliacao);
+  expect(depois).toEqual(antes);
 });
 
-test("AVAL-04/RN-12 (409): Aluno já tem outra avaliação EM_ANDAMENTO noutro curso", async () => {
+test("AVAL-04/RN-12 (409): Aluno já tem outra avaliação EM_ANDAMENTO noutro curso, nada criado nem alterado", async () => {
+  const antes = getAvaliacao(CPF_AL_RN12, cdCursoDoGo2);
   const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
 
   const cliente = await novoCliente();
@@ -187,6 +192,10 @@ test("AVAL-04/RN-12 (409): Aluno já tem outra avaliação EM_ANDAMENTO noutro c
   await cliente.dispose();
 
   expect(getAvaliacao(CPF_AL_RN12, cdCursoRN12Alvo)).toBeNull();
+
+  const depois = getAvaliacao(CPF_AL_RN12, cdCursoDoGo2);
+  expect(depois).toEqual(antes);
+  expect(depois?.status).toBe("EM_ANDAMENTO");
 });
 
 test("cdCurso inexistente é rejeitado com 404", async () => {

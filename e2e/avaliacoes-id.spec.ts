@@ -33,6 +33,7 @@ const CPF_AL_GATE_FECHADO = "60000082287";
 const CPF_AL_ENCERRADA = "60000095931";
 const CPF_AL_ACESSO = "60000109665";
 const CPF_AL_OUTRO = "60000123307";
+const CPF_AL_PRESERVA = "60000424773";
 
 const CPFS = [
   CPF_GT,
@@ -46,6 +47,7 @@ const CPFS = [
   CPF_AL_ENCERRADA,
   CPF_AL_ACESSO,
   CPF_AL_OUTRO,
+  CPF_AL_PRESERVA,
 ];
 
 // Os 2 primeiros campos de Parte 1 (usados na gravação parcial inicial).
@@ -114,6 +116,7 @@ test.beforeAll(() => {
   upsertUsuario({ cpf: CPF_AL_ENCERRADA, tipo: "AL", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_AL_ACESSO, tipo: "AL", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_AL_OUTRO, tipo: "AL", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_AL_PRESERVA, tipo: "AL", senha: SENHA, primeiraVez: false });
 
   cdCurso = criarPreCurso({
     cdOfertante,
@@ -127,6 +130,12 @@ test.beforeAll(() => {
   criarAvaliacao({ cpf: CPF_AL_ENCERRADA, cdCurso });
   encerrarAvaliacaoFixture(CPF_AL_ENCERRADA, cdCurso);
   criarAvaliacao({ cpf: CPF_AL_ACESSO, cdCurso });
+  criarAvaliacao({
+    cpf: CPF_AL_PRESERVA,
+    cdCurso,
+    parte1Completa: true,
+    respostas: { ...PARTE_1_INICIO, ...PARTE_1_RESTANTE },
+  });
 });
 
 test.afterAll(() => {
@@ -200,6 +209,32 @@ test("AVAL-14: gravação parcial de Parte 2 sem preencher tudo é aceita enquan
   const corpo = await res.json();
   expect(corpo.avaliacao.respostas.avalParticipPercentualFrequencia).toBe(80);
   expect(corpo.avaliacao.status).toBe("EM_ANDAMENTO");
+
+  await cliente.dispose();
+});
+
+test("edge case: Concluiu='Sim'->'Não' preserva os valores já salvos das 22 chaves condicionais", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AL_PRESERVA);
+
+  const cliente = await novoCliente();
+  const resPreenche = await cliente.patch(`/api/avaliacoes/${CPF_AL_PRESERVA}/${cdCurso}`, {
+    data: { avalParticipConcluiuCurso: "Sim", avalCursoDinamicasInclusao: 5 },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect(resPreenche.status()).toBe(200);
+
+  const resMuda = await cliente.patch(`/api/avaliacoes/${CPF_AL_PRESERVA}/${cdCurso}`, {
+    data: { avalParticipConcluiuCurso: "Não" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(resMuda.status()).toBe(200);
+  const corpo = await resMuda.json();
+  expect(corpo.avaliacao.respostas.avalParticipConcluiuCurso).toBe("Não");
+  expect(corpo.avaliacao.respostas.avalCursoDinamicasInclusao).toBe(5);
+
+  const persistida = getAvaliacao(CPF_AL_PRESERVA, cdCurso);
+  expect(persistida?.respostas?.avalCursoDinamicasInclusao).toBe(5);
 
   await cliente.dispose();
 });
