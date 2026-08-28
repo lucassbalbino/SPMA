@@ -8,7 +8,11 @@
 
 Corroborated across multiple features. Safe to apply as guidance.
 
-_none_
+### L-014 - Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.
+- signal: `spec_precision_gap` · recurrence: 2 feature(s) · scope: `tests` · harmful: 0
+- features: cadastro-ofertante-verba, avaliacao-aluno
+- evidence: CA-OV-12 - e2e/verbas-id.spec.ts:96-115 (tests) (+1 more)
+- last seen: 2026-08-28T17:17:04Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -92,12 +96,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: CA-OV-09 - e2e/verbas.spec.ts:102 (tests)
 - last seen: 2026-08-26T20:34:16Z
 
-### L-014 - Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.
-- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
-- features: cadastro-ofertante-verba
-- evidence: CA-OV-12 - e2e/verbas-id.spec.ts:96-115 (tests)
-- last seen: 2026-08-26T20:34:16Z
-
 ### L-015 - When a requirement names an action with no existing target in the codebase, implement the half that exists, mark the other half SPEC_DEVIATION at the call site, and carry it into traceability instead of reporting the requirement closed.
 - signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
 - features: cadastro-ofertante-verba
@@ -121,6 +119,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: formulario-pre-curso
 - evidence: REQ-PC-05, src/app/api/pre-cursos/[id]/route.ts:86 (routes)
 - last seen: 2026-08-27T13:30:18Z
+
+### L-019 - When a spec edge case says a later write must preserve already-saved values after a gate flips, write a dedicated test that fills the gated fields, flips the gate back, and asserts the prior values are still present - a generic shallow-merge PATCH is not evidence that this specific case was verified.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: avaliacao-aluno
+- evidence: spec.md edge case: avalParticipConcluiuCurso changed Sim to Nao after conditional fields already saved - no test in e2e/avaliacoes-id.spec.ts or e2e/avaliacoes-formulario.spec.ts (tests)
+- last seen: 2026-08-28T17:17:11Z
 
 ## Quarantined (failed when applied - ignore)
 

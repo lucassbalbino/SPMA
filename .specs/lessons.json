@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 19,
+  "next_id": 20,
   "lessons": [
     {
       "id": "L-001",
@@ -245,17 +245,19 @@
       "text": "Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.",
       "signal": "spec_precision_gap",
       "scope": "tests",
-      "status": "candidate",
+      "status": "confirmed",
       "features": [
-        "cadastro-ofertante-verba"
+        "cadastro-ofertante-verba",
+        "avaliacao-aluno"
       ],
-      "recurrence": 1,
+      "recurrence": 2,
       "harmful": 0,
       "evidence": [
-        "CA-OV-12 - e2e/verbas-id.spec.ts:96-115 (tests)"
+        "CA-OV-12 - e2e/verbas-id.spec.ts:96-115 (tests)",
+        "AVAL-04 - e2e/avaliacoes.spec.ts:177-190 (tests)"
       ],
       "created": "2026-08-26T20:34:16Z",
-      "last_seen": "2026-08-26T20:34:16Z"
+      "last_seen": "2026-08-28T17:17:04Z"
     },
     {
       "id": "L-015",
@@ -328,6 +330,24 @@
       ],
       "created": "2026-08-27T13:30:18Z",
       "last_seen": "2026-08-27T13:30:18Z"
+    },
+    {
+      "id": "L-019",
+      "key": "ac_gap::when a spec edge case says a later write must preserve already saved values after a gate flips write a dedicated test that fills the gated fields flips the gate back and asserts the prior values are still present a generic shallow merge patch is not evidence that this specific case was verified",
+      "text": "When a spec edge case says a later write must preserve already-saved values after a gate flips, write a dedicated test that fills the gated fields, flips the gate back, and asserts the prior values are still present - a generic shallow-merge PATCH is not evidence that this specific case was verified.",
+      "signal": "ac_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "avaliacao-aluno"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec.md edge case: avalParticipConcluiuCurso changed Sim to Nao after conditional fields already saved - no test in e2e/avaliacoes-id.spec.ts or e2e/avaliacoes-formulario.spec.ts (tests)"
+      ],
+      "created": "2026-08-28T17:17:11Z",
+      "last_seen": "2026-08-28T17:17:11Z"
     }
   ]
 }

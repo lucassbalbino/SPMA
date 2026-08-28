@@ -291,29 +291,29 @@ Chaves em camelCase, prefixo `aval` + bloco, para uso direto como propriedades d
 
 | Requirement ID | Story | Tasks | Status |
 |---|---|---|---|
-| AVAL-01 | P1: Matrícula | T4 | Implementing |
-| AVAL-02 | P1: Matrícula | T4 | Implementing |
-| AVAL-03 | P1: Matrícula | T4 | Implementing |
-| AVAL-04 | P1: Matrícula | T4 | Implementing |
-| AVAL-05 | P1: Matrícula | T4 | Implementing |
-| AVAL-06 | P1: Matrícula | T2, T4 | Implementing |
-| AVAL-07 | P1: Preenchimento Parte 1 | T5 | Implementing |
-| AVAL-08 | P1: Preenchimento Parte 1 | T3, T5 | Implementing |
-| AVAL-09 | P1: Preenchimento Parte 1 | T2, T5 | Implementing |
-| AVAL-10 | P1: Gate Parte 1 → Parte 2 | T1, T5 | Implementing |
-| AVAL-11 | P1: Gate Parte 1 → Parte 2 | T5 | Implementing |
-| AVAL-12 | P1: Regra condicional Concluiu | T3, T6 | Implementing |
-| AVAL-13 | P1: Regra condicional Concluiu | T3, T6 | Implementing |
-| AVAL-14 | P1: Regra condicional Concluiu | T5 | Implementing |
-| AVAL-15 | P1: Encerramento | T3, T6 | Implementing |
-| AVAL-16 | P1: Encerramento | T3, T6 | Implementing |
-| AVAL-17 | P1: Encerramento | T5, T6 | Implementing |
-| AVAL-18 | P1: Encerramento | T2, T6 | Implementing |
-| AVAL-19 | P1: Encerramento | T6 | Implementing |
-| AVAL-20 | P1: Consulta/listagem | T2, T5 | Implementing |
-| AVAL-21 | P1: Consulta/listagem | T2, T5 | Implementing |
-| AVAL-22 | P1: Consulta/listagem | T4 | Implementing |
-| AVAL-23 | P1: Consulta/listagem | T2, T5 | Implementing |
+| AVAL-01 | P1: Matrícula | T4 | ✅ Verified |
+| AVAL-02 | P1: Matrícula | T4 | ✅ Verified |
+| AVAL-03 | P1: Matrícula | T4 | ✅ Verified |
+| AVAL-04 | P1: Matrícula | T4 | ✅ Verified |
+| AVAL-05 | P1: Matrícula | T4 | ✅ Verified |
+| AVAL-06 | P1: Matrícula | T2, T4 | ✅ Verified |
+| AVAL-07 | P1: Preenchimento Parte 1 | T5 | ✅ Verified |
+| AVAL-08 | P1: Preenchimento Parte 1 | T3, T5 | ✅ Verified |
+| AVAL-09 | P1: Preenchimento Parte 1 | T2, T5 | ✅ Verified |
+| AVAL-10 | P1: Gate Parte 1 → Parte 2 | T1, T5 | ✅ Verified |
+| AVAL-11 | P1: Gate Parte 1 → Parte 2 | T5 | ✅ Verified |
+| AVAL-12 | P1: Regra condicional Concluiu | T3, T6 | ✅ Verified |
+| AVAL-13 | P1: Regra condicional Concluiu | T3, T6 | ✅ Verified |
+| AVAL-14 | P1: Regra condicional Concluiu | T5 | ✅ Verified |
+| AVAL-15 | P1: Encerramento | T3, T6 | ✅ Verified |
+| AVAL-16 | P1: Encerramento | T3, T6 | ✅ Verified |
+| AVAL-17 | P1: Encerramento | T5, T6 | ✅ Verified |
+| AVAL-18 | P1: Encerramento | T2, T6 | ✅ Verified |
+| AVAL-19 | P1: Encerramento | T6 | ✅ Verified |
+| AVAL-20 | P1: Consulta/listagem | T2, T5 | ✅ Verified |
+| AVAL-21 | P1: Consulta/listagem | T2, T5 | ✅ Verified |
+| AVAL-22 | P1: Consulta/listagem | T4 | ✅ Verified |
+| AVAL-23 | P1: Consulta/listagem | T2, T5 | ✅ Verified |
 
 **ID format:** `AVAL-NN` (Avaliação do Aluno).
 
