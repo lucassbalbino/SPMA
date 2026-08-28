@@ -168,3 +168,37 @@ export function getPosCurso(cdCurso: number): PosCursoPersistido | null {
 export function encerrarPosCursoFixture(cdCurso: number): PosCursoPersistido {
   return executar<PosCursoPersistido>("encerrarPosCursoFixture", cdCurso);
 }
+
+export type AvaliacaoAlunoPersistida = {
+  cpf: string;
+  cdCurso: number;
+  status: "EM_ANDAMENTO" | "ENCERRADO";
+  parte1Completa: boolean;
+  respostas: Record<string, unknown> | null;
+  dataEncerramento: string | null;
+};
+
+export function getAvaliacao(cpf: string, cdCurso: number): AvaliacaoAlunoPersistida | null {
+  return executar<AvaliacaoAlunoPersistida | null>("getAvaliacao", { cpf, cdCurso });
+}
+
+/** Insere uma AvaliacaoAluno direto no banco - atalho de fixture para os e2e que não precisam exercitar a rota de matrícula (T4) em si. */
+export function criarAvaliacao(dados: {
+  cpf: string;
+  cdCurso: number;
+  status?: "EM_ANDAMENTO" | "ENCERRADO";
+  parte1Completa?: boolean;
+  respostas?: Record<string, unknown>;
+}): AvaliacaoAlunoPersistida {
+  return executar<AvaliacaoAlunoPersistida>("criarAvaliacao", dados);
+}
+
+/** Marca uma AvaliacaoAluno de fixture como ENCERRADO direto no banco (AVAL-17), sem depender da rota de encerramento. */
+export function encerrarAvaliacaoFixture(cpf: string, cdCurso: number): AvaliacaoAlunoPersistida {
+  return executar<AvaliacaoAlunoPersistida>("encerrarAvaliacaoFixture", { cpf, cdCurso });
+}
+
+/** Chamar antes de `deleteUsuarios`/`deletePreCursosPorOfertante` quando o teste criou AvaliacaoAluno (FK para o CPF do Aluno e para o CD_Curso, sem cascade em nenhuma das duas). */
+export function deleteAvaliacoesPorCpf(cpfs: string[]): void {
+  executar("deleteAvaliacoesPorCpf", cpfs);
+}

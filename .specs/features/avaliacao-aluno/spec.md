@@ -291,12 +291,12 @@ Chaves em camelCase, prefixo `aval` + bloco, para uso direto como propriedades d
 
 | Requirement ID | Story | Tasks | Status |
 |---|---|---|---|
-| AVAL-01 | P1: Matrícula | T4 | Pending |
-| AVAL-02 | P1: Matrícula | T4 | Pending |
-| AVAL-03 | P1: Matrícula | T4 | Pending |
-| AVAL-04 | P1: Matrícula | T4 | Pending |
-| AVAL-05 | P1: Matrícula | T4 | Pending |
-| AVAL-06 | P1: Matrícula | T2, T4 | Pending |
+| AVAL-01 | P1: Matrícula | T4 | Implementing |
+| AVAL-02 | P1: Matrícula | T4 | Implementing |
+| AVAL-03 | P1: Matrícula | T4 | Implementing |
+| AVAL-04 | P1: Matrícula | T4 | Implementing |
+| AVAL-05 | P1: Matrícula | T4 | Implementing |
+| AVAL-06 | P1: Matrícula | T2, T4 | Implementing |
 | AVAL-07 | P1: Preenchimento Parte 1 | T5 | Pending |
 | AVAL-08 | P1: Preenchimento Parte 1 | T3, T5 | Pending |
 | AVAL-09 | P1: Preenchimento Parte 1 | T2, T5 | Pending |
@@ -312,7 +312,7 @@ Chaves em camelCase, prefixo `aval` + bloco, para uso direto como propriedades d
 | AVAL-19 | P1: Encerramento | T6 | Pending |
 | AVAL-20 | P1: Consulta/listagem | T2, T5 | Pending |
 | AVAL-21 | P1: Consulta/listagem | T2, T5 | Pending |
-| AVAL-22 | P1: Consulta/listagem | T4 | Pending |
+| AVAL-22 | P1: Consulta/listagem | T4 | Implementing |
 | AVAL-23 | P1: Consulta/listagem | T2, T5 | Pending |
 
 **ID format:** `AVAL-NN` (Avaliação do Aluno).

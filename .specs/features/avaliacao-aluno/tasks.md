@@ -174,15 +174,15 @@ T1 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO matricula um Aluno (CPF de um usuário `tipo=AL`) num curso do próprio Ofertante → 201, `status=EM_ANDAMENTO`, `parte1Completa=false`, `respostas=null`
-- [ ] e2e: CPF informado não corresponde a nenhum usuário → 404
-- [ ] e2e: CPF informado corresponde a um usuário que não é `tipo=AL` → 400
-- [ ] e2e: par (CPF, cdCurso) já matriculado → 409, nenhum novo registro criado
-- [ ] e2e: Aluno já tem outra avaliação `EM_ANDAMENTO` noutro curso → 409, registro existente inalterado (RN-12)
-- [ ] e2e: `cdCurso` inexistente → 404
-- [ ] e2e: `cdCurso` de um curso de outro Ofertante → 403, nenhum registro criado
-- [ ] e2e: usuário não-GO (incluindo AL) tentando matricular → 403
-- [ ] e2e: GO vinculado ao Ofertante A lista só as avaliações de cursos do Ofertante A; GT lista todas; Aluno lista só a(s) própria(s)
+- [x] e2e: GO matricula um Aluno (CPF de um usuário `tipo=AL`) num curso do próprio Ofertante → 201, `status=EM_ANDAMENTO`, `parte1Completa=false`, `respostas=null`
+- [x] e2e: CPF informado não corresponde a nenhum usuário → 404
+- [x] e2e: CPF informado corresponde a um usuário que não é `tipo=AL` → 400
+- [x] e2e: par (CPF, cdCurso) já matriculado → 409, nenhum novo registro criado
+- [x] e2e: Aluno já tem outra avaliação `EM_ANDAMENTO` noutro curso → 409, registro existente inalterado (RN-12)
+- [x] e2e: `cdCurso` inexistente → 404
+- [x] e2e: `cdCurso` de um curso de outro Ofertante → 403, nenhum registro criado
+- [x] e2e: usuário não-GO (incluindo AL) tentando matricular → 403
+- [x] e2e: GO vinculado ao Ofertante A lista só as avaliações de cursos do Ofertante A; GT lista todas; Aluno lista só a(s) própria(s)
 
 **Tests**: e2e
 **Gate**: full

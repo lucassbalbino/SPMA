@@ -12,7 +12,7 @@
 // dotenv/tsx escrevem em stdout.
 import { config as loadEnv } from "dotenv";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { PrismaClient } from "../src/generated/prisma/client";
+import { Prisma, PrismaClient } from "../src/generated/prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
 import type { TipoUsuario } from "../src/generated/prisma/enums";
 
@@ -174,6 +174,61 @@ async function executar(
     case "criarPosCurso": {
       const dados = argumento as { cdCurso: number; criadoPor: string };
       return prisma.posCurso.create({ data: dados });
+    }
+
+    // Insere uma AvaliacaoAluno de fixture direto no banco - atalho para os
+    // e2e de T5/T6 que não precisam exercitar a rota de matrícula (T4) em
+    // si, ou que precisam de um estado inicial (respostas parciais,
+    // parte1Completa) que a rota de matrícula nunca produz sozinha.
+    case "criarAvaliacao": {
+      const dados = argumento as {
+        cpf: string;
+        cdCurso: number;
+        status?: "EM_ANDAMENTO" | "ENCERRADO";
+        parte1Completa?: boolean;
+        respostas?: Record<string, unknown>;
+      };
+      return prisma.avaliacaoAluno.create({
+        data: {
+          cpf: dados.cpf,
+          cdCurso: dados.cdCurso,
+          status: dados.status ?? "EM_ANDAMENTO",
+          parte1Completa: dados.parte1Completa ?? false,
+          ...(dados.respostas !== undefined
+            ? { respostas: dados.respostas as Prisma.InputJsonValue }
+            : {}),
+        },
+      });
+    }
+
+    // Marca uma AvaliacaoAluno de fixture como ENCERRADO direto no banco -
+    // usado pelos e2e que precisam testar o gate de somente-leitura
+    // (AVAL-17) sem depender da rota de encerramento (T6) já implementada.
+    case "encerrarAvaliacaoFixture": {
+      const { cpf, cdCurso } = argumento as { cpf: string; cdCurso: number };
+      return prisma.avaliacaoAluno.update({
+        where: { cpf_cdCurso: { cpf, cdCurso } },
+        data: { status: "ENCERRADO", dataEncerramento: new Date() },
+      });
+    }
+
+    case "getAvaliacao": {
+      const { cpf, cdCurso } = argumento as { cpf: string; cdCurso: number };
+      return prisma.avaliacaoAluno.findUnique({
+        where: { cpf_cdCurso: { cpf, cdCurso } },
+      });
+    }
+
+    // AvaliacaoAluno.cpf é FK para Usuario e AvaliacaoAluno.cdCurso é FK
+    // para PreCurso, sem onDelete: Cascade em nenhuma das duas - uma
+    // avaliação de teste bloquearia tanto `deleteUsuarios` quanto
+    // `deletePreCursosPorOfertante` se não for limpa antes.
+    case "deleteAvaliacoesPorCpf": {
+      const cpfs = argumento as string[];
+      const { count } = await prisma.avaliacaoAluno.deleteMany({
+        where: { cpf: { in: cpfs } },
+      });
+      return { count };
     }
 
     // `db-test-reset.ts` não trunca TB_Tentativa_Login_Ip (tabela independente
