@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/avaliacao-aluno/design.md`
-**Status**: In Progress
+**Status**: Done
 
 ---
 
@@ -315,13 +315,13 @@ T1 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: o Aluno abre a própria avaliação `EM_ANDAMENTO`, preenche a Parte 1 e salva rascunho → Parte 2 passa a ficar habilitada na mesma tela (reflete `parte1Completa`)
-- [ ] e2e: antes da Parte 1 completa, os controles de Parte 2 aparecem desabilitados com o aviso do gate
-- [ ] e2e: o Aluno preenche `avalParticipConcluiuCurso="Não"`, informa o motivo e encerra sem preencher o restante da Parte 2 → tela reflete `status=ENCERRADO`
-- [ ] e2e: noutra avaliação, o Aluno preenche `avalParticipConcluiuCurso="Sim"` sem completar as 22 chaves e tenta encerrar → bloqueado, pendências exibidas referenciando os campos
-- [ ] e2e: o Aluno reabre uma avaliação já `ENCERRADO` → nenhum campo é editável, botões "Salvar rascunho"/"Encerrar" ausentes ou desabilitados
-- [ ] e2e: um GO do Ofertante do curso abre a tela → vê os dados, sem controles de edição/encerramento
-- [ ] e2e: outro Aluno tentando acessar a URL diretamente → página de não encontrado/negado
+- [x] e2e: o Aluno abre a própria avaliação `EM_ANDAMENTO`, preenche a Parte 1 e salva rascunho → Parte 2 passa a ficar habilitada na mesma tela (reflete `parte1Completa`)
+- [x] e2e: antes da Parte 1 completa, os controles de Parte 2 aparecem desabilitados com o aviso do gate
+- [x] e2e: o Aluno preenche `avalParticipConcluiuCurso="Não"`, informa o motivo e encerra sem preencher o restante da Parte 2 → tela reflete `status=ENCERRADO`
+- [x] e2e: noutra avaliação, o Aluno preenche `avalParticipConcluiuCurso="Sim"` sem completar as 22 chaves e tenta encerrar → bloqueado, pendências exibidas referenciando os campos
+- [x] e2e: o Aluno reabre uma avaliação já `ENCERRADO` → nenhum campo é editável, botões "Salvar rascunho"/"Encerrar" ausentes ou desabilitados
+- [x] e2e: um GO do Ofertante do curso abre a tela → vê os dados, sem controles de edição/encerramento
+- [x] e2e: outro Aluno tentando acessar a URL diretamente → página de não encontrado/negado
 
 **Tests**: e2e
 **Gate**: full

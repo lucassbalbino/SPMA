@@ -2,6 +2,8 @@ import { z } from "zod";
 import { normalizarCPF, validarCPF } from "../cpf";
 import { OPCOES_UF } from "./pre-curso.schema";
 
+export { OPCOES_UF };
+
 // Matrícula do Aluno num curso (AVAL-01).
 export const matricularAlunoSchema = z.object({
   cpf: z
