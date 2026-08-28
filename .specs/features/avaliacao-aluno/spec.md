@@ -302,14 +302,14 @@ Chaves em camelCase, prefixo `aval` + bloco, para uso direto como propriedades d
 | AVAL-09 | P1: Preenchimento Parte 1 | T2, T5 | Implementing |
 | AVAL-10 | P1: Gate Parte 1 → Parte 2 | T1, T5 | Implementing |
 | AVAL-11 | P1: Gate Parte 1 → Parte 2 | T5 | Implementing |
-| AVAL-12 | P1: Regra condicional Concluiu | T3, T6 | Pending |
-| AVAL-13 | P1: Regra condicional Concluiu | T3, T6 | Pending |
+| AVAL-12 | P1: Regra condicional Concluiu | T3, T6 | Implementing |
+| AVAL-13 | P1: Regra condicional Concluiu | T3, T6 | Implementing |
 | AVAL-14 | P1: Regra condicional Concluiu | T5 | Implementing |
-| AVAL-15 | P1: Encerramento | T3, T6 | Pending |
-| AVAL-16 | P1: Encerramento | T3, T6 | Pending |
-| AVAL-17 | P1: Encerramento | T5, T6 | Pending |
-| AVAL-18 | P1: Encerramento | T2, T6 | Pending |
-| AVAL-19 | P1: Encerramento | T6 | Pending |
+| AVAL-15 | P1: Encerramento | T3, T6 | Implementing |
+| AVAL-16 | P1: Encerramento | T3, T6 | Implementing |
+| AVAL-17 | P1: Encerramento | T5, T6 | Implementing |
+| AVAL-18 | P1: Encerramento | T2, T6 | Implementing |
+| AVAL-19 | P1: Encerramento | T6 | Implementing |
 | AVAL-20 | P1: Consulta/listagem | T2, T5 | Implementing |
 | AVAL-21 | P1: Consulta/listagem | T2, T5 | Implementing |
 | AVAL-22 | P1: Consulta/listagem | T4 | Implementing |

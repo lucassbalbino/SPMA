@@ -235,13 +235,13 @@ T1 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: Parte 1 completa + `avalParticipConcluiuCurso="Não"` + `avalParticipMotivoNaoConclusao` preenchido (as 22 chaves de Parte 2 restantes vazias) → 200, `status=ENCERRADO` (prova AVAL-12 fim-a-fim)
-- [ ] e2e: Parte 1 completa + `avalParticipConcluiuCurso="Sim"` com as 22 chaves preenchidas → 200, `status=ENCERRADO` (prova AVAL-13 fim-a-fim)
-- [ ] e2e: `avalParticipConcluiuCurso="Sim"` com 1 das 22 chaves faltando → 400, `pendentes` lista a chave, `status` permanece `EM_ANDAMENTO`
-- [ ] e2e: Parte 1 incompleta → 400, `pendentes` lista as chaves de Parte 1 faltantes, `status` permanece `EM_ANDAMENTO`
-- [ ] e2e: segunda tentativa de encerrar uma avaliação já `ENCERRADO` → 409
-- [ ] e2e: o GO que fez a matrícula tenta encerrar → 403
-- [ ] e2e: após o encerramento, uma tentativa de `PATCH` em `/api/avaliacoes/[cpf]/[cdCurso]` (T5) recebe 409 (fecha AVAL-17/19 fim-a-fim)
+- [x] e2e: Parte 1 completa + `avalParticipConcluiuCurso="Não"` + `avalParticipMotivoNaoConclusao` preenchido (as 22 chaves de Parte 2 restantes vazias) → 200, `status=ENCERRADO` (prova AVAL-12 fim-a-fim)
+- [x] e2e: Parte 1 completa + `avalParticipConcluiuCurso="Sim"` com as 22 chaves preenchidas → 200, `status=ENCERRADO` (prova AVAL-13 fim-a-fim)
+- [x] e2e: `avalParticipConcluiuCurso="Sim"` com 1 das 22 chaves faltando → 400, `pendentes` lista a chave, `status` permanece `EM_ANDAMENTO`
+- [x] e2e: Parte 1 incompleta → 400, `pendentes` lista as chaves de Parte 1 faltantes, `status` permanece `EM_ANDAMENTO`
+- [x] e2e: segunda tentativa de encerrar uma avaliação já `ENCERRADO` → 409
+- [x] e2e: o GO que fez a matrícula tenta encerrar → 403
+- [x] e2e: após o encerramento, uma tentativa de `PATCH` em `/api/avaliacoes/[cpf]/[cdCurso]` (T5) recebe 409 (fecha AVAL-17/19 fim-a-fim)
 
 **Tests**: e2e
 **Gate**: full
