@@ -265,10 +265,10 @@ T1 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO vinculado ao Ofertante A vê só as avaliações de cursos do Ofertante A
-- [ ] e2e: GT vê todas as avaliações cadastradas
-- [ ] e2e: Aluno vê só a(s) própria(s) avaliação(ões)
-- [ ] e2e: cada item lista o status atual e linka para a tela de detalhe (T9)
+- [x] e2e: GO vinculado ao Ofertante A vê só as avaliações de cursos do Ofertante A
+- [x] e2e: GT vê todas as avaliações cadastradas
+- [x] e2e: Aluno vê só a(s) própria(s) avaliação(ões)
+- [x] e2e: cada item lista o status atual e linka para a tela de detalhe (T9)
 
 **Tests**: e2e
 **Gate**: full
