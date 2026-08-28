@@ -290,10 +290,10 @@ T1 → T9
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e: GO matricula um Aluno existente num curso do próprio Ofertante → redireciona para a tela de preenchimento (T9)
-- [ ] e2e: seletor de curso mostra só os do próprio Ofertante do GO autenticado
-- [ ] e2e: tentativa com CPF de um usuário não-Aluno exibe a mensagem de erro do servidor sem redirecionar
-- [ ] e2e: tentativa de matricular um Aluno que já tem avaliação `EM_ANDAMENTO` noutro curso exibe a mensagem de erro (RN-12) sem redirecionar
+- [x] e2e: GO matricula um Aluno existente num curso do próprio Ofertante → redireciona para a tela de preenchimento (T9)
+- [x] e2e: seletor de curso mostra só os do próprio Ofertante do GO autenticado
+- [x] e2e: tentativa com CPF de um usuário não-Aluno exibe a mensagem de erro do servidor sem redirecionar
+- [x] e2e: tentativa de matricular um Aluno que já tem avaliação `EM_ANDAMENTO` noutro curso exibe a mensagem de erro (RN-12) sem redirecionar
 
 **Tests**: e2e
 **Gate**: full
