@@ -21,6 +21,21 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 Por isso o Execute **começa estabelecendo a linha de base**: rodar `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` no HEAD, **antes** da T1, e anotar as três contagens obtidas neste arquivo. Todo "Test count" abaixo é expresso como **delta sobre essa linha de base**, nunca como um absoluto herdado da spec. Se a linha de base já vier vermelha, parar e reportar — uma falha pré-existente não pode ser confundida com regressão desta feature.
 
+**Linha de base estabelecida (2026-08-30, HEAD `56ec10e`).** A árvore foi limpa em 3 commits antes da medição (`e2a19b1` troca dos questionários, `b79500c` seed de demonstração, `56ec10e` artefatos desta feature), então a medição vale para um HEAD limpo.
+
+| Gate | Resultado |
+| --- | --- |
+| `npm run lint` | 0 erros, 34 warnings pré-existentes (`_omitido`/`_a`/`_b`/`_c` em testes de completude) |
+| `npm run build` | passa |
+| `npm run typecheck` | limpo |
+| `npm run test:unit` | **461** testes / 24 arquivos |
+| `npm run test:integration` | **27** testes / 6 arquivos |
+| `npm run test:e2e` | **202** testes / 20.1 min |
+
+Os números 382/27/199 citados na spec (UI-12) são anteriores à troca dos questionários e **não** são a referência. Todo "Test count" abaixo é delta sobre **461 / 27 / 202**.
+
+Nota de execução: o `next dev` que ocupava a porta 3000 tinha um processo supervisor que respawnava o worker; foi preciso encerrar o supervisor, não só o processo que detinha a porta.
+
 ---
 
 ## Test Coverage Matrix
@@ -125,12 +140,12 @@ T7 → T8
 - Skill: NONE
 
 **Done when**:
-- [ ] `src/lib/ui/navegacao.test.ts` cobre, no mínimo: os 6 perfis com o conjunto exato de `href` da tabela do design; AL **não** recebe `/pre-cursos` nem `/pos-cursos`; VT, VO e AL **não** recebem `/usuarios/novo`; o rótulo do item de `/avaliacoes` é "Minha avaliação" para AL e "Avaliações" para os outros 5; todo perfil recebe `/painel`
-- [ ] `modulosDoPerfil` devolve, para cada um dos 6 perfis, exatamente a mesma lista de strings do literal atual do painel (asserção literal, não estrutural — é o contrato que segura `e2e/painel.spec.ts`)
-- [ ] `hrefAtivo` coberto nos 5 casos: exato; sub-rota (`/avaliacoes/novo` → `/avaliacoes`, `/pre-cursos/12` → `/pre-cursos`); mais-longo vence (`/usuarios/novo` não é ofuscado por um `/usuarios`); pathname desconhecido → `null`; lista vazia → `null`
-- [ ] Nenhum `href` da tabela aponta para rota inexistente — teste que compara os `href` distintos contra a lista literal das rotas implementadas em `src/app/(protegido)`
-- [ ] Gate quick passa: `npm run test:unit`
-- [ ] Test count: unit = linha de base **+16** ou mais; nenhum teste existente removido
+- [x] `src/lib/ui/navegacao.test.ts` cobre, no mínimo: os 6 perfis com o conjunto exato de `href` da tabela do design; AL **não** recebe `/pre-cursos` nem `/pos-cursos`; VT, VO e AL **não** recebem `/usuarios/novo`; o rótulo do item de `/avaliacoes` é "Minha avaliação" para AL e "Avaliações" para os outros 5; todo perfil recebe `/painel`
+- [x] `modulosDoPerfil` devolve, para cada um dos 6 perfis, exatamente a mesma lista de strings do literal atual do painel (asserção literal, não estrutural — é o contrato que segura `e2e/painel.spec.ts`)
+- [x] `hrefAtivo` coberto nos 5 casos: exato; sub-rota (`/avaliacoes/novo` → `/avaliacoes`, `/pre-cursos/12` → `/pre-cursos`); mais-longo vence (`/usuarios/novo` não é ofuscado por um `/usuarios`); pathname desconhecido → `null`; lista vazia → `null`
+- [x] Nenhum `href` da tabela aponta para rota inexistente — teste que compara os `href` distintos contra a lista literal das rotas implementadas em `src/app/(protegido)`
+- [x] Gate quick passa: `npm run test:unit`
+- [x] Test count: unit = linha de base **+16** ou mais; nenhum teste existente removido
 
 **Tests**: unit
 **Gate**: quick
