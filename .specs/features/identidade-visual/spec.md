@@ -2,7 +2,7 @@
 
 **Escopo:** Medium (nenhuma regra de negócio, nenhuma rota de API nova, nenhum model; o volume vem da quantidade de telas tocadas — 11 páginas do grupo `(protegido)` — não da dificuldade de cada uma).
 **Dependências:** `auth-e-usuarios` (sessão, `TipoUsuario`, `POST /api/auth/logout`, `MODULOS_POR_PERFIL` do painel), `seguranca-transversal` (CSRF no logout via `headerCSRF`, CSP com nonce — nada de `<style>` ou `style=` inline novo).
-**Fonte de decisões:** STATE.md AD-002 (Next.js App Router), AD-006 (shadcn/ui + Tailwind), AD-009/AD-012 (cascata e escopo, que definem o que cada perfil vê na navegação). Introduz AD-035 (camada visual em arquivo único), a ser registrada no Execute.
+**Fonte de decisões:** STATE.md AD-002 (Next.js App Router), AD-006 (shadcn/ui + Tailwind), AD-009/AD-012 (cascata e escopo, que definem o que cada perfil vê na navegação). Introduz AD-039 (camada visual em arquivo único), registrada no Execute.
 **Fonte funcional:** decisões do usuário nesta sessão (2026-08-28), registradas em Assunções — não há requisito visual no documento do cliente.
 
 ---
@@ -31,7 +31,7 @@ Explicitamente excluído. Documentado para evitar scope creep.
 | ---- | ------ |
 | Cor de acento, logotipo, tipografia comprada, ilustrações | Decisão do usuário: paleta neutra pura, hierarquia por peso e espaçamento. Marca visual é decisão do cliente, não desta feature. |
 | Modo escuro e alternador de tema | Custo sem demanda; o esquema claro é fixado (UI-15). Se o cliente pedir, vira feature própria — a camada de tokens já deixa isso barato. |
-| Teste automatizado que proíbe cor hardcoded | Decisão do usuário: a regra fica como convenção documentada (AD-035 + `AGENTS.md`), não como gate de CI. |
+| Teste automatizado que proíbe cor hardcoded | Decisão do usuário: a regra fica como convenção documentada (AD-039 + `AGENTS.md`), não como gate de CI. |
 | Landing pública desenhada em `/` | `/` vira redirect (UI-17). Uma home institucional é conteúdo de marketing, não parte do sistema. |
 | Telas de `(public)` e `(onboarding)` (`/login`, `/primeiro-acesso`, `/cadastro-ofertante`) | Fora do escopo escolhido: não têm sessão e por isso não têm casca. Herdam só as correções globais (UI-15, UI-18). |
 | Dashboard / indicadores | Adiado por AD-024 até o cliente definir os indicadores. |
@@ -48,7 +48,7 @@ Toda ambiguidade está resolvida ou registrada aqui.
 | --- | --- | --- | --- |
 | Amplitude da feature | O mínimo para as telas não parecerem cruas: casca + padrões de página + base de tokens, sem nenhuma tela nova | Pedido literal do usuário ("o mais simples possível, só pra não apresentar as telas totalmente cruas") | y |
 | Estética | Neutro puro (escala de cinza já em `globals.css`), sem acento; hierarquia por peso tipográfico, espaçamento e bordas de 1px | Escolha do usuário; também é a base mais barata de substituir depois, por não ter cor de marca espalhada | y |
-| Mecanismo de substituição | Convenção documentada (AD-035 + nota em `AGENTS.md`), sem teste que a force | Escolha do usuário. Custo aceito e registrado: a regra depende de disciplina; se aparecer a primeira violação, promovê-la a lint rule é tarefa de uma linha | y |
+| Mecanismo de substituição | Convenção documentada (AD-039 + nota em `AGENTS.md`), sem teste que a force | Escolha do usuário. Custo aceito e registrado: a regra depende de disciplina; se aparecer a primeira violação, promovê-la a lint rule é tarefa de uma linha | y |
 | Migração das telas existentes | Todas as 11 telas do grupo `(protegido)` migram nesta feature | Escolha do usuário; são todas simples e os 199 e2e existentes cobrem regressão | y |
 | Destino de `/` | Redirect para `/painel` (que já manda para `/login` quando não há sessão, via `requireSession`) | É a coisa mais simples que remove o resíduo do template sem inventar uma home; reaproveita o guard existente | n |
 | Esquema de cor | Fixar claro e remover o bloco `@media (prefers-color-scheme: dark)` de `globals.css` | Hoje esse bloco aplica `color-scheme: dark` sem ativar a classe `.dark`: num SO em modo escuro os controles nativos ficam escuros sobre uma paleta clara. Fixar claro corrige a inconsistência sem introduzir um tema que ninguém pediu | n |
@@ -113,7 +113,7 @@ Toda ambiguidade está resolvida ou registrada aqui.
 1. The system SHALL manter toda definição de cor, raio, fonte e escala de espaçamento em `src/app/globals.css`, sem nenhuma cor literal (`#hex`, `rgb()`, `oklch()`) nem utilitário Tailwind de cor fixa (`bg-neutral-900`, `text-slate-500`) em arquivos `.tsx`. (UI-13)
 2. The system SHALL usar exclusivamente a paleta neutra já definida, sem cor de acento, obtendo hierarquia por peso tipográfico, espaçamento e bordas de 1px. (UI-14)
 3. The system SHALL fixar o esquema de cor claro, removendo de `globals.css` o bloco `@media (prefers-color-scheme: dark)` que hoje aplica `color-scheme: dark` sem ativar a classe `.dark`. (UI-15)
-4. WHERE um tema futuro precisar substituir a estética, the system SHALL permitir a troca editando apenas os blocos `:root` e `@theme inline` de `globals.css`, sem alteração em nenhum `.tsx`; a regra fica registrada como AD-035 em `.specs/STATE.md` e citada em `AGENTS.md`. (UI-16)
+4. WHERE um tema futuro precisar substituir a estética, the system SHALL permitir a troca editando apenas os blocos `:root` e `@theme inline` de `globals.css`, sem alteração em nenhum `.tsx`; a regra fica registrada como AD-039 em `.specs/STATE.md` e citada em `AGENTS.md`. (UI-16)
 5. The system SHALL apontar `--font-sans` e `--font-mono` do `@theme inline` para as variáveis reais emitidas pelo layout raiz (`--font-geist-sans`, `--font-geist-mono`), eliminando a autorreferência `--font-sans: var(--font-sans)` que hoje invalida a variável e faz toda tela renderizar na fonte serifada de fallback do navegador. (UI-20)
 6. The system SHALL eliminar o efeito do reset não-layerizado `* { padding: 0; margin: 0 }` de `globals.css` — movendo-o para `@layer base` ou removendo-o em favor do preflight do Tailwind — de modo que utilidades de espaçamento (`p-*`, `gap-*`, `space-y-*`) voltem a valer em todas as telas. (UI-21)
 
@@ -151,13 +151,13 @@ Toda ambiguidade está resolvida ou registrada aqui.
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| UI-01 | P1: Casca comum | Design + Tasks | In Tasks |
-| UI-02 | P1: Casca comum | Design + Tasks | In Tasks |
-| UI-03 | P1: Casca comum | Design + Tasks | In Tasks |
-| UI-04 | P1: Casca comum | Design + Tasks | In Tasks |
-| UI-05 | P1: Casca comum | Design + Tasks | In Tasks |
-| UI-06 | P1: Casca comum | Design + Tasks | In Tasks |
-| UI-07 | P1: Casca comum | Design + Tasks | In Tasks |
+| UI-01 | P1: Casca comum | Design + Tasks | Verified |
+| UI-02 | P1: Casca comum | Design + Tasks | Verified |
+| UI-03 | P1: Casca comum | Design + Tasks | Verified |
+| UI-04 | P1: Casca comum | Design + Tasks | Verified |
+| UI-05 | P1: Casca comum | Design + Tasks | Verified |
+| UI-06 | P1: Casca comum | Design + Tasks | Verified |
+| UI-07 | P1: Casca comum | Design + Tasks | Verified |
 | UI-08 | P1: Padrões de página | - | Pending |
 | UI-09 | P1: Padrões de página | - | Pending |
 | UI-10 | P1: Padrões de página | - | Pending |
@@ -170,15 +170,15 @@ Toda ambiguidade está resolvida ou registrada aqui.
 | UI-17 | P2: Entrada do site | - | Pending |
 | UI-18 | P2: Entrada do site | - | Pending |
 | UI-19 | P2: Entrada do site | - | Pending |
-| UI-20 | P1: Base visual | Design + Tasks | In Tasks |
-| UI-21 | P1: Base visual | Design + Tasks | In Tasks |
+| UI-20 | P1: Base visual | Design + Tasks | Verified |
+| UI-21 | P1: Base visual | Design + Tasks | Verified |
 | UI-22 | P1: Padrões de página | - | Pending |
 
 **ID format:** `UI-NN` (interface).
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 22 no total. 9 mapeados para tarefas (UI-01…UI-07, UI-20, UI-21 — recorte "casca comum + menu de navegação", `design.md` e `tasks.md` T1–T8). 13 ainda `Pending`: UI-08…UI-19 e UI-22 pertencem às histórias "Padrões de página", "Base visual" e "Entrada do site", que ganharão o próprio ciclo Design → Tasks. 0 sem cobertura prevista.
+**Coverage:** 22 no total. 9 `Verified` (UI-01…UI-07, UI-20, UI-21 — recorte "casca comum + menu de navegação", implementado e verificado em `tasks.md` T1–T8). 13 ainda `Pending`: UI-08…UI-19 e UI-22 pertencem às histórias "Padrões de página", "Base visual" e "Entrada do site", que ganharão o próprio ciclo Design → Tasks. 0 sem cobertura prevista.
 
 > UI-20, UI-21 e UI-22 vieram do tour visual de 2026-08-29 (capturas de todas as 16 telas). São defeitos observados, não requisitos de estilo.
 

@@ -301,10 +301,10 @@ T7 → T8
 - Skill: NONE
 
 **Done when**:
-- [ ] `AD-039` existe em `.specs/STATE.md` e nenhum outro AD duplica esse número
-- [ ] Nenhuma ocorrência de "AD-035" sobra em `.specs/features/identidade-visual/` se referindo à camada visual
-- [ ] Traceability da spec: 9 requisitos `Verified`, 13 `Pending`, contagem de cobertura atualizada no rodapé
-- [ ] Gate build passa: `npm run lint && npm run build && npm run typecheck`
+- [x] `AD-039` existe em `.specs/STATE.md` e nenhum outro AD duplica esse número
+- [x] Nenhuma ocorrência de "AD-035" sobra em `.specs/features/identidade-visual/` se referindo à camada visual
+- [x] Traceability da spec: 9 requisitos `Verified`, 13 `Pending`, contagem de cobertura atualizada no rodapé
+- [x] Gate build passa: `npm run lint && npm run build && npm run typecheck`
 
 **Tests**: none (matriz: artefatos de `.specs/` e `AGENTS.md` → build gate apenas)
 **Gate**: build
