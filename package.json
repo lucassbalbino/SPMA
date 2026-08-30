@@ -14,6 +14,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:test:reset": "tsx scripts/db-test-reset.ts",
+    "dev:seed-demo": "tsx scripts/dev-seed-demo.ts",
+    "dev:seed-demo:limpar": "tsx scripts/dev-seed-demo.ts --limpar",
     "test:integration": "vitest run -c vitest.integration.config.ts"
   },
   "dependencies": {
