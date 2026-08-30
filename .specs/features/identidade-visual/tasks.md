@@ -195,10 +195,10 @@ T7 → T8
 - Skill: NONE
 
 **Done when**:
-- [ ] `grep -rn "min-h-screen" "src/app/(protegido)"` volta vazio
-- [ ] Nenhum `data-testid` e nenhum texto de rótulo alterado (conferido por `git diff` antes do commit)
-- [ ] Gate full passa com **zero arquivo de teste alterado** — a suíte e2e existente é a rede de regressão desta tarefa (UI-12)
-- [ ] Test count: as três contagens iguais às da T3
+- [x] `grep -rn "min-h-screen" "src/app/(protegido)"` volta vazio
+- [x] Nenhum `data-testid` e nenhum texto de rótulo alterado (conferido por `git diff` antes do commit)
+- [x] Gate full passa com **zero arquivo de teste alterado** — a suíte e2e existente é a rede de regressão desta tarefa (UI-12)
+- [x] Test count: as três contagens iguais às da T3
 
 **Tests**: e2e (regressão)
 **Gate**: full

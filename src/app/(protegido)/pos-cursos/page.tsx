@@ -37,7 +37,7 @@ export default async function PosCursosPage() {
   });
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-4 p-4">
+    <>
       <Card className="w-full max-w-2xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Pós-cursos</CardTitle>
@@ -67,6 +67,6 @@ export default async function PosCursosPage() {
           )}
         </CardContent>
       </Card>
-    </main>
+    </>
   );
 }

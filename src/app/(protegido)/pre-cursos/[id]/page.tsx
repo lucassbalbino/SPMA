@@ -33,13 +33,13 @@ export default async function PreCursoPage({ params }: Props) {
     podeGerenciarPreCurso(usuario, preCurso.cdOfertante);
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-4 p-4">
+    <>
       <PreCursoForm
         cdCurso={preCurso.cdCurso}
         status={preCurso.status}
         respostasIniciais={(preCurso.respostas as RespostasPreCursoParcial | null) ?? {}}
         podeEditar={podeEditar}
       />
-    </main>
+    </>
   );
 }

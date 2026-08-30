@@ -34,13 +34,13 @@ export default async function PosCursoPage({ params }: Props) {
     podeGerenciarPosCurso(usuario, posCurso.preCurso.cdOfertante);
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-4 p-4">
+    <>
       <PosCursoForm
         cdCurso={posCurso.cdCurso}
         status={posCurso.status}
         respostasIniciais={(posCurso.respostas as RespostasPosCursoParcial | null) ?? {}}
         podeEditar={podeEditar}
       />
-    </main>
+    </>
   );
 }

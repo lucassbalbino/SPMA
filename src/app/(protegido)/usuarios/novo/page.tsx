@@ -14,7 +14,7 @@ export default async function NovoUsuarioPage() {
   const { usuario } = await requireSession();
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Novo usuário</CardTitle>
@@ -23,6 +23,6 @@ export default async function NovoUsuarioPage() {
           <NovoUsuarioForm tipoCriador={usuario.tipo} />
         </CardContent>
       </Card>
-    </main>
+    </>
   );
 }

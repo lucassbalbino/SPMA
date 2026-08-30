@@ -44,7 +44,7 @@ export default async function AvaliacaoPage({ params }: Props) {
     avaliacao.status === "EM_ANDAMENTO" && podeGerenciarAvaliacao(usuario, avaliacao.cpf);
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-4 p-4">
+    <>
       <AvaliacaoForm
         cpf={avaliacao.cpf}
         cdCurso={avaliacao.cdCurso}
@@ -53,6 +53,6 @@ export default async function AvaliacaoPage({ params }: Props) {
         respostasIniciais={(avaliacao.respostas as RespostasAvaliacaoParcial | null) ?? {}}
         podeEditar={podeEditar}
       />
-    </main>
+    </>
   );
 }

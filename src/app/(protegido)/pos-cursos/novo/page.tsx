@@ -15,7 +15,7 @@ export default async function NovoPosCursoPage() {
 
   if (usuario.tipo !== "GO" || usuario.cdOfertante === null) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-4">
+      <>
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>Novo pós-curso</CardTitle>
@@ -26,7 +26,7 @@ export default async function NovoPosCursoPage() {
             </p>
           </CardContent>
         </Card>
-      </main>
+      </>
     );
   }
 
@@ -37,7 +37,7 @@ export default async function NovoPosCursoPage() {
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Novo pós-curso</CardTitle>
@@ -46,6 +46,6 @@ export default async function NovoPosCursoPage() {
           <NovoPosCursoForm cdCursosElegiveis={preCursosElegiveis.map((p) => p.cdCurso)} />
         </CardContent>
       </Card>
-    </main>
+    </>
   );
 }

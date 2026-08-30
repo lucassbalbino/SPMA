@@ -12,7 +12,7 @@ export default async function PainelPage() {
   const modulos = modulosDoPerfil(usuario.tipo);
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Olá, {usuario.nome}</CardTitle>
@@ -28,6 +28,6 @@ export default async function PainelPage() {
           </ul>
         </CardContent>
       </Card>
-    </main>
+    </>
   );
 }

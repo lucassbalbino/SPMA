@@ -14,7 +14,7 @@ export default async function NovaAvaliacaoPage() {
 
   if (usuario.tipo !== "GO" || usuario.cdOfertante === null) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-4">
+      <>
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>Matricular aluno</CardTitle>
@@ -25,7 +25,7 @@ export default async function NovaAvaliacaoPage() {
             </p>
           </CardContent>
         </Card>
-      </main>
+      </>
     );
   }
 
@@ -36,7 +36,7 @@ export default async function NovaAvaliacaoPage() {
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Matricular aluno</CardTitle>
@@ -45,6 +45,6 @@ export default async function NovaAvaliacaoPage() {
           <MatricularAlunoForm cdCursosDisponiveis={cursosDoOfertante.map((c) => c.cdCurso)} />
         </CardContent>
       </Card>
-    </main>
+    </>
   );
 }

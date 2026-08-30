@@ -17,7 +17,7 @@ export default async function NovoPreCursoPage() {
 
   if (usuario.tipo !== "GO" || usuario.cdOfertante === null) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-4">
+      <>
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>Novo pré-curso</CardTitle>
@@ -28,7 +28,7 @@ export default async function NovoPreCursoPage() {
             </p>
           </CardContent>
         </Card>
-      </main>
+      </>
     );
   }
 
@@ -45,7 +45,7 @@ export default async function NovoPreCursoPage() {
   );
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Novo pré-curso</CardTitle>
@@ -54,6 +54,6 @@ export default async function NovoPreCursoPage() {
           <NovoPreCursoForm opcoesVerba={opcoesVerba} />
         </CardContent>
       </Card>
-    </main>
+    </>
   );
 }
