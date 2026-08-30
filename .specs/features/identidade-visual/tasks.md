@@ -273,11 +273,11 @@ T7 → T8
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e de UI-04: clicar em "Sair" leva a `/login` **e** o cookie de sessão anterior deixa de autenticar uma rota protegida (as duas metades do critério — L-014) — 1 teste com as duas asserções
-- [ ] e2e de UI-05: com `page.route("**/api/auth/logout", …)` respondendo 403, clicar em "Sair" mantém a URL na tela atual **e** exibe a mensagem de falha — 1 teste com as duas asserções
-- [ ] e2e do edge case do clique duplo: com a rota interceptada respondendo 401, o clique conclui em `/login` — 1 teste
-- [ ] Gate full passa, zero arquivo de teste existente alterado
-- [ ] Test count: e2e = contagem da T6 **+3**
+- [x] e2e de UI-04: clicar em "Sair" leva a `/login` **e** o cookie de sessão anterior deixa de autenticar uma rota protegida (as duas metades do critério — L-014) — 1 teste com as duas asserções
+- [x] e2e de UI-05: com `page.route("**/api/auth/logout", …)` respondendo 403, clicar em "Sair" mantém a URL na tela atual **e** exibe a mensagem de falha — 1 teste com as duas asserções
+- [x] e2e do edge case do clique duplo: com a rota interceptada respondendo 401, o clique conclui em `/login` — 1 teste
+- [x] Gate full passa, zero arquivo de teste existente alterado
+- [x] Test count: e2e = contagem da T6 **+3**
 
 **Tests**: e2e
 **Gate**: full

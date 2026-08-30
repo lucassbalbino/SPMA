@@ -9,6 +9,7 @@
 // CPF (REQ-SEC-12).
 import type { TipoUsuario } from "@/generated/prisma/enums";
 import { navegacaoDoPerfil } from "@/lib/ui/navegacao";
+import { BotaoSair } from "./BotaoSair";
 import { NavegacaoPerfil } from "./NavegacaoPerfil";
 
 export function CascaProtegida({
@@ -31,6 +32,7 @@ export function CascaProtegida({
         <div className="ml-auto flex flex-wrap items-center gap-3">
           <span className="max-w-64 truncate text-sm font-medium">{usuario.nome}</span>
           <span className="text-sm text-muted-foreground">{usuario.tipo}</span>
+          <BotaoSair />
         </div>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>

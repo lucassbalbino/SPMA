@@ -283,3 +283,77 @@ test.describe("menu de navegação por perfil", () => {
     expect(erros.filter((e) => /hydrat|hidrat/i.test(e))).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// T7: saída de sessão pelo cabeçalho (UI-04, UI-05).
+// ---------------------------------------------------------------------------
+
+const CPF_SAIR = "50102031207";
+const CPF_SAIR_FALHA = "50102031380";
+const CPFS_SAIR = [CPF_SAIR, CPF_SAIR_FALHA];
+
+test.describe("botão Sair", () => {
+  test.beforeAll(() => {
+    deleteUsuarios(CPFS_SAIR);
+    upsertUsuario({ cpf: CPF_SAIR, tipo: "GT", senha: SENHA, primeiraVez: false });
+    upsertUsuario({ cpf: CPF_SAIR_FALHA, tipo: "GT", senha: SENHA, primeiraVez: false });
+  });
+
+  test.afterAll(() => {
+    deleteUsuarios(CPFS_SAIR);
+  });
+
+  test("UI-04: sair leva a /login e o cookie anterior deixa de autenticar", async ({
+    page,
+    browser,
+  }) => {
+    await logar(page, CPF_SAIR, SENHA);
+    await page.goto("/painel");
+
+    const cookies = await page.context().cookies();
+    const sessaoAntes = cookies.find((c) => c.name === "spma_sessao");
+    expect(sessaoAntes).toBeDefined();
+
+    await page.getByRole("button", { name: "Sair" }).click();
+    await expect(page).toHaveURL(/\/login$/);
+
+    // A outra metade do critério: o cookie que valia antes não vale mais.
+    const contexto = await browser.newContext();
+    await contexto.addCookies([sessaoAntes!]);
+    const pageAntiga = await contexto.newPage();
+    await pageAntiga.goto("/painel");
+    await expect(pageAntiga).toHaveURL(/\/login$/);
+    await contexto.close();
+  });
+
+  test("UI-05: logout rejeitado mantém a página atual e exibe a falha", async ({
+    page,
+  }) => {
+    await logar(page, CPF_SAIR_FALHA, SENHA);
+    await page.goto("/painel");
+
+    await page.route("**/api/auth/logout", (rota) =>
+      rota.fulfill({ status: 403, contentType: "application/json", body: "{}" }),
+    );
+
+    await page.getByRole("button", { name: "Sair" }).click();
+
+    await expect(page.getByTestId("erro-sair")).toBeVisible();
+    await expect(page).toHaveURL(/\/painel$/);
+  });
+
+  test("logout que responde 401 conclui em /login (edge case do clique duplo)", async ({
+    page,
+  }) => {
+    await logar(page, CPF_SAIR_FALHA, SENHA);
+    await page.goto("/painel");
+
+    await page.route("**/api/auth/logout", (rota) =>
+      rota.fulfill({ status: 401, contentType: "application/json", body: "{}" }),
+    );
+
+    await page.getByRole("button", { name: "Sair" }).click();
+
+    await expect(page).toHaveURL(/\/login$/);
+  });
+});
