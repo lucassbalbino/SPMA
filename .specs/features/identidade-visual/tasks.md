@@ -114,11 +114,12 @@ T7 → T8
 - Skill: NONE
 
 **Done when**:
-- [ ] Linha de base do Execute registrada neste arquivo (unit / integration / e2e) antes de qualquer alteração
-- [ ] Novo `e2e/identidade-visual.spec.ts` com 2 testes, em `/login` (tela sem sessão, mais barata e já coberta por `login-page.spec.ts`): `getComputedStyle(body).fontFamily` contém `Geist` e **não** cai na serifada de fallback; `getComputedStyle(CardContent).paddingLeft` é diferente de `0px`
-- [ ] Os dois testes **falham** contra o `globals.css` atual e passam depois da correção (verificado nessa ordem — é a evidência de que discriminam o defeito)
-- [ ] Gate full passa: `npm run test:unit && npm run test:integration && npm run test:e2e`
-- [ ] Test count: e2e = linha de base **+2**; unit e integration inalterados
+- [x] Linha de base do Execute registrada neste arquivo (unit / integration / e2e) antes de qualquer alteração
+- [x] Novo `e2e/identidade-visual.spec.ts` com 2 testes, em `/login` (tela sem sessão, mais barata e já coberta por `login-page.spec.ts`): `getComputedStyle(body).fontFamily` contém `Geist` e **não** cai na serifada de fallback; `getComputedStyle(CardContent).paddingLeft` é diferente de `0px`
+- [x] Os dois testes **falham** contra o `globals.css` atual e passam depois da correção (verificado nessa ordem — é a evidência de que discriminam o defeito)
+- [x] Gate full passa: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Test count: e2e = linha de base **+2**; unit e integration inalterados
+- Evidência da discriminação: contra o `globals.css` do HEAD, `2 failed / 202 passed` (só os dois testes novos); com a correção, `204 passed`. A ordem T1/T2 foi invertida na execução (T2 foi commitada antes, por ser a única que fecha sem a porta 3000), então a contagem unitária de referência aqui é 485, não 461.
 
 **Tests**: e2e
 **Gate**: full

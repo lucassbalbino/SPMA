@@ -22,10 +22,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+/* Dentro de `@layer base` de propósito: CSS sem camada vence `@layer
+   utilities`, e este reset zerava toda utilidade de espaçamento do Tailwind
+   (`p-*`, `px-*`, `gap-*`) em todas as telas - UI-21. */
+@layer base {
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
 }
 
 a {
@@ -40,8 +45,12 @@ a {
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
+  /* Apontam para as variáveis que `src/app/layout.tsx` realmente emite. A
+     autorreferência anterior (`--font-sans: var(--font-sans)`) invalidava a
+     variável e derrubava todo o sistema na serifada de fallback - UI-20. */
+  --font-heading: var(--font-geist-sans);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
