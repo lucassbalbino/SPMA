@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { obterSessao } from "@/lib/auth/session";
 import { podeGerenciarPosCurso } from "@/lib/auth/guards";
 import { validarCompletudePosCurso } from "@/lib/pos-curso/completude";
+import { normalizarCondicionaisPosCurso } from "@/lib/pos-curso/condicionais";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
 
@@ -50,7 +51,14 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
     return NextResponse.json({ erro: "Pós-curso já está encerrado" }, { status: 409 });
   }
 
-  const { completo, pendentes } = validarCompletudePosCurso(posCurso.respostas);
+  // Q12 preenchida com Q11="Não" (o Gestor respondeu "Sim", detalhou e
+  // depois mudou de ideia) é descartada AQUI, no momento em que o
+  // formulário vira registro final e imutável - durante o preenchimento o
+  // valor fica preservado. Sem isso, o registro encerrado guardaria uma
+  // contradição interna, exatamente o que o AD-037 barra nas perguntas de
+  // seleção múltipla.
+  const respostas = normalizarCondicionaisPosCurso(posCurso.respostas);
+  const { completo, pendentes } = validarCompletudePosCurso(respostas);
 
   if (!completo) {
     return NextResponse.json(
@@ -61,7 +69,7 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
 
   const atualizado = await prisma.posCurso.update({
     where: { cdCurso },
-    data: { status: "ENCERRADO", dataEncerramento: new Date() },
+    data: { status: "ENCERRADO", dataEncerramento: new Date(), respostas },
   });
 
   return NextResponse.json({ posCurso: atualizado });

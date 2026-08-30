@@ -38,15 +38,16 @@ O Gestor Ofertante (GO) precisa registrar, antes do início de cada curso, um di
 
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 |---|---|---|---|
-| Lista nominal dos 54 itens de dado (o documento fonte só descreve por bloco/categoria) | Deriva-se o dicionário completo de campos (seção "Dicionário de Campos" abaixo) a partir das descrições de bloco (4.1), dos exemplos citados, e dos ADs já travados (AD-019, AD-025 a AD-027); soma bate com os 54 itens declarados quando as 2 condicionais "Outro" do Bloco 2 são contadas junto da pergunta-mãe (17 de infraestrutura com contagem explícita no doc + 37 dos demais blocos) — o schema Zod usa 56 chaves porque cada condicional precisa da própria validação | Decisão explícita do usuário nesta sessão: "Eu derivo e você revisa" — evita bloquear a feature por falta de planilha/anexo, mas mantém o dicionário revisável antes de Design/Tasks | y |
-| Nomes dos 9 itens de Infraestrutura Básica e dos 8 de Infraestrutura Complementar (doc cita só exemplos parciais) | Ver Dicionário de Campos, blocos 6 e 7 | O doc ancora a CONTAGEM (9 e 8, seção 4.1) mas não o nome de cada item; completados com itens plausíveis de checklist de infraestrutura de curso presencial no contexto brasileiro | n — revisar com o cliente antes do encerramento real da feature em produção |
-| Opções das perguntas de seleção única/múltipla sem lista explícita no doc (vínculo a plano/programa, características do curso, público-alvo, critérios de seleção docente, políticas de reparação, canais de divulgação, parcerias, suporte ao aluno) | Ver Dicionário de Campos | Mesma decisão acima — derivação com base no domínio (qualificação profissional em Turismo, financiado por programa público) e nos 5 campos "Outro/Qual" já ancorados em 4.2, que cobrem o risco de lista incompleta (usuário sempre pode escrever texto livre quando a opção não existir) | n — revisar com o cliente |
+| Lista nominal das perguntas do questionário | Transcrita 1:1 de `docs/Questionario_do_Gestor_Pre_Curso.md` (questionário real do cliente, recebido em 2026-08-29), Q1–Q32 → 56 chaves no schema Zod — ver "Dicionário de Campos" abaixo | O questionário fonte substituiu o dicionário que havia sido **derivado** das descrições por bloco do documento de especificação, quando o anexo com as perguntas ainda não existia. Contagem de chaves inalterada (56); conteúdo das perguntas e das opções, não — ver AD-035 | y — é o documento do cliente, não mais uma derivação |
+| Nomes dos 9 itens de Infraestrutura Básica e dos 8 de Infraestrutura Complementar | Transcritos de Q23 e Q24 do questionário fonte — ver Dicionário de Campos | Eram itens plausíveis inventados a partir da contagem (9 e 8) que o documento de especificação declarava; agora vêm nomeados no papel | y |
+| Opções das perguntas de seleção única/múltipla | Transcritas do questionário fonte — ver Dicionário de Campos | Eram derivadas do domínio enquanto não havia anexo; agora são as listas reais. Cinco perguntas (Q9, Q10, Q27, Q30, Q32) abrem campo "Qual?/Quais?" e cinco (Q22, Q26, Q30, Q31, Q32) trazem uma alternativa excludente | y |
 | Estratégia de armazenamento das respostas do questionário (`Json?` vs coluna por pergunta) | JSON validado por Zod (opção B da nota em `prisma/schema.prisma`, linha 237) | Já adotada no schema físico; esta feature formaliza a AD correspondente no Design (pendência registrada em STATE.md) | y |
-| "Região" (bloco Dados da Qualificação) | Seleção única entre as 5 macrorregiões do Brasil (Norte, Nordeste, Centro-Oeste, Sudeste, Sul) | O doc não define; UF já é capturada separadamente, então "Região" é tratada como a macrorregião do curso, dado mais agregado útil para relatórios futuros | n — revisar |
+| "Região" (Q12) | Tipo de zona: Zona Urbana / Zona Periurbana / Zona Rural / Zona Natural | O questionário fonte pergunta o TIPO de zona de realização, não a macrorregião do país — a leitura anterior (5 macrorregiões) estava errada e foi corrigida com o anexo | y |
 | Quem pode criar pré-curso | Apenas GO (Gestor Ofertante) do próprio Ofertante | Seção 4 do doc: "Preenchido pelo Gestor Ofertante"; AM/GT não aparecem como criadores em nenhuma seção — diferente de Ofertante/Verba (AD-014/RN-01), que são cadastro administrativo | y |
 | Quem pode consultar (não editar) pré-curso fora do GO criador | AM/GT/VT (qualquer um, sem escopo) e VO do mesmo Ofertante (somente leitura) | Espelha o padrão de escopo já definido em AD-012/REQ-OV-05/06 para Ofertante/Verba — VO é "Visualizador Ofertante", perfil de leitura por definição (AD-008) | y |
 | Formato de gravação parcial | `PATCH` idempotente que faz merge raso (shallow merge) do JSON de respostas — envia só os campos alterados, sobrescreve só essas chaves | Evita que o cliente precise reenviar os 56 campos a cada auto-save; alinhado com o padrão "salvar parcial" de REQ-PC-04 | y |
 | Unicidade de pré-curso "em andamento" por Ofertante | Sem limite — um Ofertante pode ter vários pré-cursos EM_ANDAMENTO simultâneos (um por curso) | O doc não menciona restrição de concorrência aqui; a única regra de "um por vez" no domínio é a do Aluno (AD-022), que é uma tabela e regra diferentes | y |
+| Alternativa excludente das perguntas de seleção múltipla ("Não foram realizadas...", "Nenhuma...") | Rejeitada com HTTP 400 quando combinada com qualquer outra opção (`multiplaComExclusiva`, `src/lib/validation/multipla.ts`), e desmarcada automaticamente na UI | Decisão explícita do usuário nesta sessão. O papel não impede a combinação, mas ela é logicamente contraditória e envenenaria qualquer agregação futura; a regra vive no servidor para valer também em chamadas diretas à API, não só no preenchimento pela tela | y |
 
 **Open questions:** none - all resolved or logged above (as assumptions, alguns marcados como pendentes de confirmação do cliente antes de produção — ver coluna "Confirmed?").
 
@@ -54,130 +55,143 @@ O Gestor Ofertante (GO) precisa registrar, antes do início de cada curso, um di
 
 ## Dicionário de Campos (Anexo — base para o Zod schema de `respostas`)
 
-Chaves em camelCase, para uso direto como propriedades do JSON `PreCurso.respostas`. `sel-única` / `sel-múltipla` = seleção; `Outro?` = tem opção "Outra/Outro" com campo condicional de texto livre (RN-04, seção 4.2).
+**Fonte:** `docs/Questionario_do_Gestor_Pre_Curso.md` (questionário real do cliente, recebido em 2026-08-29). A numeração `Q1..Q32` abaixo é a do papel. Este anexo **substituiu** o dicionário derivado que existia antes desta data — ver AD-035 em `STATE.md`.
 
-### Bloco 1 — Identificação (6 itens, todos obrigatórios)
+Chaves em camelCase, para uso direto como propriedades do JSON `PreCurso.respostas`. `sel-única` / `sel-múltipla` = seleção; `Qual?` = a opção abre um campo condicional de texto livre (RN-04); `excludente` = alternativa que nega todas as outras e não pode ser combinada com nenhuma (rejeitada com 400 pelo `multiplaComExclusiva`, `src/lib/validation/multipla.ts`).
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `identifUf` | UF | sel-única (27 UFs) |
-| `identifMunicipio` | Município | texto |
-| `identifEntidadeResponsavel` | Entidade responsável | texto |
-| `identifCoordenador` | Coordenador do curso | texto |
-| `identifEmail` | E-mail de contato | texto (formato e-mail) |
-| `identifTelefone` | Telefone de contato | texto |
+### Seção 1 — Identificação (Q1–Q6, 6 itens, todos obrigatórios)
 
-### Bloco 2 — Dados da Qualificação (8 chaves: 6 diretas + 2 condicionais "Outro", todos obrigatórios quando aplicável)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `identifUf` | 1 | UF | sel-única (27 UFs) |
+| `identifMunicipio` | 2 | Município | texto |
+| `identifEntidadeResponsavel` | 3 | Nome da Entidade Responsável | texto |
+| `identifCoordenador` | 4 | Nome do Coordenador Pedagógico ou Responsável Técnico da Ação de Qualificação | texto |
+| `identifEmail` | 5 | E-mail do Coordenador/Responsável | texto (formato e-mail) |
+| `identifTelefone` | 6 | Telefone do Coordenador/Responsável | texto |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `qualifEndereco` | Endereço do local do curso | texto |
-| `qualifNomeCurso` | Nome do curso | texto |
-| `qualifVinculoPrograma` | Vínculo a plano/programa de qualificação | sel-única: Plano Nacional de Turismo / Programa Estadual de Qualificação / Programa Municipal de Qualificação / Outro **(Outro?)** |
-| `qualifCaracteristicas` | Características do curso contempladas | sel-múltipla: Sustentabilidade / Empreendedorismo / Turismo de base comunitária / Turismo rural / Turismo cultural / Acessibilidade e turismo inclusivo / Outra **(Outro?)** |
-| `qualifModalidade` | Modalidade | sel-única: Presencial / EAD / Híbrida |
-| `qualifRegiao` | Região | sel-única: Norte / Nordeste / Centro-Oeste / Sudeste / Sul |
-| *(condicionais)* | `qualifVinculoProgramaOutro`, `qualifCaracteristicasOutra` | texto, obrigatório apenas se a opção "Outro/Outra" correspondente foi selecionada |
+### Seção 2 — Dados da Qualificação Profissional (Q7–Q12, 8 chaves: 6 diretas + 2 condicionais)
 
-### Bloco 3 — Planejamento (7 itens, todos obrigatórios)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `qualifEndereco` | 7 | Endereço da Sede onde a ação de qualificação é realizada | texto |
+| `qualifNomeCurso` | 8 | Nome da Ação de Qualificação (Curso, Plano, Programa, Projeto ou Ação) | texto |
+| `qualifVinculoPrograma` | 9 | A formação faz parte de um Plano, Programa ou Projeto de Qualificação? | sel-única: Sim **(Qual?)** / Não |
+| `qualifVinculoProgramaQual` | 9 | *(condicional)* Qual? | texto, obrigatório apenas se `qualifVinculoPrograma = "Sim"` |
+| `qualifCaracteristicas` | 10 | No caso de Cursos, quais características são contempladas | sel-múltipla (≥1): Alojamento / Agenciamento e Operação / Serviços de Alimentação / Transporte / Aluguel de Transportes / Guiamento de Turismo / Ecoturismo / Turismo de Base Comunitária / Cultura e Lazer / Eventos / Outro **(Qual?)** |
+| `qualifCaracteristicasOutra` | 10 | *(condicional)* Outro. Qual? | texto, obrigatório apenas se `"Outro" ∈ qualifCaracteristicas` |
+| `qualifModalidade` | 11 | Modalidade da Ação de Qualificação/Curso | sel-única: Presencial / À distância (online) / Híbrido (parte presencial parte à distância) |
+| `qualifRegiao` | 12 | Região de realização da Ação de Qualificação/Curso | sel-única: Zona Urbana / Zona Periurbana / Zona Rural / Zona Natural |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `planejDataInicioPrevista` | Data prevista de início | data |
-| `planejDataTerminoPrevista` | Data prevista de término | data |
-| `planejCargaHoraria` | Carga horária prevista (horas) | número inteiro > 0 |
-| `planejNumTurmas` | Número de turmas previstas | número inteiro > 0 |
-| `planejNumAlunosPrevistos` | Número de alunos previstos | número inteiro > 0 |
-| `planejTaxaEvasaoEsperada` | Taxa de evasão esperada (%) | número 0–100 |
-| `planejObjetivo` | Objetivo do curso | texto livre |
+### Seção 3 — Planejamento (Q13–Q19, 7 itens, todos obrigatórios)
 
-### Bloco 4 — Público-Alvo (3 itens, 1 condicional)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `planejDataInicioPrevista` | 13 | Data prevista de início do curso/ação | data (`YYYY-MM-DD`) |
+| `planejDataTerminoPrevista` | 14 | Data prevista de término do curso/ação | data, não anterior a Q13 |
+| `planejCargaHoraria` | 15 | Carga horária planejada (horas) | inteiro > 0 |
+| `planejNumTurmas` | 16 | Número de turmas planejadas | inteiro > 0 |
+| `planejNumAlunosPrevistos` | 17 | Número previsto de alunos | inteiro > 0 |
+| `planejTaxaEvasaoEsperada` | 18 | Taxa de evasão esperada (%) | número 0–100 |
+| `planejObjetivo` | 19 | Principal objetivo da ação de qualificação/curso | texto livre longo |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `publicoPerfil` | Perfil do público-alvo | sel-múltipla, obrigatório (≥1): Jovens / Mulheres / Pessoas em situação de vulnerabilidade social / Trabalhadores do setor de turismo / Empreendedores locais / Comunidade em geral |
-| `publicoInstituicaoExecutora` | Instituição executora | sel-única, obrigatório: Entidade responsável / Empresa contratada / Parceria entre Entidade Responsável e Entidade Executora |
-| `publicoInstituicaoExecutoraNome` | Nome da instituição contratada/parceira | texto, obrigatório **somente se** `publicoInstituicaoExecutora` ∈ {Empresa contratada, Parceria...} (4.2, CA-04) |
+> Q19 traz quatro linhas (a–d) no papel. Modelado como **um** campo de texto longo, por decisão explícita do usuário nesta sessão: mantém a contagem em 56 chaves e não limita o gestor a exatamente quatro objetivos.
 
-### Bloco 5 — Diagnóstico Pré-Curso (1 item, obrigatório)
+### Seção 4 — Público-Alvo (Q20–Q21.1, 3 chaves, 1 condicional)
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `diagnosticoConsultas` | Consultas realizadas com atores territoriais | sel-múltipla, obrigatório (≥1): Poder público municipal / Poder público estadual / Sociedade civil organizada / Empresários locais do setor de turismo / Comunidade local / Instituições de ensino / Nenhuma consulta realizada |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `publicoPerfil` | 20 | Perfil do público-alvo | sel-múltipla (≥1): Jovens / Mulheres / Idosos / Pessoas com Deficiência (PCDs) / Representantes de Comunidades Originárias / Representantes da Comunidade LGBTQIA+ / Desempregados / Trabalhadores(as) do Turismo / Empreendedores Locais / Comunidade Turística / Outro |
+| `publicoInstituicaoExecutora` | 21 | Instituição Executora da ação de qualificação/curso | sel-única: Atores da Rede de Base Territorial / Própria Entidade / Empresa contratada / Parceria entre Entidade Responsável e Entidade Executora |
+| `publicoInstituicaoExecutoraNome` | 21.1 | *(condicional)* Nome da instituição contratada / parceira | texto, obrigatório apenas se Q21 ∈ {Empresa contratada, Parceria entre Entidade Responsável e Entidade Executora} |
 
-### Bloco 6 — Infraestrutura Básica (9 itens, escala 0–5, todos obrigatórios — AD-019, AD-027)
+> A opção "Outro" de Q20 **não** vem seguida de "Qual?" no papel, então não abre campo condicional — diferente das 5 perguntas que abrem (Q9, Q10, Q27, Q30, Q32).
 
-Enunciado: "Avalie a disponibilidade e o estado de conservação dos seguintes itens:"
+### Diagnóstico Pré-Curso (Q22, 1 item, obrigatório)
 
-| Chave | Rótulo |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `diagnosticoConsultas` | 22 | Consultas individuais prévias e/ou reuniões com representantes de quais grupos de atores territoriais | sel-múltipla (≥1): Setor Produtivo / Sociedade Civil Organizada / Terceiro Setor / IES / Sistema de Ensino Médio / Poder Público / Instância de Governança / **excludente:** "Não foram realizadas consultas..." |
+
+### Infraestrutura Básica (Q23, 9 itens, escala 0–5, todos obrigatórios — AD-019)
+
+Enunciado: *"Qual a disponibilidade dos equipamentos básicos fundamentais, e seu estado de conservação e funcionalidade?"*
+
+| Chave | Item |
 |---|---|
-| `infraBasicaBanheiros` | Banheiros |
-| `infraBasicaEnergia` | Fornecimento de energia elétrica |
-| `infraBasicaSalaAula` | Sala de aula |
-| `infraBasicaBiblioteca` | Biblioteca / espaço de leitura |
-| `infraBasicaAcessibilidade` | Acessibilidade (rampas, sinalização, banheiro adaptado) |
-| `infraBasicaLaboratorio` | Laboratório de informática |
-| `infraBasicaAguaPotavel` | Água potável |
-| `infraBasicaIluminacao` | Iluminação dos ambientes |
-| `infraBasicaConectividade` | Conectividade / acesso à internet |
+| `infraBasicaBanheiros` | Banheiros com sistema de esgoto ativo |
+| `infraBasicaBebedouros` | Bebedouros com água potável |
+| `infraBasicaEnergia` | Rede de energia elétrica ativa |
+| `infraBasicaSalaAula` | Sala de aula com iluminação e climatização adequadas |
+| `infraBasicaRecepcao` | Recepção/secretaria acadêmica |
+| `infraBasicaBiblioteca` | Biblioteca e/ou espaço de acervo |
+| `infraBasicaMobiliario` | Quadro branco/lousa, armário, mesa, cadeiras |
+| `infraBasicaAcessibilidade` | Estrutura física adaptada para acessibilidade a PCDs e mobilidade reduzida |
+| `infraBasicaLaboratorio` | Laboratório (informática, gastronomia, hospedagem, agenciamento de viagens ou outros) |
 
-Cada chave acima armazena um inteiro 0–5 (0=Não há disponibilidade, 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Ótimo — seção 4.3/AD-019).
+### Infraestrutura Complementar (Q24, 8 itens, escala 0–5, todos obrigatórios)
 
-### Bloco 7 — Infraestrutura Complementar (8 itens, escala 0–5, todos obrigatórios — AD-027)
+Enunciado: *"Qual a disponibilidade dos equipamentos básicos complementares, e seu estado de conservação e funcionalidade?"*
 
-Mesmo enunciado e mesma escala do Bloco 6.
-
-| Chave | Rótulo |
+| Chave | Item |
 |---|---|
-| `infraComplSalaProfessores` | Sala de professores |
-| `infraComplCopa` | Copa / cozinha |
-| `infraComplAuditorio` | Auditório / espaço para eventos |
-| `infraComplAudiovisual` | Equipamentos audiovisuais (projetor, som) |
-| `infraComplTecnologicos` | Equipamentos tecnológicos (computadores, tablets) |
-| `infraComplConvivencia` | Área de convivência / lazer |
-| `infraComplEstacionamento` | Estacionamento |
-| `infraComplAlimentacao` | Espaço para alimentação (refeitório/cantina) |
+| `infraComplSalaProfessores` | Sala de professores/instrutores, com iluminação adequada |
+| `infraComplSalaGestores` | Sala de gestores e de reuniões, com iluminação adequada |
+| `infraComplSalaEstudo` | Sala de estudo coletiva, com iluminação adequada |
+| `infraComplCopa` | Copa/cozinha |
+| `infraComplLanchonete` | Lanchonete/Cantina |
+| `infraComplAuditorio` | Auditório |
+| `infraComplAudiovisual` | Equipamentos audiovisuais (tela de projeção, projetores, TV, lousa digital) |
+| `infraComplTecnologicos` | Equipamentos tecnológicos e conexão (computador/laptop com acesso à internet) |
 
-### Bloco 8 — Infraestrutura Específica (4 itens, 3 condicionais — 4.2)
+**Escala de Q23/Q24 (RN-05, AD-019):** 0 = Não há disponibilidade · 1 = Péssimo · 2 = Ruim · 3 = Regular · 4 = Bom · 5 = Ótimo. O valor `0` é resposta legítima, não "campo vazio".
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `infraEspecificaNecessidade` | Necessidade de equipamentos específicos ao curso | sel-única, obrigatório: Sim / Não |
-| `infraEspecificaDisponibilidade` | Disponibilidade dos equipamentos específicos | sel-única, obrigatório **somente se** `infraEspecificaNecessidade` = "Sim": Disponível / Parcialmente disponível / Indisponível |
-| `infraEspecificaSuficiencia` | Suficiência dos equipamentos específicos | sel-única, obrigatório **somente se Sim**: Suficiente / Insuficiente |
-| `infraEspecificaManutencao` | Situação de manutenção dos equipamentos específicos | sel-única, obrigatório **somente se Sim**: Em bom estado / Necessita manutenção / Não aplicável |
+### Infraestrutura Específica (Q25–Q25.3, 4 itens, 3 condicionais)
 
-### Bloco 9 — Corpo Docente (5 itens, 1 condicional — AD-025, AD-026)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `infraEspecificaNecessidade` | 25 | São necessários equipamentos e/ou insumos específicos? | sel-única: "Sim, alguns equipamentos específicos são necessários" / "Não, apenas equipamentos básicos" |
+| `infraEspecificaDisponibilidade` | 25.1 | *(condicional)* Em qual dessas situações se encaixa melhor a situação dos equipamentos específicos? | sel-única: Não há disponibilidade desses equipamentos / Há disponibilidade, porém, não em sua totalidade / Há disponibilidade de todos, porém em condições insatisfatórias / Há disponibilidade de todos, em condições satisfatórias |
+| `infraEspecificaSuficiencia` | 25.2 | *(condicional)* A quantidade de equipamentos específicos é suficiente? | sel-única: Sim / Não |
+| `infraEspecificaManutencao` | 25.3 | *(condicional)* Os equipamentos específicos recebem manutenção periódica? | sel-única: Sim / Não |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `docenteCriteriosSelecao` | Critérios de seleção de professores | sel-múltipla, obrigatório (≥1): Formação acadêmica / Experiência prática no setor de turismo / Experiência em docência / Vínculo com a comunidade local / Indicação de parceiros / Processo seletivo público |
-| `docenteFormaContratacao` | Forma de contratação de professores | sel-única, obrigatório: CLT / Prestação de serviço (RPA/autônomo) / Servidor público cedido / Voluntariado / Outra **(Outro?)** |
-| `docenteFormaContratacaoOutra` | *(condicional)* especificação da forma de contratação | texto, obrigatório apenas se `docenteFormaContratacao` = "Outra" |
-| `docenteNivelFormacao` | Nível de formação dos professores | sel-única (AD-025), obrigatório: Ensino médio / Graduação / Pós-graduação (lato sensu) / Mestrado / Doutorado |
-| `docentePoliticasReparacao` | Políticas de reparação/inclusão docente | sel-múltipla, obrigatório (≥1): Cotas para docentes negros / Cotas para docentes indígenas / Cotas para docentes com deficiência / Equidade de gênero na seleção / Nenhuma política aplicada |
+> As três condicionais são obrigatórias apenas quando Q25 = "Sim, alguns equipamentos específicos são necessários" (REQ-PC-08).
 
-### Bloco 10 — Divulgação (2 itens, 1 condicional)
+### Corpo Docente (Q26–Q29, 5 chaves: 4 diretas + 1 condicional)
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `divulgacaoEstrategias` | Estratégias de divulgação | sel-múltipla, obrigatório (≥1): Redes sociais / Rádio local / Cartazes e panfletos impressos / Divulgação em escolas / Parcerias com associações locais / Carro de som / Outra **(Outro?)** |
-| `divulgacaoEstrategiasOutra` | *(condicional)* especificação de outro canal | texto, obrigatório apenas se "Outra" ∈ `divulgacaoEstrategias` |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `docenteCriteriosSelecao` | 26 | Avaliação da trajetória profissional e do histórico de formação do(a) candidato(a), a partir de quais ações fundamentais | sel-múltipla (≥1): Análise do Currículo / Análise de experiência prévia no mercado / Análise dos documentos comprobatórios / Prova de conhecimento específico / Prova didática / Entrevista / Indicação de outros profissionais / **excludente:** "Não foi realizada a avaliação..." |
+| `docenteFormaContratacao` | 27 | Como se deu a forma de contratação dos professores e instrutores? | sel-única: Edital Público. / Indicação. / Outro sistema seletivo **(Qual?)** |
+| `docenteFormaContratacaoOutra` | 27 | *(condicional)* Outro sistema seletivo. Qual? | texto, obrigatório apenas se Q27 = "Outro sistema seletivo" |
+| `docenteNivelFormacao` | 28 | Nível de formação dos professores/instrutores contratados | sel-única: Mestres de Ofícios. / Graduação incompleta. / Graduação completa. / Pós-Graduação incompleta. / Pós-Graduação completa. |
+| `docentePoliticasReparacao` | 29 | Foram consideradas políticas de reparação (raça/gênero) na contratação dos professores? | sel-única: Sim / Não |
 
-### Bloco 11 — Parcerias (1 item, obrigatório)
+### Divulgação (Q30, 2 chaves: 1 direta + 1 condicional)
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `parceriasEstabelecidas` | Parcerias locais estabelecidas | sel-múltipla, obrigatório (≥1): Prefeitura municipal / Governo estadual / SEBRAE / Instituições de ensino / Associações e cooperativas locais / Empresas privadas do setor de turismo / ONGs / Nenhuma parceria estabelecida |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `divulgacaoEstrategias` | 30 | Estratégias de divulgação do Curso adotadas | sel-múltipla (≥1): Linguagem condizente com o público-alvo / Clareza na exposição das informações / Redes sociais / Listas de e-mails / Panfletos, folders e cartazes / Rádio, TV local, jornais e revistas / Carro de som / **excludente:** "Não foram adotadas estratégias de divulgação do Curso." / Divulgação via outros canais **(Quais?)** |
+| `divulgacaoEstrategiasOutra` | 30 | *(condicional)* Divulgação via outros canais. Quais? | texto, obrigatório apenas se `"Divulgação via outros canais" ∈ divulgacaoEstrategias` |
 
-### Bloco 12 — Suporte ao Aluno (2 itens, 1 condicional)
+### Parcerias e Sensibilização (Q31, 1 item, obrigatório)
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `suporteEstrategias` | Estratégias de apoio logístico, financeiro e político | sel-múltipla, obrigatório (≥1): Auxílio transporte / Auxílio alimentação / Material didático gratuito / Apoio para documentação e deslocamento / Articulação política para permanência do aluno / Outra **(Outro?)** |
-| `suporteEstrategiasOutra` | *(condicional)* especificação de outro apoio | texto, obrigatório apenas se "Outra" ∈ `suporteEstrategias` |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `parceriasEstabelecidas` | 31 | Parceria(s) locais para realização de quais ações de notória contribuição ao Curso | sel-múltipla (≥1): Espaço físico para aulas práticas / Profissionais para palestras e relatos / Concessão ou empréstimo de materiais e equipamentos / Oportunidades de primeiro emprego e estágios / Meios de transporte / Alimentos e insumos para o coffee break / Contribuição financeira via bolsas de estudo / **excludente:** "Não foram estabelecidas parcerias..." |
 
-**Contagem:** 6+8+7+3+1+9+8+4+5+2+1+2 = **56 chaves**. O documento fonte declara "54 itens de dado" (seção 4) contando cada pergunta com sua condicional "Outro" como **um** item (ex.: A-28 + A-28.1 = 1 item na numeração do cliente, AD-026); esta correção soma os 2 campos condicionais do Bloco 2 (`qualifVinculoProgramaOutro`, `qualifCaracteristicasOutra`) como chaves distintas do JSON, porque cada um precisa da própria validação Zod e da própria checagem de completude — 56 é a contagem correta de **chaves no schema**, 54 é a contagem de **perguntas** do documento fonte; não há divergência de conteúdo, só de unidade de contagem.
+### Suporte ao Aluno (Q32, 2 chaves: 1 direta + 1 condicional)
+
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `suporteEstrategias` | 32 | Estratégias para viabilizar a participação ativa de interessados(as) no Curso até a conclusão | sel-múltipla (≥1): 2 estratégias Logísticas / 4 estratégias Financeiras / 2 estratégias Políticas / Outros **(Quais?)** / **excludente:** "Não foram adotadas estratégias logísticas, políticas ou financeiras de suporte ao aluno." |
+| `suporteEstrategiasOutra` | 32 | *(condicional)* Outros. Quais? | texto, obrigatório apenas se `"Outros" ∈ suporteEstrategias` |
+
+**Contagem:** 6+8+7+3+1+9+8+4+5+2+1+2 = **56 chaves**, para as 32 perguntas numeradas do questionário fonte (as 4 subperguntas Q21.1/Q25.1/Q25.2/Q25.3 e os 5 campos "Qual?/Quais?" são chaves próprias no JSON porque cada um precisa da própria validação Zod e da própria checagem de completude). A contagem coincide com a do dicionário derivado que este anexo substituiu, mas o **conteúdo** das perguntas e das opções não — ver AD-035.
+
+**Condicionais (9 chaves, REQ-PC-07/08/09):** `publicoInstituicaoExecutoraNome` (REQ-PC-07); `infraEspecificaDisponibilidade`, `infraEspecificaSuficiencia`, `infraEspecificaManutencao` (REQ-PC-08); `qualifVinculoProgramaQual`, `qualifCaracteristicasOutra`, `docenteFormaContratacaoOutra`, `divulgacaoEstrategiasOutra`, `suporteEstrategiasOutra` (REQ-PC-09).
+
+**Opções excludentes (5 perguntas):** `diagnosticoConsultas`, `docenteCriteriosSelecao`, `divulgacaoEstrategias`, `parceriasEstabelecidas`, `suporteEstrategias`.
 
 ---
 
@@ -276,6 +290,7 @@ Mesmo enunciado e mesma escala do Bloco 6.
 - SE `qualifCaracteristicas` incluir "Outra" junto de outras opções válidas, ENTÃO o sistema SHALL ainda exigir `qualifCaracteristicasOutra` preenchido — a presença de outras opções não dispensa a condicional.
 - QUANDO `planejDataTerminoPrevista` é anterior a `planejDataInicioPrevista`, o sistema SHALL rejeitar a gravação desses dois campos com HTTP 400.
 - SE o `cdVerba` de uma requisição de criação pertencer a um Ofertante diferente do Ofertante do GO autenticado, ENTÃO o sistema SHALL retornar HTTP 403 mesmo que o `cdVerba` exista de fato no banco (não vazar existência de dado fora de escopo via 404/400).
+- QUANDO uma das 9 respostas condicionais ficar órfã (a pergunta-mãe passou a um valor que não a revela — ex.: Q25 volta para "Não, apenas equipamentos básicos" depois de Q25.1/25.2/25.3 respondidas), o sistema SHALL preservá-la nas gravações e descartá-la no encerramento, gravando o registro encerrado sem ela (AD-038).
 
 ---
 

@@ -5,40 +5,45 @@ import {
   respostasPosCursoSchema,
 } from "./pos-curso.schema";
 
-// Fixture com os 26 campos do Dicionário de Campos (spec.md) preenchidos com
-// valores válidos, incluindo o único condicional - usada como base para os
-// testes de campo individual (spread + override).
+// Fixture com as 26 chaves do questionário fonte
+// (`docs/Questionario_do_Gestor_Pos_Curso.md`) preenchidas com valores
+// válidos, incluindo o único condicional - usada como base para os testes de
+// campo individual (spread + override).
 const RESPOSTA_VALIDA = {
-  posAcompanhProblemasEstudo: ["Dificuldade de concentração"],
-  posAcompanhConceitosTrabalhados: "Sustentabilidade e turismo de base comunitária",
-  posAcompanhPlanoAcao: "Reforço individual semanal",
-  posAcompanhAvaliacaoCognitiva: "Prova escrita",
-  posAcompanhMonitoramento: ["Relatórios de frequência"],
+  posAcompanhProblemasEstudo:
+    "Sim, foram definidos pelos Docentes em conjunto com a Coordenação Didático-Pedagógica.",
+  posAcompanhConceitosTrabalhados:
+    "Sim, foram detalhados os conceitos pelos Docentes em conjunto com a Coordenação Didático-Pedagógica.",
+  posAcompanhPlanoAcao:
+    "Sim, o Plano de Ação foi definido pelos Docentes em conjunto com a Coordenação Didático-Pedagógica responsável.",
+  posAcompanhProvaSituacao:
+    "Sim, foi elaborada pelos Docentes, mas só foi realizada pelos alunos no primeiro dia de aula.",
+  posAcompanhLicaoIndividual: "Sim, foi realizada.",
+  posAcompanhMonitoramento: ["Reuniões periódicas com alunos."],
 
   posExecDataInicioReal: "2026-03-01",
   posExecDataTerminoReal: "2026-06-01",
   posExecCargaHorariaRealizada: 120,
-  posExecDificuldadesEnfrentadas: ["Evasão de alunos"],
+  posExecDificuldadesEnfrentadas: "Evasão de alunos nas semanas de chuva forte",
   posExecHouveAlteracaoPlanejamento: "Sim",
   posExecAlteracaoDetalhe: "Curso estendido em 2 semanas por feriados",
 
   posParticNumInscritos: 40,
   posParticNumMatriculados: 35,
   posParticNumConcluintes: 30,
-  posParticMotivosAbandono: "Conflito com trabalho",
-  posParticRelacaoDemandaOferta: "Demanda superou a oferta de vagas",
+  posParticMotivosAbandono: ["Dificuldades financeiras", "Horário inapropriado das aulas"],
+  posParticDemandaMaiorQueOferta: "Sim",
   posParticIntencaoNovaOferta: "Sim",
 
-  posFinValorTotalExecutado: 15000,
-  posFinValorDespesaDocentes: 8000,
-  posFinValorDespesaMaterialDidatico: 3000,
-  posFinValorDespesaInfraestrutura: 4000,
+  posFinValorTotal: 15000,
+  posFinValorProfessores: 8000,
+  posFinValorMateriais: 3000,
+  posFinValorInfraestrutura: 4000,
+  posFinValorBolsaPermanencia: 0,
   posFinHouveDevolucaoRecursos: "Não",
-  posFinValorDevolvido: 0,
   posFinNecessidadeAditivo: "Não",
 
-  posContEstrategiasContinuidade: ["Nova turma no mesmo local"],
-  posContEstrategiasAmpliacao: ["Aumento do número de vagas"],
+  posContEstrategias: ["Estabelecimento de parcerias junto a entidades públicas."],
 };
 
 describe("criarPosCursoSchema", () => {
@@ -62,32 +67,68 @@ describe("respostasPosCursoSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("tem exatamente 26 chaves (Dicionário de Campos, spec.md)", () => {
+  it("tem exatamente 26 chaves (questionário fonte, Q1-Q26)", () => {
     expect(Object.keys(respostasPosCursoSchema.shape)).toHaveLength(26);
   });
 
-  it("posAcompanhAvaliacaoCognitiva rejeita valor fora do enum", () => {
+  it("posAcompanhProvaSituacao rejeita valor fora do enum", () => {
     const result = respostasPosCursoSchema.safeParse({
       ...RESPOSTA_VALIDA,
-      posAcompanhAvaliacaoCognitiva: "Inventado",
+      posAcompanhProvaSituacao: "Inventado",
     });
     expect(result.success).toBe(false);
   });
 
-  it("posParticMotivosAbandono rejeita valor fora do enum", () => {
+  it("posAcompanhProblemasEstudo é seleção única, não múltipla (Q1)", () => {
     const result = respostasPosCursoSchema.safeParse({
       ...RESPOSTA_VALIDA,
-      posParticMotivosAbandono: "Inventado",
+      posAcompanhProblemasEstudo: ["Não se aplica."],
     });
     expect(result.success).toBe(false);
   });
 
-  it("campo de seleção múltipla aceita array de opções válidas", () => {
+  it("posExecDificuldadesEnfrentadas é texto aberto, não seleção (Q10)", () => {
+    const aberto = respostasPosCursoSchema.safeParse({
+      ...RESPOSTA_VALIDA,
+      posExecDificuldadesEnfrentadas: "Qualquer texto livre do gestor",
+    });
+    expect(aberto.success).toBe(true);
+
+    const comoArray = respostasPosCursoSchema.safeParse({
+      ...RESPOSTA_VALIDA,
+      posExecDificuldadesEnfrentadas: ["Evasão de alunos"],
+    });
+    expect(comoArray.success).toBe(false);
+  });
+
+  // AD-036: supera o AD-025, que havia travado este campo como seleção única
+  // quando a lista real ainda não existia.
+  it("posParticMotivosAbandono é seleção múltipla e aceita mais de um motivo (Q16)", () => {
     const result = respostasPosCursoSchema.safeParse({
       ...RESPOSTA_VALIDA,
-      posAcompanhProblemasEstudo: [
-        "Dificuldade de leitura e interpretação",
-        "Baixa frequência às aulas",
+      posParticMotivosAbandono: [
+        "Falta de motivação/interesse",
+        "Local muito distante de casa",
+        "Outro",
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("posParticMotivosAbandono rejeita item fora do enum", () => {
+    const result = respostasPosCursoSchema.safeParse({
+      ...RESPOSTA_VALIDA,
+      posParticMotivosAbandono: ["Motivo inventado"],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("posContEstrategias aceita array de opções válidas", () => {
+    const result = respostasPosCursoSchema.safeParse({
+      ...RESPOSTA_VALIDA,
+      posContEstrategias: [
+        "Estabelecimento de parcerias junto a entidades privadas.",
+        "Integração do Curso a projetos e/ou programas desenvolvidos no território.",
       ],
     });
     expect(result.success).toBe(true);
@@ -96,7 +137,7 @@ describe("respostasPosCursoSchema", () => {
   it("campo de seleção múltipla rejeita item fora do enum", () => {
     const result = respostasPosCursoSchema.safeParse({
       ...RESPOSTA_VALIDA,
-      posAcompanhProblemasEstudo: ["Problema inventado"],
+      posAcompanhMonitoramento: ["Ação inventada"],
     });
     expect(result.success).toBe(false);
   });
@@ -104,18 +145,55 @@ describe("respostasPosCursoSchema", () => {
   it("campo de seleção múltipla obrigatório rejeita lista vazia", () => {
     const result = respostasPosCursoSchema.safeParse({
       ...RESPOSTA_VALIDA,
-      posContEstrategiasContinuidade: [],
+      posContEstrategias: [],
     });
     expect(result.success).toBe(false);
   });
 
-  describe("valores monetários (Bloco 4) nunca negativos", () => {
+  // As duas perguntas de múltipla escolha cuja última alternativa nega todas
+  // as outras (Q6 e Q26).
+  describe("opções excludentes", () => {
+    const CASOS = [
+      {
+        chave: "posAcompanhMonitoramento",
+        exclusiva:
+          "Nenhuma ação de monitoramento foi realizada durante o desenvolvimento do Curso/Ação de Qualificação.",
+        outra: "Reuniões periódicas com alunos.",
+      },
+      {
+        chave: "posContEstrategias",
+        exclusiva: "Não foi adotada nenhuma estratégia de continuidade e ampliação.",
+        outra: "Estabelecimento de parcerias junto a entidades públicas.",
+      },
+    ] as const;
+
+    it.each(CASOS)("$chave aceita a opção excludente sozinha", ({ chave, exclusiva }) => {
+      const result = respostasPosCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        [chave]: [exclusiva],
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it.each(CASOS)(
+      "$chave rejeita a opção excludente combinada com outra",
+      ({ chave, exclusiva, outra }) => {
+        const result = respostasPosCursoSchema.safeParse({
+          ...RESPOSTA_VALIDA,
+          [chave]: [outra, exclusiva],
+        });
+        expect(result.success).toBe(false);
+      },
+    );
+  });
+
+  describe("valores monetários (Q19-Q23) nunca negativos", () => {
     const camposMonetarios = [
-      "posFinValorTotalExecutado",
-      "posFinValorDespesaDocentes",
-      "posFinValorDespesaMaterialDidatico",
-      "posFinValorDespesaInfraestrutura",
-      "posFinValorDevolvido",
+      "posFinValorTotal",
+      "posFinValorProfessores",
+      "posFinValorMateriais",
+      "posFinValorInfraestrutura",
+      "posFinValorBolsaPermanencia",
     ] as const;
 
     it.each(camposMonetarios)("%s rejeita valor negativo", (campo) => {
@@ -149,7 +227,7 @@ describe("respostasPosCursoSchema", () => {
 
     it("ainda rejeita um campo presente com valor fora de forma", () => {
       const result = respostasPosCursoSchema.partial().safeParse({
-        posFinValorTotalExecutado: -5,
+        posFinValorTotal: -5,
       });
       expect(result.success).toBe(false);
     });

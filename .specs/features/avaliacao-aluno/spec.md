@@ -40,12 +40,13 @@ O quarto e último formulário do sistema — a Avaliação do Aluno — ainda n
 |---|---|---|---|
 | Quem cria a matrícula (linha `AvaliacaoAluno` inicial, vinculando um Aluno a um curso) — o documento fonte descreve só que "o Aluno vincula-se ao curso via avaliação" (seção 2.3/3.1), sem dizer quem aciona esse vínculo | O Gestor Ofertante (GO) do curso cria a matrícula, informando o CPF de um Aluno já cadastrado | Mesmo padrão estrutural de toda criação de recurso-filho já estabelecido nesta base: GT cria Verba, GO cria Pré-Curso, GO cria Pós-Curso — nenhuma feature até agora deixou a criação de um recurso-filho para o próprio usuário-alvo (o Aluno não teria como descobrir/escolher cursos de Ofertantes sem uma tela de "catálogo público" que o documento fonte nunca descreve) | y — alta confiança estrutural; revisar se o cliente descrever um fluxo de autoinscrição |
 | Somente GO (não AM/GT) cria a matrícula | Mesma restrição de `podeGerenciarPreCurso` (só o GO dono do Ofertante do curso, sem exceção administrativa) | A seção 4 do documento fonte já atribui o preenchimento do pré-curso exclusivamente ao GO sem exceção de AM/GT; a matrícula é a mesma classe de operação (gestão operacional do curso) | y |
-| Papel de "Concluiu o curso?" como gate interno da Parte 2 | Quando `avalParticipConcluiuCurso="Não"`, só `avalParticipMotivoNaoConclusao` é exigido; as 22 chaves restantes da Parte 2 (frequência + avaliação em escala + aprendizado + continuidade + motivações + oportunidades + efetivação + geral) ficam não-obrigatórias (inaplicáveis) para fins de completude/encerramento. Quando `="Sim"`, essas 22 chaves passam a ser exigidas | Leitura literal da seção 6.3: "Concluiu o curso? = Sim → Libera toda a Parte 2 de avaliação (frequência, escala de avaliação, aprendizado, continuidade, motivações, oportunidades)" — o verbo "libera" implica que, sem o "Sim", esses blocos permanecem bloqueados/inaplicáveis, não apenas opcionais | y — decorre da leitura literal do texto-fonte, não é uma escolha livre |
-| Nome e CPF do bloco "Dados Pessoais" (seção 6.1) não são chaves próprias do JSON `respostas` | Vêm do cadastro do próprio Usuário (`TB_Usuario.NM_Usuario`) e da própria chave primária da avaliação (`TB_Avaliacao_Aluno.CPF`) — não duplicados na Parte 1 | Evita duplicar dado já modelado noutra tabela/coluna; a UI exibe os dois como somente-leitura a partir da sessão, sem reperguntar | y |
-| Contagem de chaves derivadas (19 Parte 1 + 25 Parte 2 = 44) vs "45 itens de dado" do documento fonte | Aceita a diferença de 1, sem forçar um 45º campo artificial | Mesma tolerância já usada em `formulario-pre-curso` (54 chaves derivadas vs "56 itens" do documento fonte, nunca reconciliado à força) — a contagem de blocos do documento é descritiva, não uma lista nominal exaustiva | y — tolerado, não é uma AC |
-| `avalOportunSituacaoTrabalho` e `avalOportunIntencaoAtuarTurismo` (bloco "Oportunidades de Trabalho") tratados como dois campos diretos, sem condicional entre si | Ambos exigidos diretamente (quando `avalParticipConcluiuCurso="Sim"`), sem um revelar o outro | A seção 6.3 (Campos Condicionais) só lista 4 regras condicionais explícitas, e nenhuma delas liga esses dois campos entre si — inventar uma condicional não listada violaria o limite do gate de fechamento | y — evita escopo não pedido pelo documento |
-| `avalGeralComentariosFinais` é opcional (não bloqueia encerramento) | Não entra na lista de chaves exigidas no encerramento | Comentário final de texto livre é, por natureza, opcional em formulários de avaliação; o documento não marca esse item como obrigatório distintamente dos demais | n — revisar com o cliente antes de produção |
-| Opções de seleção sem lista explícita no documento fonte (faixa etária, escolaridade, raça/etnia, faixa de renda, condição de trabalho, motivos de participação, forma de conhecimento do curso quando não travada por AD-025, expectativas, aprendizado, situação de trabalho pós-curso quando não travada por AD-025, efetivação, avaliação geral) | Ver Dicionário de Campos abaixo | Mesma decisão já aplicada em `formulario-pre-curso`/`formulario-pos-curso` nesta base: "derive e o cliente revisa depois" — evita bloquear a feature por falta de planilha/anexo; onde AD-025 já travou o tipo (seleção única), a decisão de FORMA já está tomada, só as opções em si são derivadas | y (decisão de derivar); n nos conjuntos de opções individuais — revisar com o cliente antes de produção |
+| Papel de "Concluiu o curso?" (Q22) como gate interno da Parte 2 | Com `"Não"`, exigem-se apenas Q22.1 (motivos) e Q23 (frequência). Com `"Sim"`, exigem-se Q23 e as 21 chaves de Q24 a Q37; Q38 é opcional nos dois casos | O questionário fonte põe o cabeçalho "Avaliação do curso (apenas para quem concluiu)" **em Q24**, não antes — Q22 e Q23 são do bloco "Participação", que todo aluno responde. Corrige o gate anterior, derivado da leitura da seção 6.3 do documento de especificação, que bloqueava Q23 junto do resto | y — o cabeçalho do papel é explícito sobre onde o gate começa |
+| Nome (Q1) e CPF (Q2) não são chaves próprias do JSON `respostas` | Vêm do cadastro do próprio Usuário (`TB_Usuario.NM_Usuario`) e da chave primária da avaliação (`TB_Avaliacao_Aluno.CPF`) — não duplicados na Parte 1 | Evita duplicar dado já modelado noutra tabela/coluna; a UI exibe os dois como somente-leitura a partir da sessão, sem reperguntar. Confirmado pelo questionário fonte, que abre pedindo exatamente esses dois dados | y |
+| Contagem de chaves: 19 (Parte 1) + 26 (Parte 2) = **45** | Bate exatamente com os "45 itens de dado" da seção 6 do documento de especificação | O dicionário derivado somava 44 e tolerava a diferença de 1 sem explicá-la. A chave que faltava é `avalOportunSituacaoTrabalhoOutra`, o campo "Quais?" da opção j de Q30 — visível só no questionário fonte | y — diferença resolvida, não mais tolerada |
+| `avalOportunSituacaoTrabalho` (Q30) e `avalOportunIntencaoAtuarTurismo` (Q31) tratados como dois campos diretos, sem condicional entre si | Ambos exigidos diretamente (quando Q22 = "Sim"), sem um revelar o outro | Confirmado pelo questionário fonte: são duas perguntas numeradas independentes. Q30 tem, sim, um condicional próprio — a opção "Outra. Quais?" que revela `avalOportunSituacaoTrabalhoOutra` | y |
+| `avalGeralComentariosFinais` (Q38) é opcional (não bloqueia encerramento) | Não entra na lista de chaves exigidas no encerramento | Q38 é comentário livre de melhoria ("algum comentário, crítica, elogio ou sugestão"), por natureza opcional. Q36, apesar de também ser ABERTA, é exigida: o papel a numera como pergunta de avaliação, não como espaço de sugestão | n — revisar com o cliente antes de produção |
+| Opções de seleção de todas as perguntas | Transcritas do questionário fonte — ver Dicionário de Campos | Eram derivadas do domínio enquanto não havia anexo. Correções notáveis: Q9 (PCD) não é Sim/Não mas o tipo da deficiência; Q12 é lista fechada, não texto livre; Q23 são 4 faixas, não número 0–100; Q36 é texto ABERTO, não seleção; Q22.1 é múltipla | y |
+| Lista nominal das perguntas do questionário | Transcrita 1:1 de `docs/Questionario_do_Aluno_1.md` (questionário real do cliente, recebido em 2026-08-29), Q1–Q38 → 45 chaves no schema Zod | O questionário fonte substituiu o dicionário derivado das descrições por bloco — ver AD-035 | y — é o documento do cliente, não mais uma derivação |
 
 **Open questions:** none - all resolved or logged above (vários marcados como pendentes de confirmação do cliente antes de produção — ver coluna "Confirmed?").
 
@@ -53,122 +54,144 @@ O quarto e último formulário do sistema — a Avaliação do Aluno — ainda n
 
 ## Dicionário de Campos (Anexo — base para o Zod schema de `respostas`)
 
-Chaves em camelCase, prefixo `aval` + bloco, para uso direto como propriedades do JSON `AvaliacaoAluno.respostas`. Nenhum campo desta feature tem opção "Outro/Outra" (o documento fonte não menciona isso na seção 6, diferente do Pré-Curso).
+**Fonte:** `docs/Questionario_do_Aluno_1.md` (questionário real do cliente, recebido em 2026-08-29). A numeração `Q1..Q38` abaixo é a do papel: Q1–Q21 formam a Parte 1, Q22–Q38 a Parte 2. Este anexo **substituiu** o dicionário derivado que existia antes dessa data — ver AD-035 em `STATE.md`.
 
-### Parte 1 — Dados Pessoais e Motivação (19 chaves)
+Chaves em camelCase, para uso direto como propriedades do JSON `AvaliacaoAluno.respostas`. **Q1 (nome completo) e Q2 (CPF) não são chaves deste JSON**: vêm de `TB_Usuario.NM_Usuario` e da própria chave primária da avaliação, e a UI os exibe como somente-leitura a partir da sessão.
 
-#### Bloco Dados Pessoais (7 chaves — Nome e CPF não são chaves do JSON, ver Assunções)
+### Parte 1 — Dados Pessoais (Q3–Q9, 7 itens)
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalPessoalEstado` | Estado (UF) | sel-única: reuso de `OPCOES_UF` (`pre-curso.schema.ts`) |
-| `avalPessoalMunicipio` | Município | texto livre |
-| `avalPessoalGenero` | Gênero | sel-única: Feminino / Masculino / Não binário / Prefiro não informar |
-| `avalPessoalFaixaEtaria` | Faixa etária | sel-única: 16 a 17 anos / 18 a 24 anos / 25 a 34 anos / 35 a 44 anos / 45 a 59 anos / 60 anos ou mais |
-| `avalPessoalEscolaridade` | Escolaridade | sel-única: Fundamental incompleto / Fundamental completo / Médio incompleto / Médio completo / Superior incompleto / Superior completo / Pós-graduação |
-| `avalPessoalRacaEtnia` | Raça/etnia | sel-única: Branca / Preta / Parda / Amarela / Indígena / Prefiro não informar |
-| `avalPessoalCondicaoPcd` | Condição de PCD | sel-única: Sim / Não |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalPessoalEstado` | 3 | Estado de residência | sel-única (27 UFs) |
+| `avalPessoalMunicipio` | 4 | Município e Estado | texto |
+| `avalPessoalGenero` | 5 | Gênero | sel-única: Feminino / Masculino / Prefiro não informar |
+| `avalPessoalFaixaEtaria` | 6 | Faixa etária | sel-única: Até 18 anos / 19 a 25 / 26 a 35 / 36 a 50 / Acima de 50 anos |
+| `avalPessoalEscolaridade` | 7 | Qual o seu nível de escolaridade | sel-única, 10 opções: Sem escolaridade → Pós-graduação completa |
+| `avalPessoalRacaEtnia` | 8 | Qual a sua cor/raça/etnia? | sel-única: Branco / Negro / Pardo / Amarelo / Indígena |
+| `avalPessoalCondicaoPcd` | 9 | Você é uma Pessoa com Deficiência (PCD)? | sel-única, 5 opções: "Não sou uma Pessoa com Deficiência." / física / auditiva / visual / intelectual-mental |
 
-#### Bloco Situação Profissional (4 chaves: 3 diretas + 1 condicional)
+> Q9 **não é Sim/Não**: o papel pede o tipo da deficiência na mesma pergunta. Q8 não traz "Prefiro não informar", e Q5 não traz "Não binário" — ambos existiam só no dicionário derivado.
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalProfissCondicaoTrabalho` | Condição atual de trabalho | sel-única: Empregado(a) com carteira assinada / Empregado(a) sem carteira assinada / Autônomo(a) / Desempregado(a) / Estudante sem trabalho / Aposentado(a) |
-| `avalProfissAtuaTurismo` | Atualmente trabalha em Turismo? | sel-única: Sim / Não (**condicionante**, seção 6.3) |
-| *(condicional)* `avalProfissAtividadeEspecifica` | Atividade específica em que atua | texto livre, obrigatório apenas se `avalProfissAtuaTurismo="Sim"` |
-| `avalProfissFaixaRenda` | Faixa de renda | sel-única: Sem renda / Até 1 salário mínimo / De 1 a 2 salários mínimos / De 2 a 3 salários mínimos / Acima de 3 salários mínimos |
+### Parte 1 — Situação Profissional (Q10–Q13, 4 chaves, 1 condicional)
 
-#### Bloco Experiência (3 chaves: 2 diretas + 1 condicional)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalProfissCondicaoTrabalho` | 10 | Qual sua condição atual de trabalho? | sel-única, 9 opções: Estagiário(a) / MEI / PJ / Profissional Liberal / Autônomo-Freelancer / Informal / Formal (CLT) / Estudante / Desempregado |
+| `avalProfissAtuaTurismo` | 11 | Atualmente você trabalha na área de Turismo? | sel-única: Sim / Não |
+| `avalProfissAtividadeEspecifica` | 12 | *(condicional)* Se sim, em qual atividade? | **sel-única**, 10 opções (Serviços de Alimentação … Turismo de Base Comunitária / Outro); obrigatória apenas se Q11 = "Sim" |
+| `avalProfissFaixaRenda` | 13 | Qual a sua faixa de renda mensal | sel-única, 7 faixas: Sem renda → Acima de 10 salários mínimos |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalExperienciaTrabalhoPrevio` | Trabalho prévio em Turismo | sel-única: Sim / Não |
-| `avalExperienciaCursoAnterior` | Já realizou cursos de Turismo? | sel-única: Sim / Não (**condicionante**, seção 6.3) |
-| *(condicional)* `avalExperienciaTipoCursoAnterior` | Tipo de curso de Turismo já realizado | sel-única (**AD-025**, resolvida): Curso livre / Curso técnico / Graduação / Pós-graduação / Curso de extensão — obrigatório apenas se `avalExperienciaCursoAnterior="Sim"` |
+> Q12 era texto livre no dicionário derivado; no papel é uma lista fechada.
 
-#### Bloco Motivação (2 chaves)
+### Parte 1 — Experiência (Q14–Q16, 3 chaves, 1 condicional)
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalMotivMotivosParticipacao` | Motivos para participar do curso | sel-múltipla, obrigatório (1 a **3** opções, limite explícito do documento): Geração de renda / Qualificação profissional / Interesse pessoal no setor de Turismo / Exigência do mercado de trabalho / Empreender no setor / Indicação de terceiros / Outro motivo |
-| `avalMotivFormaConhecimento` | Como ficou sabendo do curso | sel-única (**AD-025**, resolvida): Redes sociais / Indicação de conhecidos / Divulgação da Entidade Responsável / Rádio ou TV local / Cartazes ou panfletos / Escola ou instituição de ensino / Outra forma |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalExperienciaTrabalhoPrevio` | 14 | Já trabalhou no setor de Turismo? | sel-única: Sim / Não |
+| `avalExperienciaCursoAnterior` | 15 | Já realizou cursos na área de Turismo antes? | sel-única: Sim / Não |
+| `avalExperienciaTipoCursoAnterior` | 16 | *(condicional)* Se sim, qual? | sel-única, 7 opções: Atualização profissional / Técnico / Tecnológico-Superior / Graduação / Especialização-MBA / Mestrado-Doutorado / Outro; obrigatória apenas se Q15 = "Sim" |
 
-#### Bloco Expectativas (3 chaves)
+### Parte 1 — Motivação (Q17–Q18, 2 itens)
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalExpectAtendimento` | Expectativa de atendimento | sel-única: Superou minhas expectativas / Atendeu totalmente / Atendeu parcialmente / Não atendeu |
-| `avalExpectEmprego` | Expectativa de emprego | sel-única: mesma escala de `avalExpectAtendimento` |
-| `avalExpectRenda` | Expectativa de melhoria de renda | sel-única: mesma escala de `avalExpectAtendimento` |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalMotivMotivosParticipacao` | 17 | Quais os três (03) principais motivos para participar do Curso? | sel-múltipla, **1 a 3 opções**, 6 alternativas |
+| `avalMotivFormaConhecimento` | 18 | Como você ficou sabendo do curso? | sel-única, 8 opções: Prefeitura / Redes Sociais / comunidade / indicação de amigo(s) / rádio-tv local / carro de som / panfletos-outdoors / Outro |
 
-### Parte 2 — Avaliação Pós-Curso (25 chaves — todas as chaves além de `avalParticipConcluiuCurso`/`avalParticipMotivoNaoConclusao` são condicionadas por `avalParticipConcluiuCurso="Sim"`, ver Assunções)
+### Parte 1 — Expectativas (Q19–Q21, 3 itens)
 
-#### Bloco Participação (3 chaves)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalExpectAtendimento` | 19 | Você considera que a sua expectativa no Curso será atendida? | sel-única: Sim / Parcialmente / Não |
+| `avalExpectEmprego` | 20 | Você acredita que conseguirá um trabalho ou uma ascensão de carreira após o Curso? | sel-única: Sim / Talvez / Não |
+| `avalExpectRenda` | 21 | Qual a sua expectativa de melhoria de renda após o Curso? | sel-única: Nenhuma / Baixa / Média / Alta |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalParticipConcluiuCurso` | Concluiu o curso? | sel-única: Sim / Não (**gate principal da Parte 2**, seção 6.3) |
-| *(condicional)* `avalParticipMotivoNaoConclusao` | Motivo(s) de não conclusão | sel-múltipla, obrigatório (≥1) apenas se `avalParticipConcluiuCurso="Não"`: Dificuldades financeiras / Conflito com trabalho / Mudança de endereço / Problemas de saúde / Falta de tempo / Não se identificou com o curso / Outro motivo |
-| *(condicional por Concluiu=Sim)* `avalParticipPercentualFrequencia` | Percentual de frequência | número, 0 a 100 |
+**Parte 1: 7+4+3+2+3 = 19 chaves** (as mesmas 19 de `CHAVES_PARTE_1`).
 
-#### Bloco Avaliação do Curso (8 chaves, escala 1–5 crescente — **AD-020**, sem "não há disponibilidade", condicionais por Concluiu=Sim)
+---
 
-| Chave | Rótulo |
+### Parte 2 — Participação (Q22, Q22.1, Q23, 3 chaves, 1 condicional)
+
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalParticipConcluiuCurso` | 22 | Você concluiu o Curso? | sel-única: Sim / Não |
+| `avalParticipMotivoNaoConclusao` | 22.1 | *(condicional)* Se não concluiu, qual(ais) o(os) motivo(s) principal(ais)? | **sel-múltipla** (≥1), 10 opções idênticas às de Q16 do questionário do Gestor; obrigatória apenas se Q22 = "Não" |
+| `avalParticipPercentualFrequencia` | 23 | Percentual de aulas frequentadas | sel-única: Até 25% / 26% a 50% / 51% a 75% / 76% a 100% |
+
+> **Q23 é exigida de todo aluno**, tenha concluído ou não: está no bloco "Participação", e o cabeçalho "Avaliação do curso (apenas para quem concluiu)" só começa em Q24. Isso corrige o gate anterior, que a bloqueava junto do resto da Parte 2.
+> Q22.1 é **múltipla** (marcada MÚLTIPLA ESCOLHA no papel), superando o AD-025 — ver AD-036. Q23 era número livre 0–100 no dicionário derivado; no papel são 4 faixas.
+
+### Parte 2 — Avaliação do curso, apenas para quem concluiu (Q24, 8 linhas em escala)
+
+Enunciado: *"Como você avalia os seguintes aspectos do curso:"*
+
+| Chave | Aspecto |
 |---|---|
-| `avalCursoDinamicasInclusao` | Dinâmicas de inclusão |
-| `avalCursoMaterialDidatico` | Material didático |
-| `avalCursoConteudo` | Conteúdo |
-| `avalCursoClareza` | Clareza |
-| `avalCursoConhecimentoInstrutores` | Conhecimento dos instrutores |
-| `avalCursoOrganizacao` | Organização |
-| `avalCursoInfraestruturaBasica` | Infraestrutura básica |
-| `avalCursoInfraestruturaSalaAula` | Infraestrutura de sala de aula |
+| `avalCursoDinamicasInclusao` | Dinâmicas de inclusão e de participação do aluno nas aulas |
+| `avalCursoMaterialDidatico` | Qualidade do material didático (vídeos, leituras, visitas técnicas, aulas práticas etc.) |
+| `avalCursoConteudo` | Qualidade do conteúdo apresentado |
+| `avalCursoClareza` | Clareza na exposição das aulas |
+| `avalCursoConhecimentoInstrutores` | Conhecimento dos instrutores/professores |
+| `avalCursoOrganizacao` | Organização do Curso (horário, local, comunicação) |
+| `avalCursoInfraestruturaBasica` | Infraestrutura Básica de Atendimento (banheiros, bebedouros, limpeza, acessibilidade etc.) |
+| `avalCursoInfraestruturaSalaAula` | Infraestrutura da Sala de Aula (climatização, equipamentos, mesas e cadeiras etc.) |
 
-#### Bloco Aprendizado (3 chaves, condicionais por Concluiu=Sim)
+**Escala de Q24 (AD-020):** 1 = Péssimo · 2 = Ruim · 3 = Regular · 4 = Bom · 5 = Ótimo. Não há o `0` ("não há disponibilidade") da escala do Pré-Curso. O papel lista as colunas de ÓTIMO a PÉSSIMO; o valor armazenado é crescente e é a UI que apresenta na ordem do papel.
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalAprendizAmpliacaoConhecimento` | Ampliação de conhecimento | sel-única: Sim, totalmente / Sim, parcialmente / Não |
-| `avalAprendizAtendimentoExpectativas` | Atendimento de expectativas | sel-única: mesma escala de `avalExpectAtendimento` |
-| `avalAprendizSensacaoPreparo` | Sensação de preparo | sel-única: Sim, me sinto totalmente preparado(a) / Parcialmente preparado(a) / Não me sinto preparado(a) |
+### Parte 2 — Aprendizado (Q25–Q27, 3 itens)
 
-#### Bloco Continuidade nos Estudos (1 chave, condicional por Concluiu=Sim)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalAprendizAmpliacaoConhecimento` | 25 | O seu conhecimento após a conclusão do Curso | sel-única: Ampliou / Melhorou · Não ampliou / Não Melhorou · Indiferente |
+| `avalAprendizAtendimentoExpectativas` | 26 | O Curso atendeu as suas expectativas | sel-única: Sim / Parcialmente / Não |
+| `avalAprendizSensacaoPreparo` | 27 | Você se sente preparado para trabalhar na área da formação | sel-única: Sim / Parcialmente / Não |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalContinuidadeRetomadaEstudos` | Retomada de estudos após o curso | sel-única (**AD-025**, resolvida — simplificação, sem múltipla retomada): Sim, já retomei / Pretendo retomar em breve / Não pretendo retomar / Ainda não decidi |
+### Parte 2 — Continuidade nos Estudos (Q28, 1 item)
 
-#### Bloco Motivações Pós-Curso (1 chave, condicional por Concluiu=Sim)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalContinuidadeRetomadaEstudos` | 28 | Após a conclusão do Curso, você retomou os estudos? | sel-única, 7 opções: Sim, a educação básica / ao ensino fundamental / ao ensino médio / ao ensino técnico / ao ensino superior / a outras formações profissionais / Não |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalMotivacoesPosPercepcoes` | Percepções e motivações desenvolvidas após o curso | sel-múltipla, obrigatório (≥1): Maior autoconfiança / Vontade de empreender / Interesse em continuar estudando / Desejo de atuar no setor de Turismo / Melhoria na renda familiar / Nenhuma mudança percebida |
+### Parte 2 — Motivações após o Curso (Q29, 1 item)
 
-#### Bloco Oportunidades de Trabalho (2 chaves, condicionais por Concluiu=Sim, sem condicional entre si — ver Assunções)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalMotivacoesPosPercepcoes` | 29 | Após a conclusão do Curso, você sente que: | sel-múltipla (≥1), 6 opções: condições de atuar no Turismo / novas percepções de mundo / motivado a retomar os estudos / motivado a melhorar condições de vida / motivado a combater práticas de violência / percepções sobre mudanças climáticas |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalOportunSituacaoTrabalho` | Situação de trabalho após o curso | sel-única (**AD-025**, resolvida): Empregado(a) na área de Turismo / Empregado(a) fora da área de Turismo / Autônomo(a) na área de Turismo / Desempregado(a) buscando emprego / Estudante sem trabalho |
-| `avalOportunIntencaoAtuarTurismo` | Intenção de atuar em Turismo | sel-única: Sim / Não / Ainda não decidi |
+### Parte 2 — Oportunidades Reais de Trabalho e Emprego (Q30, Q30.j, Q31, 3 chaves, 1 condicional)
 
-#### Bloco Efetivação e Renda (3 chaves, condicionais por Concluiu=Sim)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalOportunSituacaoTrabalho` | 30 | Após a conclusão do Curso: | sel-única, 10 opções: 4 combinações emprego × (com/sem carteira) × (dentro/fora do Turismo) / autônomo / MEI / mesma posição de antes / desempregado / estudando / **Outra (Quais?)** |
+| `avalOportunSituacaoTrabalhoOutra` | 30 | *(condicional)* Outra. Quais? | texto, obrigatório apenas se Q30 = "Outra" |
+| `avalOportunIntencaoAtuarTurismo` | 31 | Caso não esteja trabalhando no Turismo, você pretende trabalhar no setor? | sel-única: Sim / Não |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalEfetivEmprego` | Efetivação no emprego | sel-única: Sim / Não / Não se aplica |
-| `avalEfetivAumentoRenda` | Aumento de renda | sel-única: Sim / Não / Não se aplica |
-| `avalEfetivMelhoriaPadraoVida` | Melhoria de padrão de vida | sel-única: Sim / Não / Não se aplica |
+> `avalOportunSituacaoTrabalhoOutra` é chave **nova**: é o único campo "Quais?" da Parte 2 e não existia no dicionário derivado. É ele que fecha a contagem em 45.
 
-#### Bloco Avaliação Geral (4 chaves; 3 condicionais por Concluiu=Sim, 1 sempre opcional)
+### Parte 2 — Efetivação no Emprego e Aumento da Renda (Q32–Q34, 3 itens)
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `avalGeralNota` | Nota geral do curso | número inteiro, 0 a 10 |
-| `avalGeralMelhoriasComunidade` | Percepção de melhorias na comunidade | sel-única: Sim / Não / Não sei avaliar |
-| `avalGeralRecomendaCurso` | Recomendaria o curso? | sel-única: Sim / Não / Talvez |
-| `avalGeralComentariosFinais` | Comentários finais | texto livre, **sempre opcional** (ver Assunções) — nunca exigido no encerramento |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalEfetivEmprego` | 32 | Caso não esteja efetivado no emprego, após a conclusão do Curso você foi efetivado? | sel-única: Sim / Não |
+| `avalEfetivAumentoRenda` | 33 | Após a conclusão do Curso sua renda aumentou? | sel-única: Sim / Não |
+| `avalEfetivMelhoriaPadraoVida` | 34 | Após a conclusão do Curso, o seu padrão de vida melhorou? | sel-única: Sim, totalmente / Sim, parcialmente / Não |
 
-**Contagem:** 19 (Parte 1) + 25 (Parte 2) = **44 chaves**, próximo de "45 itens de dado" da seção 6 (diferença de 1 tolerada — ver Assunções, mesmo padrão do Pré-Curso).
+### Parte 2 — Avaliação geral (Q35–Q38, 4 itens)
+
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `avalGeralNota` | 35 | Qual nota você dá para o Curso (0 a 10)? | inteiro 0–10 |
+| `avalGeralMelhoriasComunidade` | 36 | Como você avalia as melhorias em sua comunidade após a conclusão do Curso? | **texto livre** (marcado ABERTA no papel) |
+| `avalGeralRecomendaCurso` | 37 | Você recomendaria este Curso para outra pessoa da comunidade? | sel-única: Sim / Não |
+| `avalGeralComentariosFinais` | 38 | Comentário, crítica, elogio ou sugestão para a próxima edição | texto livre, **opcional** (não bloqueia o encerramento) |
+
+**Parte 2: 3+8+3+1+1+3+3+4 = 26 chaves.**
+
+**Contagem total: 19 + 26 = 45 chaves**, batendo exatamente com os "45 itens de dado" declarados na seção 6 do documento de especificação. O dicionário derivado que este anexo substituiu somava 44 e nunca reconciliava essa diferença de 1: a chave que faltava era `avalOportunSituacaoTrabalhoOutra` (o "Quais?" de Q30).
+
+**Gate interno de Q22 (AVAL-12/13):** com `avalParticipConcluiuCurso = "Não"`, exigem-se apenas Q22.1 e Q23. Com `"Sim"`, exigem-se Q23 e as 21 chaves de Q24 a Q37 — Q38 é opcional em qualquer caso.
+
+**Condicionais (4 chaves):** `avalProfissAtividadeEspecifica` (Q12), `avalExperienciaTipoCursoAnterior` (Q16), `avalParticipMotivoNaoConclusao` (Q22.1), `avalOportunSituacaoTrabalhoOutra` (Q30.j).
 
 ---
 
@@ -283,6 +306,7 @@ Chaves em camelCase, prefixo `aval` + bloco, para uso direto como propriedades d
 - IF `avalParticipPercentualFrequencia` estiver fora do intervalo 0–100 THEN the system SHALL rejeitar a gravação com HTTP 400.
 - IF o CPF informado na matrícula não corresponder a nenhum usuário cadastrado THEN the system SHALL rejeitar com HTTP 404 (distinto do HTTP 400 usado quando o CPF existe mas não é do tipo `AL`, AVAL-02).
 - WHEN `avalParticipConcluiuCurso` for alterado de "Sim" para "Não" numa gravação posterior, após as 22 chaves condicionais já terem sido preenchidas, the system SHALL aceitar a gravação e preservar os valores já salvos dessas chaves — eles só deixam de ser exigidos para completude, nunca são apagados automaticamente.
+- WHEN o encerramento for solicitado com respostas que a própria avaliação tornou inaplicáveis (condicionais órfãs de Q12/Q16/Q22.1/Q30.j, ou as chaves de "apenas para quem concluiu" com `avalParticipConcluiuCurso="Não"`), the system SHALL descartá-las antes de validar a completude e gravar a avaliação encerrada sem elas — a preservação acima vale para as GRAVAÇÕES, o descarte só no encerramento (AD-038).
 - IF o `cdCurso` de uma matrícula pertencer a um Ofertante diferente do Ofertante do GO autenticado THEN the system SHALL retornar HTTP 403 mesmo que o `cdCurso` exista de fato no banco (não vazar existência de dado fora de escopo via 404/400).
 
 ---

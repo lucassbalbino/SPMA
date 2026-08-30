@@ -5,45 +5,50 @@ import {
   respostasAvaliacaoSchema,
 } from "./avaliacao.schema";
 
-// Fixture com as 44 chaves do Dicionário de Campos (spec.md) preenchidas com
-// valores válidos, incluindo os 4 condicionais aplicáveis - usada como base
-// para os testes de campo individual (spread + override).
+// Fixture com as 45 chaves do questionário fonte
+// (`docs/Questionario_do_Aluno_1.md`) preenchidas com valores válidos,
+// incluindo os condicionais aplicáveis - usada como base para os testes de
+// campo individual (spread + override). Valores transcritos literalmente do
+// papel, sem importar as constantes de opções do schema.
 const RESPOSTA_VALIDA = {
-  // Parte 1 - Dados Pessoais
+  // Parte 1 - Dados Pessoais (Q3-Q9)
   avalPessoalEstado: "SP",
-  avalPessoalMunicipio: "Ubatuba",
+  avalPessoalMunicipio: "Ubatuba - SP",
   avalPessoalGenero: "Feminino",
-  avalPessoalFaixaEtaria: "25 a 34 anos",
-  avalPessoalEscolaridade: "Médio completo",
-  avalPessoalRacaEtnia: "Parda",
-  avalPessoalCondicaoPcd: "Não",
+  avalPessoalFaixaEtaria: "26 a 35 anos",
+  avalPessoalEscolaridade: "Ensino médio completo",
+  avalPessoalRacaEtnia: "Pardo",
+  avalPessoalCondicaoPcd: "Não sou uma Pessoa com Deficiência.",
 
-  // Parte 1 - Situação Profissional
-  avalProfissCondicaoTrabalho: "Desempregado(a)",
+  // Parte 1 - Situação Profissional (Q10-Q13)
+  avalProfissCondicaoTrabalho: "Desempregado",
   avalProfissAtuaTurismo: "Sim",
-  avalProfissAtividadeEspecifica: "Recepção em pousada local",
-  avalProfissFaixaRenda: "Até 1 salário mínimo",
+  avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
+  avalProfissFaixaRenda: "Até 01 salário mínimo",
 
-  // Parte 1 - Experiência
+  // Parte 1 - Experiência (Q14-Q16)
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
-  avalExperienciaTipoCursoAnterior: "Curso livre",
+  avalExperienciaTipoCursoAnterior: "Atualização profissional",
 
-  // Parte 1 - Motivação
-  avalMotivMotivosParticipacao: ["Geração de renda", "Qualificação profissional"],
-  avalMotivFormaConhecimento: "Redes sociais",
+  // Parte 1 - Motivação (Q17-Q18)
+  avalMotivMotivosParticipacao: [
+    "Conseguir um emprego/trabalho",
+    "Abrir o meu próprio negócio",
+  ],
+  avalMotivFormaConhecimento: "pelas Redes Sociais",
 
-  // Parte 1 - Expectativas
-  avalExpectAtendimento: "Atendeu totalmente",
-  avalExpectEmprego: "Atendeu parcialmente",
-  avalExpectRenda: "Superou minhas expectativas",
+  // Parte 1 - Expectativas (Q19-Q21)
+  avalExpectAtendimento: "Sim",
+  avalExpectEmprego: "Talvez",
+  avalExpectRenda: "Média",
 
-  // Parte 2 - Participação
+  // Parte 2 - Participação (Q22, Q22.1, Q23)
   avalParticipConcluiuCurso: "Sim",
   avalParticipMotivoNaoConclusao: undefined,
-  avalParticipPercentualFrequencia: 90,
+  avalParticipPercentualFrequencia: "76% a 100%",
 
-  // Parte 2 - Avaliação do Curso
+  // Parte 2 - Avaliação do Curso (Q24)
   avalCursoDinamicasInclusao: 5,
   avalCursoMaterialDidatico: 4,
   avalCursoConteudo: 5,
@@ -53,29 +58,34 @@ const RESPOSTA_VALIDA = {
   avalCursoInfraestruturaBasica: 3,
   avalCursoInfraestruturaSalaAula: 3,
 
-  // Parte 2 - Aprendizado
-  avalAprendizAmpliacaoConhecimento: "Sim, totalmente",
-  avalAprendizAtendimentoExpectativas: "Atendeu totalmente",
-  avalAprendizSensacaoPreparo: "Sim, me sinto totalmente preparado(a)",
+  // Parte 2 - Aprendizado (Q25-Q27)
+  avalAprendizAmpliacaoConhecimento: "Ampliou / Melhorou",
+  avalAprendizAtendimentoExpectativas: "Sim",
+  avalAprendizSensacaoPreparo: "Parcialmente",
 
-  // Parte 2 - Continuidade
-  avalContinuidadeRetomadaEstudos: "Pretendo retomar em breve",
+  // Parte 2 - Continuidade nos Estudos (Q28)
+  avalContinuidadeRetomadaEstudos: "Sim, ao ensino técnico",
 
-  // Parte 2 - Motivações Pós-Curso
-  avalMotivacoesPosPercepcoes: ["Maior autoconfiança", "Vontade de empreender"],
+  // Parte 2 - Motivações após o Curso (Q29)
+  avalMotivacoesPosPercepcoes: [
+    "tem condições de atuar na área do Turismo",
+    "desenvolveu novas percepções de mundo",
+  ],
 
-  // Parte 2 - Oportunidades de Trabalho
-  avalOportunSituacaoTrabalho: "Empregado(a) na área de Turismo",
+  // Parte 2 - Oportunidades Reais de Trabalho e Emprego (Q30, Q30.j, Q31)
+  avalOportunSituacaoTrabalho:
+    "Consegui um emprego, com carteira assinada, na área de Turismo.",
+  avalOportunSituacaoTrabalhoOutra: undefined,
   avalOportunIntencaoAtuarTurismo: "Sim",
 
-  // Parte 2 - Efetivação e Renda
+  // Parte 2 - Efetivação no Emprego e Aumento da Renda (Q32-Q34)
   avalEfetivEmprego: "Sim",
   avalEfetivAumentoRenda: "Sim",
-  avalEfetivMelhoriaPadraoVida: "Sim",
+  avalEfetivMelhoriaPadraoVida: "Sim, parcialmente",
 
-  // Parte 2 - Avaliação Geral
+  // Parte 2 - Avaliação geral (Q35-Q38)
   avalGeralNota: 9,
-  avalGeralMelhoriasComunidade: "Sim",
+  avalGeralMelhoriasComunidade: "Mais gente da comunidade trabalhando com receptivo",
   avalGeralRecomendaCurso: "Sim",
   avalGeralComentariosFinais: "Curso excelente, mudou minha perspectiva de carreira",
 };
@@ -115,8 +125,8 @@ describe("respostasAvaliacaoSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("tem exatamente 44 chaves (Dicionário de Campos, spec.md)", () => {
-    expect(Object.keys(respostasAvaliacaoSchema.shape)).toHaveLength(44);
+  it("tem exatamente 45 chaves (questionário fonte: 19 na Parte 1, 26 na Parte 2)", () => {
+    expect(Object.keys(respostasAvaliacaoSchema.shape)).toHaveLength(45);
   });
 
   it("aceita objeto vazio (todas as chaves são opcionais na FORMA)", () => {
@@ -146,10 +156,53 @@ describe("respostasAvaliacaoSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("avalPessoalCondicaoPcd é o tipo da deficiência, não Sim/Não (Q9)", () => {
+    const foraDoEnum = respostasAvaliacaoSchema.safeParse({
+      ...RESPOSTA_VALIDA,
+      avalPessoalCondicaoPcd: "Sim",
+    });
+    expect(foraDoEnum.success).toBe(false);
+
+    const valido = respostasAvaliacaoSchema.safeParse({
+      ...RESPOSTA_VALIDA,
+      avalPessoalCondicaoPcd: "Sim, tenho deficiência auditiva.",
+    });
+    expect(valido.success).toBe(true);
+  });
+
+  it("avalProfissAtividadeEspecifica é seleção fechada, não texto livre (Q12)", () => {
+    const textoLivre = respostasAvaliacaoSchema.safeParse({
+      ...RESPOSTA_VALIDA,
+      avalProfissAtividadeEspecifica: "Recepção em pousada local",
+    });
+    expect(textoLivre.success).toBe(false);
+  });
+
+  it("avalGeralMelhoriasComunidade é texto aberto, não seleção (Q36)", () => {
+    const result = respostasAvaliacaoSchema.safeParse({
+      ...RESPOSTA_VALIDA,
+      avalGeralMelhoriasComunidade: "Qualquer texto livre do aluno",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  // AD-036: supera o AD-025, que havia travado este campo como seleção única.
+  it("avalParticipMotivoNaoConclusao é seleção múltipla e aceita mais de um motivo (Q22.1)", () => {
+    const result = respostasAvaliacaoSchema.safeParse({
+      ...RESPOSTA_VALIDA,
+      avalParticipConcluiuCurso: "Não",
+      avalParticipMotivoNaoConclusao: [
+        "Dificuldades financeiras",
+        "Local muito distante de casa",
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("campo de seleção múltipla aceita array de opções válidas", () => {
     const result = respostasAvaliacaoSchema.safeParse({
       ...RESPOSTA_VALIDA,
-      avalMotivMotivosParticipacao: ["Geração de renda"],
+      avalMotivMotivosParticipacao: ["Conseguir um emprego/trabalho"],
     });
     expect(result.success).toBe(true);
   });
@@ -174,9 +227,9 @@ describe("respostasAvaliacaoSchema", () => {
     const result = respostasAvaliacaoSchema.safeParse({
       ...RESPOSTA_VALIDA,
       avalMotivMotivosParticipacao: [
-        "Geração de renda",
-        "Qualificação profissional",
-        "Interesse pessoal no setor de Turismo",
+        "Conseguir um emprego/trabalho",
+        "Abrir o meu próprio negócio",
+        "Aplicar o conhecimento adquirido",
       ],
     });
     expect(result.success).toBe(true);
@@ -186,16 +239,16 @@ describe("respostasAvaliacaoSchema", () => {
     const result = respostasAvaliacaoSchema.safeParse({
       ...RESPOSTA_VALIDA,
       avalMotivMotivosParticipacao: [
-        "Geração de renda",
-        "Qualificação profissional",
-        "Interesse pessoal no setor de Turismo",
-        "Empreender no setor",
+        "Conseguir um emprego/trabalho",
+        "Abrir o meu próprio negócio",
+        "Aplicar o conhecimento adquirido",
+        "Contribuir com o turismo no meu território",
       ],
     });
     expect(result.success).toBe(false);
   });
 
-  describe("escala de Avaliação do Curso (Bloco 8 campos, AD-020, 1 a 5)", () => {
+  describe("escala de Avaliação do Curso (Q24, 8 linhas, AD-020, 1 a 5)", () => {
     const camposEscala = [
       "avalCursoDinamicasInclusao",
       "avalCursoMaterialDidatico",
@@ -252,36 +305,28 @@ describe("respostasAvaliacaoSchema", () => {
     ).toBe(true);
   });
 
-  it("avalParticipPercentualFrequencia rejeita -1 e 101, aceita 0 e 100", () => {
+  // Q23 mudou de número livre (0-100) para 4 faixas fechadas.
+  it("avalParticipPercentualFrequencia aceita as 4 faixas e rejeita número (Q23)", () => {
+    for (const faixa of ["Até 25%", "26% a 50%", "51% a 75%", "76% a 100%"]) {
+      expect(
+        respostasAvaliacaoSchema.safeParse({
+          ...RESPOSTA_VALIDA,
+          avalParticipPercentualFrequencia: faixa,
+        }).success,
+      ).toBe(true);
+    }
+
     expect(
       respostasAvaliacaoSchema.safeParse({
         ...RESPOSTA_VALIDA,
-        avalParticipPercentualFrequencia: -1,
+        avalParticipPercentualFrequencia: 90,
       }).success,
     ).toBe(false);
-    expect(
-      respostasAvaliacaoSchema.safeParse({
-        ...RESPOSTA_VALIDA,
-        avalParticipPercentualFrequencia: 101,
-      }).success,
-    ).toBe(false);
-    expect(
-      respostasAvaliacaoSchema.safeParse({
-        ...RESPOSTA_VALIDA,
-        avalParticipPercentualFrequencia: 0,
-      }).success,
-    ).toBe(true);
-    expect(
-      respostasAvaliacaoSchema.safeParse({
-        ...RESPOSTA_VALIDA,
-        avalParticipPercentualFrequencia: 100,
-      }).success,
-    ).toBe(true);
   });
 });
 
 describe("CHAVES_PARTE_1", () => {
-  it("tem exatamente 19 entradas (Dicionário de Campos, spec.md)", () => {
+  it("tem exatamente 19 entradas (Parte 1 do questionário fonte, Q3-Q21)", () => {
     expect(CHAVES_PARTE_1).toHaveLength(19);
   });
 

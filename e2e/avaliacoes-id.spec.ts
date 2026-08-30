@@ -59,22 +59,22 @@ const PARTE_1_INICIO = {
 // As 17 chaves restantes de Parte 1 (completam as 19 no total).
 const PARTE_1_RESTANTE = {
   avalPessoalGenero: "Feminino",
-  avalPessoalFaixaEtaria: "25 a 34 anos",
-  avalPessoalEscolaridade: "Médio completo",
-  avalPessoalRacaEtnia: "Parda",
-  avalPessoalCondicaoPcd: "Não",
-  avalProfissCondicaoTrabalho: "Desempregado(a)",
+  avalPessoalFaixaEtaria: "26 a 35 anos",
+  avalPessoalEscolaridade: "Ensino médio completo",
+  avalPessoalRacaEtnia: "Pardo",
+  avalPessoalCondicaoPcd: "Não sou uma Pessoa com Deficiência.",
+  avalProfissCondicaoTrabalho: "Desempregado",
   avalProfissAtuaTurismo: "Sim",
-  avalProfissAtividadeEspecifica: "Recepção em pousada local",
-  avalProfissFaixaRenda: "Até 1 salário mínimo",
+  avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
+  avalProfissFaixaRenda: "Até 01 salário mínimo",
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
-  avalExperienciaTipoCursoAnterior: "Curso livre",
-  avalMotivMotivosParticipacao: ["Geração de renda"],
-  avalMotivFormaConhecimento: "Redes sociais",
-  avalExpectAtendimento: "Atendeu totalmente",
-  avalExpectEmprego: "Atendeu parcialmente",
-  avalExpectRenda: "Superou minhas expectativas",
+  avalExperienciaTipoCursoAnterior: "Atualização profissional",
+  avalMotivMotivosParticipacao: ["Conseguir um emprego/trabalho"],
+  avalMotivFormaConhecimento: "pelas Redes Sociais",
+  avalExpectAtendimento: "Sim",
+  avalExpectEmprego: "Talvez",
+  avalExpectRenda: "Média",
 };
 
 let cdOfertante: number;
@@ -201,13 +201,13 @@ test("AVAL-14: gravação parcial de Parte 2 sem preencher tudo é aceita enquan
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/avaliacoes/${CPF_AL_PROGRESSIVO}/${cdCurso}`, {
-    data: { avalParticipPercentualFrequencia: 80 },
+    data: { avalParticipPercentualFrequencia: "76% a 100%" },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(200);
   const corpo = await res.json();
-  expect(corpo.avaliacao.respostas.avalParticipPercentualFrequencia).toBe(80);
+  expect(corpo.avaliacao.respostas.avalParticipPercentualFrequencia).toBe("76% a 100%");
   expect(corpo.avaliacao.status).toBe("EM_ANDAMENTO");
 
   await cliente.dispose();

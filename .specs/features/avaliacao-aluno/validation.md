@@ -5,6 +5,9 @@
 **Diff range**: `6b338c7..HEAD` (10 commits, `a4e0c52`..`83edf75`)
 **Verifier**: independent sub-agent (author ≠ verifier)
 
+
+> ⚠️ **Este relatório precede a substituição dos Dicionários de Campos (AD-035, 2026-08-29).** O PASS registrado abaixo verificou a implementação contra o dicionário **derivado**, não contra o questionário fonte do cliente. A arquitetura verificada (JSON + Zod na borda + `completude.ts` como autoridade condicional), os requisitos REQ-*/AVAL-* e os gates de encerramento continuam valendo — o que mudou foi o **conteúdo** do questionário: a Avaliação do Aluno passou de 44 para 45 chaves (`avalOportunSituacaoTrabalhoOutra`), mudou 12 listas de opções e 3 tipos de campo, e o gate de Q22 recuou (Q23 passou a ser exigida de todo aluno). Testes unitários e de forma foram atualizados e passam; **a suíte e2e desta feature ainda não foi reexecutada após a troca**. Vale um novo ciclo do Verifier antes de considerar a feature verificada contra o documento do cliente.
+
 ---
 
 ## Task Completion

@@ -34,7 +34,10 @@ Este arquivo é a fonte de verdade das decisões travadas. Não reabrir uma AD s
   - **Lição nova:** `.specs/LESSONS.md` L-019 (candidata) - quando um edge case da spec diz que uma gravação posterior deve preservar valores já salvos após um gate mudar de estado, escrever um teste dedicado que preenche os campos gated, vira o gate de volta, e afirma que os valores anteriores continuam presentes; um PATCH de merge raso genérico não é evidência de que esse caso específico foi verificado. L-014 (conjuntos de critérios multi-parte) foi promovida a **confirmed** nesta rodada (2ª recorrência, depois de `cadastro-ofertante-verba`) - carregar em Specify/Design das próximas features.
   - **Arquivos da feature:** `.specs/features/avaliacao-aluno/{spec.md,design.md,tasks.md,validation.md}`.
 - **Próxima feature:** nenhuma pronta para implementação automática. Os 6 primeiros itens da ordem sugerida do README estão todos DONE; resta só o item 7 (`dashboard`), formalmente adiado por AD-024 até o cliente definir os indicadores - não iniciar sem essa definição.
-- **Pendências abertas:** nenhuma de domínio, exceto os indicadores do dashboard (feature adiada por decisão AD-024).
+- **Substituição dos questionários (2026-08-29, AD-035/036/037):** o cliente entregou os três questionários reais (`docs/Questionario_do_Gestor_Pre_Curso.md`, `docs/Questionario_do_Gestor_Pos_Curso.md`, `docs/Questionario_do_Aluno_1.md`), que substituíram os Dicionários de Campos **derivados** das três features de formulário. Contagens: pré-curso 56 (inalterada), pós-curso 26 (inalterada, com +2/−1/−1 de composição), aluno 44 → **45**. Atualizados: os 3 `spec.md` (dicionário + linhas de assumption), os 3 schemas Zod, os 3 `completude.ts`, os 3 formulários, 6 arquivos de teste unitário e 7 specs e2e. Novo helper compartilhado `src/lib/validation/multipla.ts` (AD-037). **Nenhuma migration**: a arquitetura `respostas Json?` + Zod na borda (AD-004/AD-034) absorveu a troca inteira sem tocar em schema físico, rota, guarda ou fluxo de encerramento.
+  - **Gate após a troca:** `lint` (0 erros), `typecheck` (limpo) e `test:unit` (418 testes, 20 arquivos) verdes. **`test:e2e` ainda não reexecutado** — a porta 3000 estava ocupada por um servidor Next já em execução no momento da troca, e derrubá-lo arriscaria o banco de desenvolvimento. Rodar `npm run test:e2e` antes de considerar a troca concluída.
+  - **Re-verificação pendente:** os 3 `validation.md` registram PASS contra o dicionário derivado e foram anotados com esse aviso no topo. Vale um novo ciclo do Verifier por feature.
+- **Pendências abertas:** nenhuma de domínio, exceto os indicadores do dashboard (feature adiada por decisão AD-024) e as poucas linhas ainda marcadas `Confirmed? n` nos `spec.md` (ex.: Q16 do pós-curso não oferecer alternativa "não houve abandono"; Q36 vs Q38 do aluno, uma exigida e a outra opcional).
 
 ---
 
@@ -114,6 +117,7 @@ Indicadores não definidos. Fatiar e implementar o resto do sistema primeiro; vo
 
 ### Tipos de campo resolvidos (eram ambíguos no documento fonte)
 
+**AD-025 — Seleção única (radio) para os 6 campos antes ambíguos:** ⚠️ *parcialmente superado pelo AD-036 — "motivos de abandono" (pós-curso) e "motivo(s) de não conclusão" (aluno) passaram a seleção múltipla quando os questionários fonte chegaram.*
 **AD-025 — Seleção única (radio) para os 6 campos antes ambíguos:**
 nível de formação dos professores (pré-curso); motivos de abandono (pós-curso do gestor); tipo de curso de Turismo já realizado (aluno); como ficou sabendo do curso (aluno); retomada de estudos (aluno); situação de trabalho pós-curso (aluno).
 Nota: "retomada de estudos" como única é uma simplificação; revisar se surgir caso real de múltipla retomada.
@@ -122,6 +126,34 @@ Nota: "retomada de estudos" como única é uma simplificação; revisar se surgi
 
 **AD-027 — Enunciado genérico das tabelas de infraestrutura do pré-curso:**
 "Avalie a disponibilidade e o estado de conservação dos seguintes itens:" (o documento fonte não trazia enunciado explícito para a segunda tabela).
+⚠️ *Superado pelo AD-035: os questionários fonte trazem os enunciados reais de Q23 e Q24 do pré-curso, e eles são distintos entre si.*
+
+### Questionários fonte (2026-08-29)
+
+**AD-035 — Os três Dicionários de Campos passam a ser transcrição dos questionários do cliente, não derivação.**
+Até 2026-08-29 o único material disponível era `docs/SPMA_Especificacao_Cliente_v2.md`, que descreve os formulários **por bloco e por contagem** (54 / 26 / 45 itens) mas nunca lista os enunciados nem as opções. Os dicionários das três features de formulário foram, por decisão explícita do usuário na época ("eu derivo e você revisa"), **derivados** dessas descrições — com as linhas correspondentes marcadas `Confirmed? n — revisar com o cliente`. Nesta data o cliente entregou os questionários reais (`docs/Questionario_do_Gestor_Pre_Curso.md`, `docs/Questionario_do_Gestor_Pos_Curso.md`, `docs/Questionario_do_Aluno_1.md`) e os três dicionários foram **substituídos** por transcrição 1:1, com a numeração do papel (Q1..Q32 / Q1..Q26 / Q1..Q38) preservada nas specs, nas constantes de opções e nos rótulos da UI.
+
+Impacto por formulário:
+- **Pré-curso:** 56 chaves antes e depois, mas ~30 listas de opções trocadas. Correções de conteúdo: Q9 passa de lista de 4 programas para Sim/Não + "Qual?"; Q12 ("Região") passa de macrorregião do país para tipo de zona (Urbana/Periurbana/Rural/Natural); Q29 passa de seleção múltipla de políticas para Sim/Não; os 9+8 itens de infraestrutura ganham os nomes reais; `qualifVinculoProgramaOutro` vira `qualifVinculoProgramaQual`.
+- **Pós-curso:** 26 chaves antes e depois, com saldo +2 −1 −1. Novas: Q5 (`posAcompanhLicaoIndividual`) e Q23 (`posFinValorBolsaPermanencia`). Removida: `posFinValorDevolvido` (o papel só pergunta *se* houve devolução). Fundidas: `posContEstrategiasContinuidade` + `posContEstrategiasAmpliacao` → `posContEstrategias` (Q26 é uma pergunta só). Q2/Q3/Q4 deixam de ser texto livre ou enum inventado e viram alternativas fechadas; Q10 vira texto ABERTO; Q17/Q18 viram Sim/Não.
+- **Avaliação do aluno:** 44 → **45** chaves. A chave que faltava é `avalOportunSituacaoTrabalhoOutra` (o "Quais?" da opção j de Q30) — com ela a contagem passa a bater exatamente com os "45 itens de dado" do documento de especificação, diferença que antes era tolerada sem explicação. Q9 (PCD) deixa de ser Sim/Não e vira o tipo da deficiência; Q12 vira lista fechada; Q23 vira 4 faixas em vez de número 0–100; Q36 vira texto ABERTO. O gate de Q22 recua: Q23 (frequência) é exigida de todo aluno, porque o cabeçalho "apenas para quem concluiu" do papel só começa em Q24.
+
+A arquitetura não mudou: `respostas Json?` + Zod como autoridade de forma (AD-004/AD-034) + `completude.ts` como autoridade de obrigatoriedade condicional absorveram a troca inteira sem migration e sem alteração de rota, guarda ou fluxo de encerramento.
+
+**AD-036 — "Motivos de abandono" e "motivo(s) de não conclusão" são seleção MÚLTIPLA, superando o AD-025.**
+O AD-025 travou os dois como seleção única quando as listas reais ainda não existiam. Os questionários fonte contradizem: o do Aluno marca Q22.1 explicitamente como **MÚLTIPLA ESCOLHA**, e o do Gestor enuncia Q16 no plural ("Principais motivos atestados"). Ambos passam a `sel-múltipla` (≥1), com a **mesma lista de 10 opções** nos dois formulários — de propósito, para permitir cruzar a visão do gestor com a do aluno sobre o mesmo curso. Decisão explícita do usuário nesta sessão. Os outros 4 campos travados pelo AD-025 seguem como seleção única, confirmados pelo papel.
+
+**AD-037 — Alternativa excludente das perguntas de seleção múltipla é barrada no servidor.**
+Sete perguntas dos questionários terminam com uma alternativa que nega todas as outras ("Não foram realizadas consultas...", "Nenhuma ação de monitoramento...", "Não foram estabelecidas parcerias..."): 5 no pré-curso (Q22, Q26, Q30, Q31, Q32) e 2 no pós-curso (Q6, Q26). Marcá-la junto de qualquer outra opção é contraditório e envenenaria qualquer agregação futura do dashboard (AD-024). O helper `multiplaComExclusiva` (`src/lib/validation/multipla.ts`) rejeita a combinação com HTTP 400, e a UI desmarca automaticamente — a regra vive no servidor para valer também em chamadas diretas à API, não só no preenchimento pela tela. Decisão explícita do usuário nesta sessão.
+
+**AD-038 — Resposta condicional que ficou órfã é preservada durante o preenchimento e descartada no encerramento.**
+`visivelSe`/`bloqueadoSe` só escondiam o campo na tela: quem respondia a pergunta-filha e depois mudava a pergunta-mãe deixava a resposta órfã gravada no JSON, e a completude — que só checa a direção "condição verdadeira → exige" — encerrava o formulário com a contradição dentro (ex.: Q11="Não" do pós-curso com o detalhe da alteração preenchido; aluno com Q22="Não" e nota 10 no curso). Mesma classe de contradição que o AD-037 barra nas seleções múltiplas.
+
+Regra adotada, igual nos três formulários:
+- **PATCH preserva.** Ir e voltar entre alternativas é preenchimento normal, e no formulário do Aluno a preservação é edge case explícito da spec (Q22 "Sim"→"Não" numa gravação posterior, verificado em `e2e/avaliacoes-id.spec.ts`). A UI apenas para de **enviar** a chave enquanto ela está órfã; o que já estava salvo continua no banco.
+- **Encerramento descarta.** As rotas `*/encerrar` normalizam as respostas (`normalizarCondicionais*`) antes de validar a completude e gravam o resultado junto do `status: ENCERRADO` — o registro final, imutável e insumo do dashboard futuro (AD-024), nunca guarda resposta de pergunta que não se aplica.
+
+Cada condicional passa a ter **uma** definição (`src/lib/validation/condicionais.ts` + `<feature>/condicionais.ts`), lida por completude, tela e limpeza — antes a condição de Q21.1 do pré-curso existia duplicada como literais soltos no formulário, e as 23 chaves de "apenas para quem concluiu" eram marcadas uma a uma na UI, sem relação com nenhuma lista do servidor.
 
 ---
 

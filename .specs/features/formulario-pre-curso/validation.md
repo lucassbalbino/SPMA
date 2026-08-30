@@ -5,6 +5,9 @@
 **Diff range**: `9324083^..HEAD` (15 commits, `docs(pre-curso): add spec` .. `fix(pre-curso): reject inverted planning dates on write`)
 **Verifier**: independent sub-agent (author ≠ verifier), fresh eyes for iteration 2
 
+
+> ⚠️ **Este relatório precede a substituição dos Dicionários de Campos (AD-035, 2026-08-29).** O PASS registrado abaixo verificou a implementação contra o dicionário **derivado**, não contra o questionário fonte do cliente. A arquitetura verificada (JSON + Zod na borda + `completude.ts` como autoridade condicional), os requisitos REQ-* e os gates de encerramento continuam valendo — o que mudou foi o **conteúdo** do questionário: as 56 chaves do Pré-Curso mantiveram a contagem, mas ~30 listas de opções, 9 rótulos de infraestrutura, 3 tipos de campo e 1 gatilho condicional (Q9) mudaram de conteúdo. Testes unitários e de forma foram atualizados e passam; **a suíte e2e desta feature ainda não foi reexecutada após a troca**. Vale um novo ciclo do Verifier antes de considerar a feature verificada contra o documento do cliente.
+
 ---
 
 ## Iteration history

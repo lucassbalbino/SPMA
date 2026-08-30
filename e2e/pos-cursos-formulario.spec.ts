@@ -113,14 +113,13 @@ async function selecionar(page: Page, testIdTrigger: string, rotulo: string) {
     .click();
 }
 
-async function marcarCheckbox(escopo: Locator, rotulo: string) {
-  const item = escopo.getByRole("checkbox", { name: rotulo, exact: true });
-  await item.click();
-  await expect(item).toBeChecked();
-}
-
-async function marcarRadio(escopo: Locator, rotulo: string) {
-  const item = escopo.getByRole("radio", { name: rotulo, exact: true });
+// Marca uma opção de radio/checkbox pelo testid da própria opção
+// (`campo-<chave>-opcao-<indice>`), e não pelo rótulo: depois da troca para
+// os questionários fonte, vários blocos passaram a ter mais de um grupo com
+// as mesmas alternativas "Sim"/"Não" (ex.: Q24 e Q25), o que tornaria
+// ambíguo qualquer `getByRole` por nome dentro do bloco.
+async function marcarOpcao(page: Page, chave: string, indice: number) {
+  const item = page.getByTestId(`campo-${chave}-opcao-${indice}`);
   await item.click();
   await expect(item).toBeChecked();
 }
@@ -146,20 +145,25 @@ async function encerrar(page: Page) {
 }
 
 async function preencherTodosOsCampos(page: Page, opcoes: { omitirDetalheAlteracao?: boolean } = {}) {
+  // Durante o Curso - Acompanhamento Pedagógico (Q1-Q6)
   await abrirBloco(page, 1);
-  await marcarCheckbox(bloco(page, 1), "Dificuldade de concentração");
-  await page.getByTestId("campo-posAcompanhConceitosTrabalhados").fill("Turismo de base comunitária");
-  await page.getByTestId("campo-posAcompanhPlanoAcao").fill("Reforço individual semanal");
-  await selecionar(page, "campo-posAcompanhAvaliacaoCognitiva-select", "Prova escrita");
-  await marcarCheckbox(bloco(page, 1), "Relatórios de frequência");
+  await marcarOpcao(page, "posAcompanhProblemasEstudo", 0);
+  await marcarOpcao(page, "posAcompanhConceitosTrabalhados", 0);
+  await marcarOpcao(page, "posAcompanhPlanoAcao", 0);
+  await marcarOpcao(page, "posAcompanhProvaSituacao", 1);
+  await marcarOpcao(page, "posAcompanhLicaoIndividual", 0);
+  await marcarOpcao(page, "posAcompanhMonitoramento", 0);
   await fecharBloco(page, 1);
 
+  // Execução (Q7-Q12)
   await abrirBloco(page, 2);
   await page.getByTestId("campo-posExecDataInicioReal").fill("2026-03-01");
   await page.getByTestId("campo-posExecDataTerminoReal").fill("2026-06-01");
   await page.getByTestId("campo-posExecCargaHorariaRealizada").fill("120");
-  await marcarCheckbox(bloco(page, 2), "Evasão de alunos");
-  await marcarRadio(bloco(page, 2), "Sim");
+  await page
+    .getByTestId("campo-posExecDificuldadesEnfrentadas")
+    .fill("Evasão de alunos nas semanas de chuva forte");
+  await marcarOpcao(page, "posExecHouveAlteracaoPlanejamento", 0); // Sim
   if (!opcoes.omitirDetalheAlteracao) {
     await page
       .getByTestId("campo-posExecAlteracaoDetalhe")
@@ -167,32 +171,30 @@ async function preencherTodosOsCampos(page: Page, opcoes: { omitirDetalheAlterac
   }
   await fecharBloco(page, 2);
 
+  // Participação (Q13-Q18)
   await abrirBloco(page, 3);
   await page.getByTestId("campo-posParticNumInscritos").fill("40");
   await page.getByTestId("campo-posParticNumMatriculados").fill("35");
   await page.getByTestId("campo-posParticNumConcluintes").fill("30");
-  await selecionar(page, "campo-posParticMotivosAbandono-select", "Conflito com trabalho");
-  await selecionar(
-    page,
-    "campo-posParticRelacaoDemandaOferta-select",
-    "Demanda superou a oferta de vagas",
-  );
-  await selecionar(page, "campo-posParticIntencaoNovaOferta-select", "Sim");
+  await marcarOpcao(page, "posParticMotivosAbandono", 1); // Dificuldades financeiras
+  await marcarOpcao(page, "posParticDemandaMaiorQueOferta", 0); // Sim
+  await marcarOpcao(page, "posParticIntencaoNovaOferta", 0); // Sim
   await fecharBloco(page, 3);
 
+  // Financeiro (Q19-Q25)
   await abrirBloco(page, 4);
-  await page.getByTestId("campo-posFinValorTotalExecutado").fill("15000");
-  await page.getByTestId("campo-posFinValorDespesaDocentes").fill("8000");
-  await page.getByTestId("campo-posFinValorDespesaMaterialDidatico").fill("3000");
-  await page.getByTestId("campo-posFinValorDespesaInfraestrutura").fill("4000");
-  await selecionar(page, "campo-posFinHouveDevolucaoRecursos-select", "Não");
-  await page.getByTestId("campo-posFinValorDevolvido").fill("0");
-  await selecionar(page, "campo-posFinNecessidadeAditivo-select", "Não");
+  await page.getByTestId("campo-posFinValorTotal").fill("15000");
+  await page.getByTestId("campo-posFinValorProfessores").fill("8000");
+  await page.getByTestId("campo-posFinValorMateriais").fill("3000");
+  await page.getByTestId("campo-posFinValorInfraestrutura").fill("4000");
+  await page.getByTestId("campo-posFinValorBolsaPermanencia").fill("0");
+  await marcarOpcao(page, "posFinHouveDevolucaoRecursos", 1); // Não
+  await marcarOpcao(page, "posFinNecessidadeAditivo", 1); // Não
   await fecharBloco(page, 4);
 
+  // Ações para Continuidade do Curso (Q26)
   await abrirBloco(page, 5);
-  await marcarCheckbox(bloco(page, 5), "Nova turma no mesmo local");
-  await marcarCheckbox(bloco(page, 5), "Aumento do número de vagas");
+  await marcarOpcao(page, "posContEstrategias", 0);
   await fecharBloco(page, 5);
 }
 
@@ -202,16 +204,18 @@ test("GO salva um bloco parcial e o dado persiste após reload", async ({ page }
   await login(page, CPF_GO_A);
   await page.goto(`/pos-cursos/${cdCurso}`);
 
-  await abrirBloco(page, 1);
-  await page.getByTestId("campo-posAcompanhPlanoAcao").fill("Rascunho de plano de ação");
+  await abrirBloco(page, 2);
+  await page
+    .getByTestId("campo-posExecDificuldadesEnfrentadas")
+    .fill("Rascunho de dificuldades");
   const resposta = await salvarRascunho(page);
   expect(resposta.ok()).toBe(true);
   await expect(page.getByTestId("erro-pos-curso")).toHaveCount(0);
 
   await page.reload();
-  await abrirBloco(page, 1);
-  await expect(page.getByTestId("campo-posAcompanhPlanoAcao")).toHaveValue(
-    "Rascunho de plano de ação",
+  await abrirBloco(page, 2);
+  await expect(page.getByTestId("campo-posExecDificuldadesEnfrentadas")).toHaveValue(
+    "Rascunho de dificuldades",
   );
 });
 
@@ -260,8 +264,8 @@ test("GO preenche os 26 campos e encerra o pós-curso de forma irreversível", a
   await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 
-  await abrirBloco(page, 1);
-  await expect(page.getByTestId("campo-posAcompanhPlanoAcao")).toBeDisabled();
+  await abrirBloco(page, 2);
+  await expect(page.getByTestId("campo-posExecDificuldadesEnfrentadas")).toBeDisabled();
 });
 
 test("pós-curso encerrado é somente leitura, sem botões de ação", async ({ page }) => {
@@ -275,8 +279,8 @@ test("pós-curso encerrado é somente leitura, sem botões de ação", async ({ 
   await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 
-  await abrirBloco(page, 1);
-  await expect(page.getByTestId("campo-posAcompanhPlanoAcao")).toBeDisabled();
+  await abrirBloco(page, 2);
+  await expect(page.getByTestId("campo-posExecDificuldadesEnfrentadas")).toBeDisabled();
 });
 
 test("VO visualiza os dados sem controles de edição", async ({ page }) => {

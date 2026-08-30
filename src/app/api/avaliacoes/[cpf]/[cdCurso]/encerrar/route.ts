@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { obterSessao } from "@/lib/auth/session";
 import { podeGerenciarAvaliacao } from "@/lib/auth/guards";
 import { validarCompletudeAvaliacao } from "@/lib/avaliacao/completude";
+import { normalizarCondicionaisAvaliacao } from "@/lib/avaliacao/condicionais";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
 
@@ -51,8 +52,18 @@ async function encerrarAvaliacao(request: Request, { params }: Contexto) {
     return NextResponse.json({ erro: "Esta avaliação já está encerrada" }, { status: 409 });
   }
 
+  // Respostas que a própria avaliação tornou inaplicáveis (Q12/Q16 com a
+  // pergunta-mãe em "Não", Q30.j sem Q30="Outra", e as 22 chaves de "apenas
+  // para quem concluiu" quando Q22="Não") são descartadas AQUI, no momento
+  // em que a avaliação vira registro final e imutável. No PATCH elas
+  // continuam preservadas de propósito - é edge case explícito da spec
+  // (Q22 alterada de "Sim" para "Não" numa gravação posterior preserva o
+  // que já estava salvo), para o aluno poder corrigir Q22 sem perder o que
+  // respondeu; o descarte só acontece quando ele confirma o encerramento.
+  const respostas = normalizarCondicionaisAvaliacao(avaliacao.respostas);
+
   // AVAL-12/13: gate "Concluiu o curso?" - une pendências de Parte 1 e Parte 2.
-  const { completo, pendentes } = validarCompletudeAvaliacao(avaliacao.respostas);
+  const { completo, pendentes } = validarCompletudeAvaliacao(respostas);
 
   if (!completo) {
     return NextResponse.json(
@@ -63,7 +74,7 @@ async function encerrarAvaliacao(request: Request, { params }: Contexto) {
 
   const atualizada = await prisma.avaliacaoAluno.update({
     where: { cpf_cdCurso: { cpf, cdCurso } },
-    data: { status: "ENCERRADO", dataEncerramento: new Date() },
+    data: { status: "ENCERRADO", dataEncerramento: new Date(), respostas },
   });
 
   return NextResponse.json({ avaliacao: atualizada });

@@ -1,10 +1,12 @@
 // Formulário de preenchimento/encerramento do pós-curso (REQ-PO-04 a
 // REQ-PO-11), colocado junto de `page.tsx` (T9). Mesmo padrão orientado a
-// metadados de `PreCursoForm.tsx`: os 5 blocos do Dicionário de Campos
-// (spec.md) viram uma tabela `BLOCOS` interpretada genericamente por
-// `renderCampo`, em vez de 26 blocos JSX escritos à mão. Diferente do
-// Pré-Curso, nenhum campo tem opção "Outro/Outra" nem escala 0-5 - só o
-// único condicional (`posExecAlteracaoDetalhe`) via `visivelSe`.
+// metadados de `PreCursoForm.tsx`: os 5 blocos do questionário fonte
+// (`docs/Questionario_do_Gestor_Pos_Curso.md`) viram uma tabela `BLOCOS`
+// interpretada genericamente por `renderCampo`, em vez de 26 blocos JSX
+// escritos à mão. Os rótulos carregam a numeração do papel (1..26).
+// Diferente do Pré-Curso, nenhum campo tem opção "Qual?" nem escala 0-5 -
+// só o único condicional (`posExecAlteracaoDetalhe`, Q12) via `visivelSe` e
+// duas perguntas com alternativa excludente (Q6 e Q26).
 "use client";
 
 import { useState, type ReactNode } from "react";
@@ -25,21 +27,25 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  OPCOES_AVALIACAO_COGNITIVA,
-  OPCOES_DIFICULDADES_ENFRENTADAS,
-  OPCOES_ESTRATEGIAS_AMPLIACAO,
+  EXCLUSIVA_CONTINUIDADE,
+  EXCLUSIVA_MONITORAMENTO,
+  OPCOES_CONCEITOS_TRABALHADOS,
   OPCOES_ESTRATEGIAS_CONTINUIDADE,
-  OPCOES_HOUVE_ALTERACAO_PLANEJAMENTO,
-  OPCOES_HOUVE_DEVOLUCAO_RECURSOS,
-  OPCOES_INTENCAO_NOVA_OFERTA,
+  OPCOES_LICAO_INDIVIDUAL,
   OPCOES_MONITORAMENTO,
   OPCOES_MOTIVOS_ABANDONO,
-  OPCOES_NECESSIDADE_ADITIVO,
+  OPCOES_PLANO_ACAO,
   OPCOES_PROBLEMAS_ESTUDO,
-  OPCOES_RELACAO_DEMANDA_OFERTA,
+  OPCOES_PROVA_SITUACAO,
+  OPCOES_SIM_NAO,
   type RespostasPosCurso,
   type RespostasPosCursoParcial,
 } from "@/lib/validation/schemas/pos-curso.schema";
+import {
+  REGRAS_CONDICIONAIS_POS_CURSO,
+  condicaoPosCurso,
+} from "@/lib/pos-curso/condicionais";
+import { chavesOrfas } from "@/lib/validation/condicionais";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import type { StatusFormulario } from "@/generated/prisma/enums";
 
@@ -52,6 +58,10 @@ interface CampoDef {
   rotulo: string;
   tipo: TipoCampo;
   opcoes?: readonly string[];
+  // Opção que, no papel, nega todas as outras ("Nenhuma ação de
+  // monitoramento...") - marcá-la limpa as demais e vice-versa, espelhando o
+  // que `multiplaComExclusiva` rejeita no servidor.
+  exclusiva?: string;
   visivelSe?: (respostas: RespostasPosCursoParcial) => boolean;
 }
 
@@ -62,138 +72,183 @@ interface BlocoDef {
 
 const BLOCOS: BlocoDef[] = [
   {
-    titulo: "Bloco 1 - Acompanhamento Pedagógico",
+    titulo: "Durante o Curso - Acompanhamento Pedagógico",
     campos: [
       {
         chave: "posAcompanhProblemasEstudo",
-        rotulo: "Problemas de estudo identificados",
-        tipo: "checkboxes",
+        rotulo:
+          "1. Para o exercício pleno da profissão pretendida, é fundamental que o Docente, em conjunto com a Coordenação Didática-Pedagógica, tenha definido os problemas de estudo (desafios) que os Discentes deverão resolver. Esses problemas foram definidos?",
+        tipo: "radio",
         opcoes: OPCOES_PROBLEMAS_ESTUDO,
       },
       {
         chave: "posAcompanhConceitosTrabalhados",
-        rotulo: "Principais conceitos/temas trabalhados",
-        tipo: "textarea",
+        rotulo:
+          "2. As dimensões econômica, ambiental e sociocultural abordadas no Curso foram devidamente detalhadas pelos Docentes em conjunto com a Coordenação Didático-Pedagógica, a partir de conceitos pertinentes a cada dimensão?",
+        tipo: "radio",
+        opcoes: OPCOES_CONCEITOS_TRABALHADOS,
       },
-      { chave: "posAcompanhPlanoAcao", rotulo: "Plano de ação pedagógico adotado", tipo: "textarea" },
       {
-        chave: "posAcompanhAvaliacaoCognitiva",
-        rotulo: "Forma de avaliação cognitiva utilizada",
-        tipo: "select",
-        opcoes: OPCOES_AVALIACAO_COGNITIVA,
+        chave: "posAcompanhPlanoAcao",
+        rotulo:
+          "3. O Plano de Ação, que prepara as vivências dos alunos para as situações práticas do Curso, foi devidamente definido pelos Docentes em conjunto com a Coordenação Didático-Pedagógica responsável?",
+        tipo: "radio",
+        opcoes: OPCOES_PLANO_ACAO,
+      },
+      {
+        chave: "posAcompanhProvaSituacao",
+        rotulo:
+          "4. A \"Prova Situação\", que reconhece no primeiro dia de aula o nível de conhecimento de cada discente, foi elaborada pelos Docentes e devidamente realizada pelos alunos?",
+        tipo: "radio",
+        opcoes: OPCOES_PROVA_SITUACAO,
+      },
+      {
+        chave: "posAcompanhLicaoIndividual",
+        rotulo:
+          "5. Ao final do Curso, cada discente deve realizar a Prova chamada \"Lição Individual\". Ela foi devidamente realizada pelos alunos?",
+        tipo: "radio",
+        opcoes: OPCOES_LICAO_INDIVIDUAL,
       },
       {
         chave: "posAcompanhMonitoramento",
-        rotulo: "Estratégias de monitoramento do aprendizado",
+        rotulo:
+          "6. Quais ações de monitoramento foram realizadas durante o desenvolvimento do Curso?",
         tipo: "checkboxes",
         opcoes: OPCOES_MONITORAMENTO,
+        exclusiva: EXCLUSIVA_MONITORAMENTO,
       },
     ],
   },
   {
-    titulo: "Bloco 2 - Execução",
+    titulo: "Execução",
     campos: [
-      { chave: "posExecDataInicioReal", rotulo: "Data real de início", tipo: "data" },
-      { chave: "posExecDataTerminoReal", rotulo: "Data real de término", tipo: "data" },
+      {
+        chave: "posExecDataInicioReal",
+        rotulo: "7. Data de início do Curso/Ação de Qualificação",
+        tipo: "data",
+      },
+      {
+        chave: "posExecDataTerminoReal",
+        rotulo: "8. Data de término do Curso/Ação de Qualificação",
+        tipo: "data",
+      },
       {
         chave: "posExecCargaHorariaRealizada",
-        rotulo: "Carga horária efetivamente realizada (horas)",
+        rotulo: "9. Carga horária realizada (horas)",
         tipo: "numero",
       },
       {
         chave: "posExecDificuldadesEnfrentadas",
-        rotulo: "Dificuldades enfrentadas na execução",
-        tipo: "checkboxes",
-        opcoes: OPCOES_DIFICULDADES_ENFRENTADAS,
+        rotulo:
+          "10. Quais as dificuldades enfrentadas na execução do Curso/Ação de Qualificação?",
+        tipo: "textarea",
       },
       {
         chave: "posExecHouveAlteracaoPlanejamento",
-        rotulo: "Houve alteração no planejamento inicial?",
+        rotulo:
+          "11. Houve alguma alteração no planejamento inicial do Curso/Ação de Qualificação?",
         tipo: "radio",
-        opcoes: OPCOES_HOUVE_ALTERACAO_PLANEJAMENTO,
+        opcoes: OPCOES_SIM_NAO,
       },
       {
         chave: "posExecAlteracaoDetalhe",
-        rotulo: "Motivo e descrição da alteração",
+        rotulo: "12. Se sim, por qual motivo? Qual alteração foi necessária?",
         tipo: "textarea",
-        visivelSe: (respostas) => respostas.posExecHouveAlteracaoPlanejamento === "Sim",
+        // Mesma regra que a completude usa no encerramento - a tela não pode
+        // revelar um campo que ela não cobra, nem esconder um que ela cobre.
+        visivelSe: condicaoPosCurso("posExecAlteracaoDetalhe"),
       },
     ],
   },
   {
-    titulo: "Bloco 3 - Participação",
+    titulo: "Participação",
     campos: [
-      { chave: "posParticNumInscritos", rotulo: "Número de inscritos", tipo: "numero" },
-      { chave: "posParticNumMatriculados", rotulo: "Número de matriculados", tipo: "numero" },
-      { chave: "posParticNumConcluintes", rotulo: "Número de concluintes", tipo: "numero" },
+      { chave: "posParticNumInscritos", rotulo: "13. Número de alunos inscritos", tipo: "numero" },
+      {
+        chave: "posParticNumMatriculados",
+        rotulo: "14. Número de alunos matriculados",
+        tipo: "numero",
+      },
+      {
+        chave: "posParticNumConcluintes",
+        rotulo: "15. Número de alunos concluintes",
+        tipo: "numero",
+      },
       {
         chave: "posParticMotivosAbandono",
-        rotulo: "Principal motivo de abandono",
-        tipo: "select",
+        rotulo:
+          "16. Principais motivos atestados para o abandono do Curso/Ação de Qualificação",
+        tipo: "checkboxes",
         opcoes: OPCOES_MOTIVOS_ABANDONO,
       },
       {
-        chave: "posParticRelacaoDemandaOferta",
-        rotulo: "Relação entre demanda e oferta de vagas",
-        tipo: "select",
-        opcoes: OPCOES_RELACAO_DEMANDA_OFERTA,
+        chave: "posParticDemandaMaiorQueOferta",
+        rotulo:
+          "17. A demanda pelo Curso/Ação de Qualificação foi maior do que a oferta disponibilizada?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
       },
       {
         chave: "posParticIntencaoNovaOferta",
-        rotulo: "Intenção de nova oferta do curso",
-        tipo: "select",
-        opcoes: OPCOES_INTENCAO_NOVA_OFERTA,
+        rotulo: "18. Pretendem ofertar o Curso/Ação de Qualificação novamente?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
       },
     ],
   },
   {
-    titulo: "Bloco 4 - Financeiro",
+    titulo: "Financeiro",
     campos: [
-      { chave: "posFinValorTotalExecutado", rotulo: "Valor total executado", tipo: "numero" },
       {
-        chave: "posFinValorDespesaDocentes",
-        rotulo: "Despesa com docentes/instrutores",
+        chave: "posFinValorTotal",
+        rotulo: "19. Valor total do Curso/Ação de Qualificação (R$)",
         tipo: "numero",
       },
       {
-        chave: "posFinValorDespesaMaterialDidatico",
-        rotulo: "Despesa com material didático",
+        chave: "posFinValorProfessores",
+        rotulo: "20. Valor pago para professores e/ou instrutores (R$)",
         tipo: "numero",
       },
       {
-        chave: "posFinValorDespesaInfraestrutura",
-        rotulo: "Despesa com infraestrutura",
+        chave: "posFinValorMateriais",
+        rotulo: "21. Valor pago para aquisição de materiais didáticos e insumos (R$)",
+        tipo: "numero",
+      },
+      {
+        chave: "posFinValorInfraestrutura",
+        rotulo: "22. Valor pago com infraestrutura (R$)",
+        tipo: "numero",
+      },
+      {
+        chave: "posFinValorBolsaPermanencia",
+        rotulo:
+          "23. Valor destinado a bolsa permanência (apoio aos alunos para transporte, alimentação, uniforme, equipamentos etc.) (R$)",
         tipo: "numero",
       },
       {
         chave: "posFinHouveDevolucaoRecursos",
-        rotulo: "Houve devolução de recursos?",
-        tipo: "select",
-        opcoes: OPCOES_HOUVE_DEVOLUCAO_RECURSOS,
+        rotulo: "24. Houve devolução de recursos?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
       },
-      { chave: "posFinValorDevolvido", rotulo: "Valor devolvido", tipo: "numero" },
       {
         chave: "posFinNecessidadeAditivo",
-        rotulo: "Necessidade de aditivo orçamentário",
-        tipo: "select",
-        opcoes: OPCOES_NECESSIDADE_ADITIVO,
+        rotulo: "25. Houve a necessidade de complementação financeira (aditivos)?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
       },
     ],
   },
   {
-    titulo: "Bloco 5 - Continuidade",
+    titulo: "Ações para Continuidade do Curso",
     campos: [
       {
-        chave: "posContEstrategiasContinuidade",
-        rotulo: "Estratégias de continuidade da formação",
+        chave: "posContEstrategias",
+        rotulo:
+          "26. Quais estratégias foram adotadas pensando na continuidade e na ampliação da formação proposta?",
         tipo: "checkboxes",
         opcoes: OPCOES_ESTRATEGIAS_CONTINUIDADE,
-      },
-      {
-        chave: "posContEstrategiasAmpliacao",
-        rotulo: "Estratégias de ampliação da formação",
-        tipo: "checkboxes",
-        opcoes: OPCOES_ESTRATEGIAS_AMPLIACAO,
+        exclusiva: EXCLUSIVA_CONTINUIDADE,
       },
     ],
   },
@@ -232,17 +287,38 @@ export function PosCursoForm({
     setAlterados((atual) => new Set(atual).add(chave));
   }
 
-  function toggleCheckbox(chave: Chave, opcao: string, marcado: boolean) {
-    const atuais = (respostas[chave] as string[] | undefined) ?? [];
-    const novos = marcado ? [...atuais, opcao] : atuais.filter((item) => item !== opcao);
-    setCampo(chave, novos);
+  // Espelha, na tela, a regra que `multiplaComExclusiva` aplica no servidor:
+  // marcar a opção excludente limpa as demais, e marcar qualquer outra
+  // desmarca a excludente.
+  function toggleCheckbox(campo: CampoDef, opcao: string, marcado: boolean) {
+    const atuais = (respostas[campo.chave] as string[] | undefined) ?? [];
+
+    let novos: string[];
+    if (!marcado) {
+      novos = atuais.filter((item) => item !== opcao);
+    } else if (campo.exclusiva !== undefined && opcao === campo.exclusiva) {
+      novos = [opcao];
+    } else {
+      novos = [...atuais.filter((item) => item !== campo.exclusiva), opcao];
+    }
+
+    setCampo(campo.chave, novos);
   }
 
   async function salvarRascunho() {
     setErro(null);
     setSalvando(true);
     try {
-      const corpo = Object.fromEntries([...alterados].map((chave) => [chave, respostas[chave]]));
+      // Q12 que ficou órfã (o Gestor detalhou a alteração e depois mudou
+      // Q11 para "Não") não vai no PATCH: o valor continua no estado local,
+      // caso ele volte atrás, mas não é gravado como resposta de uma
+      // pergunta que não se aplica mais.
+      const orfas = new Set<string>(chavesOrfas(REGRAS_CONDICIONAIS_POS_CURSO, respostas));
+      const corpo = Object.fromEntries(
+        [...alterados]
+          .filter((chave) => !orfas.has(chave))
+          .map((chave) => [chave, respostas[chave]]),
+      );
       const res = await fetch(`/api/pos-cursos/${cdCurso}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...headerCSRF() },
@@ -402,9 +478,7 @@ export function PosCursoForm({
                   id={`${campo.chave}-${indice}`}
                   data-testid={`campo-${campo.chave}-opcao-${indice}`}
                   checked={((valor as string[] | undefined) ?? []).includes(opcao)}
-                  onCheckedChange={(marcado) =>
-                    toggleCheckbox(campo.chave, opcao, marcado === true)
-                  }
+                  onCheckedChange={(marcado) => toggleCheckbox(campo, opcao, marcado === true)}
                   disabled={desabilitado}
                 />
                 {opcao}

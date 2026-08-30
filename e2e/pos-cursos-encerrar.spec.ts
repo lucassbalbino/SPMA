@@ -35,35 +35,39 @@ async function logarComCsrf(cpf: string): Promise<{ idSessao: string; idCsrf: st
   return { idSessao, idCsrf };
 }
 
-// Os 26 campos do Dicionário de Campos (spec.md), incluindo o único
-// condicional, aplicável nesta fixture.
+// As 26 chaves do questionário fonte
+// (`docs/Questionario_do_Gestor_Pos_Curso.md`), incluindo o único condicional.
 const RESPOSTA_COMPLETA = {
-  posAcompanhProblemasEstudo: ["Dificuldade de concentração"],
-  posAcompanhConceitosTrabalhados: "Sustentabilidade e turismo de base comunitária",
-  posAcompanhPlanoAcao: "Reforço individual semanal",
-  posAcompanhAvaliacaoCognitiva: "Prova escrita",
-  posAcompanhMonitoramento: ["Relatórios de frequência"],
+  posAcompanhProblemasEstudo:
+    "Sim, foram definidos pelos Docentes em conjunto com a Coordenação Didático-Pedagógica.",
+  posAcompanhConceitosTrabalhados:
+    "Sim, foram detalhados os conceitos pelos Docentes em conjunto com a Coordenação Didático-Pedagógica.",
+  posAcompanhPlanoAcao:
+    "Sim, o Plano de Ação foi definido pelos Docentes em conjunto com a Coordenação Didático-Pedagógica responsável.",
+  posAcompanhProvaSituacao:
+    "Sim, foi elaborada pelos Docentes, mas só foi realizada pelos alunos no primeiro dia de aula.",
+  posAcompanhLicaoIndividual: "Sim, foi realizada.",
+  posAcompanhMonitoramento: ["Reuniões periódicas com alunos."],
   posExecDataInicioReal: "2026-03-01",
   posExecDataTerminoReal: "2026-06-01",
   posExecCargaHorariaRealizada: 120,
-  posExecDificuldadesEnfrentadas: ["Evasão de alunos"],
+  posExecDificuldadesEnfrentadas: "Evasão de alunos nas semanas de chuva forte",
   posExecHouveAlteracaoPlanejamento: "Sim",
   posExecAlteracaoDetalhe: "Curso estendido em 2 semanas por feriados",
   posParticNumInscritos: 40,
   posParticNumMatriculados: 35,
   posParticNumConcluintes: 30,
-  posParticMotivosAbandono: "Conflito com trabalho",
-  posParticRelacaoDemandaOferta: "Demanda superou a oferta de vagas",
+  posParticMotivosAbandono: ["Dificuldades financeiras", "Horário inapropriado das aulas"],
+  posParticDemandaMaiorQueOferta: "Sim",
   posParticIntencaoNovaOferta: "Sim",
-  posFinValorTotalExecutado: 15000,
-  posFinValorDespesaDocentes: 8000,
-  posFinValorDespesaMaterialDidatico: 3000,
-  posFinValorDespesaInfraestrutura: 4000,
+  posFinValorTotal: 15000,
+  posFinValorProfessores: 8000,
+  posFinValorMateriais: 3000,
+  posFinValorInfraestrutura: 4000,
+  posFinValorBolsaPermanencia: 0,
   posFinHouveDevolucaoRecursos: "Não",
-  posFinValorDevolvido: 0,
   posFinNecessidadeAditivo: "Não",
-  posContEstrategiasContinuidade: ["Nova turma no mesmo local"],
-  posContEstrategiasAmpliacao: ["Aumento do número de vagas"],
+  posContEstrategias: ["Estabelecimento de parcerias junto a entidades públicas."],
 };
 
 test.beforeAll(() => {
@@ -183,6 +187,45 @@ test("REQ-PO-08: PATCH após o encerramento recebe 409 (fecha o gate fim-a-fim c
   });
 
   expect(res.status()).toBe(409);
+
+  await cliente.dispose();
+});
+
+test("condicional órfã (Q12 preenchida com Q11='Não') é descartada no encerramento", async () => {
+  const cdCurso = criarPosCursoFixture();
+
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const cliente = await novoCliente();
+
+  // Q11="Sim" + Q12 detalhada...
+  await cliente.patch(`/api/pos-cursos/${cdCurso}`, {
+    data: RESPOSTA_COMPLETA,
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  // ...e o Gestor muda de ideia: Q11 vira "Não". A gravação PRESERVA o
+  // detalhe (merge raso, REQ-PO-04) - é só no encerramento que ele sai.
+  await cliente.patch(`/api/pos-cursos/${cdCurso}`, {
+    data: { posExecHouveAlteracaoPlanejamento: "Não" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect(getPosCurso(cdCurso)?.respostas?.posExecAlteracaoDetalhe).toBe(
+    "Curso estendido em 2 semanas por feriados",
+  );
+
+  const res = await cliente.post(`/api/pos-cursos/${cdCurso}/encerrar`, {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(200);
+  const persistido = getPosCurso(cdCurso);
+  expect(persistido?.status).toBe("ENCERRADO");
+  expect(persistido?.respostas?.posExecHouveAlteracaoPlanejamento).toBe("Não");
+  expect(persistido?.respostas).not.toHaveProperty("posExecAlteracaoDetalhe");
+  // o resto do questionário continua intacto
+  expect(persistido?.respostas?.posExecDificuldadesEnfrentadas).toBe(
+    "Evasão de alunos nas semanas de chuva forte",
+  );
 
   await cliente.dispose();
 });

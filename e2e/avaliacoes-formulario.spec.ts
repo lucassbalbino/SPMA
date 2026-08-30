@@ -90,14 +90,13 @@ async function selecionar(page: Page, testIdTrigger: string, rotulo: string) {
     .click();
 }
 
-async function marcarCheckbox(escopo: Locator, rotulo: string) {
-  const item = escopo.getByRole("checkbox", { name: rotulo, exact: true });
-  await item.click();
-  await expect(item).toBeChecked();
-}
-
-async function marcarRadio(escopo: Locator, rotulo: string) {
-  const item = escopo.getByRole("radio", { name: rotulo, exact: true });
+// Marca uma opção de radio/checkbox pelo testid da própria opção
+// (`campo-<chave>-opcao-<indice>`), e não pelo rótulo: depois da troca para
+// o questionário fonte, vários blocos passaram a ter mais de um grupo com as
+// mesmas alternativas ("Sim"/"Não", "Sim"/"Parcialmente"/"Não"), o que
+// tornaria ambíguo qualquer `getByRole` por nome dentro do bloco.
+async function marcarOpcao(page: Page, chave: string, indice: number) {
+  const item = page.getByTestId(`campo-${chave}-opcao-${indice}`);
   await item.click();
   await expect(item).toBeChecked();
 }
@@ -123,104 +122,123 @@ async function encerrar(page: Page) {
 }
 
 async function preencherParte1(page: Page) {
+  // Dados Pessoais (Q3-Q9)
   const b1 = blocoParte1(page, 1);
   await abrirBloco(b1, "bloco-parte1-1");
   await selecionar(page, "campo-avalPessoalEstado-select", "SP");
   await page.getByTestId("campo-avalPessoalMunicipio").fill("Ubatuba");
-  await selecionar(page, "campo-avalPessoalGenero-select", "Feminino");
-  await selecionar(page, "campo-avalPessoalFaixaEtaria-select", "25 a 34 anos");
-  await selecionar(page, "campo-avalPessoalEscolaridade-select", "Médio completo");
-  await selecionar(page, "campo-avalPessoalRacaEtnia-select", "Parda");
-  await marcarRadio(b1, "Não");
+  await marcarOpcao(page, "avalPessoalGenero", 0); // Feminino
+  await marcarOpcao(page, "avalPessoalFaixaEtaria", 2); // 26 a 35 anos
+  await selecionar(page, "campo-avalPessoalEscolaridade-select", "Ensino médio completo");
+  await marcarOpcao(page, "avalPessoalRacaEtnia", 2); // Pardo
+  await marcarOpcao(page, "avalPessoalCondicaoPcd", 0); // Não sou uma PCD
   await abrirBloco(b1, "bloco-parte1-1");
 
+  // Situação Profissional (Q10-Q13)
   const b2 = blocoParte1(page, 2);
   await abrirBloco(b2, "bloco-parte1-2");
-  await selecionar(page, "campo-avalProfissCondicaoTrabalho-select", "Desempregado(a)");
-  await marcarRadio(b2, "Sim");
-  await page.getByTestId("campo-avalProfissAtividadeEspecifica").fill("Recepção em pousada local");
-  await selecionar(page, "campo-avalProfissFaixaRenda-select", "Até 1 salário mínimo");
+  await selecionar(page, "campo-avalProfissCondicaoTrabalho-select", "Desempregado");
+  await marcarOpcao(page, "avalProfissAtuaTurismo", 0); // Sim
+  await selecionar(
+    page,
+    "campo-avalProfissAtividadeEspecifica-select",
+    "Alojamento (meios de hospedagem)",
+  );
+  await selecionar(page, "campo-avalProfissFaixaRenda-select", "Até 01 salário mínimo");
   await abrirBloco(b2, "bloco-parte1-2");
 
+  // Experiência (Q14-Q16)
   const b3 = blocoParte1(page, 3);
   await abrirBloco(b3, "bloco-parte1-3");
-  await b3.getByRole("radio", { name: "Não", exact: true }).first().click();
-  await b3.getByRole("radio", { name: "Sim", exact: true }).last().click();
-  await selecionar(page, "campo-avalExperienciaTipoCursoAnterior-select", "Curso livre");
+  await marcarOpcao(page, "avalExperienciaTrabalhoPrevio", 1); // Não
+  await marcarOpcao(page, "avalExperienciaCursoAnterior", 0); // Sim
+  await selecionar(
+    page,
+    "campo-avalExperienciaTipoCursoAnterior-select",
+    "Atualização profissional",
+  );
   await abrirBloco(b3, "bloco-parte1-3");
 
+  // Motivação (Q17-Q18)
   const b4 = blocoParte1(page, 4);
   await abrirBloco(b4, "bloco-parte1-4");
-  await marcarCheckbox(b4, "Geração de renda");
-  await selecionar(page, "campo-avalMotivFormaConhecimento-select", "Redes sociais");
+  await marcarOpcao(page, "avalMotivMotivosParticipacao", 0); // Conseguir um emprego
+  await marcarOpcao(page, "avalMotivFormaConhecimento", 1); // pelas Redes Sociais
   await abrirBloco(b4, "bloco-parte1-4");
 
+  // Expectativas (Q19-Q21)
   const b5 = blocoParte1(page, 5);
   await abrirBloco(b5, "bloco-parte1-5");
-  await selecionar(page, "campo-avalExpectAtendimento-select", "Atendeu totalmente");
-  await selecionar(page, "campo-avalExpectEmprego-select", "Atendeu parcialmente");
-  await selecionar(page, "campo-avalExpectRenda-select", "Superou minhas expectativas");
+  await marcarOpcao(page, "avalExpectAtendimento", 0); // Sim
+  await marcarOpcao(page, "avalExpectEmprego", 1); // Talvez
+  await marcarOpcao(page, "avalExpectRenda", 2); // Média
   await abrirBloco(b5, "bloco-parte1-5");
 }
 
 async function preencherParte2Concluiu(page: Page) {
+  // Participação (Q22, Q23)
   const b1 = blocoParte2(page, 1);
   await abrirBloco(b1, "bloco-parte2-1");
-  await marcarRadio(b1, "Sim");
-  await page.getByTestId("campo-avalParticipPercentualFrequencia").fill("90");
+  await marcarOpcao(page, "avalParticipConcluiuCurso", 0); // Sim
+  await marcarOpcao(page, "avalParticipPercentualFrequencia", 3); // 76% a 100%
   await abrirBloco(b1, "bloco-parte2-1");
 
+  // Avaliação do curso (Q24)
   const b2 = blocoParte2(page, 2);
   await abrirBloco(b2, "bloco-parte2-2");
-  await selecionar(page, "campo-avalCursoDinamicasInclusao-select", "5 - Ótimo");
-  await selecionar(page, "campo-avalCursoMaterialDidatico-select", "4 - Bom");
-  await selecionar(page, "campo-avalCursoConteudo-select", "5 - Ótimo");
-  await selecionar(page, "campo-avalCursoClareza-select", "4 - Bom");
-  await selecionar(page, "campo-avalCursoConhecimentoInstrutores-select", "5 - Ótimo");
-  await selecionar(page, "campo-avalCursoOrganizacao-select", "4 - Bom");
-  await selecionar(page, "campo-avalCursoInfraestruturaBasica-select", "3 - Regular");
-  await selecionar(page, "campo-avalCursoInfraestruturaSalaAula-select", "3 - Regular");
+  await selecionar(page, "campo-avalCursoDinamicasInclusao-select", "Ótimo");
+  await selecionar(page, "campo-avalCursoMaterialDidatico-select", "Bom");
+  await selecionar(page, "campo-avalCursoConteudo-select", "Ótimo");
+  await selecionar(page, "campo-avalCursoClareza-select", "Bom");
+  await selecionar(page, "campo-avalCursoConhecimentoInstrutores-select", "Ótimo");
+  await selecionar(page, "campo-avalCursoOrganizacao-select", "Bom");
+  await selecionar(page, "campo-avalCursoInfraestruturaBasica-select", "Regular");
+  await selecionar(page, "campo-avalCursoInfraestruturaSalaAula-select", "Regular");
   await abrirBloco(b2, "bloco-parte2-2");
 
+  // Aprendizado (Q25-Q27)
   const b3 = blocoParte2(page, 3);
   await abrirBloco(b3, "bloco-parte2-3");
-  await selecionar(page, "campo-avalAprendizAmpliacaoConhecimento-select", "Sim, totalmente");
-  await selecionar(page, "campo-avalAprendizAtendimentoExpectativas-select", "Atendeu totalmente");
-  await selecionar(
-    page,
-    "campo-avalAprendizSensacaoPreparo-select",
-    "Sim, me sinto totalmente preparado(a)",
-  );
+  await marcarOpcao(page, "avalAprendizAmpliacaoConhecimento", 0); // Ampliou / Melhorou
+  await marcarOpcao(page, "avalAprendizAtendimentoExpectativas", 0); // Sim
+  await marcarOpcao(page, "avalAprendizSensacaoPreparo", 1); // Parcialmente
   await abrirBloco(b3, "bloco-parte2-3");
 
+  // Continuidade nos Estudos (Q28)
   const b4 = blocoParte2(page, 4);
   await abrirBloco(b4, "bloco-parte2-4");
-  await selecionar(page, "campo-avalContinuidadeRetomadaEstudos-select", "Pretendo retomar em breve");
+  await marcarOpcao(page, "avalContinuidadeRetomadaEstudos", 3); // Sim, ao ensino técnico
   await abrirBloco(b4, "bloco-parte2-4");
 
+  // Motivações após o Curso (Q29)
   const b5 = blocoParte2(page, 5);
   await abrirBloco(b5, "bloco-parte2-5");
-  await marcarCheckbox(b5, "Maior autoconfiança");
+  await marcarOpcao(page, "avalMotivacoesPosPercepcoes", 0);
   await abrirBloco(b5, "bloco-parte2-5");
 
+  // Oportunidades Reais de Trabalho e Emprego (Q30, Q31)
   const b6 = blocoParte2(page, 6);
   await abrirBloco(b6, "bloco-parte2-6");
-  await selecionar(page, "campo-avalOportunSituacaoTrabalho-select", "Empregado(a) na área de Turismo");
-  await selecionar(page, "campo-avalOportunIntencaoAtuarTurismo-select", "Sim");
+  await marcarOpcao(page, "avalOportunSituacaoTrabalho", 0); // emprego com carteira no Turismo
+  await marcarOpcao(page, "avalOportunIntencaoAtuarTurismo", 0); // Sim
   await abrirBloco(b6, "bloco-parte2-6");
 
+  // Efetivação no Emprego e Aumento da Renda (Q32-Q34)
   const b7 = blocoParte2(page, 7);
   await abrirBloco(b7, "bloco-parte2-7");
-  await selecionar(page, "campo-avalEfetivEmprego-select", "Sim");
-  await selecionar(page, "campo-avalEfetivAumentoRenda-select", "Sim");
-  await selecionar(page, "campo-avalEfetivMelhoriaPadraoVida-select", "Sim");
+  await marcarOpcao(page, "avalEfetivEmprego", 0); // Sim
+  await marcarOpcao(page, "avalEfetivAumentoRenda", 0); // Sim
+  await marcarOpcao(page, "avalEfetivMelhoriaPadraoVida", 1); // Sim, parcialmente
   await abrirBloco(b7, "bloco-parte2-7");
 
+  // Avaliação geral (Q35-Q37)
   const b8 = blocoParte2(page, 8);
   await abrirBloco(b8, "bloco-parte2-8");
   await page.getByTestId("campo-avalGeralNota").fill("9");
-  await selecionar(page, "campo-avalGeralMelhoriasComunidade-select", "Sim");
-  await selecionar(page, "campo-avalGeralRecomendaCurso-select", "Sim");
+  await page
+    .getByTestId("campo-avalGeralMelhoriasComunidade")
+    .fill("Mais gente da comunidade trabalhando com receptivo");
+  await marcarOpcao(page, "avalGeralRecomendaCurso", 0); // Sim
   await abrirBloco(b8, "bloco-parte2-8");
 }
 
@@ -272,8 +290,9 @@ test("Concluiu='Não' + motivo, sem preencher o restante da Parte 2, encerra com
 
   const b1 = blocoParte2(page, 1);
   await abrirBloco(b1, "bloco-parte2-1");
-  await b1.getByRole("radio", { name: "Não", exact: true }).click();
-  await marcarCheckbox(b1, "Falta de tempo");
+  await marcarOpcao(page, "avalParticipConcluiuCurso", 1); // Não
+  await marcarOpcao(page, "avalParticipMotivoNaoConclusao", 3); // Problemas pessoais/familiares
+  await marcarOpcao(page, "avalParticipPercentualFrequencia", 0); // Até 25%
   await abrirBloco(b1, "bloco-parte2-1");
 
   const respostaSalvar = await salvarRascunho(page);

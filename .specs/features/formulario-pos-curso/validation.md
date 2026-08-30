@@ -5,6 +5,9 @@
 **Diff range**: `10694c7^..HEAD` (12 commits, `docs(pos-curso): add spec` through `feat(pos-curso): add fill-in and closure screen`, HEAD `3f697d0`)
 **Verifier**: independent sub-agent (author ≠ verifier)
 
+
+> ⚠️ **Este relatório precede a substituição dos Dicionários de Campos (AD-035, 2026-08-29).** O PASS registrado abaixo verificou a implementação contra o dicionário **derivado**, não contra o questionário fonte do cliente. A arquitetura verificada (JSON + Zod na borda + `completude.ts` como autoridade condicional), os requisitos REQ-*/AVAL-* e os gates de encerramento continuam valendo — o que mudou foi o **conteúdo** do questionário: o Pós-Curso manteve as 26 chaves, mas ganhou 2 perguntas (Q5 Lição Individual, Q23 bolsa permanência), perdeu `posFinValorDevolvido`, fundiu as duas de continuidade em Q26 e mudou 6 tipos de campo. Testes unitários e de forma foram atualizados e passam; **a suíte e2e desta feature ainda não foi reexecutada após a troca**. Vale um novo ciclo do Verifier antes de considerar a feature verificada contra o documento do cliente.
+
 ---
 
 ## Task Completion

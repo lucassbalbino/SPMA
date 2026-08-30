@@ -37,13 +37,15 @@ O Gestor Ofertante (GO) precisa registrar, durante e após a execução de um cu
 
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 |---|---|---|---|
-| Lista nominal dos 26 itens de dado (o documento fonte só descreve por bloco/categoria) | Deriva-se o dicionário completo de campos (seção "Dicionário de Campos" abaixo) a partir das descrições de bloco (5.1) e do único condicional (5.2) | Mesma decisão do usuário já aplicada em `formulario-pre-curso` nesta sessão: "derive e eu reviso depois" — evita bloquear a feature por falta de planilha/anexo | y (decisão de derivar); n nos itens individuais marcados abaixo |
+| Lista nominal das perguntas do questionário | Transcrita 1:1 de `docs/Questionario_do_Gestor_Pos_Curso.md` (questionário real do cliente, recebido em 2026-08-29), Q1–Q26 → 26 chaves no schema Zod — ver "Dicionário de Campos" abaixo | O questionário fonte substituiu o dicionário que havia sido **derivado** das descrições por bloco. Contagem de chaves inalterada (26); conteúdo, não: +2 perguntas novas (Q5, Q23), −1 campo removido (`posFinValorDevolvido`), −1 por fusão (Q26 cobre continuidade e ampliação numa pergunta só) — ver AD-035 | y — é o documento do cliente, não mais uma derivação |
 | Pré-condição de criação do Pós-Curso (o doc só diz "durante e após a execução", sem amarrar ao status do Pré-Curso) | Pós-Curso pode ser criado independente do status do Pré-Curso vinculado (`EM_ANDAMENTO` ou `ENCERRADO`) — sem gate entre os dois formulários | Decisão explícita do usuário nesta sessão | y |
-| Nomes/opções das 3 categorias de despesa do bloco Financeiro (doc cita só "por categoria de despesa", sem listar quais) | Docentes/Instrutores, Material Didático, Infraestrutura (ver Dicionário de Campos, Bloco 4) | Categorias plausíveis de custeio de um curso de qualificação, mantendo o total de itens do bloco compatível com a contagem de 26 do documento fonte | n — revisar com o cliente antes do encerramento real da feature em produção |
-| "Motivo e descrição da alteração" (campo revelado pela condicional de Execução) tratado como 1 único campo de texto livre, não 2 campos separados | `posExecAlteracaoDetalhe: texto livre` | O doc lista o campo revelado no singular ("Campo revelado"); um único campo de texto livre cobre motivo+descrição sem inventar uma segunda pergunta que o doc não pede | n — revisar |
-| Opções dos campos de seleção sem lista explícita no doc (problemas de estudo, avaliação cognitiva, monitoramento, dificuldades enfrentadas, relação demanda/oferta, intenção de nova oferta, estratégias de continuidade, estratégias de ampliação) | Ver Dicionário de Campos | Mesma decisão acima — derivação com base no domínio (curso de qualificação profissional financiado por programa público), análoga ao `formulario-pre-curso` | n — revisar |
-| "Motivos de abandono" é seleção única (não múltipla) | Seleção única (radio) | Já travado por **AD-025** (`STATE.md`) — "motivos de abandono (pós-curso do gestor)" é um dos 6 campos resolvidos como seleção única; reuso direto, não uma nova decisão desta feature | y |
+| Categorias de despesa do bloco Financeiro | Q20 professores/instrutores, Q21 materiais didáticos e insumos, Q22 infraestrutura, Q23 bolsa permanência — quatro categorias, não três | Transcritas do questionário fonte; a quarta (bolsa permanência) não existia no dicionário derivado | y |
+| "Motivo e descrição da alteração" (Q12) tratado como 1 único campo de texto livre | `posExecAlteracaoDetalhe: texto livre` | Confirmado pelo questionário fonte: Q12 é uma única pergunta ABERTA ("Se sim, por qual motivo? Qual alteração foi necessária?") | y |
+| Opções dos campos de seleção | Transcritas do questionário fonte — ver Dicionário de Campos | Eram derivadas do domínio enquanto não havia anexo. Correções notáveis: Q2/Q3/Q4 eram texto livre ou enum inventado e são alternativas fechadas; Q10 vira texto ABERTO; Q17 e Q18 são Sim/Não, não escalas de 3 opções | y |
+| "Motivos de abandono" (Q16) é seleção **múltipla** | `sel-múltipla` (≥1), 10 opções idênticas às do questionário do Aluno (Q22.1) | **Supera o AD-025** (ver AD-036): aquele AD travou o campo como seleção única quando a lista real ainda não existia. O enunciado do papel está no plural ("Principais motivos") e a pergunta equivalente do Aluno vem marcada explicitamente como MÚLTIPLA ESCOLHA. Decisão explícita do usuário nesta sessão | y |
 | Validação de ordem entre as duas datas reais de execução (`posExecDataTerminoReal` não pode ser anterior a `posExecDataInicioReal`) | Rejeitar a gravação com HTTP 400 quando ambas as datas estiverem presentes no estado mesclado (existente + patch) | Mesma regra e mesma técnica (`ordemDatasValida`, validado contra o estado mesclado) que `formulario-pre-curso` teve de adicionar depois que o Verifier encontrou a lacuna nas datas previstas — aplicada aqui desde o início para as datas reais, que têm a mesma natureza de par ordenado | y — reuso de padrão já estabelecido, incluindo a lição registrada em `.specs/LESSONS.md` |
+| Alternativa excludente de Q6 e Q26 ("Nenhuma ação de monitoramento...", "Não foi adotada nenhuma estratégia...") | Rejeitada com HTTP 400 quando combinada com qualquer outra opção (`multiplaComExclusiva`), e desmarcada automaticamente na UI | Mesma decisão aplicada aos 5 campos equivalentes do Pré-Curso nesta sessão | y |
+| Q16 (motivos de abandono) não oferece alternativa "não houve abandono" | Mantido como no papel: a pergunta é obrigatória e exige ≥1 opção, sendo "Outro" a válvula de escape | Fidelidade ao questionário fonte, que não traz essa alternativa — diferente do dicionário derivado, que tinha inventado "Não houve abandono". Um curso sem nenhuma evasão obriga o gestor a marcar "Outro" | n — vale confirmar com o cliente se falta uma alternativa "Não houve abandono" |
 
 **Open questions:** none - all resolved or logged above (alguns marcados como pendentes de confirmação do cliente antes de produção — ver coluna "Confirmed?").
 
@@ -51,60 +53,79 @@ O Gestor Ofertante (GO) precisa registrar, durante e após a execução de um cu
 
 ## Dicionário de Campos (Anexo — base para o Zod schema de `respostas`)
 
-Chaves em camelCase, prefixo `pos` seguido do bloco, para uso direto como propriedades do JSON `PosCurso.respostas`. `sel-única` / `sel-múltipla` = seleção; `Outro?` = nenhum campo desta feature tem opção "Outro/Outra" (diferente do Pré-Curso — não há menção a isso na seção 5 do documento fonte).
+**Fonte:** `docs/Questionario_do_Gestor_Pos_Curso.md` (questionário real do cliente, recebido em 2026-08-29). A numeração `Q1..Q26` abaixo é a do papel. Este anexo **substituiu** o dicionário derivado que existia antes dessa data — ver AD-035 em `STATE.md`.
 
-### Bloco 1 — Acompanhamento Pedagógico (5 itens, todos obrigatórios)
+O arquivo fonte reúne dois momentos de coleta — "FORMULÁRIO – DURANTE O CURSO" (Q1–Q6) e "FORMULÁRIO PÓS-CURSO" (Q7–Q26) — num único registro de Pós-Curso, como esta feature já modelava.
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `posAcompanhProblemasEstudo` | Problemas de estudo identificados | sel-múltipla, obrigatório (≥1): Dificuldade de leitura e interpretação / Dificuldade de concentração / Baixa frequência às aulas / Dificuldade de acesso a material didático / Conflito entre estudo e trabalho / Nenhum problema identificado |
-| `posAcompanhConceitosTrabalhados` | Principais conceitos/temas trabalhados | texto livre |
-| `posAcompanhPlanoAcao` | Plano de ação pedagógico adotado | texto livre |
-| `posAcompanhAvaliacaoCognitiva` | Forma de avaliação cognitiva utilizada | sel-única: Prova escrita / Trabalho prático / Avaliação oral / Portfólio / Não foi realizada avaliação cognitiva |
-| `posAcompanhMonitoramento` | Estratégias de monitoramento do aprendizado | sel-múltipla, obrigatório (≥1): Reuniões periódicas com os alunos / Acompanhamento individual / Relatórios de frequência / Feedback dos professores / Nenhum monitoramento formal |
+Chaves em camelCase, para uso direto como propriedades do JSON `PosCurso.respostas`. `sel-única` / `sel-múltipla` = seleção; `excludente` = alternativa que nega todas as outras e não pode ser combinada com nenhuma (rejeitada com 400 pelo `multiplaComExclusiva`, `src/lib/validation/multipla.ts`).
 
-### Bloco 2 — Execução (6 chaves: 5 diretas + 1 condicional, todos obrigatórios quando aplicável)
+### Durante o Curso — Acompanhamento Pedagógico (Q1–Q6, 6 itens, todos obrigatórios)
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `posExecDataInicioReal` | Data real de início | data |
-| `posExecDataTerminoReal` | Data real de término | data (SHALL ser ≥ `posExecDataInicioReal` — edge case) |
-| `posExecCargaHorariaRealizada` | Carga horária efetivamente realizada (horas) | número inteiro > 0 |
-| `posExecDificuldadesEnfrentadas` | Dificuldades enfrentadas na execução | sel-múltipla, obrigatório (≥1): Evasão de alunos / Problemas de infraestrutura / Indisponibilidade de professores / Questões climáticas / Restrições orçamentárias / Baixa adesão da comunidade / Nenhuma dificuldade |
-| `posExecHouveAlteracaoPlanejamento` | Houve alteração no planejamento inicial? | sel-única: Sim / Não |
-| *(condicional)* `posExecAlteracaoDetalhe` | Motivo e descrição da alteração | texto livre, obrigatório apenas se `posExecHouveAlteracaoPlanejamento` = "Sim" |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `posAcompanhProblemasEstudo` | 1 | Os problemas de estudo (desafios) que os Discentes deverão resolver foram definidos? | sel-única: definidos com a Coordenação / definidos sem a Coordenação / não foram definidos / Não se aplica |
+| `posAcompanhConceitosTrabalhados` | 2 | As dimensões econômica, ambiental e sociocultural foram detalhadas a partir de conceitos pertinentes a cada dimensão? | sel-única: detalhados com a Coordenação / detalhados sem a Coordenação / não foram detalhados / Não se aplica |
+| `posAcompanhPlanoAcao` | 3 | O Plano de Ação foi definido pelos Docentes em conjunto com a Coordenação Didático-Pedagógica? | sel-única: definido com a Coordenação / definido sem a Coordenação / não foi definido / Não se aplica |
+| `posAcompanhProvaSituacao` | 4 | A "Prova Situação" foi elaborada pelos Docentes e devidamente realizada pelos alunos? | sel-única: elaborada e realizada no 1º dia e ao longo do curso / elaborada e realizada só no 1º dia / não foi elaborada / Não se aplica |
+| `posAcompanhLicaoIndividual` | 5 | A "Lição Individual" (prova de encerramento) foi devidamente realizada pelos alunos? | sel-única: Sim, foi realizada. / Não foi realizada. / Não se aplica. |
+| `posAcompanhMonitoramento` | 6 | Quais ações de monitoramento foram realizadas durante o desenvolvimento do Curso? | sel-múltipla (≥1): Reuniões com alunos / Reuniões com professores / Acompanhamento individualizado / Reuniões com parceiros / Registros administrativos periódicos / **excludente:** "Nenhuma ação de monitoramento foi realizada..." |
 
-### Bloco 3 — Participação (6 itens, todos obrigatórios)
+> Q2, Q3 e Q4 eram **texto livre** ou enum inventado no dicionário derivado; no papel são as quatro alternativas fechadas acima. Q5 (`posAcompanhLicaoIndividual`) é pergunta **nova** — não existia no dicionário derivado.
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `posParticNumInscritos` | Número de inscritos | número inteiro ≥ 0 |
-| `posParticNumMatriculados` | Número de matriculados | número inteiro ≥ 0 |
-| `posParticNumConcluintes` | Número de concluintes | número inteiro ≥ 0 |
-| `posParticMotivosAbandono` | Principal motivo de abandono | sel-única (**AD-025**): Dificuldades financeiras / Conflito com trabalho / Mudança de endereço / Desmotivação / Problemas de saúde / Não houve abandono |
-| `posParticRelacaoDemandaOferta` | Relação entre demanda e oferta de vagas | sel-única: Demanda superou a oferta de vagas / Demanda foi igual à oferta / Demanda foi menor que a oferta |
-| `posParticIntencaoNovaOferta` | Intenção de nova oferta do curso | sel-única: Sim / Não / Ainda não definido |
+### Execução (Q7–Q12, 6 chaves: 5 diretas + 1 condicional)
 
-### Bloco 4 — Financeiro (7 itens, todos obrigatórios)
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `posExecDataInicioReal` | 7 | Data de início do Curso/Ação de Qualificação | data (`YYYY-MM-DD`) |
+| `posExecDataTerminoReal` | 8 | Data de término do Curso/Ação de Qualificação | data, não anterior a Q7 |
+| `posExecCargaHorariaRealizada` | 9 | Carga horária realizada (horas) | inteiro > 0 |
+| `posExecDificuldadesEnfrentadas` | 10 | Quais as dificuldades enfrentadas na execução do Curso? | **texto livre** (marcado ABERTO no papel) |
+| `posExecHouveAlteracaoPlanejamento` | 11 | Houve alguma alteração no planejamento inicial? | sel-única: Sim / Não |
+| `posExecAlteracaoDetalhe` | 12 | *(condicional)* Se sim, por qual motivo? Qual alteração foi necessária? | texto livre, obrigatório apenas se Q11 = "Sim" (REQ-PO-07) |
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `posFinValorTotalExecutado` | Valor total executado | valor monetário ≥ 0 |
-| `posFinValorDespesaDocentes` | Despesa com docentes/instrutores | valor monetário ≥ 0 |
-| `posFinValorDespesaMaterialDidatico` | Despesa com material didático | valor monetário ≥ 0 |
-| `posFinValorDespesaInfraestrutura` | Despesa com infraestrutura | valor monetário ≥ 0 |
-| `posFinHouveDevolucaoRecursos` | Houve devolução de recursos? | sel-única: Sim / Não |
-| `posFinValorDevolvido` | Valor devolvido | valor monetário ≥ 0 (`0` quando não houve devolução — resposta válida, não pendência; mesmo padrão do item de infraestrutura=0 do Pré-Curso) |
-| `posFinNecessidadeAditivo` | Necessidade de aditivo orçamentário | sel-única: Sim / Não |
+> Q10 era seleção múltipla com opções inventadas no dicionário derivado; o papel marca **(ABERTO)**.
 
-### Bloco 5 — Continuidade (2 itens, todos obrigatórios)
+### Participação (Q13–Q18, 6 itens, todos obrigatórios)
 
-| Chave | Rótulo | Tipo |
-|---|---|---|
-| `posContEstrategiasContinuidade` | Estratégias de continuidade da formação | sel-múltipla, obrigatório (≥1): Nova turma no mesmo local / Ampliação para outros municípios / Parceria com instituição de ensino / Criação de curso avançado / Nenhuma estratégia definida |
-| `posContEstrategiasAmpliacao` | Estratégias de ampliação da formação | sel-múltipla, obrigatório (≥1): Busca de novos parceiros financiadores / Aumento do número de vagas / Diversificação de conteúdo / Divulgação ampliada / Nenhuma estratégia definida |
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `posParticNumInscritos` | 13 | Número de alunos inscritos | inteiro ≥ 0 |
+| `posParticNumMatriculados` | 14 | Número de alunos matriculados | inteiro ≥ 0 |
+| `posParticNumConcluintes` | 15 | Número de alunos concluintes | inteiro ≥ 0 |
+| `posParticMotivosAbandono` | 16 | Principais motivos atestados para o abandono do Curso | **sel-múltipla** (≥1), 10 opções: Falta de motivação/interesse / Dificuldades financeiras / Dificuldades de aprendizagem / Problemas pessoais/familiares / Não ter com quem deixar o(s) filho(s) / Horário inapropriado das aulas / Impeditivos no trabalho / Local muito distante de casa / Professores não qualificados / Outro |
+| `posParticDemandaMaiorQueOferta` | 17 | A demanda pelo Curso foi maior do que a oferta disponibilizada? | sel-única: Sim / Não |
+| `posParticIntencaoNovaOferta` | 18 | Pretendem ofertar o Curso novamente? | sel-única: Sim / Não |
 
-**Contagem:** 5+6+6+7+2 = **26 chaves**, batendo exatamente com "Contém 26 itens de dado" (seção 5 do documento fonte). O comentário pré-existente em `prisma/schema.prisma` ("Respostas PG1..PG25") é só uma anotação descritiva anterior a esta feature, não uma contagem travada — sem divergência de convenção como a que existiu no Pré-Curso (54 vs 56): aqui a contagem de chaves do schema Zod bate 1:1 com a contagem de itens do documento fonte, porque o único condicional (`posExecAlteracaoDetalhe`) já está incluído nos "26 itens" do doc, diferente das 2 condicionais "Outro" do Pré-Curso que o doc contava junto da pergunta-mãe.
+> Q16 é **múltipla**, superando o AD-025 (ver AD-036): o enunciado está no plural e a pergunta equivalente do questionário do Aluno (Q22.1) vem marcada explicitamente como MÚLTIPLA ESCOLHA. A lista é idêntica à do Aluno, de propósito — permite cruzar a visão do gestor com a do aluno sobre o mesmo curso.
+> Q17 e Q18 são Sim/Não no papel; o dicionário derivado tinha inventado escalas de 3 opções para as duas.
+
+### Financeiro (Q19–Q25, 7 itens, todos obrigatórios)
+
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `posFinValorTotal` | 19 | Valor total do Curso/Ação de Qualificação (R$) | monetário ≥ 0 |
+| `posFinValorProfessores` | 20 | Valor pago para professores e/ou instrutores (R$) | monetário ≥ 0 |
+| `posFinValorMateriais` | 21 | Valor pago para aquisição de materiais didáticos e insumos (R$) | monetário ≥ 0 |
+| `posFinValorInfraestrutura` | 22 | Valor pago com infraestrutura (R$) | monetário ≥ 0 |
+| `posFinValorBolsaPermanencia` | 23 | Valor destinado a bolsa permanência (transporte, alimentação, uniforme, equipamentos etc.) (R$) | monetário ≥ 0 |
+| `posFinHouveDevolucaoRecursos` | 24 | Houve devolução de recursos? | sel-única: Sim / Não |
+| `posFinNecessidadeAditivo` | 25 | Houve a necessidade de complementação financeira (aditivos)? | sel-única: Sim / Não |
+
+> Q23 (`posFinValorBolsaPermanencia`) é pergunta **nova**. Em contrapartida, o campo `posFinValorDevolvido` do dicionário derivado foi **removido**: o papel pergunta apenas *se* houve devolução (Q24), nunca o valor.
+
+### Ações para Continuidade do Curso (Q26, 1 item, obrigatório)
+
+| Chave | Q | Rótulo | Tipo |
+|---|---|---|---|
+| `posContEstrategias` | 26 | Quais estratégias foram adotadas pensando na continuidade e na ampliação da formação proposta? | sel-múltipla (≥1): Parcerias com entidades públicas / Parcerias com entidades privadas / Parcerias com IES visando extensão / Integração a projetos e programas do território / Participação em editais de financiamento / **excludente:** "Não foi adotada nenhuma estratégia de continuidade e ampliação." |
+
+> O papel faz **uma** pergunta cobrindo continuidade *e* ampliação; o dicionário derivado tinha inventado duas perguntas separadas (`posContEstrategiasContinuidade` e `posContEstrategiasAmpliacao`), agora fundidas em `posContEstrategias`.
+
+**Contagem:** 6+6+6+7+1 = **26 chaves**, batendo exatamente com as 26 perguntas numeradas do questionário fonte e com o "Contém 26 itens de dado" da seção 5 do documento de especificação. O saldo em relação ao dicionário derivado (que também somava 26) é: **+2** perguntas novas (Q5 Lição Individual, Q23 bolsa permanência), **−1** campo removido (`posFinValorDevolvido`), **−1** por fusão (as duas de continuidade viraram Q26).
+
+**Condicional (1 chave, REQ-PO-07):** `posExecAlteracaoDetalhe`, exigido apenas quando `posExecHouveAlteracaoPlanejamento = "Sim"`.
+
+**Opções excludentes (2 perguntas):** `posAcompanhMonitoramento` (Q6), `posContEstrategias` (Q26).
 
 ---
 
@@ -200,6 +221,7 @@ Chaves em camelCase, prefixo `pos` seguido do bloco, para uso direto como propri
 - IF qualquer valor monetário (`posFinValorTotalExecutado`, `posFinValorDespesaDocentes`, `posFinValorDespesaMaterialDidatico`, `posFinValorDespesaInfraestrutura`, `posFinValorDevolvido`) for negativo THEN the system SHALL rejeitar a gravação com HTTP 400.
 - IF `posExecDataTerminoReal` for anterior a `posExecDataInicioReal` THEN the system SHALL rejeitar a gravação desses dois campos com HTTP 400 (REQ-PO-06 — cobre tanto as duas datas chegando no mesmo PATCH quanto uma data setada num PATCH anterior e a outra depois, contra o estado mesclado).
 - IF o `cdCurso` de uma requisição de criação pertencer a um Ofertante diferente do Ofertante do GO autenticado THEN the system SHALL retornar HTTP 403 mesmo que o `cdCurso` exista de fato no banco (não vazar existência de dado fora de escopo via 404/400).
+- WHEN Q12 (`posExecAlteracaoDetalhe`) ficar órfã porque Q11 passou a "Não", the system SHALL preservá-la nas gravações e descartá-la no encerramento, gravando o registro encerrado sem ela (AD-038).
 
 ---
 

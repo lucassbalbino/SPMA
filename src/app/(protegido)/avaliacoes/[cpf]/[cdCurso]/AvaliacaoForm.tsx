@@ -1,16 +1,24 @@
 // Formulário de preenchimento/encerramento da avaliação (AVAL-07 a AVAL-19),
 // colocado junto de `page.tsx` (T9). Mesmo padrão orientado a metadados de
-// `PosCursoForm.tsx`/`PreCursoForm.tsx`: os blocos do Dicionário de Campos
-// (spec.md) viram tabelas `BLOCOS_PARTE_1`/`BLOCOS_PARTE_2` interpretadas
-// genericamente por `renderCampo`.
+// `PosCursoForm.tsx`/`PreCursoForm.tsx`: os blocos do questionário fonte
+// (`docs/Questionario_do_Aluno_1.md`, Q1-Q21 = Parte 1, Q22-Q38 = Parte 2)
+// viram tabelas `BLOCOS_PARTE_1`/`BLOCOS_PARTE_2` interpretadas genericamente
+// por `renderCampo`. Os rótulos carregam a numeração do papel.
 //
 // Diferença chave frente às duas features anteriores: dois gates empilhados
 // (AD-023/AVAL-10: Parte 2 inteira bloqueada até `parte1Completa`; AVAL-12/13:
-// dentro da Parte 2, "Concluiu o curso?" bloqueia as outras 22 chaves). O
+// dentro da Parte 2, "Concluiu o curso?" bloqueia as chaves de Q24 a Q38). O
 // primeiro gate desabilita todo o Accordion de Parte 2; o segundo desabilita
-// campo a campo via `bloqueadoSe` (visível, mas não editável, refletindo
-// que o dado "aplica-se ou não" - diferente de `visivelSe`, que ESCONDE um
-// campo que revela outra pergunta, como `avalProfissAtividadeEspecifica`).
+// campo a campo, a partir da lista `CHAVES_SOMENTE_CONCLUINTE` de
+// `src/lib/avaliacao/condicionais.ts` - a MESMA que o encerramento usa para
+// descartar essas respostas quando o aluno declara não ter concluído, para a
+// tela não bloquear um conjunto de campos e o servidor tratar outro.
+// Bloquear é diferente de `visivelSe`, que ESCONDE um campo que só existe
+// quando outra pergunta o revela, como `avalProfissAtividadeEspecifica`.
+//
+// Q22 e Q23 NÃO levam `bloqueadoSe`: são do bloco "Participação", que todo
+// aluno responde. O cabeçalho "Avaliação do curso (apenas para quem
+// concluiu)" do papel só começa em Q24.
 "use client";
 
 import { useState, type ReactNode } from "react";
@@ -32,30 +40,38 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   OPCOES_AMPLIACAO_CONHECIMENTO,
+  OPCOES_ATIVIDADE_TURISMO,
+  OPCOES_CONDICAO_PCD,
   OPCOES_CONDICAO_TRABALHO,
-  OPCOES_EFETIVACAO,
   OPCOES_ESCOLARIDADE,
-  OPCOES_EXPECTATIVA,
+  OPCOES_EXPECTATIVA_RENDA,
   OPCOES_FAIXA_ETARIA,
   OPCOES_FAIXA_RENDA,
   OPCOES_FORMA_CONHECIMENTO,
   OPCOES_GENERO,
-  OPCOES_INTENCAO_ATUAR_TURISMO,
-  OPCOES_MELHORIAS_COMUNIDADE,
+  OPCOES_MELHORIA_PADRAO_VIDA,
   OPCOES_MOTIVACOES_POS,
   OPCOES_MOTIVOS_PARTICIPACAO,
   OPCOES_MOTIVO_NAO_CONCLUSAO,
+  OPCOES_PERCENTUAL_FREQUENCIA,
   OPCOES_RACA_ETNIA,
-  OPCOES_RECOMENDA_CURSO,
   OPCOES_RETOMADA_ESTUDOS,
-  OPCOES_SENSACAO_PREPARO,
   OPCOES_SIM_NAO,
+  OPCOES_SIM_PARCIAL_NAO,
+  OPCOES_SIM_TALVEZ_NAO,
   OPCOES_SITUACAO_TRABALHO,
   OPCOES_TIPO_CURSO_ANTERIOR,
   OPCOES_UF,
   type RespostasAvaliacao,
   type RespostasAvaliacaoParcial,
 } from "@/lib/validation/schemas/avaliacao.schema";
+import {
+  CHAVES_SOMENTE_CONCLUINTE,
+  REGRAS_CONDICIONAIS_AVALIACAO,
+  condicaoAvaliacao,
+  naoConcluiuDeclarado,
+} from "@/lib/avaliacao/condicionais";
+import { chavesOrfas } from "@/lib/validation/condicionais";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import type { StatusFormulario } from "@/generated/prisma/enums";
 
@@ -69,7 +85,6 @@ interface CampoDef {
   tipo: TipoCampo;
   opcoes?: readonly string[];
   visivelSe?: (respostas: RespostasAvaliacaoParcial) => boolean;
-  bloqueadoSe?: (respostas: RespostasAvaliacaoParcial) => boolean;
 }
 
 interface BlocoDef {
@@ -77,47 +92,55 @@ interface BlocoDef {
   campos: CampoDef[];
 }
 
+// Q24 (AD-020): valor armazenado é crescente (1=Péssimo .. 5=Ótimo), mas a
+// ordem apresentada segue a da tabela do papel, que começa em ÓTIMO.
 const ESCALA_AVALIACAO_OPCOES = [
-  { valor: "1", rotulo: "1 - Péssimo" },
-  { valor: "2", rotulo: "2 - Ruim" },
-  { valor: "3", rotulo: "3 - Regular" },
-  { valor: "4", rotulo: "4 - Bom" },
-  { valor: "5", rotulo: "5 - Ótimo" },
+  { valor: "5", rotulo: "Ótimo" },
+  { valor: "4", rotulo: "Bom" },
+  { valor: "3", rotulo: "Regular" },
+  { valor: "2", rotulo: "Ruim" },
+  { valor: "1", rotulo: "Péssimo" },
 ] as const;
 
-const naoConcluiuOuIndefinido = (respostas: RespostasAvaliacaoParcial) =>
-  respostas.avalParticipConcluiuCurso !== "Sim";
+// Enquanto Q22 não é "Sim", as chaves de "apenas para quem concluiu" ficam
+// visíveis porém não editáveis.
+const somenteConcluinte = new Set<string>(CHAVES_SOMENTE_CONCLUINTE);
 
 const BLOCOS_PARTE_1: BlocoDef[] = [
   {
     titulo: "Dados Pessoais",
     campos: [
-      { chave: "avalPessoalEstado", rotulo: "Estado (UF)", tipo: "select", opcoes: OPCOES_UF },
-      { chave: "avalPessoalMunicipio", rotulo: "Município", tipo: "texto" },
-      { chave: "avalPessoalGenero", rotulo: "Gênero", tipo: "select", opcoes: OPCOES_GENERO },
+      {
+        chave: "avalPessoalEstado",
+        rotulo: "3. Estado de residência",
+        tipo: "select",
+        opcoes: OPCOES_UF,
+      },
+      { chave: "avalPessoalMunicipio", rotulo: "4. Município e Estado", tipo: "texto" },
+      { chave: "avalPessoalGenero", rotulo: "5. Gênero", tipo: "radio", opcoes: OPCOES_GENERO },
       {
         chave: "avalPessoalFaixaEtaria",
-        rotulo: "Faixa etária",
-        tipo: "select",
+        rotulo: "6. Faixa etária",
+        tipo: "radio",
         opcoes: OPCOES_FAIXA_ETARIA,
       },
       {
         chave: "avalPessoalEscolaridade",
-        rotulo: "Escolaridade",
+        rotulo: "7. Qual o seu nível de escolaridade",
         tipo: "select",
         opcoes: OPCOES_ESCOLARIDADE,
       },
       {
         chave: "avalPessoalRacaEtnia",
-        rotulo: "Raça/etnia",
-        tipo: "select",
+        rotulo: "8. Qual a sua cor/raça/etnia?",
+        tipo: "radio",
         opcoes: OPCOES_RACA_ETNIA,
       },
       {
         chave: "avalPessoalCondicaoPcd",
-        rotulo: "Condição de PCD",
+        rotulo: "9. Você é uma Pessoa com Deficiência (PCD)?",
         tipo: "radio",
-        opcoes: OPCOES_SIM_NAO,
+        opcoes: OPCOES_CONDICAO_PCD,
       },
     ],
   },
@@ -126,25 +149,26 @@ const BLOCOS_PARTE_1: BlocoDef[] = [
     campos: [
       {
         chave: "avalProfissCondicaoTrabalho",
-        rotulo: "Condição atual de trabalho",
+        rotulo: "10. Qual sua condição atual de trabalho?",
         tipo: "select",
         opcoes: OPCOES_CONDICAO_TRABALHO,
       },
       {
         chave: "avalProfissAtuaTurismo",
-        rotulo: "Atualmente trabalha em Turismo?",
+        rotulo: "11. Atualmente você trabalha na área de Turismo?",
         tipo: "radio",
         opcoes: OPCOES_SIM_NAO,
       },
       {
         chave: "avalProfissAtividadeEspecifica",
-        rotulo: "Atividade específica em que atua",
-        tipo: "texto",
-        visivelSe: (respostas) => respostas.avalProfissAtuaTurismo === "Sim",
+        rotulo: "12. Se sim, em qual atividade?",
+        tipo: "select",
+        opcoes: OPCOES_ATIVIDADE_TURISMO,
+        visivelSe: condicaoAvaliacao("avalProfissAtividadeEspecifica"),
       },
       {
         chave: "avalProfissFaixaRenda",
-        rotulo: "Faixa de renda",
+        rotulo: "13. Qual a sua faixa de renda mensal",
         tipo: "select",
         opcoes: OPCOES_FAIXA_RENDA,
       },
@@ -155,22 +179,22 @@ const BLOCOS_PARTE_1: BlocoDef[] = [
     campos: [
       {
         chave: "avalExperienciaTrabalhoPrevio",
-        rotulo: "Trabalho prévio em Turismo",
+        rotulo: "14. Já trabalhou no setor de Turismo?",
         tipo: "radio",
         opcoes: OPCOES_SIM_NAO,
       },
       {
         chave: "avalExperienciaCursoAnterior",
-        rotulo: "Já realizou cursos de Turismo?",
+        rotulo: "15. Já realizou cursos na área de Turismo antes?",
         tipo: "radio",
         opcoes: OPCOES_SIM_NAO,
       },
       {
         chave: "avalExperienciaTipoCursoAnterior",
-        rotulo: "Tipo de curso de Turismo já realizado",
+        rotulo: "16. Se sim, qual?",
         tipo: "select",
         opcoes: OPCOES_TIPO_CURSO_ANTERIOR,
-        visivelSe: (respostas) => respostas.avalExperienciaCursoAnterior === "Sim",
+        visivelSe: condicaoAvaliacao("avalExperienciaTipoCursoAnterior"),
       },
     ],
   },
@@ -179,14 +203,14 @@ const BLOCOS_PARTE_1: BlocoDef[] = [
     campos: [
       {
         chave: "avalMotivMotivosParticipacao",
-        rotulo: "Motivos para participar do curso (até 3)",
+        rotulo: "17. Quais os três (03) principais motivos para participar do Curso?",
         tipo: "checkboxes",
         opcoes: OPCOES_MOTIVOS_PARTICIPACAO,
       },
       {
         chave: "avalMotivFormaConhecimento",
-        rotulo: "Como ficou sabendo do curso",
-        tipo: "select",
+        rotulo: "18. Como você ficou sabendo do curso?",
+        tipo: "radio",
         opcoes: OPCOES_FORMA_CONHECIMENTO,
       },
     ],
@@ -196,21 +220,22 @@ const BLOCOS_PARTE_1: BlocoDef[] = [
     campos: [
       {
         chave: "avalExpectAtendimento",
-        rotulo: "Expectativa de atendimento",
-        tipo: "select",
-        opcoes: OPCOES_EXPECTATIVA,
+        rotulo: "19. Você considera que a sua expectativa no Curso será atendida?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_PARCIAL_NAO,
       },
       {
         chave: "avalExpectEmprego",
-        rotulo: "Expectativa de emprego",
-        tipo: "select",
-        opcoes: OPCOES_EXPECTATIVA,
+        rotulo:
+          "20. Você acredita que conseguirá um trabalho ou uma ascensão de carreira após o Curso?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_TALVEZ_NAO,
       },
       {
         chave: "avalExpectRenda",
-        rotulo: "Expectativa de melhoria de renda",
-        tipo: "select",
-        opcoes: OPCOES_EXPECTATIVA,
+        rotulo: "21. Qual a sua expectativa de melhoria de renda após o Curso?",
+        tipo: "radio",
+        opcoes: OPCOES_EXPECTATIVA_RENDA,
       },
     ],
   },
@@ -222,171 +247,194 @@ const BLOCOS_PARTE_2: BlocoDef[] = [
     campos: [
       {
         chave: "avalParticipConcluiuCurso",
-        rotulo: "Concluiu o curso?",
+        rotulo: "22. Você concluiu o Curso?",
         tipo: "radio",
         opcoes: OPCOES_SIM_NAO,
       },
       {
         chave: "avalParticipMotivoNaoConclusao",
-        rotulo: "Motivo(s) de não conclusão",
+        rotulo: "22.1. Se não concluiu, qual(ais) o(os) motivo(s) principal(ais)?",
         tipo: "checkboxes",
         opcoes: OPCOES_MOTIVO_NAO_CONCLUSAO,
-        visivelSe: (respostas) => respostas.avalParticipConcluiuCurso === "Não",
+        visivelSe: condicaoAvaliacao("avalParticipMotivoNaoConclusao"),
       },
+      // Q23 é do bloco "Participação", que todo aluno responde - por isso
+      // não leva `bloqueadoSe`: o gate "apenas para quem concluiu" só começa
+      // no cabeçalho de Q24.
       {
         chave: "avalParticipPercentualFrequencia",
-        rotulo: "Percentual de frequência",
-        tipo: "numero",
-        bloqueadoSe: naoConcluiuOuIndefinido,
+        rotulo: "23. Percentual de aulas frequentadas",
+        tipo: "radio",
+        opcoes: OPCOES_PERCENTUAL_FREQUENCIA,
       },
     ],
   },
   {
-    titulo: "Avaliação do Curso",
-    campos: (
-      [
-        { chave: "avalCursoDinamicasInclusao", rotulo: "Dinâmicas de inclusão", tipo: "escala" },
-        { chave: "avalCursoMaterialDidatico", rotulo: "Material didático", tipo: "escala" },
-        { chave: "avalCursoConteudo", rotulo: "Conteúdo", tipo: "escala" },
-        { chave: "avalCursoClareza", rotulo: "Clareza", tipo: "escala" },
-        {
-          chave: "avalCursoConhecimentoInstrutores",
-          rotulo: "Conhecimento dos instrutores",
-          tipo: "escala",
-        },
-        { chave: "avalCursoOrganizacao", rotulo: "Organização", tipo: "escala" },
-        {
-          chave: "avalCursoInfraestruturaBasica",
-          rotulo: "Infraestrutura básica",
-          tipo: "escala",
-        },
-        {
-          chave: "avalCursoInfraestruturaSalaAula",
-          rotulo: "Infraestrutura de sala de aula",
-          tipo: "escala",
-        },
-      ] as const satisfies readonly Omit<CampoDef, "bloqueadoSe">[]
-    ).map((campo) => ({ ...campo, bloqueadoSe: naoConcluiuOuIndefinido })),
+    titulo: "Avaliação do curso (apenas para quem concluiu)",
+    campos: [
+      {
+        chave: "avalCursoDinamicasInclusao",
+        rotulo: "24. Dinâmicas de inclusão e de participação do aluno nas aulas",
+        tipo: "escala",
+      },
+      {
+        chave: "avalCursoMaterialDidatico",
+        rotulo:
+          "24. Qualidade do material didático (vídeos, leituras, visitas técnicas, aulas práticas etc.)",
+        tipo: "escala",
+      },
+      {
+        chave: "avalCursoConteudo",
+        rotulo: "24. Qualidade do conteúdo apresentado",
+        tipo: "escala",
+      },
+      {
+        chave: "avalCursoClareza",
+        rotulo: "24. Clareza na exposição das aulas",
+        tipo: "escala",
+      },
+      {
+        chave: "avalCursoConhecimentoInstrutores",
+        rotulo: "24. Conhecimento dos instrutores/professores",
+        tipo: "escala",
+      },
+      {
+        chave: "avalCursoOrganizacao",
+        rotulo: "24. Organização do Curso (horário, local, comunicação)",
+        tipo: "escala",
+      },
+      {
+        chave: "avalCursoInfraestruturaBasica",
+        rotulo:
+          "24. Infraestrutura Básica de Atendimento (banheiros, bebedouros, limpeza, acessibilidade etc.)",
+        tipo: "escala",
+      },
+      {
+        chave: "avalCursoInfraestruturaSalaAula",
+        rotulo:
+          "24. Infraestrutura da Sala de Aula (climatização, equipamentos, mesas e cadeiras etc.)",
+        tipo: "escala",
+      },
+    ],
   },
   {
     titulo: "Aprendizado",
-    campos: (
-      [
-        {
-          chave: "avalAprendizAmpliacaoConhecimento",
-          rotulo: "Ampliação de conhecimento",
-          tipo: "select",
-          opcoes: OPCOES_AMPLIACAO_CONHECIMENTO,
-        },
-        {
-          chave: "avalAprendizAtendimentoExpectativas",
-          rotulo: "Atendimento de expectativas",
-          tipo: "select",
-          opcoes: OPCOES_EXPECTATIVA,
-        },
-        {
-          chave: "avalAprendizSensacaoPreparo",
-          rotulo: "Sensação de preparo",
-          tipo: "select",
-          opcoes: OPCOES_SENSACAO_PREPARO,
-        },
-      ] as const satisfies readonly Omit<CampoDef, "bloqueadoSe">[]
-    ).map((campo) => ({ ...campo, bloqueadoSe: naoConcluiuOuIndefinido })),
+    campos: [
+      {
+        chave: "avalAprendizAmpliacaoConhecimento",
+        rotulo: "25. O seu conhecimento após a conclusão do Curso",
+        tipo: "radio",
+        opcoes: OPCOES_AMPLIACAO_CONHECIMENTO,
+      },
+      {
+        chave: "avalAprendizAtendimentoExpectativas",
+        rotulo: "26. O Curso atendeu as suas expectativas",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_PARCIAL_NAO,
+      },
+      {
+        chave: "avalAprendizSensacaoPreparo",
+        rotulo: "27. Você se sente preparado para trabalhar na área da formação",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_PARCIAL_NAO,
+      },
+    ],
   },
   {
     titulo: "Continuidade nos Estudos",
     campos: [
       {
         chave: "avalContinuidadeRetomadaEstudos",
-        rotulo: "Retomada de estudos após o curso",
-        tipo: "select",
+        rotulo:
+          "28. Após a conclusão do Curso, você retomou os estudos? (Educação Básica / Fundamental)",
+        tipo: "radio",
         opcoes: OPCOES_RETOMADA_ESTUDOS,
-        bloqueadoSe: naoConcluiuOuIndefinido,
       },
     ],
   },
   {
-    titulo: "Motivações Pós-Curso",
+    titulo: "Motivações após o Curso",
     campos: [
       {
         chave: "avalMotivacoesPosPercepcoes",
-        rotulo: "Percepções e motivações desenvolvidas após o curso",
+        rotulo: "29. Após a conclusão do Curso, você sente que:",
         tipo: "checkboxes",
         opcoes: OPCOES_MOTIVACOES_POS,
-        bloqueadoSe: naoConcluiuOuIndefinido,
       },
     ],
   },
   {
-    titulo: "Oportunidades de Trabalho",
+    titulo: "Oportunidades Reais de Trabalho e Emprego",
     campos: [
       {
         chave: "avalOportunSituacaoTrabalho",
-        rotulo: "Situação de trabalho após o curso",
-        tipo: "select",
+        rotulo: "30. Após a conclusão do Curso:",
+        tipo: "radio",
         opcoes: OPCOES_SITUACAO_TRABALHO,
-        bloqueadoSe: naoConcluiuOuIndefinido,
+      },
+      {
+        chave: "avalOportunSituacaoTrabalhoOutra",
+        rotulo: "30. Outra. Quais?",
+        tipo: "texto",
+        visivelSe: condicaoAvaliacao("avalOportunSituacaoTrabalhoOutra"),
       },
       {
         chave: "avalOportunIntencaoAtuarTurismo",
-        rotulo: "Intenção de atuar em Turismo",
-        tipo: "select",
-        opcoes: OPCOES_INTENCAO_ATUAR_TURISMO,
-        bloqueadoSe: naoConcluiuOuIndefinido,
+        rotulo:
+          "31. Caso não esteja trabalhando no Turismo, você pretende trabalhar no setor?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
       },
     ],
   },
   {
-    titulo: "Efetivação e Renda",
-    campos: (
-      [
-        {
-          chave: "avalEfetivEmprego",
-          rotulo: "Efetivação no emprego",
-          tipo: "select",
-          opcoes: OPCOES_EFETIVACAO,
-        },
-        {
-          chave: "avalEfetivAumentoRenda",
-          rotulo: "Aumento de renda",
-          tipo: "select",
-          opcoes: OPCOES_EFETIVACAO,
-        },
-        {
-          chave: "avalEfetivMelhoriaPadraoVida",
-          rotulo: "Melhoria de padrão de vida",
-          tipo: "select",
-          opcoes: OPCOES_EFETIVACAO,
-        },
-      ] as const satisfies readonly Omit<CampoDef, "bloqueadoSe">[]
-    ).map((campo) => ({ ...campo, bloqueadoSe: naoConcluiuOuIndefinido })),
+    titulo: "Efetivação no Emprego e Aumento da Renda",
+    campos: [
+      {
+        chave: "avalEfetivEmprego",
+        rotulo:
+          "32. Caso não esteja efetivado no emprego, após a conclusão do Curso você foi efetivado?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
+      },
+      {
+        chave: "avalEfetivAumentoRenda",
+        rotulo: "33. Após a conclusão do Curso sua renda aumentou?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
+      },
+      {
+        chave: "avalEfetivMelhoriaPadraoVida",
+        rotulo: "34. Após a conclusão do Curso, o seu padrão de vida melhorou?",
+        tipo: "radio",
+        opcoes: OPCOES_MELHORIA_PADRAO_VIDA,
+      },
+    ],
   },
   {
-    titulo: "Avaliação Geral",
+    titulo: "Avaliação geral",
     campos: [
       {
         chave: "avalGeralNota",
-        rotulo: "Nota geral do curso (0 a 10)",
+        rotulo: "35. Qual nota você dá para o Curso (0 a 10)?",
         tipo: "numero",
-        bloqueadoSe: naoConcluiuOuIndefinido,
       },
       {
         chave: "avalGeralMelhoriasComunidade",
-        rotulo: "Percepção de melhorias na comunidade",
-        tipo: "select",
-        opcoes: OPCOES_MELHORIAS_COMUNIDADE,
-        bloqueadoSe: naoConcluiuOuIndefinido,
+        rotulo:
+          "36. Como você avalia as melhorias em sua comunidade após a conclusão do Curso?",
+        tipo: "textarea",
       },
       {
         chave: "avalGeralRecomendaCurso",
-        rotulo: "Recomendaria o curso?",
-        tipo: "select",
-        opcoes: OPCOES_RECOMENDA_CURSO,
-        bloqueadoSe: naoConcluiuOuIndefinido,
+        rotulo: "37. Você recomendaria este Curso para outra pessoa da comunidade?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
       },
       {
         chave: "avalGeralComentariosFinais",
-        rotulo: "Comentários finais (opcional)",
+        rotulo:
+          "38. A partir da sua experiência como aluno do Curso, você tem algum comentário, crítica, elogio ou sugestão que ajude a melhorar na próxima edição? (opcional)",
         tipo: "textarea",
       },
     ],
@@ -443,7 +491,20 @@ export function AvaliacaoForm({
     setErro(null);
     setSalvando(true);
     try {
-      const corpo = Object.fromEntries([...alterados].map((chave) => [chave, respostas[chave]]));
+      // Resposta que deixou de se aplicar (condicional órfã, ou chave de
+      // "apenas para quem concluiu" depois de o aluno marcar Q22="Não") não
+      // vai no PATCH: o valor continua no estado local, caso ele volte
+      // atrás, e o que já estava salvo no servidor segue preservado (edge
+      // case da spec) até o encerramento.
+      const naoAplicaveis = new Set<string>([
+        ...chavesOrfas(REGRAS_CONDICIONAIS_AVALIACAO, respostas),
+        ...(naoConcluiuDeclarado(respostas) ? CHAVES_SOMENTE_CONCLUINTE : []),
+      ]);
+      const corpo = Object.fromEntries(
+        [...alterados]
+          .filter((chave) => !naoAplicaveis.has(chave))
+          .map((chave) => [chave, respostas[chave]]),
+      );
       const res = await fetch(`/api/avaliacoes/${cpf}/${cdCurso}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...headerCSRF() },
@@ -493,8 +554,9 @@ export function AvaliacaoForm({
       return null;
     }
 
-    const campoDesabilitado =
-      desabilitado || bloqueioExtra || (campo.bloqueadoSe?.(respostas) ?? false);
+    const bloqueadoPeloGateDeConclusao =
+      somenteConcluinte.has(campo.chave) && respostas.avalParticipConcluiuCurso !== "Sim";
+    const campoDesabilitado = desabilitado || bloqueioExtra || bloqueadoPeloGateDeConclusao;
     const valor = respostas[campo.chave];
     let controle: ReactNode;
 

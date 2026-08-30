@@ -41,30 +41,31 @@ async function logarComCsrf(cpf: string): Promise<{ idSessao: string; idCsrf: st
 // As 19 chaves de Parte 1 completas.
 const PARTE_1_COMPLETA = {
   avalPessoalEstado: "SP",
-  avalPessoalMunicipio: "Ubatuba",
+  avalPessoalMunicipio: "Ubatuba - SP",
   avalPessoalGenero: "Feminino",
-  avalPessoalFaixaEtaria: "25 a 34 anos",
-  avalPessoalEscolaridade: "Médio completo",
-  avalPessoalRacaEtnia: "Parda",
-  avalPessoalCondicaoPcd: "Não",
-  avalProfissCondicaoTrabalho: "Desempregado(a)",
+  avalPessoalFaixaEtaria: "26 a 35 anos",
+  avalPessoalEscolaridade: "Ensino médio completo",
+  avalPessoalRacaEtnia: "Pardo",
+  avalPessoalCondicaoPcd: "Não sou uma Pessoa com Deficiência.",
+  avalProfissCondicaoTrabalho: "Desempregado",
   avalProfissAtuaTurismo: "Sim",
-  avalProfissAtividadeEspecifica: "Recepção em pousada local",
-  avalProfissFaixaRenda: "Até 1 salário mínimo",
+  avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
+  avalProfissFaixaRenda: "Até 01 salário mínimo",
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
-  avalExperienciaTipoCursoAnterior: "Curso livre",
-  avalMotivMotivosParticipacao: ["Geração de renda"],
-  avalMotivFormaConhecimento: "Redes sociais",
-  avalExpectAtendimento: "Atendeu totalmente",
-  avalExpectEmprego: "Atendeu parcialmente",
-  avalExpectRenda: "Superou minhas expectativas",
+  avalExperienciaTipoCursoAnterior: "Atualização profissional",
+  avalMotivMotivosParticipacao: ["Conseguir um emprego/trabalho"],
+  avalMotivFormaConhecimento: "pelas Redes Sociais",
+  avalExpectAtendimento: "Sim",
+  avalExpectEmprego: "Talvez",
+  avalExpectRenda: "Média",
 };
 
-// As 22 chaves de Parte 2 exigidas quando avalParticipConcluiuCurso="Sim".
+// As 21 chaves de Q24 a Q37 exigidas quando avalParticipConcluiuCurso="Sim",
+// mais as 2 do bloco "Participação" (Q22 e Q23), que todo aluno responde.
 const PARTE_2_COMPLETA_CONCLUIU = {
   avalParticipConcluiuCurso: "Sim",
-  avalParticipPercentualFrequencia: 90,
+  avalParticipPercentualFrequencia: "76% a 100%",
   avalCursoDinamicasInclusao: 5,
   avalCursoMaterialDidatico: 4,
   avalCursoConteudo: 5,
@@ -73,18 +74,19 @@ const PARTE_2_COMPLETA_CONCLUIU = {
   avalCursoOrganizacao: 4,
   avalCursoInfraestruturaBasica: 3,
   avalCursoInfraestruturaSalaAula: 3,
-  avalAprendizAmpliacaoConhecimento: "Sim, totalmente",
-  avalAprendizAtendimentoExpectativas: "Atendeu totalmente",
-  avalAprendizSensacaoPreparo: "Sim, me sinto totalmente preparado(a)",
-  avalContinuidadeRetomadaEstudos: "Pretendo retomar em breve",
-  avalMotivacoesPosPercepcoes: ["Maior autoconfiança"],
-  avalOportunSituacaoTrabalho: "Empregado(a) na área de Turismo",
+  avalAprendizAmpliacaoConhecimento: "Ampliou / Melhorou",
+  avalAprendizAtendimentoExpectativas: "Sim",
+  avalAprendizSensacaoPreparo: "Parcialmente",
+  avalContinuidadeRetomadaEstudos: "Sim, ao ensino técnico",
+  avalMotivacoesPosPercepcoes: ["tem condições de atuar na área do Turismo"],
+  avalOportunSituacaoTrabalho:
+    "Consegui um emprego, com carteira assinada, na área de Turismo.",
   avalOportunIntencaoAtuarTurismo: "Sim",
   avalEfetivEmprego: "Sim",
   avalEfetivAumentoRenda: "Sim",
-  avalEfetivMelhoriaPadraoVida: "Sim",
+  avalEfetivMelhoriaPadraoVida: "Sim, parcialmente",
   avalGeralNota: 9,
-  avalGeralMelhoriasComunidade: "Sim",
+  avalGeralMelhoriasComunidade: "Mais gente da comunidade trabalhando com receptivo",
   avalGeralRecomendaCurso: "Sim",
 };
 
@@ -122,7 +124,8 @@ test("AVAL-12: Parte 1 completa + Concluiu='Não' + motivo -> 200, ENCERRADO, me
     respostas: {
       ...PARTE_1_COMPLETA,
       avalParticipConcluiuCurso: "Não",
-      avalParticipMotivoNaoConclusao: ["Falta de tempo"],
+      avalParticipMotivoNaoConclusao: ["Problemas pessoais/familiares"],
+      avalParticipPercentualFrequencia: "Até 25%",
     },
   });
 
@@ -288,6 +291,49 @@ test("AVAL-17/AVAL-19: PATCH após o encerramento recebe 409 (fecha o gate fim-a
   });
 
   expect(res.status()).toBe(409);
+
+  await cliente.dispose();
+});
+
+test("Concluiu='Sim'->'Não': o PATCH preserva as respostas de concluinte, o encerramento as descarta", async () => {
+  const cdCurso = criarCursoFixture();
+  criarAvaliacao({
+    cpf: CPF_AL,
+    cdCurso,
+    parte1Completa: true,
+    respostas: { ...PARTE_1_COMPLETA, ...PARTE_2_COMPLETA_CONCLUIU },
+  });
+
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AL);
+  const cliente = await novoCliente();
+
+  // Edge case da spec: a gravação posterior preserva o que já estava salvo.
+  const resPatch = await cliente.patch(`/api/avaliacoes/${CPF_AL}/${cdCurso}`, {
+    data: {
+      avalParticipConcluiuCurso: "Não",
+      avalParticipMotivoNaoConclusao: ["Dificuldades financeiras"],
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect(resPatch.status()).toBe(200);
+  expect(getAvaliacao(CPF_AL, cdCurso)?.respostas?.avalGeralNota).toBeDefined();
+
+  // O encerramento é que fecha o registro sem a contradição.
+  const res = await cliente.post(`/api/avaliacoes/${CPF_AL}/${cdCurso}/encerrar`, {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(200);
+  const respostas = getAvaliacao(CPF_AL, cdCurso)?.respostas;
+  expect(getAvaliacao(CPF_AL, cdCurso)?.status).toBe("ENCERRADO");
+  expect(respostas?.avalParticipConcluiuCurso).toBe("Não");
+  expect(respostas?.avalParticipMotivoNaoConclusao).toEqual(["Dificuldades financeiras"]);
+  expect(respostas).not.toHaveProperty("avalGeralNota");
+  expect(respostas).not.toHaveProperty("avalCursoConteudo");
+  expect(respostas).not.toHaveProperty("avalOportunSituacaoTrabalho");
+  // Q23 (frequência) e a Parte 1 continuam: não são "apenas para quem concluiu"
+  expect(respostas?.avalParticipPercentualFrequencia).toBeDefined();
+  expect(respostas?.avalPessoalMunicipio).toBeDefined();
 
   await cliente.dispose();
 });

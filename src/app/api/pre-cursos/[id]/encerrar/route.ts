@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import { obterSessao } from "@/lib/auth/session";
 import { podeGerenciarPreCurso } from "@/lib/auth/guards";
 import { validarCompletudePreCurso } from "@/lib/pre-curso/completude";
+import { normalizarCondicionaisPreCurso } from "@/lib/pre-curso/condicionais";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
 
@@ -48,7 +49,16 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
     return NextResponse.json({ erro: "Pré-curso já está encerrado" }, { status: 409 });
   }
 
-  const { completo, pendentes } = validarCompletudePreCurso(preCurso.respostas);
+  // Respostas de perguntas condicionais que a resposta-mãe tornou
+  // inaplicáveis (ex.: Q25="Não, apenas equipamentos básicos" com Q25.1
+  // ainda preenchida de uma escolha anterior) são descartadas AQUI, no
+  // momento em que o formulário vira registro final e imutável - durante o
+  // preenchimento elas ficam preservadas, para o Gestor poder ir e voltar
+  // entre as alternativas. Sem isso, o registro encerrado guardaria uma
+  // contradição interna, exatamente o que o AD-037 barra nas perguntas de
+  // seleção múltipla.
+  const respostas = normalizarCondicionaisPreCurso(preCurso.respostas);
+  const { completo, pendentes } = validarCompletudePreCurso(respostas);
 
   if (!completo) {
     return NextResponse.json(
@@ -59,7 +69,7 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
 
   const atualizado = await prisma.preCurso.update({
     where: { cdCurso },
-    data: { status: "ENCERRADO", dataEncerramento: new Date() },
+    data: { status: "ENCERRADO", dataEncerramento: new Date(), respostas },
   });
 
   return NextResponse.json({ preCurso: atualizado });

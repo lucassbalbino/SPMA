@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { multiplaComExclusiva } from "../multipla";
 
 // Criação do pós-curso (REQ-PO-01).
 export const criarPosCursoSchema = z.object({
@@ -7,132 +8,157 @@ export const criarPosCursoSchema = z.object({
 
 export type CriarPosCursoInput = z.infer<typeof criarPosCursoSchema>;
 
-// ---- Constantes de opções (Dicionário de Campos, spec.md) ----
+// ---- Constantes de opções ----
+//
+// Transcritas de `docs/Questionario_do_Gestor_Pos_Curso.md` (a numeração das
+// perguntas fica nos comentários). O arquivo fonte reúne dois momentos de
+// coleta - "FORMULÁRIO – DURANTE O CURSO" (Q1-Q6) e "FORMULÁRIO PÓS-CURSO"
+// (Q7-Q26) - num único registro de Pós-Curso, como já modelado.
 // Reexportadas para a UI montar Select/RadioGroup/checkboxes sem duplicar a
 // lista (AD-004: schema único, cliente e servidor).
 
+export const OPCOES_SIM_NAO = ["Sim", "Não"] as const;
+
+// Q1 - problemas de estudo (desafios) definidos.
 export const OPCOES_PROBLEMAS_ESTUDO = [
-  "Dificuldade de leitura e interpretação",
-  "Dificuldade de concentração",
-  "Baixa frequência às aulas",
-  "Dificuldade de acesso a material didático",
-  "Conflito entre estudo e trabalho",
-  "Nenhum problema identificado",
+  "Sim, foram definidos pelos Docentes em conjunto com a Coordenação Didático-Pedagógica.",
+  "Sim, foram definidos pelos Docentes, porém, sem a participação da Coordenação Didática-Pedagógica.",
+  "Não, não foram definidos pelos Docentes.",
+  "Não se aplica.",
 ] as const;
 
-export const OPCOES_AVALIACAO_COGNITIVA = [
-  "Prova escrita",
-  "Trabalho prático",
-  "Avaliação oral",
-  "Portfólio",
-  "Não foi realizada avaliação cognitiva",
+// Q2 - conceitos das dimensões econômica, ambiental e sociocultural.
+export const OPCOES_CONCEITOS_TRABALHADOS = [
+  "Sim, foram detalhados os conceitos pelos Docentes em conjunto com a Coordenação Didático-Pedagógica.",
+  "Sim, foram detalhados os conceitos pelos Docentes, porém, não conjunto com a Coordenação Didático-Pedagógica.",
+  "Não, não foram detalhados os conceitos pelos Docentes.",
+  "Não se aplica.",
 ] as const;
+
+// Q3 - Plano de Ação (situações práticas-vivenciais).
+export const OPCOES_PLANO_ACAO = [
+  "Sim, o Plano de Ação foi definido pelos Docentes em conjunto com a Coordenação Didático-Pedagógica responsável.",
+  "Sim, o Plano de Ação foi definido pelos Docentes, porém, não em conjunto com a Coordenação Didático-Pedagógica.",
+  "Não, o Plano de Ação não foi definido pelos Docentes.",
+  "Não se aplica.",
+] as const;
+
+// Q4 - "Prova Situação" (avaliação cognitiva do primeiro dia).
+export const OPCOES_PROVA_SITUACAO = [
+  "Sim, foi elaborada pelos Docentes, e foi devidamente realizada pelos alunos no primeiro dia de aula e ao longo do curso.",
+  "Sim, foi elaborada pelos Docentes, mas só foi realizada pelos alunos no primeiro dia de aula.",
+  "Não, não foi devidamente elaborada pelos Docentes.",
+  "Não se aplica.",
+] as const;
+
+// Q5 - "Lição Individual" (prova de encerramento).
+export const OPCOES_LICAO_INDIVIDUAL = [
+  "Sim, foi realizada.",
+  "Não foi realizada.",
+  "Não se aplica.",
+] as const;
+
+// Q6 - ações de monitoramento (múltipla, opção f excludente).
+export const EXCLUSIVA_MONITORAMENTO =
+  "Nenhuma ação de monitoramento foi realizada durante o desenvolvimento do Curso/Ação de Qualificação.";
 
 export const OPCOES_MONITORAMENTO = [
-  "Reuniões periódicas com os alunos",
-  "Acompanhamento individual",
-  "Relatórios de frequência",
-  "Feedback dos professores",
-  "Nenhum monitoramento formal",
+  "Reuniões periódicas com alunos.",
+  "Reuniões periódicas com professores/instrutores.",
+  "Acompanhamento individualizado (quando necessário) com alunos.",
+  "Reuniões de acompanhamento com parceiros.",
+  "Acompanhamento de registros administrativos periódicos, em que conste o número de egressos, as taxas mensais de evasão, e os respectivos motivos atestados.",
+  EXCLUSIVA_MONITORAMENTO,
 ] as const;
 
-export const OPCOES_DIFICULDADES_ENFRENTADAS = [
-  "Evasão de alunos",
-  "Problemas de infraestrutura",
-  "Indisponibilidade de professores",
-  "Questões climáticas",
-  "Restrições orçamentárias",
-  "Baixa adesão da comunidade",
-  "Nenhuma dificuldade",
-] as const;
-
-export const OPCOES_HOUVE_ALTERACAO_PLANEJAMENTO = ["Sim", "Não"] as const;
-
-// AD-025: seleção única (não múltipla).
+// Q16 - motivos atestados para o abandono. Seleção MÚLTIPLA: o enunciado do
+// questionário fonte está no plural ("Principais motivos") e a pergunta
+// equivalente do questionário do Aluno (Q22.1) vem marcada explicitamente
+// como MÚLTIPLA ESCOLHA. Supera o AD-025, que havia travado este campo como
+// seleção única quando a lista real ainda não existia (ver AD-036). A lista
+// é idêntica à do formulário do Aluno, de propósito: permite cruzar a visão
+// do gestor com a do aluno sobre o mesmo curso.
 export const OPCOES_MOTIVOS_ABANDONO = [
+  "Falta de motivação/interesse",
   "Dificuldades financeiras",
-  "Conflito com trabalho",
-  "Mudança de endereço",
-  "Desmotivação",
-  "Problemas de saúde",
-  "Não houve abandono",
+  "Dificuldades de aprendizagem",
+  "Problemas pessoais/familiares",
+  "Não ter com quem deixar o(s) filho(s)",
+  "Horário inapropriado das aulas",
+  "Impeditivos no trabalho (Ex: chefe não liberou)",
+  "Local muito distante de casa",
+  "Professores/Instrutores não qualificados",
+  "Outro",
 ] as const;
 
-export const OPCOES_RELACAO_DEMANDA_OFERTA = [
-  "Demanda superou a oferta de vagas",
-  "Demanda foi igual à oferta",
-  "Demanda foi menor que a oferta",
-] as const;
-
-export const OPCOES_INTENCAO_NOVA_OFERTA = ["Sim", "Não", "Ainda não definido"] as const;
-
-export const OPCOES_HOUVE_DEVOLUCAO_RECURSOS = ["Sim", "Não"] as const;
-
-export const OPCOES_NECESSIDADE_ADITIVO = ["Sim", "Não"] as const;
+// Q26 - estratégias de continuidade E ampliação (múltipla, opção f
+// excludente). O questionário fonte faz UMA pergunta cobrindo os dois temas;
+// o dicionário derivado anterior tinha inventado duas perguntas separadas.
+export const EXCLUSIVA_CONTINUIDADE =
+  "Não foi adotada nenhuma estratégia de continuidade e ampliação.";
 
 export const OPCOES_ESTRATEGIAS_CONTINUIDADE = [
-  "Nova turma no mesmo local",
-  "Ampliação para outros municípios",
-  "Parceria com instituição de ensino",
-  "Criação de curso avançado",
-  "Nenhuma estratégia definida",
-] as const;
-
-export const OPCOES_ESTRATEGIAS_AMPLIACAO = [
-  "Busca de novos parceiros financiadores",
-  "Aumento do número de vagas",
-  "Diversificação de conteúdo",
-  "Divulgação ampliada",
-  "Nenhuma estratégia definida",
+  "Estabelecimento de parcerias junto a entidades públicas.",
+  "Estabelecimento de parcerias junto a entidades privadas.",
+  "Estabelecimento de parcerias junto a instituições de ensino superior (IES), públicas e/ou privadas, visando projetos de extensão conjuntos.",
+  "Integração do Curso a projetos e/ou programas desenvolvidos no território.",
+  "Participação em editais voltados ao financiamento de propostas técnicas na área de educação, inclusão social, desenvolvimento local e/ou turismo.",
+  EXCLUSIVA_CONTINUIDADE,
 ] as const;
 
 // Valor monetário: nunca negativo (edge case, spec.md).
 const valorMonetario = z.number().min(0);
 
-// ---- Forma dos 26 campos do questionário (spec.md, Dicionário de Campos) ----
+// ---- Forma das 26 chaves do questionário ----
 //
-// O único campo condicional (`posExecAlteracaoDetalhe`, REQ-PO-07) fica
+// O único campo condicional (`posExecAlteracaoDetalhe`, Q12, REQ-PO-07) fica
 // `.optional()` aqui: a FORMA dele é validada em toda gravação, mas a
 // obrigatoriedade condicional é responsabilidade exclusiva de
 // `validarCompletudePosCurso` (src/lib/pos-curso/completude.ts), não deste
 // schema. `.partial()` (usado no PATCH) torna as 25 chaves restantes também
 // opcionais, sem alterar a validação de forma de cada uma quando presente.
 export const respostasPosCursoSchema = z.object({
-  // Bloco 1 - Acompanhamento Pedagógico
-  posAcompanhProblemasEstudo: z.array(z.enum(OPCOES_PROBLEMAS_ESTUDO)).min(1),
-  posAcompanhConceitosTrabalhados: z.string().min(1),
-  posAcompanhPlanoAcao: z.string().min(1),
-  posAcompanhAvaliacaoCognitiva: z.enum(OPCOES_AVALIACAO_COGNITIVA),
-  posAcompanhMonitoramento: z.array(z.enum(OPCOES_MONITORAMENTO)).min(1),
+  // Durante o curso - Acompanhamento Pedagógico (Q1-Q6)
+  posAcompanhProblemasEstudo: z.enum(OPCOES_PROBLEMAS_ESTUDO),
+  posAcompanhConceitosTrabalhados: z.enum(OPCOES_CONCEITOS_TRABALHADOS),
+  posAcompanhPlanoAcao: z.enum(OPCOES_PLANO_ACAO),
+  posAcompanhProvaSituacao: z.enum(OPCOES_PROVA_SITUACAO),
+  posAcompanhLicaoIndividual: z.enum(OPCOES_LICAO_INDIVIDUAL),
+  posAcompanhMonitoramento: multiplaComExclusiva(
+    OPCOES_MONITORAMENTO,
+    EXCLUSIVA_MONITORAMENTO,
+  ),
 
-  // Bloco 2 - Execução
+  // Execução (Q7-Q12)
   posExecDataInicioReal: z.iso.date(),
   posExecDataTerminoReal: z.iso.date(),
   posExecCargaHorariaRealizada: z.number().int().positive(),
-  posExecDificuldadesEnfrentadas: z.array(z.enum(OPCOES_DIFICULDADES_ENFRENTADAS)).min(1),
-  posExecHouveAlteracaoPlanejamento: z.enum(OPCOES_HOUVE_ALTERACAO_PLANEJAMENTO),
+  posExecDificuldadesEnfrentadas: z.string().min(1),
+  posExecHouveAlteracaoPlanejamento: z.enum(OPCOES_SIM_NAO),
   posExecAlteracaoDetalhe: z.string().min(1).optional(),
 
-  // Bloco 3 - Participação
+  // Participação (Q13-Q18)
   posParticNumInscritos: z.number().int().min(0),
   posParticNumMatriculados: z.number().int().min(0),
   posParticNumConcluintes: z.number().int().min(0),
-  posParticMotivosAbandono: z.enum(OPCOES_MOTIVOS_ABANDONO),
-  posParticRelacaoDemandaOferta: z.enum(OPCOES_RELACAO_DEMANDA_OFERTA),
-  posParticIntencaoNovaOferta: z.enum(OPCOES_INTENCAO_NOVA_OFERTA),
+  posParticMotivosAbandono: z.array(z.enum(OPCOES_MOTIVOS_ABANDONO)).min(1),
+  posParticDemandaMaiorQueOferta: z.enum(OPCOES_SIM_NAO),
+  posParticIntencaoNovaOferta: z.enum(OPCOES_SIM_NAO),
 
-  // Bloco 4 - Financeiro
-  posFinValorTotalExecutado: valorMonetario,
-  posFinValorDespesaDocentes: valorMonetario,
-  posFinValorDespesaMaterialDidatico: valorMonetario,
-  posFinValorDespesaInfraestrutura: valorMonetario,
-  posFinHouveDevolucaoRecursos: z.enum(OPCOES_HOUVE_DEVOLUCAO_RECURSOS),
-  posFinValorDevolvido: valorMonetario,
-  posFinNecessidadeAditivo: z.enum(OPCOES_NECESSIDADE_ADITIVO),
+  // Financeiro (Q19-Q25)
+  posFinValorTotal: valorMonetario,
+  posFinValorProfessores: valorMonetario,
+  posFinValorMateriais: valorMonetario,
+  posFinValorInfraestrutura: valorMonetario,
+  posFinValorBolsaPermanencia: valorMonetario,
+  posFinHouveDevolucaoRecursos: z.enum(OPCOES_SIM_NAO),
+  posFinNecessidadeAditivo: z.enum(OPCOES_SIM_NAO),
 
-  // Bloco 5 - Continuidade
-  posContEstrategiasContinuidade: z.array(z.enum(OPCOES_ESTRATEGIAS_CONTINUIDADE)).min(1),
-  posContEstrategiasAmpliacao: z.array(z.enum(OPCOES_ESTRATEGIAS_AMPLIACAO)).min(1),
+  // Ações para Continuidade do Curso (Q26)
+  posContEstrategias: multiplaComExclusiva(
+    OPCOES_ESTRATEGIAS_CONTINUIDADE,
+    EXCLUSIVA_CONTINUIDADE,
+  ),
 });
 
 export type RespostasPosCurso = z.infer<typeof respostasPosCursoSchema>;

@@ -90,8 +90,9 @@ test("REQ-PO-04: GO grava um bloco parcial -> 200, demais campos continuam ausen
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/pos-cursos/${cdCursoEmAndamento}`, {
     data: {
-      posAcompanhConceitosTrabalhados: "Sustentabilidade",
-      posAcompanhPlanoAcao: "Reforço semanal",
+      posAcompanhConceitosTrabalhados:
+      "Não se aplica.",
+      posAcompanhPlanoAcao: "Não se aplica.",
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
@@ -99,8 +100,9 @@ test("REQ-PO-04: GO grava um bloco parcial -> 200, demais campos continuam ausen
   expect(res.status()).toBe(200);
   const corpo = await res.json();
   expect(corpo.posCurso.respostas).toEqual({
-    posAcompanhConceitosTrabalhados: "Sustentabilidade",
-    posAcompanhPlanoAcao: "Reforço semanal",
+    posAcompanhConceitosTrabalhados:
+      "Não se aplica.",
+    posAcompanhPlanoAcao: "Não se aplica.",
   });
   expect(corpo.posCurso.respostas.posParticNumInscritos).toBeUndefined();
 
@@ -118,14 +120,15 @@ test("REQ-PO-04: segundo bloco preserva o primeiro (merge raso)", async () => {
 
   expect(res.status()).toBe(200);
   const corpo = await res.json();
-  expect(corpo.posCurso.respostas.posAcompanhConceitosTrabalhados).toBe("Sustentabilidade");
-  expect(corpo.posCurso.respostas.posAcompanhPlanoAcao).toBe("Reforço semanal");
+  expect(corpo.posCurso.respostas.posAcompanhConceitosTrabalhados).toBe("Não se aplica.");
+  expect(corpo.posCurso.respostas.posAcompanhPlanoAcao).toBe("Não se aplica.");
   expect(corpo.posCurso.respostas.posParticNumInscritos).toBe(40);
 
   const persistido = getPosCurso(cdCursoEmAndamento);
   expect(persistido?.respostas).toEqual({
-    posAcompanhConceitosTrabalhados: "Sustentabilidade",
-    posAcompanhPlanoAcao: "Reforço semanal",
+    posAcompanhConceitosTrabalhados:
+      "Não se aplica.",
+    posAcompanhPlanoAcao: "Não se aplica.",
     posParticNumInscritos: 40,
   });
 
@@ -138,7 +141,7 @@ test("REQ-PO-06: valor monetário negativo é rejeitado com 400, nada persistido
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/pos-cursos/${cdCursoEmAndamento}`, {
-    data: { posFinValorTotalExecutado: -1 },
+    data: { posFinValorTotal: -1 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 

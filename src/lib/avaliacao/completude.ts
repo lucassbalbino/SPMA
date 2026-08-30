@@ -1,17 +1,25 @@
 // Decide, em dois níveis, se uma AvaliacaoAluno pode avançar/encerrar.
 //
 // `respostasAvaliacaoSchema` (avaliacao.schema.ts) só valida FORMA - todas as
-// 44 chaves são `.optional()` lá. A obrigatoriedade condicional vive
+// 45 chaves são `.optional()` lá. A obrigatoriedade condicional vive
 // inteiramente aqui, como funções puras, sem `.superRefine` encadeado no
 // schema base: o Zod pula o callback de `superRefine` quando o schema base
 // já tem qualquer issue, o que faria pendências condicionais nunca
 // aparecerem enquanto o formulário ainda está pouco preenchido - lição
 // registrada em `.specs/LESSONS.md` a partir do que aconteceu em
 // `formulario-pre-curso`.
+//
+// As condições em si (Q12, Q16, Q22.1, Q30.j e o gate de Q22) ficam em
+// `condicionais.ts`, compartilhadas com a tela e com a limpeza de órfãs do
+// encerramento.
 import { respostasAvaliacaoSchema } from "../validation/schemas/avaliacao.schema";
+import {
+  pendenciasCondicionaisParte1,
+  pendenciasCondicionaisParte2,
+} from "./condicionais";
 
 // As 17 chaves de Parte 1 sempre-obrigatórias (as 19 chaves da Parte 1 menos
-// os 2 condicionais, checados à parte por `pendenciasCondicionaisParte1`).
+// os 2 condicionais, checados à parte pelas regras de `condicionais.ts`).
 const parte1SchemaBase = respostasAvaliacaoSchema.pick({
   avalPessoalEstado: true,
   avalPessoalMunicipio: true,
@@ -32,29 +40,20 @@ const parte1SchemaBase = respostasAvaliacaoSchema.pick({
   avalExpectRenda: true,
 }).required();
 
-// Seção 6.3 (Campos Condicionais): revelados só quando o campo condicionante
-// é "Sim".
-function pendenciasCondicionaisParte1(dados: Record<string, unknown>): string[] {
-  const pendentes: string[] = [];
+// Q22 e Q23 são do bloco "Participação", que todo aluno responde - o gate
+// "Concluiu o curso?" só começa a valer em Q24, cujo cabeçalho no papel diz
+// "Avaliação do curso (apenas para quem concluiu)".
+const parte2SchemaSempre = respostasAvaliacaoSchema
+  .pick({
+    avalParticipConcluiuCurso: true,
+    avalParticipPercentualFrequencia: true,
+  })
+  .required();
 
-  if (dados.avalProfissAtuaTurismo === "Sim" && !dados.avalProfissAtividadeEspecifica) {
-    pendentes.push("avalProfissAtividadeEspecifica");
-  }
-
-  if (
-    dados.avalExperienciaCursoAnterior === "Sim" &&
-    !dados.avalExperienciaTipoCursoAnterior
-  ) {
-    pendentes.push("avalExperienciaTipoCursoAnterior");
-  }
-
-  return pendentes;
-}
-
-// As 22 chaves de Parte 2 exigidas só quando avalParticipConcluiuCurso="Sim"
-// (AVAL-13, seção 6.3: "libera toda a Parte 2 de avaliação").
+// As 21 chaves de Q24 a Q37, exigidas só quando
+// avalParticipConcluiuCurso="Sim" (AVAL-13). Q38
+// (`avalGeralComentariosFinais`) fica de fora: é comentário livre opcional.
 const parte2SchemaQuandoConcluiu = respostasAvaliacaoSchema.pick({
-  avalParticipPercentualFrequencia: true,
   avalCursoDinamicasInclusao: true,
   avalCursoMaterialDidatico: true,
   avalCursoConteudo: true,
@@ -77,10 +76,6 @@ const parte2SchemaQuandoConcluiu = respostasAvaliacaoSchema.pick({
   avalGeralMelhoriasComunidade: true,
   avalGeralRecomendaCurso: true,
 }).required();
-
-const parte2SchemaQuandoNaoConcluiu = respostasAvaliacaoSchema
-  .pick({ avalParticipMotivoNaoConclusao: true })
-  .required();
 
 export interface ResultadoCompletude {
   completo: boolean;
@@ -105,28 +100,44 @@ function issuesParaPendentes(resultado: { success: boolean; error?: { issues: { 
 export function validarCompletudeParte1(respostas: unknown): ResultadoCompletude {
   const pendentesBase = issuesParaPendentes(parte1SchemaBase.safeParse(respostas));
   const pendentes = [
-    ...new Set([...pendentesBase, ...pendenciasCondicionaisParte1(dados(respostas))]),
+    ...new Set([...pendentesBase, ...pendenciasCondicionaisParte1(respostas)]),
   ];
 
   return { completo: pendentes.length === 0, pendentes };
 }
 
 // AVAL-12/13: gate interno "Concluiu o curso?" - só avaliado no encerramento.
+// As duas condicionais da Parte 2 (Q22.1, exigida quando o aluno NÃO
+// concluiu; Q30.j, exigida quando Q30="Outra") vêm da mesma tabela de regras
+// nos dois ramos - cada uma se aplica só no ramo em que sua condição vale.
 export function validarCompletudeParte2(respostas: unknown): ResultadoCompletude {
-  const concluiuCurso = dados(respostas).avalParticipConcluiuCurso;
+  const brutos = dados(respostas);
+  const concluiuCurso = brutos.avalParticipConcluiuCurso;
+
+  const pendentesSempre = issuesParaPendentes(parte2SchemaSempre.safeParse(respostas));
 
   if (concluiuCurso !== "Sim" && concluiuCurso !== "Não") {
-    return { completo: false, pendentes: ["avalParticipConcluiuCurso"] };
+    return {
+      completo: false,
+      pendentes: [...new Set(["avalParticipConcluiuCurso", ...pendentesSempre])],
+    };
   }
 
   if (concluiuCurso === "Não") {
-    const pendentes = issuesParaPendentes(
-      parte2SchemaQuandoNaoConcluiu.safeParse(respostas),
-    );
+    const pendentes = [
+      ...new Set([...pendentesSempre, ...pendenciasCondicionaisParte2(respostas)]),
+    ];
     return { completo: pendentes.length === 0, pendentes };
   }
 
-  const pendentes = issuesParaPendentes(parte2SchemaQuandoConcluiu.safeParse(respostas));
+  const pendentes = [
+    ...new Set([
+      ...pendentesSempre,
+      ...issuesParaPendentes(parte2SchemaQuandoConcluiu.safeParse(respostas)),
+      ...pendenciasCondicionaisParte2(respostas),
+    ]),
+  ];
+
   return { completo: pendentes.length === 0, pendentes };
 }
 

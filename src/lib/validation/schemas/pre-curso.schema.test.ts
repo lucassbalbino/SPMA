@@ -5,9 +5,10 @@ import {
   respostasPreCursoSchema,
 } from "./pre-curso.schema";
 
-// Fixture com os 56 campos do Dicionário de Campos (spec.md) preenchidos com
-// valores válidos, incluindo os 9 condicionais - usada como base para os
-// testes de campo individual (spread + override).
+// Fixture com as 56 chaves do questionário fonte
+// (`docs/Questionario_do_Gestor_Pre_Curso.md`) preenchidas com valores
+// válidos, incluindo os 9 condicionais - usada como base para os testes de
+// campo individual (spread + override).
 const RESPOSTA_VALIDA = {
   identifUf: "SP",
   identifMunicipio: "Campinas",
@@ -18,12 +19,12 @@ const RESPOSTA_VALIDA = {
 
   qualifEndereco: "Rua das Flores, 100",
   qualifNomeCurso: "Guia de Turismo Local",
-  qualifVinculoPrograma: "Outro",
-  qualifVinculoProgramaOutro: "Programa municipal específico",
-  qualifCaracteristicas: ["Sustentabilidade", "Outra"],
-  qualifCaracteristicasOutra: "Foco em turismo de aventura",
+  qualifVinculoPrograma: "Sim",
+  qualifVinculoProgramaQual: "Plano Municipal de Qualificação em Turismo",
+  qualifCaracteristicas: ["Guiamento de Turismo / Condução de Turismo", "Outro"],
+  qualifCaracteristicasOutra: "Turismo de aventura",
   qualifModalidade: "Presencial",
-  qualifRegiao: "Sudeste",
+  qualifRegiao: "Zona Urbana",
 
   planejDataInicioPrevista: "2026-03-01",
   planejDataTerminoPrevista: "2026-06-01",
@@ -37,45 +38,46 @@ const RESPOSTA_VALIDA = {
   publicoInstituicaoExecutora: "Empresa contratada",
   publicoInstituicaoExecutoraNome: "Turismo & Cia Ltda",
 
-  diagnosticoConsultas: ["Poder público municipal"],
+  diagnosticoConsultas: ["Poder Público: Secretarias, Prefeitura ou outros."],
 
   infraBasicaBanheiros: 5,
+  infraBasicaBebedouros: 5,
   infraBasicaEnergia: 5,
   infraBasicaSalaAula: 5,
+  infraBasicaRecepcao: 5,
   infraBasicaBiblioteca: 5,
+  infraBasicaMobiliario: 5,
   infraBasicaAcessibilidade: 5,
   infraBasicaLaboratorio: 5,
-  infraBasicaAguaPotavel: 5,
-  infraBasicaIluminacao: 5,
-  infraBasicaConectividade: 5,
 
   infraComplSalaProfessores: 4,
+  infraComplSalaGestores: 4,
+  infraComplSalaEstudo: 4,
   infraComplCopa: 4,
+  infraComplLanchonete: 4,
   infraComplAuditorio: 4,
   infraComplAudiovisual: 4,
   infraComplTecnologicos: 4,
-  infraComplConvivencia: 4,
-  infraComplEstacionamento: 4,
-  infraComplAlimentacao: 4,
 
-  infraEspecificaNecessidade: "Sim",
-  infraEspecificaDisponibilidade: "Disponível",
-  infraEspecificaSuficiencia: "Suficiente",
-  infraEspecificaManutencao: "Em bom estado",
+  infraEspecificaNecessidade: "Sim, alguns equipamentos específicos são necessários",
+  infraEspecificaDisponibilidade:
+    "Há disponibilidade de todos os equipamentos, em condições satisfatórias",
+  infraEspecificaSuficiencia: "Sim",
+  infraEspecificaManutencao: "Sim",
 
-  docenteCriteriosSelecao: ["Formação acadêmica"],
-  docenteFormaContratacao: "Outra",
-  docenteFormaContratacaoOutra: "Cooperativa de professores",
-  docenteNivelFormacao: "Graduação",
-  docentePoliticasReparacao: ["Nenhuma política aplicada"],
+  docenteCriteriosSelecao: ["Análise do Currículo (Vitae ou Lattes)."],
+  docenteFormaContratacao: "Outro sistema seletivo",
+  docenteFormaContratacaoOutra: "Chamamento público simplificado",
+  docenteNivelFormacao: "Graduação completa.",
+  docentePoliticasReparacao: "Sim",
 
-  divulgacaoEstrategias: ["Redes sociais", "Outra"],
-  divulgacaoEstrategiasOutra: "Carro de som",
+  divulgacaoEstrategias: ["Divulgação via carro de som.", "Divulgação via outros canais"],
+  divulgacaoEstrategiasOutra: "Mensagens em grupos de WhatsApp de bairro",
 
-  parceriasEstabelecidas: ["Prefeitura municipal"],
+  parceriasEstabelecidas: ["Concessão ou empréstimo de materiais e/ou de equipamentos."],
 
-  suporteEstrategias: ["Auxílio transporte", "Outra"],
-  suporteEstrategiasOutra: "Apoio psicológico",
+  suporteEstrategias: ["Estratégias Financeiras: auxílio financeiro para creche.", "Outros"],
+  suporteEstrategiasOutra: "Empréstimo de uniformes",
 };
 
 describe("criarPreCursoSchema", () => {
@@ -114,7 +116,7 @@ describe("criarPreCursoSchema", () => {
 });
 
 describe("respostasPreCursoSchema", () => {
-  it("tem exatamente 56 chaves (Dicionário de Campos, spec.md)", () => {
+  it("tem exatamente 56 chaves (questionário fonte, Q1-Q32)", () => {
     expect(Object.keys(respostasPreCursoSchema.shape)).toHaveLength(56);
   });
 
@@ -124,28 +126,28 @@ describe("respostasPreCursoSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  describe("escala de infraestrutura (Blocos 6 e 7, 0-5)", () => {
+  describe("escala de infraestrutura (Q23 e Q24, 0-5)", () => {
     const CHAVES_INFRAESTRUTURA = [
       "infraBasicaBanheiros",
+      "infraBasicaBebedouros",
       "infraBasicaEnergia",
       "infraBasicaSalaAula",
+      "infraBasicaRecepcao",
       "infraBasicaBiblioteca",
+      "infraBasicaMobiliario",
       "infraBasicaAcessibilidade",
       "infraBasicaLaboratorio",
-      "infraBasicaAguaPotavel",
-      "infraBasicaIluminacao",
-      "infraBasicaConectividade",
       "infraComplSalaProfessores",
+      "infraComplSalaGestores",
+      "infraComplSalaEstudo",
       "infraComplCopa",
+      "infraComplLanchonete",
       "infraComplAuditorio",
       "infraComplAudiovisual",
       "infraComplTecnologicos",
-      "infraComplConvivencia",
-      "infraComplEstacionamento",
-      "infraComplAlimentacao",
     ] as const;
 
-    it("tem 17 chaves de infraestrutura no dicionário (9 + 8)", () => {
+    it("tem 17 chaves de infraestrutura no questionário (9 + 8)", () => {
       expect(CHAVES_INFRAESTRUTURA).toHaveLength(17);
     });
 
@@ -237,7 +239,7 @@ describe("respostasPreCursoSchema", () => {
     it("qualifCaracteristicas aceita array de opções válidas", () => {
       const result = respostasPreCursoSchema.safeParse({
         ...RESPOSTA_VALIDA,
-        qualifCaracteristicas: ["Turismo rural", "Turismo cultural"],
+        qualifCaracteristicas: ["Eventos", "Turismo de Base Comunitária"],
         qualifCaracteristicasOutra: undefined,
       });
 
@@ -270,6 +272,67 @@ describe("respostasPreCursoSchema", () => {
 
       expect(result.success).toBe(false);
     });
+  });
+
+  // As perguntas de múltipla escolha cuja última alternativa nega todas as
+  // outras ("Não foram realizadas...", "Nenhuma...") - a combinação é
+  // contraditória e é barrada no servidor, não só escondida na UI.
+  describe("opções excludentes das perguntas de seleção múltipla", () => {
+    const CASOS = [
+      {
+        chave: "diagnosticoConsultas",
+        exclusiva:
+          "Não foram realizadas consultas individuais prévias e/ou reuniões com nenhum dos representantes dos grupos de atores locais.",
+        outra: "Poder Público: Secretarias, Prefeitura ou outros.",
+      },
+      {
+        chave: "docenteCriteriosSelecao",
+        exclusiva:
+          "Não foi realizada a avaliação da trajetória profissional e do histórico de formação do(a) candidato(a).",
+        outra: "Análise do Currículo (Vitae ou Lattes).",
+      },
+      {
+        chave: "divulgacaoEstrategias",
+        exclusiva: "Não foram adotadas estratégias de divulgação do Curso.",
+        outra: "Divulgação via carro de som.",
+      },
+      {
+        chave: "parceriasEstabelecidas",
+        exclusiva: "Não foram estabelecidas parcerias para realização do Curso.",
+        outra: "Concessão ou empréstimo de materiais e/ou de equipamentos.",
+      },
+      {
+        chave: "suporteEstrategias",
+        exclusiva:
+          "Não foram adotadas estratégias logísticas, políticas ou financeiras de suporte ao aluno.",
+        outra: "Estratégias Financeiras: auxílio financeiro para creche.",
+      },
+    ] as const;
+
+    it.each(CASOS)("$chave aceita a opção excludente sozinha", ({ chave, exclusiva }) => {
+      const result = respostasPreCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        [chave]: [exclusiva],
+        // Os campos "Qual?/Quais?" de Q30/Q32 deixam de ser alcançáveis
+        // quando a excludente é a única marcada.
+        divulgacaoEstrategiasOutra: undefined,
+        suporteEstrategiasOutra: undefined,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it.each(CASOS)(
+      "$chave rejeita a opção excludente combinada com outra",
+      ({ chave, exclusiva, outra }) => {
+        const result = respostasPreCursoSchema.safeParse({
+          ...RESPOSTA_VALIDA,
+          [chave]: [outra, exclusiva],
+        });
+
+        expect(result.success).toBe(false);
+      },
+    );
   });
 
   describe("forma parcial (PATCH, REQ-PC-04/05)", () => {
