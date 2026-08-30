@@ -163,3 +163,123 @@ test.describe("casca comum", () => {
     await contexto.close();
   });
 });
+
+// ---------------------------------------------------------------------------
+// T6: menu de navegação por perfil (UI-01, UI-02, UI-03).
+// ---------------------------------------------------------------------------
+
+const CPF_NAV_GT = "50102030901";
+const CPF_NAV_AL = "50102031037";
+const CPF_NAV_VT = "50102031118";
+const CPFS_NAV = [CPF_NAV_GT, CPF_NAV_AL, CPF_NAV_VT];
+
+const linksDoMenu = (page: Page) =>
+  page.getByTestId("navegacao-perfil").getByRole("link");
+
+test.describe("menu de navegação por perfil", () => {
+  test.beforeAll(() => {
+    deleteUsuarios(CPFS_NAV);
+    upsertUsuario({ cpf: CPF_NAV_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
+    upsertUsuario({ cpf: CPF_NAV_AL, tipo: "AL", senha: SENHA, primeiraVez: false });
+    upsertUsuario({ cpf: CPF_NAV_VT, tipo: "VT", senha: SENHA, primeiraVez: false });
+  });
+
+  test.afterAll(() => {
+    deleteUsuarios(CPFS_NAV);
+  });
+
+  test("UI-02: GT vê os 5 itens da tabela do design", async ({ page }) => {
+    await logar(page, CPF_NAV_GT, SENHA);
+    await page.goto("/painel");
+
+    await expect(linksDoMenu(page)).toHaveText([
+      "Painel",
+      "Novo usuário",
+      "Pré-cursos",
+      "Pós-cursos",
+      "Avaliações",
+    ]);
+  });
+
+  test("UI-02: AL vê exatamente 2 itens, com o rótulo próprio da avaliação", async ({
+    page,
+  }) => {
+    await logar(page, CPF_NAV_AL, SENHA);
+    await page.goto("/painel");
+
+    await expect(linksDoMenu(page)).toHaveText(["Painel", "Minha avaliação"]);
+  });
+
+  test("UI-02: AL não vê Pré-cursos nem Pós-cursos", async ({ page }) => {
+    await logar(page, CPF_NAV_AL, SENHA);
+    await page.goto("/painel");
+
+    const menu = page.getByTestId("navegacao-perfil");
+    await expect(menu.getByRole("link", { name: "Pré-cursos" })).toHaveCount(0);
+    await expect(menu.getByRole("link", { name: "Pós-cursos" })).toHaveCount(0);
+  });
+
+  test("UI-02: VT não vê Novo usuário", async ({ page }) => {
+    await logar(page, CPF_NAV_VT, SENHA);
+    await page.goto("/painel");
+
+    const menu = page.getByTestId("navegacao-perfil");
+    await expect(menu.getByRole("link", { name: "Novo usuário" })).toHaveCount(0);
+    // O menu renderizou: a ausência acima é do item, não do menu inteiro.
+    await expect(menu.getByRole("link", { name: "Painel" })).toHaveCount(1);
+  });
+
+  test("UI-03: em /avaliacoes só o item de /avaliacoes tem aria-current=page", async ({
+    page,
+  }) => {
+    await logar(page, CPF_NAV_GT, SENHA);
+    await page.goto("/avaliacoes");
+
+    const menu = page.getByTestId("navegacao-perfil");
+    await expect(menu.getByRole("link", { name: "Avaliações" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await expect(menu.locator('a[aria-current="page"]')).toHaveCount(1);
+  });
+
+  test("UI-03: numa sub-rota o item da rota-pai continua marcado", async ({ page }) => {
+    await logar(page, CPF_NAV_GT, SENHA);
+    await page.goto("/avaliacoes/novo");
+
+    const menu = page.getByTestId("navegacao-perfil");
+    await expect(menu.getByRole("link", { name: "Avaliações" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  test("UI-01: dá para chegar em /pos-cursos pelo menu, sem digitar a URL", async ({
+    page,
+  }) => {
+    await logar(page, CPF_NAV_GT, SENHA);
+    await page.goto("/painel");
+
+    await page.getByTestId("navegacao-perfil").getByRole("link", { name: "Pós-cursos" }).click();
+
+    await expect(page).toHaveURL(/\/pos-cursos$/);
+  });
+
+  test("navegar entre duas rotas pelo menu não produz erro de hidratação", async ({
+    page,
+  }) => {
+    const erros: string[] = [];
+    page.on("console", (mensagem) => {
+      if (mensagem.type() === "error") {
+        erros.push(mensagem.text());
+      }
+    });
+
+    await logar(page, CPF_NAV_GT, SENHA);
+    await page.goto("/painel");
+    await page.getByTestId("navegacao-perfil").getByRole("link", { name: "Pré-cursos" }).click();
+    await expect(page).toHaveURL(/\/pre-cursos$/);
+
+    expect(erros.filter((e) => /hydrat|hidrat/i.test(e))).toEqual([]);
+  });
+});

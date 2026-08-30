@@ -8,6 +8,8 @@
 // O cabeçalho identifica o usuário por nome e sigla do perfil, nunca por
 // CPF (REQ-SEC-12).
 import type { TipoUsuario } from "@/generated/prisma/enums";
+import { navegacaoDoPerfil } from "@/lib/ui/navegacao";
+import { NavegacaoPerfil } from "./NavegacaoPerfil";
 
 export function CascaProtegida({
   usuario,
@@ -25,6 +27,7 @@ export function CascaProtegida({
         data-testid="casca-cabecalho"
       >
         <span className="text-lg font-semibold tracking-tight">SPMA</span>
+        <NavegacaoPerfil itens={navegacaoDoPerfil(usuario.tipo)} />
         <div className="ml-auto flex flex-wrap items-center gap-3">
           <span className="max-w-64 truncate text-sm font-medium">{usuario.nome}</span>
           <span className="text-sm text-muted-foreground">{usuario.tipo}</span>

@@ -246,12 +246,12 @@ T7 → T8
 - Skill: NONE
 
 **Done when**:
-- [ ] e2e por perfil, em contextos separados (padrão de `e2e/painel.spec.ts`): GT vê os 5 itens da tabela do design; AL vê exatamente 2 ("Painel", "Minha avaliação"); AL **não** vê "Pré-cursos" nem "Pós-cursos"; VT **não** vê "Novo usuário" — 4 testes, um por asserção de conjunto (L-014: afirmar cada parte do critério, não só que a navegação renderizou)
-- [ ] e2e de UI-03: em `/avaliacoes` o link de `/avaliacoes` tem `aria-current="page"` e os demais não têm; em `/avaliacoes/novo` (sub-rota) o mesmo link continua marcado — 2 testes
-- [ ] e2e de navegação real: logado como GT, clicar em "Pós-cursos" no menu chega em `/pos-cursos` sem digitar URL — 1 teste
-- [ ] Navegar entre duas rotas com o menu não produz erro de hidratação no console — asserção sobre `page.on("console")`, 1 teste
-- [ ] Gate full passa, zero arquivo de teste existente alterado
-- [ ] Test count: e2e = contagem da T5 **+8**
+- [x] e2e por perfil, em contextos separados (padrão de `e2e/painel.spec.ts`): GT vê os 5 itens da tabela do design; AL vê exatamente 2 ("Painel", "Minha avaliação"); AL **não** vê "Pré-cursos" nem "Pós-cursos"; VT **não** vê "Novo usuário" — 4 testes, um por asserção de conjunto (L-014: afirmar cada parte do critério, não só que a navegação renderizou)
+- [x] e2e de UI-03: em `/avaliacoes` o link de `/avaliacoes` tem `aria-current="page"` e os demais não têm; em `/avaliacoes/novo` (sub-rota) o mesmo link continua marcado — 2 testes
+- [x] e2e de navegação real: logado como GT, clicar em "Pós-cursos" no menu chega em `/pos-cursos` sem digitar URL — 1 teste
+- [x] Navegar entre duas rotas com o menu não produz erro de hidratação no console — asserção sobre `page.on("console")`, 1 teste
+- [x] Gate full passa, zero arquivo de teste existente alterado
+- [x] Test count: e2e = contagem da T5 **+8**
 
 **Tests**: e2e
 **Gate**: full
