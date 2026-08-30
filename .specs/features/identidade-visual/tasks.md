@@ -168,10 +168,10 @@ T7 → T8
 - Skill: NONE
 
 **Done when**:
-- [ ] Nenhum literal de módulo sobra em `painel/page.tsx` (`grep` por "Ofertantes" no arquivo volta vazio)
-- [ ] `e2e/painel.spec.ts` passa **sem nenhuma alteração no arquivo de teste** (UI-12) — é a prova de que os rótulos não mudaram
-- [ ] Gate full passa
-- [ ] Test count: unit, integration e e2e todos iguais aos da T2/T1 (esta tarefa não adiciona teste; ela é coberta pela regressão existente mais os testes literais de `modulosDoPerfil` da T2)
+- [x] Nenhum literal de módulo sobra em `painel/page.tsx` (`grep` por "Ofertantes" no arquivo volta vazio)
+- [x] `e2e/painel.spec.ts` passa **sem nenhuma alteração no arquivo de teste** (UI-12) — é a prova de que os rótulos não mudaram
+- [x] Gate full passa
+- [x] Test count: unit, integration e e2e todos iguais aos da T2/T1 (esta tarefa não adiciona teste; ela é coberta pela regressão existente mais os testes literais de `modulosDoPerfil` da T2)
 
 **Tests**: e2e
 **Gate**: full
