@@ -19,6 +19,7 @@
 // `/cadastro-ofertante` (T26/T27) vivem em `src/app/(onboarding)/`, um
 // grupo irmão guardado só por requireSession() - mesmas URLs finais
 // (grupos de rota são transparentes), sem o guard que criaria o loop.
+import { CascaProtegida } from "@/components/layout/CascaProtegida";
 import {
   requireOfertanteVinculado,
   requirePrimeiroAcessoConcluido,
@@ -34,5 +35,5 @@ export default async function ProtegidoLayout({
   requirePrimeiroAcessoConcluido(usuario);
   requireOfertanteVinculado(usuario);
 
-  return <>{children}</>;
+  return <CascaProtegida usuario={usuario}>{children}</CascaProtegida>;
 }

@@ -220,11 +220,11 @@ T7 → T8
 - Skill: NONE
 
 **Done when**:
-- [ ] `e2e/identidade-visual.spec.ts` ganha 4 testes: o cabeçalho com "SPMA" aparece em `/painel` **e** em `/avaliacoes` (prova que é da casca, não da página); o nome e a sigla do perfil do usuário logado aparecem; o CPF do usuário logado **não** aparece em lugar nenhum do documento; existe exatamente **um** `<main>` na página (`page.locator("main")` → count 1)
-- [ ] Teste de UI-07: com `viewport` de 375px de largura, `document.documentElement.scrollWidth <= clientWidth` em `/painel` (sem scroll horizontal) e o cabeçalho continua visível
-- [ ] `/primeiro-acesso` e `/cadastro-ofertante` **não** renderizam o cabeçalho (edge case da spec) — 1 teste
-- [ ] Gate full passa, zero arquivo de teste existente alterado
-- [ ] Test count: e2e = contagem da T4 **+6**
+- [x] `e2e/identidade-visual.spec.ts` ganha 4 testes: o cabeçalho com "SPMA" aparece em `/painel` **e** em `/avaliacoes` (prova que é da casca, não da página); o nome e a sigla do perfil do usuário logado aparecem; o CPF do usuário logado **não** aparece em lugar nenhum do documento; existe exatamente **um** `<main>` na página (`page.locator("main")` → count 1)
+- [x] Teste de UI-07: com `viewport` de 375px de largura, `document.documentElement.scrollWidth <= clientWidth` em `/painel` (sem scroll horizontal) e o cabeçalho continua visível
+- [x] `/primeiro-acesso` e `/cadastro-ofertante` **não** renderizam o cabeçalho (edge case da spec) — 1 teste
+- [x] Gate full passa, zero arquivo de teste existente alterado
+- [x] Test count: e2e = contagem da T4 **+6**
 
 **Tests**: e2e
 **Gate**: full
