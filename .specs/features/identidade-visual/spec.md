@@ -75,7 +75,7 @@ Toda ambiguidade está resolvida ou registrada aqui.
 2. The system SHALL derivar os itens de navegação de uma única fonte compartilhada com o painel, de modo que um perfil nunca receba link para um módulo fora da sua lista. (UI-02)
 3. WHEN a rota atual corresponde a um item da navegação THEN the system SHALL marcar esse item com `aria-current="page"`. (UI-03)
 4. WHEN o usuário aciona "Sair" THEN the system SHALL enviar `POST /api/auth/logout` com o cabeçalho `x-csrf-token` obtido de `headerCSRF()` e, ao receber resposta de sucesso, navegar para `/login`. (UI-04)
-5. IF a requisição de logout for rejeitada (403 de CSRF, 401 de sessão ausente) ou falhar por rede THEN the system SHALL manter o usuário na página atual e exibir uma mensagem de falha, sem navegar para `/login`. (UI-05)
+5. IF a requisição de logout for rejeitada por CSRF (403) ou falhar por rede THEN the system SHALL manter o usuário na página atual e exibir uma mensagem de falha, sem navegar para `/login`. O 401 de sessão ausente é a exceção deliberada: ele é tratado como conclusão bem-sucedida, porque a sessão que o botão existe para destruir já não existe — ver o edge case do clique duplo e a decisão correspondente em `design.md`. (UI-05)
 6. The system SHALL renderizar o conteúdo de toda tela protegida dentro de um contêiner único, centralizado e de largura máxima fixa, com o mesmo espaçamento vertical em todas elas. (UI-06)
 7. WHERE a viewport tem menos de 640px de largura, the system SHALL manter cabeçalho e navegação legíveis sem scroll horizontal e sem depender de JavaScript para revelar a navegação. (UI-07)
 

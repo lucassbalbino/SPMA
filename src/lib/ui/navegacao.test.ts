@@ -131,6 +131,15 @@ describe("hrefAtivo", () => {
     expect(hrefAtivo("/relatorios", itens)).toBeNull();
   });
 
+  // Fronteira do separador: sem a barra, o prefixo compartilhado e uma
+  // sub-rota de verdade sao coisas diferentes. Sem este caso, trocar
+  // `startsWith(href + "/")` por `startsWith(href)` passaria despercebido.
+  it("rota irma que so compartilha o prefixo, sem a barra, nao casa", () => {
+    expect(hrefAtivo("/pre-cursos-antigos", itens)).toBeNull();
+    expect(hrefAtivo("/painelx", itens)).toBeNull();
+    expect(hrefAtivo("/usuarios-inativos", itens)).toBeNull();
+  });
+
   it("lista vazia não marca nenhum item", () => {
     expect(hrefAtivo("/painel", [])).toBeNull();
   });

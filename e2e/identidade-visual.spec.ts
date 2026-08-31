@@ -58,7 +58,15 @@ const CPF_CASCA = "50102030499";
 const NOME_CASCA = "Fulana de Tal da Casca";
 const CPF_PRIMEIRA_VEZ = "50102030570";
 const CPF_GO_SEM_OFERTANTE = "50102030650";
-const CPFS_CASCA = [CPF_CASCA, CPF_PRIMEIRA_VEZ, CPF_GO_SEM_OFERTANTE];
+const CPF_NOME_LONGO = "50102031460";
+const NOME_LONGO =
+  "Maria Aparecida Buarque de Hollanda Nascimento Vasconcelos Albuquerque";
+const CPFS_CASCA = [
+  CPF_CASCA,
+  CPF_PRIMEIRA_VEZ,
+  CPF_GO_SEM_OFERTANTE,
+  CPF_NOME_LONGO,
+];
 
 test.describe("casca comum", () => {
   test.beforeAll(() => {
@@ -82,6 +90,13 @@ test.describe("casca comum", () => {
       senha: SENHA,
       primeiraVez: false,
       cdOfertante: null,
+    });
+    upsertUsuario({
+      cpf: CPF_NOME_LONGO,
+      nome: NOME_LONGO,
+      tipo: "GT",
+      senha: SENHA,
+      primeiraVez: false,
     });
   });
 
@@ -122,11 +137,34 @@ test.describe("casca comum", () => {
     expect(await page.content()).not.toContain(CPF_CASCA);
   });
 
-  test("UI-06: a tela protegida tem exatamente um <main>", async ({ page }) => {
+  test("UI-06: o conteudo fica num <main> unico, centralizado e de largura maxima", async ({
+    page,
+  }) => {
     await logar(page, CPF_CASCA, SENHA);
     await page.goto("/painel");
 
     await expect(page.locator("main")).toHaveCount(1);
+    // Em uma segunda rota tambem: o container e da casca, nao da pagina.
+    await page.goto("/avaliacoes");
+    await expect(page.locator("main")).toHaveCount(1);
+
+    // Contar o <main> nao prova "centralizado e de largura maxima fixa".
+    // Medir max-width e a simetria das margens prova.
+    const medidas = await page.locator("main").evaluate((elemento) => {
+      const estilo = getComputedStyle(elemento);
+      const caixa = elemento.getBoundingClientRect();
+      return {
+        maxWidth: estilo.maxWidth,
+        paddingTop: estilo.paddingTop,
+        folgaEsquerda: caixa.left,
+        folgaDireita: document.documentElement.clientWidth - caixa.right,
+      };
+    });
+
+    expect(medidas.maxWidth).not.toBe("none");
+    expect(medidas.paddingTop).not.toBe("0px");
+    expect(Math.abs(medidas.folgaEsquerda - medidas.folgaDireita)).toBeLessThanOrEqual(1);
+    expect(medidas.folgaEsquerda).toBeGreaterThan(0);
   });
 
   test("UI-07: a 375px o cabeçalho continua visível e não há scroll horizontal", async ({
@@ -136,13 +174,61 @@ test.describe("casca comum", () => {
     await logar(page, CPF_CASCA, SENHA);
     await page.goto("/painel");
 
-    await expect(page.getByTestId("casca-cabecalho")).toBeVisible();
+    const cabecalho = page.getByTestId("casca-cabecalho");
+    await expect(cabecalho).toBeVisible();
+    await expect(page.getByTestId("navegacao-perfil")).toBeVisible();
 
-    const { scrollWidth, clientWidth } = await page.evaluate(() => ({
-      scrollWidth: document.documentElement.scrollWidth,
-      clientWidth: document.documentElement.clientWidth,
+    // `globals.css` fixa `html, body { overflow-x: hidden }`, entao medir
+    // `documentElement.scrollWidth` seria tautologia: a raiz nunca estoura.
+    // O elemento que pode estourar e o proprio cabecalho.
+    const medidas = await cabecalho.evaluate((elemento) => ({
+      scrollWidth: elemento.scrollWidth,
+      clientWidth: elemento.clientWidth,
     }));
-    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+    expect(medidas.scrollWidth).toBeLessThanOrEqual(medidas.clientWidth);
+
+    // E nenhum item do menu pode passar da viewport.
+    const larguraViewport = page.viewportSize()!.width;
+    for (const link of await page.getByTestId("navegacao-perfil").getByRole("link").all()) {
+      const caixa = await link.boundingBox();
+      expect(caixa!.x + caixa!.width).toBeLessThanOrEqual(larguraViewport);
+    }
+  });
+
+  test("nome longo trunca com reticencias, sem quebrar o cabecalho", async ({ page }) => {
+    await logar(page, CPF_NOME_LONGO, SENHA);
+    await page.goto("/painel");
+
+    const nome = page.getByTestId("casca-cabecalho").getByText(NOME_LONGO);
+    const medidas = await nome.evaluate((elemento) => ({
+      scrollWidth: elemento.scrollWidth,
+      clientWidth: elemento.clientWidth,
+      textOverflow: getComputedStyle(elemento).textOverflow,
+    }));
+
+    // Trunca de fato: o conteudo excede a caixa e o excesso vira reticencias.
+    expect(medidas.scrollWidth).toBeGreaterThan(medidas.clientWidth);
+    expect(medidas.textOverflow).toBe("ellipsis");
+  });
+
+  test("UI-07: a navegacao existe sem depender de JavaScript", async ({ browser }) => {
+    // A exigencia da spec e literal: nada de drawer ou hamburguer que so
+    // aparece com JS. Com JavaScript desligado os links continuam la.
+    const contexto = await browser.newContext({ javaScriptEnabled: false });
+    const pagina = await contexto.newPage();
+    await logar(pagina, CPF_CASCA, SENHA);
+    await pagina.goto("/painel");
+
+    await expect(pagina.getByTestId("casca-cabecalho")).toBeVisible();
+    const links = pagina.getByTestId("navegacao-perfil").getByRole("link");
+    await expect(links).toHaveText([
+      "Painel",
+      "Novo usuário",
+      "Pré-cursos",
+      "Pós-cursos",
+      "Avaliações",
+    ]);
+    await contexto.close();
   });
 
   test("as telas de onboarding não recebem a casca", async ({ page, browser }) => {
@@ -335,6 +421,21 @@ test.describe("botão Sair", () => {
     await page.route("**/api/auth/logout", (rota) =>
       rota.fulfill({ status: 403, contentType: "application/json", body: "{}" }),
     );
+
+    await page.getByRole("button", { name: "Sair" }).click();
+
+    await expect(page.getByTestId("erro-sair")).toBeVisible();
+    await expect(page).toHaveURL(/\/painel$/);
+  });
+
+  test("UI-05: falha de rede no logout mantem a pagina e exibe a falha", async ({
+    page,
+  }) => {
+    await logar(page, CPF_SAIR_FALHA, SENHA);
+    await page.goto("/painel");
+
+    // O ramo do catch: a requisicao nem chega a ter status.
+    await page.route("**/api/auth/logout", (rota) => rota.abort());
 
     await page.getByRole("button", { name: "Sair" }).click();
 
