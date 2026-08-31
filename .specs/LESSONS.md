@@ -168,6 +168,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: UI-07 - e2e/identidade-visual.spec.ts:132 (e2e)
 - last seen: 2026-08-31T07:42:09Z
 
+### L-027 - When a criterion applies a shared container to every screen, assert it on every route in scope; sampling two routes leaves a per-page regression on the rest undetected.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: identidade-visual
+- evidence: N1 - e2e/identidade-visual.spec.ts:146,149,165 (UI-06) (e2e)
+- last seen: 2026-08-31T22:05:17Z
+
+### L-028 - Assert containment by scoping the locator inside the element the criterion names; a document-wide locator still passes after the child is moved out of its parent.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: identidade-visual
+- evidence: N2 - e2e/identidade-visual.spec.ts:224,403 (UI-01) (e2e)
+- last seen: 2026-08-31T22:05:18Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

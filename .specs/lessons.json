@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 27,
+  "next_id": 29,
   "lessons": [
     {
       "id": "L-001",
@@ -474,6 +474,42 @@
       ],
       "created": "2026-08-31T07:42:09Z",
       "last_seen": "2026-08-31T07:42:09Z"
+    },
+    {
+      "id": "L-027",
+      "key": "surviving_mutant::when a criterion applies a shared container to every screen assert it on every route in scope sampling two routes leaves a per page regression on the rest undetected",
+      "text": "When a criterion applies a shared container to every screen, assert it on every route in scope; sampling two routes leaves a per-page regression on the rest undetected.",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N1 - e2e/identidade-visual.spec.ts:146,149,165 (UI-06) (e2e)"
+      ],
+      "created": "2026-08-31T22:05:17Z",
+      "last_seen": "2026-08-31T22:05:17Z"
+    },
+    {
+      "id": "L-028",
+      "key": "surviving_mutant::assert containment by scoping the locator inside the element the criterion names a document wide locator still passes after the child is moved out of its parent",
+      "text": "Assert containment by scoping the locator inside the element the criterion names; a document-wide locator still passes after the child is moved out of its parent.",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N2 - e2e/identidade-visual.spec.ts:224,403 (UI-01) (e2e)"
+      ],
+      "created": "2026-08-31T22:05:18Z",
+      "last_seen": "2026-08-31T22:05:18Z"
     }
   ]
 }
