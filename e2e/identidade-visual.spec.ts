@@ -126,6 +126,9 @@ test.describe("casca comum", () => {
     const cabecalho = page.getByTestId("casca-cabecalho");
     await expect(cabecalho).toContainText(NOME_CASCA);
     await expect(cabecalho).toContainText("GT");
+    // UI-01 exige os quatro elementos NO cabecalho, nao apenas na pagina.
+    await expect(cabecalho.getByTestId("navegacao-perfil")).toHaveCount(1);
+    await expect(cabecalho.getByRole("button", { name: "Sair" })).toHaveCount(1);
   });
 
   test("REQ-SEC-12: o CPF do usuário logado não aparece em lugar nenhum do documento", async ({
@@ -167,6 +170,39 @@ test.describe("casca comum", () => {
     expect(medidas.folgaEsquerda).toBeGreaterThan(0);
   });
 
+  test("UI-06: toda rota estatica tem um <main> unico e o mesmo espacamento vertical", async ({
+    page,
+  }) => {
+    await logar(page, CPF_CASCA, SENHA);
+
+    // "Contêiner único" e "mesmo espaçamento vertical em todas elas" sao
+    // afirmacoes sobre o conjunto das telas - verificar duas nao as prova.
+    // As 3 rotas dinamicas ficam de fora porque exigiriam fixture de curso.
+    const rotas = [
+      "/painel",
+      "/usuarios/novo",
+      "/pre-cursos",
+      "/pre-cursos/novo",
+      "/pos-cursos",
+      "/pos-cursos/novo",
+      "/avaliacoes",
+      "/avaliacoes/novo",
+    ];
+
+    const espacamentos: string[] = [];
+    for (const rota of rotas) {
+      await page.goto(rota);
+      await expect(page.locator("main")).toHaveCount(1);
+      espacamentos.push(
+        await page.locator("main").evaluate((e) => getComputedStyle(e).paddingTop),
+      );
+    }
+
+    // py-8 = 2rem = 32px. Valor fixo, nao "diferente de zero": assim uma
+    // troca de py-8 por py-2 tambem derruba o teste.
+    expect(espacamentos).toEqual(rotas.map(() => "32px"));
+  });
+
   test("UI-07: a 375px o cabeçalho continua visível e não há scroll horizontal", async ({
     page,
   }) => {
@@ -176,7 +212,7 @@ test.describe("casca comum", () => {
 
     const cabecalho = page.getByTestId("casca-cabecalho");
     await expect(cabecalho).toBeVisible();
-    await expect(page.getByTestId("navegacao-perfil")).toBeVisible();
+    await expect(menuDaCasca(page)).toBeVisible();
 
     // `globals.css` fixa `html, body { overflow-x: hidden }`, entao medir
     // `documentElement.scrollWidth` seria tautologia: a raiz nunca estoura.
@@ -189,7 +225,7 @@ test.describe("casca comum", () => {
 
     // E nenhum item do menu pode passar da viewport.
     const larguraViewport = page.viewportSize()!.width;
-    for (const link of await page.getByTestId("navegacao-perfil").getByRole("link").all()) {
+    for (const link of await linksDoMenu(page).all()) {
       const caixa = await link.boundingBox();
       expect(caixa!.x + caixa!.width).toBeLessThanOrEqual(larguraViewport);
     }
@@ -220,7 +256,7 @@ test.describe("casca comum", () => {
     await pagina.goto("/painel");
 
     await expect(pagina.getByTestId("casca-cabecalho")).toBeVisible();
-    const links = pagina.getByTestId("navegacao-perfil").getByRole("link");
+    const links = linksDoMenu(pagina);
     await expect(links).toHaveText([
       "Painel",
       "Novo usuário",
@@ -259,8 +295,16 @@ const CPF_NAV_AL = "50102031037";
 const CPF_NAV_VT = "50102031118";
 const CPFS_NAV = [CPF_NAV_GT, CPF_NAV_AL, CPF_NAV_VT];
 
-const linksDoMenu = (page: Page) =>
-  page.getByTestId("navegacao-perfil").getByRole("link");
+// Escopado no cabecalho de proposito: um localizador de documento acharia a
+// nav mesmo que ela fosse renderizada fora da casca, e UI-01 exige que ela
+// esteja DENTRO do cabecalho.
+const menuDaCasca = (page: Page) =>
+  page.getByTestId("casca-cabecalho").getByTestId("navegacao-perfil");
+
+const linksDoMenu = (page: Page) => menuDaCasca(page).getByRole("link");
+
+const botaoSair = (page: Page) =>
+  page.getByTestId("casca-cabecalho").getByRole("button", { name: "Sair" });
 
 test.describe("menu de navegação por perfil", () => {
   test.beforeAll(() => {
@@ -300,7 +344,7 @@ test.describe("menu de navegação por perfil", () => {
     await logar(page, CPF_NAV_AL, SENHA);
     await page.goto("/painel");
 
-    const menu = page.getByTestId("navegacao-perfil");
+    const menu = menuDaCasca(page);
     await expect(menu.getByRole("link", { name: "Pré-cursos" })).toHaveCount(0);
     await expect(menu.getByRole("link", { name: "Pós-cursos" })).toHaveCount(0);
   });
@@ -309,7 +353,7 @@ test.describe("menu de navegação por perfil", () => {
     await logar(page, CPF_NAV_VT, SENHA);
     await page.goto("/painel");
 
-    const menu = page.getByTestId("navegacao-perfil");
+    const menu = menuDaCasca(page);
     await expect(menu.getByRole("link", { name: "Novo usuário" })).toHaveCount(0);
     // O menu renderizou: a ausência acima é do item, não do menu inteiro.
     await expect(menu.getByRole("link", { name: "Painel" })).toHaveCount(1);
@@ -321,7 +365,7 @@ test.describe("menu de navegação por perfil", () => {
     await logar(page, CPF_NAV_GT, SENHA);
     await page.goto("/avaliacoes");
 
-    const menu = page.getByTestId("navegacao-perfil");
+    const menu = menuDaCasca(page);
     await expect(menu.getByRole("link", { name: "Avaliações" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -333,11 +377,37 @@ test.describe("menu de navegação por perfil", () => {
     await logar(page, CPF_NAV_GT, SENHA);
     await page.goto("/avaliacoes/novo");
 
-    const menu = page.getByTestId("navegacao-perfil");
+    const menu = menuDaCasca(page);
     await expect(menu.getByRole("link", { name: "Avaliações" })).toHaveAttribute(
       "aria-current",
       "page",
     );
+  });
+
+  test("UI-03: em cada rota, o item marcado e o correspondente aquela rota", async ({
+    page,
+  }) => {
+    await logar(page, CPF_NAV_GT, SENHA);
+
+    // UI-03 vale para toda rota que casa com um item, nao so /avaliacoes.
+    // Inclui as rotas-filhas, onde quem deve ficar marcado e o item pai.
+    const esperado: Array<[string, string]> = [
+      ["/painel", "Painel"],
+      ["/usuarios/novo", "Novo usuário"],
+      ["/pre-cursos", "Pré-cursos"],
+      ["/pre-cursos/novo", "Pré-cursos"],
+      ["/pos-cursos", "Pós-cursos"],
+      ["/pos-cursos/novo", "Pós-cursos"],
+      ["/avaliacoes", "Avaliações"],
+      ["/avaliacoes/novo", "Avaliações"],
+    ];
+
+    for (const [rota, rotulo] of esperado) {
+      await page.goto(rota);
+      const marcados = menuDaCasca(page).locator('a[aria-current="page"]');
+      await expect(marcados).toHaveCount(1);
+      await expect(marcados).toHaveText(rotulo);
+    }
   });
 
   test("UI-01: dá para chegar em /pos-cursos pelo menu, sem digitar a URL", async ({
@@ -346,7 +416,7 @@ test.describe("menu de navegação por perfil", () => {
     await logar(page, CPF_NAV_GT, SENHA);
     await page.goto("/painel");
 
-    await page.getByTestId("navegacao-perfil").getByRole("link", { name: "Pós-cursos" }).click();
+    await linksDoMenu(page).filter({ hasText: "Pós-cursos" }).click();
 
     await expect(page).toHaveURL(/\/pos-cursos$/);
   });
@@ -363,7 +433,7 @@ test.describe("menu de navegação por perfil", () => {
 
     await logar(page, CPF_NAV_GT, SENHA);
     await page.goto("/painel");
-    await page.getByTestId("navegacao-perfil").getByRole("link", { name: "Pré-cursos" }).click();
+    await linksDoMenu(page).filter({ hasText: "Pré-cursos" }).click();
     await expect(page).toHaveURL(/\/pre-cursos$/);
 
     expect(erros.filter((e) => /hydrat|hidrat/i.test(e))).toEqual([]);
@@ -400,7 +470,7 @@ test.describe("botão Sair", () => {
     const sessaoAntes = cookies.find((c) => c.name === "spma_sessao");
     expect(sessaoAntes).toBeDefined();
 
-    await page.getByRole("button", { name: "Sair" }).click();
+    await botaoSair(page).click();
     await expect(page).toHaveURL(/\/login$/);
 
     // A outra metade do critério: o cookie que valia antes não vale mais.
@@ -422,7 +492,7 @@ test.describe("botão Sair", () => {
       rota.fulfill({ status: 403, contentType: "application/json", body: "{}" }),
     );
 
-    await page.getByRole("button", { name: "Sair" }).click();
+    await botaoSair(page).click();
 
     await expect(page.getByTestId("erro-sair")).toBeVisible();
     await expect(page).toHaveURL(/\/painel$/);
@@ -437,7 +507,7 @@ test.describe("botão Sair", () => {
     // O ramo do catch: a requisicao nem chega a ter status.
     await page.route("**/api/auth/logout", (rota) => rota.abort());
 
-    await page.getByRole("button", { name: "Sair" }).click();
+    await botaoSair(page).click();
 
     await expect(page.getByTestId("erro-sair")).toBeVisible();
     await expect(page).toHaveURL(/\/painel$/);
@@ -453,7 +523,7 @@ test.describe("botão Sair", () => {
       rota.fulfill({ status: 401, contentType: "application/json", body: "{}" }),
     );
 
-    await page.getByRole("button", { name: "Sair" }).click();
+    await botaoSair(page).click();
 
     await expect(page).toHaveURL(/\/login$/);
   });
