@@ -126,6 +126,48 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: spec.md edge case: avalParticipConcluiuCurso changed Sim to Nao after conditional fields already saved - no test in e2e/avaliacoes-id.spec.ts or e2e/avaliacoes-formulario.spec.ts (tests)
 - last seen: 2026-08-28T17:17:11Z
 
+### L-020 - When a path-prefix match is defined with a separator boundary (href + '/'), test a sibling path that shares the prefix without the separator; exact and sub-route cases alone pass with or without the boundary check.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: identidade-visual
+- evidence: M2 - src/lib/ui/navegacao.ts:81 (tests)
+- last seen: 2026-08-31T07:41:58Z
+
+### L-021 - A no-horizontal-scroll assertion on documentElement is vacuous while the page sets overflow-x:hidden on html/body; measure scrollWidth against clientWidth on the element that can actually overflow.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: identidade-visual
+- evidence: E8 - e2e/identidade-visual.spec.ts:145 (e2e)
+- last seen: 2026-08-31T07:41:58Z
+
+### L-022 - Assert a layout container's computed max-width and centering, not just that exactly one of it exists; a count assertion still passes after the container classes are removed.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: identidade-visual
+- evidence: E7 - src/components/layout/CascaProtegida.tsx:38 (e2e)
+- last seen: 2026-08-31T07:41:59Z
+
+### L-023 - To verify a truncation requirement, use a deliberately oversized fixture and assert the element overflows its clientWidth; a default-sized fixture never exercises truncation.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: identidade-visual
+- evidence: E9 - src/components/layout/CascaProtegida.tsx:33 (e2e)
+- last seen: 2026-08-31T07:41:59Z
+
+### L-024 - When a listed edge case contradicts an acceptance criterion, amend the criterion text before implementing; leaving both makes the AC unsatisfiable as written and its Verified status unearned.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs` · harmful: 0
+- features: identidade-visual
+- evidence: UI-05 - .specs/features/identidade-visual/spec.md (UI-05 vs Edge Cases) (specs)
+- last seen: 2026-08-31T07:42:08Z
+
+### L-025 - Cover a fetch catch branch by aborting the intercepted route; a test that returns a rejected status code exercises the response path and never enters the catch.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: identidade-visual
+- evidence: UI-05 - src/components/layout/BotaoSair.tsx:38 (tests)
+- last seen: 2026-08-31T07:42:08Z
+
+### L-026 - When a criterion says a feature must not depend on JavaScript, assert it in a context with JavaScript disabled; a passing test in a JS-enabled browser is not evidence.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: identidade-visual
+- evidence: UI-07 - e2e/identidade-visual.spec.ts:132 (e2e)
+- last seen: 2026-08-31T07:42:09Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

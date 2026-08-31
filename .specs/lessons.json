@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 20,
+  "next_id": 27,
   "lessons": [
     {
       "id": "L-001",
@@ -348,6 +348,132 @@
       ],
       "created": "2026-08-28T17:17:11Z",
       "last_seen": "2026-08-28T17:17:11Z"
+    },
+    {
+      "id": "L-020",
+      "key": "surviving_mutant::when a path prefix match is defined with a separator boundary href test a sibling path that shares the prefix without the separator exact and sub route cases alone pass with or without the boundary check",
+      "text": "When a path-prefix match is defined with a separator boundary (href + '/'), test a sibling path that shares the prefix without the separator; exact and sub-route cases alone pass with or without the boundary check.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M2 - src/lib/ui/navegacao.ts:81 (tests)"
+      ],
+      "created": "2026-08-31T07:41:58Z",
+      "last_seen": "2026-08-31T07:41:58Z"
+    },
+    {
+      "id": "L-021",
+      "key": "surviving_mutant::a no horizontal scroll assertion on documentelement is vacuous while the page sets overflow x hidden on html body measure scrollwidth against clientwidth on the element that can actually overflow",
+      "text": "A no-horizontal-scroll assertion on documentElement is vacuous while the page sets overflow-x:hidden on html/body; measure scrollWidth against clientWidth on the element that can actually overflow.",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "E8 - e2e/identidade-visual.spec.ts:145 (e2e)"
+      ],
+      "created": "2026-08-31T07:41:58Z",
+      "last_seen": "2026-08-31T07:41:58Z"
+    },
+    {
+      "id": "L-022",
+      "key": "surviving_mutant::assert a layout container s computed max width and centering not just that exactly one of it exists a count assertion still passes after the container classes are removed",
+      "text": "Assert a layout container's computed max-width and centering, not just that exactly one of it exists; a count assertion still passes after the container classes are removed.",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "E7 - src/components/layout/CascaProtegida.tsx:38 (e2e)"
+      ],
+      "created": "2026-08-31T07:41:59Z",
+      "last_seen": "2026-08-31T07:41:59Z"
+    },
+    {
+      "id": "L-023",
+      "key": "surviving_mutant::to verify a truncation requirement use a deliberately oversized fixture and assert the element overflows its clientwidth a default sized fixture never exercises truncation",
+      "text": "To verify a truncation requirement, use a deliberately oversized fixture and assert the element overflows its clientWidth; a default-sized fixture never exercises truncation.",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "E9 - src/components/layout/CascaProtegida.tsx:33 (e2e)"
+      ],
+      "created": "2026-08-31T07:41:59Z",
+      "last_seen": "2026-08-31T07:41:59Z"
+    },
+    {
+      "id": "L-024",
+      "key": "spec_precision_gap::when a listed edge case contradicts an acceptance criterion amend the criterion text before implementing leaving both makes the ac unsatisfiable as written and its verified status unearned",
+      "text": "When a listed edge case contradicts an acceptance criterion, amend the criterion text before implementing; leaving both makes the AC unsatisfiable as written and its Verified status unearned.",
+      "signal": "spec_precision_gap",
+      "scope": "specs",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "UI-05 - .specs/features/identidade-visual/spec.md (UI-05 vs Edge Cases) (specs)"
+      ],
+      "created": "2026-08-31T07:42:08Z",
+      "last_seen": "2026-08-31T07:42:08Z"
+    },
+    {
+      "id": "L-025",
+      "key": "ac_gap::cover a fetch catch branch by aborting the intercepted route a test that returns a rejected status code exercises the response path and never enters the catch",
+      "text": "Cover a fetch catch branch by aborting the intercepted route; a test that returns a rejected status code exercises the response path and never enters the catch.",
+      "signal": "ac_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "UI-05 - src/components/layout/BotaoSair.tsx:38 (tests)"
+      ],
+      "created": "2026-08-31T07:42:08Z",
+      "last_seen": "2026-08-31T07:42:08Z"
+    },
+    {
+      "id": "L-026",
+      "key": "ac_gap::when a criterion says a feature must not depend on javascript assert it in a context with javascript disabled a passing test in a js enabled browser is not evidence",
+      "text": "When a criterion says a feature must not depend on JavaScript, assert it in a context with JavaScript disabled; a passing test in a JS-enabled browser is not evidence.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "UI-07 - e2e/identidade-visual.spec.ts:132 (e2e)"
+      ],
+      "created": "2026-08-31T07:42:09Z",
+      "last_seen": "2026-08-31T07:42:09Z"
     }
   ]
 }
