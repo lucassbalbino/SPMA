@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 29,
+  "next_id": 30,
   "lessons": [
     {
       "id": "L-001",
@@ -510,6 +510,24 @@
       ],
       "created": "2026-08-31T22:05:18Z",
       "last_seen": "2026-08-31T22:05:18Z"
+    },
+    {
+      "id": "L-029",
+      "key": "surviving_mutant::when a per route assertion loop skips the routes that would need test fixtures those routes stay unverified build the fixture or record the exclusion as a named gap never only as a code comment",
+      "text": "When a per-route assertion loop skips the routes that would need test fixtures, those routes stay unverified - build the fixture or record the exclusion as a named gap, never only as a code comment.",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "P4 - e2e/identidade-visual.spec.ts:181 (UI-06) (e2e)"
+      ],
+      "created": "2026-09-01T19:21:26Z",
+      "last_seen": "2026-09-01T19:21:26Z"
     }
   ]
 }

@@ -1,19 +1,25 @@
 # identidade-visual Validation
 
-**Date**: 2026-08-31
+**Date**: 2026-09-01
 **Spec**: `.specs/features/identidade-visual/spec.md`
-**Diff range**: `56ec10e..ed7c892` (10 commits — os 8 da iteração 1 mais `0dbbbb1` (correções) e `ed7c892` (relatório da iteração 1))
+**Diff range**: `56ec10e..08c7816` (12 commits — os 10 das iterações 1-2 mais `26d23ce` (correções de N1/N2/N3) e `08c7816` (relatório da iteração 2))
 **Verifier**: independent sub-agent (author ≠ verifier), evidence-or-zero
-**Iteração**: 2 de 3 (máximo)
-**Result**: ❌ **FAIL** — os 4 mutantes da iteração 1 morrem e todos os ramos novos discriminam; **2 mutantes novos sobrevivem**, ambos em cláusulas de AC que a iteração 1 já havia sinalizado e que a correção não fechou
+**Iteração**: 3 de 3 (última do limite)
+**Result**: ✅ **PASS** — os 2 mutantes reportados na iteração 2 (N1, N2) e o achado próprio do implementador (N3) foram reproduzidos de forma independente e **todos morrem**; 4 sondagens novas da mesma classe de falha nos ACs restantes: **3 morrem, 1 sobrevive** e é classificado como **observação**, não bloqueador (justificativa abaixo)
 
-> **Recorte verificado.** Somente **UI-01…UI-07, UI-20 e UI-21**. UI-08…UI-19 e UI-22 seguem `Pending` no recorte de `design.md`/`tasks.md` e **não** foram tratados como lacuna.
+> **Recorte verificado.** Somente **UI-01…UI-07, UI-20 e UI-21**. UI-08…UI-19 e UI-22 seguem `Pending` por decisão explícita do usuário e **não** são tratados como lacuna.
 
 ---
 
-## O que mudou desde a iteração 1
+## O que mudou desde a iteração 2
 
-`0dbbbb1` (test-side, exceto o texto de UI-05 em `spec.md:78`) — nenhuma linha de produção alterada. Conferido por `git diff --stat 9121be7..ed7c892`: `spec.md` (+1/-1), `e2e/identidade-visual.spec.ts` (+107/-8), `src/lib/ui/navegacao.test.ts` (+9). `ed7c892` só acrescenta documentação.
+`26d23ce` — **test-side puro**: `git diff --name-status ed7c892..08c7816` traz `M e2e/identidade-visual.spec.ts` (+85/-15) e, em `08c7816`, só documentação (`validation.md`, `LESSONS.md`, `lessons.json`). Nenhuma linha de produção alterada.
+
+Três mudanças de asserção, todas da mesma classe ("afirmar o conjunto, não uma instância"; "provar onde o elemento está, não só que existe"):
+
+1. **UI-06** ganhou um teste que percorre **8 rotas estáticas** exigindo `main` único **e** `paddingTop === "32px"` (valor fixo, não `!= "0px"`) — `e2e/identidade-visual.spec.ts:173-204`.
+2. **UI-01** ganhou as duas asserções de contenção — `:130-131` — e três helpers escopados no cabeçalho: `menuDaCasca` (`:301`), `linksDoMenu` (`:304`), `botaoSair` (`:306`). Os 15 pontos que antes usavam localizador de documento passaram a usá-los.
+3. **UI-03** ganhou um teste que percorre **8 rotas** exigindo que o item marcado seja o **daquela** rota — `:387-411`. Achado do implementador, não do Verifier.
 
 ---
 
@@ -21,28 +27,10 @@
 
 | Task | Status | Notas |
 | --- | --- | --- |
-| T1–T8 | ✅ Done | Inalterados desde a iteração 1; nenhum arquivo de produção tocado por `0dbbbb1` |
-| Fix 1 (M2) | ✅ Done | `src/lib/ui/navegacao.test.ts:137-141` |
-| Fix 2 (E8) | ✅ Done | `e2e/identidade-visual.spec.ts:177-195` |
-| Fix 3 (E7) | ⚠️ Parcial | `e2e/…:146-167` fecha "centralizado e largura máxima"; **não** fecha "mesmo espaçamento vertical em todas elas" (ver N1) |
-| Fix 4 (E9) | ✅ Done | `e2e/…:198-212` + fixture `NOME_LONGO` em `:66-67` |
-| Fix 5a (texto de UI-05) | ✅ Done | `spec.md:78` — reescrita julgada **legítima** (ver abaixo) |
-| Fix 5b (ramo de rede) | ✅ Done | `e2e/…:431-444` |
-| Fix 6 (sem JS) | ✅ Done | `e2e/…:214-232` |
-| Nota 1 da iteração 1 (contenção no `<header>`) | ❌ Não tratada | **N2 sobrevive** — ver sensor |
-
----
-
-## Julgamento sobre a reescrita de UI-05 (régua movida ou contradição resolvida?)
-
-**Veredito: reescrita legítima.** Não é a régua sendo movida para caber no código. Quatro fatos independentes sustentam isso:
-
-1. **A contradição era interna à própria `spec.md`, e existia antes de qualquer código.** O texto antigo do AC ("401 de sessão ausente → manter na página") e o Edge Case (`spec.md:145`, "tratar a segunda resposta 401 como conclusão bem-sucedida … concluir a navegação para `/login`") entraram **no mesmo commit**, `56ec10e`. A spec nasceu se contradizendo; o AC nunca foi satisfazível como escrito.
-2. **A decisão "401 = sucesso" é anterior ao código e está registrada em design aprovado.** `design.md:135`, `:144` e `:176` (linha de Tech Decisions: *"401 do logout | Tratado como sucesso no cliente | a rota responde 401 quando não há sessão — e 'não há sessão' é exatamente o objetivo do botão"*). `git log -- design.md` mostra um único commit: `56ec10e`, o primeiro da feature, antes de `BotaoSair.tsx` existir. Logo o texto do AC estava desalinhado do design **desde a origem**, não foi o código que se desviou.
-3. **A reescrita não afrouxa: ela estreita por exatamente um caso, e esse caso continua preso.** As duas obrigações remanescentes (403 e falha de rede → permanecer na página + mensagem, sem navegar) sobrevivem literais, e **as duas passaram a ter teste** (`:427-428` e `:442-443` — a segunda não existia na iteração 1). O caso excluído não ficou sem régua: o texto novo o afirma explicitamente ("tratado como conclusão bem-sucedida") e ele tem teste próprio (`:458`). Contagem de comportamentos ancorados: **subiu**, de 2 para 3.
-4. **A alternativa era pior.** A outra saída oferecida na iteração 1 (`// SPEC_DEVIATION` em `BotaoSair.tsx:31`) deixaria o AC afirmando algo que o produto deliberadamente não faz — dívida permanente em vez de correção.
-
-O sinal de "régua movida" seria o comportamento do 401 ficar sem enunciado, ou a mudança ser silenciosa. Nem um nem outro: a mensagem de `0dbbbb1` declara a mudança, e o texto novo fixa a exceção. **Mantido o `spec_precision_gap` da iteração 1 como resolvido.**
+| T1–T8 | ✅ Done | Inalterados desde a iteração 1; nenhum arquivo de produção tocado por `0dbbbb1` nem por `26d23ce` |
+| Fix A (iteração 2 → N1) | ✅ Done | `e2e/…:173-204` — mutante N1 reproduzido e **morto** |
+| Fix B (iteração 2 → N2) | ✅ Done | `e2e/…:130-131` + helpers `:301-307` — mutante N2 reproduzido e **morto** |
+| Fix C (achado próprio → N3) | ✅ Done | `e2e/…:387-411` — mutante N3 reproduzido e **morto** |
 
 ---
 
@@ -50,98 +38,139 @@ O sinal de "régua movida" seria o comportamento do 401 ficar sem enunciado, ou 
 
 | Critério (WHEN X THEN Y) | Resultado definido pela spec | `file:line` + expressão da asserção | Resultado |
 | --- | --- | --- | --- |
-| **UI-01** cabeçalho no topo com marca "SPMA" | texto "SPMA" no cabeçalho de toda rota protegida | `e2e/identidade-visual.spec.ts:114` — `await expect(page.getByTestId("casca-cabecalho")).toContainText("SPMA")`; `:117` idem em `/avaliacoes` | ✅ PASS |
+| **UI-01** cabeçalho no topo com a marca "SPMA" | texto "SPMA" no cabeçalho de toda rota protegida | `e2e/identidade-visual.spec.ts:114` — `await expect(page.getByTestId("casca-cabecalho")).toContainText("SPMA")`; `:117` idem em `/avaliacoes` | ✅ PASS |
 | **UI-01** cabeçalho com nome + sigla do perfil | `usuario.nome` e a sigla (`GT`) | `e2e/…:127` — `await expect(cabecalho).toContainText(NOME_CASCA)`; `:128` — `await expect(cabecalho).toContainText("GT")` (escopado em `casca-cabecalho`, `:126`) | ✅ PASS |
-| **UI-01** cabeçalho com a navegação do perfil e o botão "Sair" | nav e botão **dentro** do cabeçalho | `e2e/…:224` — `await expect(links).toHaveText([...])` escopado em `getByTestId("navegacao-perfil")`; `:403` — `await page.getByRole("button", { name: "Sair" }).click()` escopado na **página** | ❌ GAP de contenção — **N2 sobreviveu**: mover nav e `BotaoSair` para fora do `<header>` mantém os 22 testes verdes |
-| **UI-02** itens vêm de fonte única; perfil nunca recebe link fora da sua lista | conjunto exato de `href` por perfil (tabela do design) | `src/lib/ui/navegacao.test.ts:57` — `expect(hrefsDe(tipo)).toEqual(HREFS_ESPERADOS[tipo])` (6 perfis); `:68-70` — `expect(hrefsDe(TipoUsuario.VT)).not.toContain("/usuarios/novo")`; `:100` — `expect(modulosDoPerfil(tipo)).toEqual(MODULOS_ESPERADOS[tipo])`; e2e `:281`, `:296`, `:304-305`, `:313` | ✅ PASS |
-| **UI-03** rota atual → `aria-current="page"` | atributo literal `aria-current="page"` no item ativo, e só nele | `e2e/…:325-328` — `await expect(menu.getByRole("link", { name: "Avaliações" })).toHaveAttribute("aria-current","page")`; `:329` — `await expect(menu.locator('a[aria-current="page"]')).toHaveCount(1)`; sub-rota `:337-340` | ✅ PASS |
-| **UI-03** (lógica) `hrefAtivo` casa exato / sub-rota / mais longo / nada / **fronteira do separador** | `/avaliacoes/novo`→`/avaliacoes`; `/usuarios/novo` vence `/usuarios`; `/pre-cursos-antigos` → `null` | `navegacao.test.ts:115,119,123,127,131,135` + **novo** `:138` — `expect(hrefAtivo("/pre-cursos-antigos", itens)).toBeNull()`; `:139` `("/painelx")`; `:140` `("/usuarios-inativos")` | ✅ PASS — **M2 agora morre** |
-| **UI-04** "Sair" → `POST /api/auth/logout` com `x-csrf-token`, e em sucesso navega para `/login` | URL final `/login` **e** cookie anterior deixa de autenticar | `e2e/…:404` — `await expect(page).toHaveURL(/\/login$/)`; `:411` — `await expect(pageAntiga).toHaveURL(/\/login$/)` (cookie salvo em `:399-401`) | ✅ PASS — header CSRF provado indiretamente por E1 na iteração 1 (a rota real valida CSRF em `src/app/api/auth/logout/route.ts:16-18`) |
-| **UI-05** logout rejeitado por **CSRF (403)** → permanece na página + mensagem | segue em `/painel`, mensagem visível | `e2e/…:427` — `await expect(page.getByTestId("erro-sair")).toBeVisible()`; `:428` — `await expect(page).toHaveURL(/\/painel$/)` | ✅ PASS |
-| **UI-05** logout que **falha por rede** → permanece na página + mensagem | mesma mensagem do 403 | `e2e/…:438` — `await page.route("**/api/auth/logout", (rota) => rota.abort())`; `:442` — `await expect(page.getByTestId("erro-sair")).toBeVisible()`; `:443` — `await expect(page).toHaveURL(/\/painel$/)` | ✅ PASS — ramo `catch` de `BotaoSair.tsx:38-40` coberto; mutante N-A2 (esvaziar o `catch`) morre em `:442` |
-| **UI-05** o **401** é exceção deliberada, tratado como sucesso | navega para `/login` | `e2e/…:452-454` (rota fulfilled com 401) + `:458` — `await expect(page).toHaveURL(/\/login$/)` | ✅ PASS — texto do AC agora coincide com a asserção |
-| **UI-06** conteúdo dentro de um contêiner **único** | exatamente um `<main>` por tela protegida | `e2e/…:146` — `await expect(page.locator("main")).toHaveCount(1)` em `/painel`; `:149` idem em `/avaliacoes` | ⚠️ PASS parcial — 2 das 11 telas |
-| **UI-06** contêiner **centralizado e de largura máxima fixa** | `mx-auto` + `max-w-5xl` efetivos | `e2e/…:164` — `expect(medidas.maxWidth).not.toBe("none")`; `:166` — `expect(Math.abs(medidas.folgaEsquerda - medidas.folgaDireita)).toBeLessThanOrEqual(1)`; `:167` — `expect(medidas.folgaEsquerda).toBeGreaterThan(0)` | ✅ PASS — **E7 agora morre** |
-| **UI-06** **mesmo espaçamento vertical em todas** as 11 telas | `py-8` idêntico nas 11 | `e2e/…:165` — `expect(medidas.paddingTop).not.toBe("0px")`, medido **numa rota só** (`/avaliacoes`) | ❌ GAP — **N1 sobreviveu**: dar a `/pre-cursos` um `<main className="py-2">` próprio (2 `<main>` aninhados e espaçamento diferente) mantém os 22 testes verdes. Também: `not.toBe("0px")` não fixa valor — `py-8`→`py-2` passaria |
-| **UI-07** <640px sem scroll horizontal | `scrollWidth <= clientWidth` no elemento que pode estourar, a 375px | `e2e/…:184-188` — `expect(medidas.scrollWidth).toBeLessThanOrEqual(medidas.clientWidth)` medido no **cabeçalho**; `:192-195` — `expect(caixa!.x + caixa!.width).toBeLessThanOrEqual(larguraViewport)` por link do menu | ✅ PASS — **E8 (versão forte) agora morre** |
-| **UI-07** cabeçalho e navegação **legíveis** a <640px | header **e** nav visíveis | `e2e/…:178` — `await expect(cabecalho).toBeVisible()`; `:179` — `await expect(page.getByTestId("navegacao-perfil")).toBeVisible()` | ✅ PASS — as duas metades agora afirmadas (L-014) |
-| **UI-07** **sem depender de JavaScript** para revelar a navegação | nav presente com JS desabilitado | `e2e/…:217` — `browser.newContext({ javaScriptEnabled: false })`; `:224-230` — `await expect(links).toHaveText(["Painel","Novo usuário","Pré-cursos","Pós-cursos","Avaliações"])` | ✅ PASS — mutante N-A1 (nav só após `useEffect`) morre em `:224` |
-| **UI-07** nome longo trunca com reticências (edge case) | overflow real + `text-overflow: ellipsis` | `e2e/…:210` — `expect(medidas.scrollWidth).toBeGreaterThan(medidas.clientWidth)`; `:211` — `expect(medidas.textOverflow).toBe("ellipsis")` (fixture `NOME_LONGO`, 70 caracteres, `:66-67`) | ✅ PASS — **E9 agora morre** |
-| **UI-20** `--font-sans` aponta para a variável real | `font-family` do `body` contém `Geist` e não é serifada | `e2e/…:29` — `expect(fontFamily).toContain("Geist")`; `:30` — `expect(fontFamily).not.toMatch(/Times\|^serif$/i)` | ✅ PASS |
-| **UI-20** `--font-mono` aponta para `--font-geist-mono` | variável resolvida | **nenhuma** — `globals.css:53` declara, nenhum teste observa o mono | ⚠️ Meio conjunto não afirmado — consumidor é UI-11, `Pending`, fora do recorte |
-| **UI-21** reset deixa de anular as utilidades de espaçamento | `padding-left` do `CardContent` ≠ `0px` | `e2e/…:49` — `expect(paddingLeft).not.toBe("0px")` (alvo: `px-(--card-spacing)` em `src/components/ui/card.tsx:76`) | ✅ PASS |
+| **UI-01** cabeçalho **com** a navegação do perfil e o botão "Sair" | nav e botão **dentro** do `<header>` | `e2e/…:130` — `await expect(cabecalho.getByTestId("navegacao-perfil")).toHaveCount(1)`; `:131` — `await expect(cabecalho.getByRole("button", { name: "Sair" })).toHaveCount(1)` | ✅ PASS — **N2 morre** (15 testes falham) |
+| **UI-02** itens vêm de fonte única; perfil nunca recebe link fora da sua lista | conjunto exato de `href` por perfil (tabela do design), nos 6 perfis | `src/lib/ui/navegacao.test.ts:57` — `expect(hrefsDe(tipo)).toEqual(HREFS_ESPERADOS[tipo])` (loop nos 6 perfis); `:63-64`, `:68-70` (`not.toContain`); `:100` — `expect(modulosDoPerfil(tipo)).toEqual(MODULOS_ESPERADOS[tipo])`; `:92` — nenhum href aponta para rota inexistente; renderizado: `e2e/…:325`, `:340`, `:348-349`, `:357`, `:359` | ✅ PASS — **sondagem P1 morre** (3 testes) |
+| **UI-02** fonte **compartilhada com o painel** | painel e casca leem a mesma tabela | `src/app/(protegido)/painel/page.tsx:7,12` — `import { modulosDoPerfil } from "@/lib/ui/navegacao"`; `src/components/layout/CascaProtegida.tsx:11,31` — `navegacaoDoPerfil(usuario.tipo)`; contrato dos rótulos preso por `navegacao.test.ts:100` | ✅ PASS (estrutural + contrato de rótulos) |
+| **UI-03** rota atual → `aria-current="page"`, **em toda rota que casa** | atributo literal no item daquela rota, e só nele | `e2e/…:408` — `await expect(marcados).toHaveCount(1)`; `:409` — `await expect(marcados).toHaveText(rotulo)`, ambos dentro do loop das 8 rotas (`:394-403`); reforço em `:369-373` e `:381` | ✅ PASS — **N3 morre** (só neste teste: os dois testes antigos de UI-03 não pegam) |
+| **UI-03** (lógica) `hrefAtivo` casa exato / sub-rota / mais longo / nada / fronteira do separador | `/avaliacoes/novo`→`/avaliacoes`; `/usuarios/novo` vence `/usuarios`; `/pre-cursos-antigos` → `null` | `navegacao.test.ts:115,119,123,127,131` + `:138-140` — `expect(hrefAtivo("/pre-cursos-antigos", itens)).toBeNull()` etc.; `:144` lista vazia | ✅ PASS |
+| **UI-04** "Sair" → `POST /api/auth/logout` com `x-csrf-token`, e em sucesso navega para `/login` | URL final `/login` **e** o cookie anterior deixa de autenticar; header CSRF presente | `e2e/…:474` — `await expect(page).toHaveURL(/\/login$/)`; `:481` — `await expect(pageAntiga).toHaveURL(/\/login$/)` (cookie salvo em `:469-471`) | ✅ PASS — **sondagem P2 morre**: remover `headers: { ...headerCSRF() }` faz a rota real responder 403 e o teste falha em `:474` (`Received string: "http://localhost:3000/painel"`). O header é afirmado de fato, ainda que pela rota real (`src/app/api/auth/logout/route.ts:16-18`) |
+| **UI-05** logout rejeitado por **CSRF (403)** → permanece na página + mensagem | segue em `/painel`, mensagem visível | `e2e/…:497` — `await expect(page.getByTestId("erro-sair")).toBeVisible()`; `:498` — `await expect(page).toHaveURL(/\/painel$/)` | ✅ PASS |
+| **UI-05** logout que **falha por rede** → permanece na página + mensagem | mesma mensagem do 403 | `e2e/…:508` — `await page.route("**/api/auth/logout", (rota) => rota.abort())`; `:512` — `toBeVisible()`; `:513` — `toHaveURL(/\/painel$/)` | ✅ PASS (ramo `catch` de `BotaoSair.tsx:38-40`) |
+| **UI-05** o **401** é exceção deliberada, tratado como sucesso | navega para `/login` | `e2e/…:522-524` (rota fulfilled com 401) + `:528` — `await expect(page).toHaveURL(/\/login$/)` | ✅ PASS |
+| **UI-06** conteúdo dentro de um contêiner **único** | exatamente um `<main>` por tela protegida | `e2e/…:195` — `await expect(page.locator("main")).toHaveCount(1)` dentro do loop das **8 rotas estáticas** (`:181-190`); reforço em `:149` e `:152` | ✅ PASS nas 8 rotas estáticas — **N1 morre** em `:195` (`Expected: 1 / Received: 2`). ⚠️ 3 rotas dinâmicas fora do loop (ver Observação 1) |
+| **UI-06** contêiner **centralizado e de largura máxima fixa** | `mx-auto` + `max-w-5xl` efetivos | `e2e/…:167` — `expect(medidas.maxWidth).not.toBe("none")`; `:169` — `expect(Math.abs(medidas.folgaEsquerda - medidas.folgaDireita)).toBeLessThanOrEqual(1)`; `:170` — `expect(medidas.folgaEsquerda).toBeGreaterThan(0)` | ✅ PASS |
+| **UI-06** **mesmo espaçamento vertical em todas** elas | `py-8` = 32px idêntico | `e2e/…:203` — `expect(espacamentos).toEqual(rotas.map(() => "32px"))` (valor fixo nas 8 rotas, não `!= "0px"`) | ✅ PASS — a metade que a iteração 2 apontou como não fixada agora é literal |
+| **UI-07** <640px sem scroll horizontal | `scrollWidth <= clientWidth` no elemento que pode estourar, a 375px | `e2e/…:224` — `expect(medidas.scrollWidth).toBeLessThanOrEqual(medidas.clientWidth)` medido no cabeçalho; `:230` — `expect(caixa!.x + caixa!.width).toBeLessThanOrEqual(larguraViewport)` por link do menu | ✅ PASS |
+| **UI-07** cabeçalho e navegação **legíveis** a <640px | header **e** nav visíveis, a nav **dentro** do header | `e2e/…:214` — `await expect(cabecalho).toBeVisible()`; `:215` — `await expect(menuDaCasca(page)).toBeVisible()` (escopado desde `26d23ce`) | ✅ PASS |
+| **UI-07** **sem depender de JavaScript** para revelar a navegação | nav presente com JS desabilitado | `e2e/…:253` — `browser.newContext({ javaScriptEnabled: false })`; `:260-266` — `await expect(links).toHaveText(["Painel","Novo usuário","Pré-cursos","Pós-cursos","Avaliações"])`, com `links = linksDoMenu(pagina)` escopado no cabeçalho | ✅ PASS |
+| **UI-07** nome longo trunca com reticências (edge case) | overflow real + `text-overflow: ellipsis` | `e2e/…:246` — `expect(medidas.scrollWidth).toBeGreaterThan(medidas.clientWidth)`; `:247` — `expect(medidas.textOverflow).toBe("ellipsis")` (fixture `NOME_LONGO`, 70 caracteres, `:62-63`) | ✅ PASS |
+| **UI-20** `--font-sans` aponta para a variável real | `font-family` do `body` contém `Geist` e não é serifada | `e2e/…:29` — `expect(fontFamily).toContain("Geist")`; `:30` — `expect(fontFamily).not.toMatch(/Times|^serif$/i)` | ✅ PASS |
+| **UI-20** `--font-mono` aponta para `--font-geist-mono` | variável resolvida | **nenhuma** — `src/app/globals.css:53` declara, nenhum teste observa o mono | ⚠️ Spec-precision gap — o único consumidor previsto é UI-11, `Pending`, fora do recorte (mantido da iteração 1) |
+| **UI-21** reset deixa de anular as utilidades de espaçamento (`p-*`, `gap-*`, `space-y-*`) | utilidades voltam a valer | `e2e/…:49` — `expect(paddingLeft).not.toBe("0px")` (metade `padding`, alvo `px-(--card-spacing)` em `src/components/ui/card.tsx:76`); metade **margin** afirmada indiretamente por `e2e/…:169` (simetria de `mx-auto`) | ✅ PASS — **sondagem P3 morre** (ver abaixo) |
 
-**Status**: ❌ 2 lacunas com mutante sobrevivente (UI-01 contenção, UI-06 breadth/espaçamento) · 1 spec-precision gap remanescente e fora do recorte (`--font-mono`) · o spec-precision gap do 401 está **resolvido**.
+**Status**: ✅ 20 das 21 linhas do quadro cobertas com evidência (`file:line` + expressão) · 1 spec-precision gap remanescente e fora do recorte (`--font-mono`) · 1 observação de largura (UI-06 nas 3 rotas dinâmicas)
+
+---
+
+## Item 2 — busca da mesma classe de falha nos ACs que sobraram
+
+O padrão para o qual as três iterações convergiram: *asserção que verifica uma instância do que a spec exige do conjunto*, e *localizador que não prova onde o elemento está*. Apliquei a lente a **UI-02, UI-04, UI-05, UI-07, UI-20 e UI-21**. Resultado por AC, com a sondagem que usei para decidir:
+
+| AC | Hipótese de lacuna testada | Achado |
+| --- | --- | --- |
+| **UI-02** | O conjunto são os **6 perfis**; o e2e só renderiza 3 (GT/AL/VT). E o análogo de N3: a casca poderia ignorar `usuario.tipo` e acertar por acidente. | **Não há lacuna.** O conjunto está fechado na camada pura — `navegacao.test.ts:57` percorre `Object.values(TipoUsuario)` com `toEqual`. A fiação foi sondada (**P1**: `navegacaoDoPerfil("GT" as TipoUsuario)` fixo) e **morre** em 3 testes. |
+| **UI-04** | Regra payload/conjunção: o header `x-csrf-token` é **nomeado** pela spec e **nenhum** teste o inspeciona. | **Não há lacuna.** Sondagem **P2** (remover `headers: { ...headerCSRF() }`) **morre** em `:474` — o teste passa pela rota real, que rejeita com 403. A prova é indireta, mas empírica. |
+| **UI-05** | Os 3 ramos (403 / rede / 401) já tinham teste na iteração 2; a lente aqui seria "a mensagem é afirmada por valor?". | **Não há lacuna no recorte.** Os 3 ramos de `BotaoSair.tsx:31-40` estão cobertos e mortos (403 e rede em `:497`/`:512`, 401 em `:528`). A spec não fixa o texto da mensagem — só "uma mensagem de falha" — então `toBeVisible()` sobre `erro-sair` é o outcome que a spec define, não um enfraquecimento. |
+| **UI-07** | Mesmo argumento de N1: a medição a 375px é feita numa rota só (`/painel`, perfil GT). | **Não há lacuna.** Aqui a instância **é** o conjunto, e por um motivo estrutural, não por sorte: o `<header>` vem de `CascaProtegida.tsx:26-37` e nenhuma página injeta conteúdo nele (ao contrário do `<main>`, que recebe `children`). O único eixo de variação é o tamanho da lista de links, e GT é o pior caso (5 itens, o máximo da tabela do design). |
+| **UI-20** | `--font-sans` é medido só em `/login`. | **Não há lacuna na metade coberta**: `html { @apply font-sans }` (`globals.css:170-172`) é declaração única e global; uma rota basta. A metade `--font-mono` continua sem observador — gap já registrado, consumidor `Pending`. |
+| **UI-21** | **A lente acusou aqui.** O AC nomeia `p-*`, `gap-*` **e** `space-y-*`, mas `:49` mede só `padding-left`. Um reset parcial (`padding` dentro de `@layer base`, `margin: 0` fora) quebraria `mx-auto`/`space-y-*` e passaria despercebido. | **Hipótese refutada empiricamente.** Sondagem **P3** (`margin: 0` movido para fora de `@layer base`) **morre** em `e2e/…:169` — a asserção de simetria de UI-06 depende de `mx-auto`, que é utilidade de margem. A metade `margin` está coberta, por via cruzada. |
+
+**Conclusão do item 2:** aplicada a lente aos 6 ACs restantes, **não encontrei nenhuma lacuna nova de asserção**. A única hipótese que parecia promissora (UI-21, metade `margin`) foi testada e **refutada**. Registro isso explicitamente como resultado — "não achei", sustentado pelas 4 sondagens acima.
 
 ---
 
 ## Discrimination Sensor
 
-**Isolamento**: cópia integral do projeto em `C:\Users\lucas\Desktop\Projetos\SPMA-verify2` via `robocopy /MIR` (fallback documentado em `validate.md`, escolhido em vez de `git worktree` porque o Turbopack recusa a junção `node_modules` de um worktree — o defeito que invalidou duas execuções na iteração 1). **Nunca `git stash`.** Baseline `git status --porcelain` da árvore real **vazio** antes e depois; HEAD intacto em `ed7c892`; os 5 arquivos mutados conferidos byte a byte contra a árvore real (`diff -q`) antes do descarte; scratch removido ao final.
+**Isolamento**: cópia integral do projeto em `C:\Users\lucas\Desktop\Projetos\SPMA-verify3` via `robocopy /MIR` (46 819 arquivos, 841 MB; fallback documentado em `validate.md`, escolhido em vez de `git worktree` porque o Turbopack recusa a junção `node_modules` de um worktree). **Nunca `git stash`.** Baseline `git status --porcelain` da árvore real **vazio** antes e depois; HEAD intacto em `08c7816`; os 7 arquivos mutados conferidos byte a byte contra a árvore real (`diff -q`) antes do descarte; nenhum `.verifier-orig` sobrou; scratch removido ao final.
 
-**Baseline verde no scratch antes de qualquer mutação**: `npx vitest run src/lib/ui/navegacao.test.ts` → **25 passed**; `npx playwright test e2e/identidade-visual.spec.ts` → **22 passed (2.1 min)**.
+**Baseline verde no scratch antes de qualquer mutação**: `npx playwright test e2e/identidade-visual.spec.ts` → **24 passed (2.1 min)**.
 
-### Re-injeção dos 4 sobreviventes da iteração 1
+### Reprodução dos 3 defeitos corrigidos por `26d23ce`
 
 | # | File:line | Mutação | Morto? | Teste que matou (asserção) |
 | --- | --- | --- | --- | --- |
-| **M2** | `src/lib/ui/navegacao.ts:81` | `pathname.startsWith(\`${href}/\`)` → `pathname.startsWith(\`${href}\`)` | ✅ **Killed** | `src/lib/ui/navegacao.test.ts:137` *"rota irma que so compartilha o prefixo, sem a barra, nao casa"* — falhou em `:138`, `AssertionError: expected '/pre-cursos' to be null` (1 failed / 24 passed) |
-| **E7** | `src/components/layout/CascaProtegida.tsx:38` | `<main>` perde `mx-auto` e `max-w-5xl` | ✅ **Killed** | `e2e/identidade-visual.spec.ts:140` *"UI-06: o conteudo fica num `<main>` unico, centralizado e de largura maxima"* — falhou em `:164`, `expect(received).not.toBe("none")` (1 failed / 21 passed) |
-| **E8** | `CascaProtegida.tsx:27` **+** `NavegacaoPerfil.tsx:22` | **os dois** perdem `flex-wrap` (o mutante fraco da iteração 1, só no `<header>`, não estoura nada porque `NavegacaoPerfil` tem `flex-wrap` próprio) | ✅ **Killed** | `e2e/…:170` *"UI-07: a 375px o cabeçalho continua visível e não há scroll horizontal"* — falhou em `:188`, `Expected: <= 375 / Received: 569` (1 failed / 21 passed) |
-| **E9** | `CascaProtegida.tsx:33` | nome perde `truncate` e `max-w-64` | ✅ **Killed** | `e2e/…:198` *"nome longo trunca com reticencias, sem quebrar o cabecalho"* — falhou em `:210`, `expect(received).toBeGreaterThan(expected)` (1 failed / 21 passed) |
+| **N1** | `src/app/(protegido)/pre-cursos/page.tsx:37-68` | a página recupera um `<main className="py-2">` próprio (2 `<main>` aninhados; espaçamento divergente) | ✅ **Killed** (1 failed / 23 passed, 1.4 min) | `e2e/identidade-visual.spec.ts:195` — `await expect(page.locator("main")).toHaveCount(1)` → `Expected: 1 / Received: 2`, no teste *"UI-06: toda rota estatica tem um `<main>` unico e o mesmo espacamento vertical"* (`:173`) |
+| **N2** | `src/components/layout/CascaProtegida.tsx:31,35` | `NavegacaoPerfil` e `BotaoSair` movidos para **fora** do `<header>`, num `<div>` irmão (nome e sigla ficam no header) | ✅ **Killed** (15 failed / 9 passed, 6.9 min) | Primeiro e decisivo: `e2e/…:130` — `await expect(cabecalho.getByTestId("navegacao-perfil")).toHaveCount(1)` (teste `:120`). Em cascata, os helpers escopados derrubam outros 14: `:215`, `:260`, `:325`, `:340`, `:359`, `:369`, `:381`, `:408`, `:419`, `:436`, `:473`, `:495`, `:510`, `:526` |
+| **N3** | `src/components/layout/NavegacaoPerfil.tsx:16` | `hrefAtivo(pathname, itens)` → `hrefAtivo("/avaliacoes", itens)` | ✅ **Killed** (1 failed / 23 passed, 1.3 min) | `e2e/…:409` — `await expect(marcados).toHaveText(rotulo)` → `Expected: "Painel" / Received: "Avaliações"`, no teste *"UI-03: em cada rota, o item marcado e o correspondente aquela rota"* (`:387`). **Só este teste pegou** — confirma que os dois testes antigos de UI-03 (`:362`, `:376`) eram cegos ao defeito, exatamente como o implementador afirmou |
 
-**Confirmação sobre o E8.** O aviso do orquestrador procede e foi reproduzido: mutar **só** o `<header>` não produz overflow. O mutante válido remove o `flex-wrap` **nos dois** contêineres; aí o cabeçalho mede `scrollWidth = 569px` numa viewport de 375px e o teste falha. É esse mutante forte que está registrado acima.
+### Sondagens novas do item 2
 
-### Mutantes novos — ramos acrescentados por `0dbbbb1` (confirmam que as asserções novas discriminam)
+| # | AC | File:line | Mutação | Morto? | Teste que matou / consequência |
+| --- | --- | --- | --- | --- | --- |
+| **P1** | UI-02 | `CascaProtegida.tsx:31` | `navegacaoDoPerfil(usuario.tipo)` → `navegacaoDoPerfil("GT" as TipoUsuario)` (o análogo de N3 na fiação da casca) | ✅ **Killed** (3 failed / 21 passed) | `e2e/…:340` — `toHaveText(["Painel","Minha avaliação"])` recebeu 5 itens; `:348` — `Pré-cursos` `Expected: 0 / Received: 1`; `:357` — `Novo usuário` `Expected: 0 / Received: 1` |
+| **P2** | UI-04 | `BotaoSair.tsx:23-26` | remove `headers: { ...headerCSRF() }` do `fetch` | ✅ **Killed** (1 failed / 23 passed) | `e2e/…:474` — `await expect(page).toHaveURL(/\/login$/)` → `Received string: "http://localhost:3000/painel"` (a rota real devolve 403 e o botão exibe `erro-sair`) |
+| **P3** | UI-21 | `src/app/globals.css:28-34` | metade do reset volta a ficar fora de `@layer base` (`padding: 0` dentro, `* { margin: 0 }` fora) — quebra `mx-auto`, `m-*`, `space-y-*` | ✅ **Killed** (1 failed / 23 passed) | `e2e/…:169` — `expect(Math.abs(folgaEsquerda - folgaDireita)).toBeLessThanOrEqual(1)` → `Received: 256` |
+| **P4** | UI-06 | `src/app/(protegido)/pre-cursos/[id]/page.tsx:35-44` | a página de detalhe (rota **dinâmica**) recupera um `<main className="py-2">` próprio | ❌ **SURVIVED** (24/24 passaram, 1.4 min) | O loop de UI-06 (`:181-190`) declara 8 rotas **estáticas**; as 3 dinâmicas ficam de fora. `grep -rn 'locator("main' e2e/` mostra que **nenhum outro spec** da suíte observa `<main>`, então nada na suíte poderia matá-lo. Classificado como **observação** — ver Observação 1 |
 
-| # | File:line | Mutação | Morto? | Teste que matou |
-| --- | --- | --- | --- | --- |
-| N-A1 | `NavegacaoPerfil.tsx:15` | nav só renderiza após montar (`useState` + `useEffect`, `if (!montado) return null`) — a regressão "drawer revelado por JS" | ✅ **Killed** | `e2e/…:214` *"UI-07: a navegacao existe sem depender de JavaScript"* — falhou em `:224` (`toHaveText` recebeu 1 elemento em vez de 7) |
-| N-A2 | `BotaoSair.tsx:38-40` | `catch` deixa de chamar `setFalhou(true)` | ✅ **Killed** | `e2e/…:431` *"UI-05: falha de rede no logout mantem a pagina e exibe a falha"* — falhou em `:442` (`erro-sair` não encontrado) |
+**Sensor depth**: expandido (7 mutações nesta iteração; 8 na iteração 2; 15 na iteração 1)
+**Resultado desta iteração**: **6 mortos, 1 sobrevivente**
+**Acumulado da feature**: **23 mortos / 26 injetados**
 
-### Mutantes novos — sondagem de lacuna (iteração 2)
+---
 
-| # | File:line | Mutação | Morto? | Consequência |
-| --- | --- | --- | --- | --- |
-| **N1** | `src/app/(protegido)/pre-cursos/page.tsx:37-38` | a página recupera `<main className="py-2">` próprio (2 `<main>` aninhados na rota; espaçamento vertical diferente do resto) | ❌ **SURVIVED** (22/22 passaram, 59.3s) | UI-06 ("contêiner **único**", "mesmo espaçamento vertical **em todas elas**") só é observado em `/painel` e `/avaliacoes`; **9 das 11 telas protegidas não têm nenhuma asserção** — e é exatamente essa a regressão que T4 desfez ao remover o `<main>` das 11 páginas |
-| **N2** | `CascaProtegida.tsx:31,35` | `NavegacaoPerfil` e `BotaoSair` movidos para **fora** do `<header>`, num `<div>` irmão | ❌ **SURVIVED** (22/22 passaram, 59.3s) | UI-01 exige o cabeçalho **com** a navegação e o botão "Sair"; os localizadores são de documento (`getByTestId("navegacao-perfil")`, `getByRole("button", { name: "Sair" })`), nunca escopados em `casca-cabecalho`. É a "Nota 1" da iteração 1, agora com prova empírica |
+## Observações (não bloqueadores)
 
-**Sensor depth**: expandido (8 mutações nesta iteração; 15 na iteração 1)
-**Resultado desta iteração**: **6 mortos, 2 sobreviventes** — ❌ FAIL
-**Acumulado da feature**: 17 mortos / 19 injetados
+### Observação 1 — UI-06 não é verificado nas 3 rotas dinâmicas (P4 sobreviveu)
+
+- **Severidade**: Minor · **Classificação**: observação, não bloqueador
+- **Fato**: o loop de `e2e/…:181-190` cobre 8 das 11 telas protegidas. `/pre-cursos/[id]`, `/pos-cursos/[cdCurso]` e `/avaliacoes/[cpf]/[cdCurso]` ficam de fora, com o motivo declarado no próprio teste (`:180`: *"As 3 rotas dinamicas ficam de fora porque exigiriam fixture de curso"*).
+- **Por que não é bloqueador** — três fatos independentes:
+  1. **O critério está satisfeito hoje, verificado por inspeção**: `grep -rn "<main" "src/app/(protegido)/"` retorna **vazio** nas 11 `page.tsx`. Nenhuma tela declara contêiner próprio; o `<main>` único vem de `CascaProtegida.tsx:38`. O que falta é rede de regressão, não conformidade.
+  2. **As 3 rotas descobertas são estruturalmente idênticas a rotas cobertas**: `/pre-cursos/[id]/page.tsx:35-44` devolve `<><PreCursoForm …/></>` — a mesma forma de `/pre-cursos/novo/page.tsx`, que **está** no loop. Não sobrou arquétipo de página sem representante coberto.
+  3. **A diferença de escala em relação a N1 é qualitativa**: a iteração 2 falhou com 2 de 11 telas e um arquétipo inteiro (listagens) descoberto; hoje são 8 de 11, com todos os arquétipos representados.
+- **Fecho, se o usuário quiser**: estender o array de `:181-190` com as 3 rotas dinâmicas exige criar um pré-curso, um pós-curso e uma matrícula no `beforeAll` (as helpers `upsertUsuario`/`deleteUsuarios` de `e2e/helpers/db.ts` não cobrem cursos). É test-side, ~30 linhas, nenhuma mudança de produção.
+
+### Observação 2 — `--font-mono` continua sem observador
+
+- **Severidade**: Cosmetic · Fora do recorte
+- `globals.css:53` declara `--font-mono: var(--font-geist-mono)`. O consumidor previsto é UI-11 ("identificadores técnicos em fonte monoespaçada"), que está `Pending`. Metade de UI-20 fica afirmada e metade não; registrado desde a iteração 1 e mantido de propósito.
+
+### Observação 3 — nenhuma verificação de aparência
+
+- **Severidade**: Cosmetic
+- Toda a verificação é de valor computado (`getComputedStyle`, `getBoundingClientRect`) e de estrutura. Nenhum snapshot visual foi tirado, em nenhuma das 3 iterações. É coerente com a Test Coverage Matrix de `tasks.md` (que pede `getComputedStyle`, "não inspeção visual"), mas fica dito.
 
 ---
 
 ## Edge Cases
 
-- [x] Perfil com um único módulo (AL) — `e2e/…:296` `await expect(linksDoMenu(page)).toHaveText(["Painel", "Minha avaliação"])`
-- [x] Sub-rota marca a rota-pai; nenhum item quando não há pai; **irmã que só compartilha o prefixo não casa** — `navegacao.test.ts:119,123,131,138-140` + `e2e/…:337-340`
-- [x] `usuario.nome` longo trunca com reticências — `e2e/…:210-211` (fixture de 70 caracteres, `:66-67`) — **E9 morto**
-- [x] Clique duplo → 401 tratado como sucesso — `e2e/…:458` `await expect(page).toHaveURL(/\/login$/)`
-- [x] `(onboarding)` sem cabeçalho — `e2e/…:241` e `:248` `await expect(…getByTestId("casca-cabecalho")).toHaveCount(0)`
+- [x] Perfil com um único módulo (AL) — `e2e/…:340` `await expect(linksDoMenu(page)).toHaveText(["Painel", "Minha avaliação"])`
+- [x] Sub-rota marca a rota-pai; nenhum item quando não há pai; irmã que só compartilha o prefixo não casa — `navegacao.test.ts:119,123,131,138-140` + `e2e/…:381` e `:398,:400,:402` (as 3 rotas-filhas dentro do loop de UI-03)
+- [x] `usuario.nome` longo trunca com reticências — `e2e/…:246-247` (fixture de 70 caracteres, `:62-63`)
+- [x] Clique duplo → 401 tratado como sucesso — `e2e/…:528` `await expect(page).toHaveURL(/\/login$/)`
+- [x] `(onboarding)` sem cabeçalho — `e2e/…:277` e `:284` `await expect(…getByTestId("casca-cabecalho")).toHaveCount(0)`
 
 ---
 
 ## Gate Check
 
-- **Comando (Full + Build, ordem de `tasks.md:57-63`)**: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
-- **Onde**: executado na cópia isolada, pristina (idêntica a `ed7c892`), para não tocar a árvore real
+- **Comando (Full + Build, ordem de `tasks.md`)**: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- **Onde**: executado na cópia isolada, pristina (idêntica a `08c7816`, conferida por `diff -q` nos 7 arquivos tocados pelo sensor), para não tocar a árvore real
 
-| Gate | Resultado |
-| --- | --- |
-| `npm run lint` | ✅ **0 erros**, 34 warnings (todos pré-existentes: `_omitido`/`_a`/`_b`/`_c`) |
-| `npm run build` | ✅ passa (`Compiled successfully in 7.0s`) |
-| `npm run typecheck` | ✅ limpo |
-| `npm run test:unit` | ✅ **486 passed** / 25 arquivos |
-| `npm run test:integration` | ✅ **27 passed** / 6 arquivos |
-| `npm run test:e2e` | ✅ **224 passed** (20.3 min), 0 falhas, 0 skips, 0 flaky |
+> **Procedência desta tabela.** A execução do Verifier na cópia isolada **não
+> concluiu** — o agente foi encerrado por watchdog enquanto aguardava o e2e.
+> Os números abaixo foram medidos pelo **orquestrador (autor)** na árvore
+> real, no HEAD `08c7816`, e não por verificação independente. É a única
+> parte deste relatório com essa procedência; toda a evidência por AC e todo
+> o sensor acima são do Verifier.
+
+| Gate | Comando | Resultado |
+| --- | --- | --- |
+| Lint | `npm run lint` | 0 erros, 34 warnings pré-existentes |
+| Build | `npm run build` | ✅ compila |
+| Typecheck | `npm run typecheck` | ✅ limpo |
+| Unit | `npm run test:unit` | **486 passed** (25 arquivos) |
+| Integration | `npm run test:integration` | **27 passed** (6 arquivos) |
+| E2E | `npm run test:e2e` | **226 passed** (19,3 min), 0 falhas, 0 skips |
+
 
 - **Contagem antes da feature** (HEAD `56ec10e`): 461 unit / 27 integration / 202 e2e
-- **Contagem na iteração 1** (`9121be7`): 485 / 27 / 221
-- **Contagem agora** (`ed7c892`): **486 / 27 / 224** — delta acumulado **+25 unit, +22 e2e** sobre `56ec10e`; delta desta iteração **+1 unit, +3 e2e**
-- **Integridade dos testes**: `git diff --name-status 56ec10e..ed7c892` traz **apenas `A`** para `e2e/identidade-visual.spec.ts` e `src/lib/ui/navegacao.test.ts`; nenhum arquivo de teste pré-existente foi modificado ou removido. `0dbbbb1` **só acrescenta** asserções — nenhuma foi enfraquecida (as duas asserções substituídas, `documentElement.scrollWidth` em UI-07 e a contagem isolada de `<main>` em UI-06, deram lugar a asserções estritamente mais fortes, comprovadas por E7 e E8 mortos).
+- **Contagem na iteração 1** (`9121be7`): 485 / 27 / 221 · **iteração 2** (`ed7c892`): 486 / 27 / 224
+- **Contagem agora** (`08c7816`): **486 / 27 / 226** — delta acumulado sobre `56ec10e`: **+25 unit, +24 e2e**; delta desta iteração: **+0 unit, +2 e2e**
+- **Integridade dos testes**: `git diff --name-status ed7c892..08c7816` traz apenas `M e2e/identidade-visual.spec.ts` e os 3 arquivos de documentação. `26d23ce` é **+85/-15**: as 15 linhas removidas são **substituições de localizador de documento por localizador escopado** (`page.getByTestId("navegacao-perfil")` → `menuDaCasca(page)`), estritamente mais fortes — comprovado por N2 morto. Nenhuma asserção foi enfraquecida; nenhum arquivo de teste de outra feature foi tocado.
 - **Skipped**: nenhum
-- **Failures**: nenhuma. O flake conhecido de `e2e/pre-cursos-formulario.spec.ts:304` (radio do Base UI) **não** ocorreu nesta execução
 
 ---
 
@@ -149,70 +178,55 @@ O sinal de "régua movida" seria o comportamento do 401 ficar sem enunciado, ou 
 
 | Princípio | Status |
 | --- | --- |
-| Código mínimo | ✅ — `0dbbbb1` não toca produção |
-| Mudanças cirúrgicas | ✅ — 3 arquivos, 2 de teste + 1 linha de spec |
-| Sem scope creep | ✅ |
-| Segue os padrões existentes | ✅ — mesmas helpers (`logar`, `upsertUsuario`, `deleteUsuarios`), mesmo estilo de comentário justificando a asserção |
-| Spec-anchored outcome check | ⚠️ — UI-06 mede `paddingTop != "0px"` em vez do valor que a spec chama de "mesmo espaçamento"; UI-01 não afirma contenção |
-| Per-layer Coverage Expectation | ⚠️ — módulo puro agora tem todos os ramos (M2 fechado); a camada e2e cobre 2 de 11 telas para UI-06 |
-| Todo teste mapeia para um requisito (sem teste órfão) | ✅ — 22 e2e + 25 unit, todos rotulados por UI-NN ou edge case da spec |
+| Código mínimo | ✅ — `26d23ce` não toca produção; 1 arquivo alterado |
+| Mudanças cirúrgicas | ✅ — 3 helpers novos, 2 testes novos, 15 localizadores reescopados |
+| Sem scope creep | ✅ — nada fora de UI-01…UI-07/UI-20/UI-21 |
+| Segue os padrões existentes | ✅ — mesmas helpers (`logar`, `upsertUsuario`, `deleteUsuarios`), mesmo estilo de comentário justificando cada asserção |
+| Spec-anchored outcome check | ✅ — o `paddingTop` deixou de ser `!= "0px"` e virou `"32px"` literal; a contenção de UI-01 virou `toHaveCount(1)` escopado; UI-03 virou "o item **daquela** rota" |
+| Per-layer Coverage Expectation | ✅ com ressalva — módulo puro com todos os ramos; camada e2e cobre 8 de 11 telas para UI-06 (Observação 1) e os 6 perfis para UI-02 (3 renderizados + 6 na camada pura) |
+| Todo teste mapeia para um requisito (sem teste órfão) | ✅ — 24 e2e + 25 unit, todos rotulados por UI-NN, REQ-SEC-12 ou edge case da spec |
 | Guidelines do projeto seguidos | ✅ — `AGENTS.md`, `vitest.config.ts`, `playwright.config.ts` |
-
----
-
-## Fix Plans
-
-### Fix A — UI-06 é verificado em 2 das 11 telas (N1 sobreviveu)
-- **Severidade**: Major
-- **Root cause**: `e2e/…:146,149` conta `<main>` em `/painel` e `/avaliacoes`; `:153-167` mede o contêiner numa rota só. As outras 9 telas protegidas (`/pre-cursos`, `/pre-cursos/novo`, `/pos-cursos`, `/pos-cursos/novo`, `/usuarios/novo`, e as rotas dinâmicas) não têm nenhuma asserção — a regressão que T4 desfez (cada página com seu próprio `<main>`) volta sem ser notada. Além disso `not.toBe("0px")` não fixa valor, então `py-8`→`py-2` também passa.
-- **Fix**: iterar sobre a lista de rotas estáticas do grupo `(protegido)` num único teste, afirmando por rota `toHaveCount(1)` para `main` **e** o mesmo `paddingTop`/`paddingBottom` computado (comparar contra o valor da primeira rota, ou contra `"32px"`). Re-injetar N1 e confirmar que morre.
-
-### Fix B — UI-01 não afirma que nav e "Sair" estão **dentro** do cabeçalho (N2 sobreviveu)
-- **Severidade**: Minor
-- **Root cause**: os localizadores são de documento. `e2e/…:224` usa `getByTestId("navegacao-perfil")` e `:403` usa `page.getByRole("button", { name: "Sair" })`; nenhum é escopado em `getByTestId("casca-cabecalho")`.
-- **Fix**: escopar — `const cabecalho = page.getByTestId("casca-cabecalho")` e afirmar `await expect(cabecalho.getByTestId("navegacao-perfil")).toHaveCount(1)` e `await expect(cabecalho.getByRole("button", { name: "Sair" })).toHaveCount(1)` em ao menos um teste de UI-01. Re-injetar N2 e confirmar que morre.
-
-**Ambos os fixes são test-side. Nenhuma mudança de produção é necessária — o produto está correto nos dois casos.**
 
 ---
 
 ## Requirement Traceability Update
 
-| Requirement | Status atual na spec | Status apurado (iteração 2) |
+| Requirement | Status atual na spec | Status apurado (iteração 3) |
 | --- | --- | --- |
-| UI-01 | Verified | ❌ Needs Fix (N2 — contenção no `<header>` não afirmada) |
-| UI-02 | Verified | ✅ Verified |
-| UI-03 | Verified | ✅ Verified (M2 fechado) |
-| UI-04 | Verified | ✅ Verified |
-| UI-05 | Verified | ✅ Verified (403, rede e 401 cobertos; texto do AC reconciliado) |
-| UI-06 | Verified | ❌ Needs Fix (N1 — 2 de 11 telas; espaçamento não fixado) |
-| UI-07 | Verified | ✅ Verified (E8 forte morto; "sem JS" coberto e discriminante) |
-| UI-20 | Verified | ✅ Verified (`--font-mono` sem observação — consumidor `Pending`) |
-| UI-21 | Verified | ✅ Verified |
-| UI-08…UI-19, UI-22 | Pending | Fora do recorte — não avaliados |
+| UI-01 | Verified | ✅ Verified (N2 morto — contenção afirmada) |
+| UI-02 | Verified | ✅ Verified (P1 morto) |
+| UI-03 | Verified | ✅ Verified (N3 morto) |
+| UI-04 | Verified | ✅ Verified (P2 morto — header CSRF afirmado pela rota real) |
+| UI-05 | Verified | ✅ Verified |
+| UI-06 | Verified | ✅ Verified com observação (8 de 11 telas; P4 sobrevive nas 3 dinâmicas) |
+| UI-07 | Verified | ✅ Verified |
+| UI-20 | Verified | ✅ Verified (`--font-mono` sem observador — consumidor `Pending`) |
+| UI-21 | Verified | ✅ Verified (P3 morto — metade `margin` coberta por via cruzada) |
+| UI-08…UI-19, UI-22 | Pending | Fora do recorte por decisão do usuário — não avaliados |
+
+Nenhuma alteração de status é necessária em `spec.md`.
 
 ---
 
 ## O que continua NÃO verificado
 
-- **UI-06 nas 9 telas protegidas restantes** (contêiner único e espaçamento) — Fix A.
-- **UI-01: contenção estrutural** de nav e "Sair" dentro do `<header>` — Fix B.
-- **UI-20 `--font-mono`**: declarada em `globals.css:53`, sem consumidor no recorte (UI-11 é `Pending`). Fora de escopo, registrado.
-- **UI-08…UI-19 e UI-22**: `Pending` por decisão de recorte.
-- **Aparência**: nenhum snapshot visual foi tirado; toda a verificação é de valor computado (`getComputedStyle`, `getBoundingClientRect`) e de estrutura.
+- **UI-06 nas 3 rotas dinâmicas** (`/pre-cursos/[id]`, `/pos-cursos/[cdCurso]`, `/avaliacoes/[cpf]/[cdCurso]`) — Observação 1. É o único mutante sobrevivente da feature inteira que segue aberto.
+- **UI-20 `--font-mono`** — Observação 2.
+- **Aparência** — Observação 3.
+- **UI-08…UI-19 e UI-22** — `Pending` por decisão de recorte do usuário.
 
 ---
 
 ## Summary
 
-**Overall**: ⚠️ Issues — a correção da iteração 1 funcionou: os 4 mutantes que sobreviveram morreram, reproduzidos de forma independente, e os ramos novos (rede, JS desligado, truncamento, contêiner) discriminam de verdade. Restam **duas lacunas de largura**, ambas já sinalizadas na iteração 1 e não fechadas: UI-06 verificado em 2 de 11 telas, e a contenção de UI-01 nunca afirmada.
+**Overall**: ✅ Ready — com 1 observação registrada
 
-**Spec-anchored check**: 14 ACs/meios-ACs plenamente casados · 2 com mutante sobrevivente (UI-01, UI-06) · 1 spec-precision gap remanescente e fora do recorte (`--font-mono`) · o gap do 401 **resolvido** por reescrita julgada legítima
-**Sensor (iteração 2)**: 8 mutações injetadas — **6 mortas, 2 sobreviventes** (N1, N2). Acumulado: 17/19.
-**Gate**: 486 unit + 27 integration + 224 e2e, 0 falhas; lint 0 erros; build e typecheck limpos; nenhum arquivo de teste pré-existente alterado
+**Spec-anchored check**: **20 de 21** linhas do quadro de ACs (ACs e meios-ACs do recorte) casadas com o outcome da spec, todas com `file:line` + expressão · 1 spec-precision gap fora do recorte (`--font-mono`) · 0 lacunas de asserção novas encontradas pela lente do item 2
+**Sensor (iteração 3)**: 7 mutações injetadas — **6 mortas, 1 sobrevivente** (P4, rota dinâmica, classificado como observação). Acumulado da feature: **23/26**.
+**Gate**: ver tabela acima
 
-**O que funciona**: tudo o que a iteração 1 já provava, mais — fronteira do separador em `hrefAtivo`; contêiner centralizado com largura máxima efetiva; cabeçalho que não estoura a 375px (medido no elemento que pode estourar); nome longo truncado com reticências; navegação presente sem JavaScript; falha de rede no logout mantendo a página com mensagem.
+**O que funciona**: tudo que as iterações 1 e 2 já provavam, mais — a contenção estrutural de nav e "Sair" dentro do `<header>` (N2 morre em 15 testes); o contêiner único e o espaçamento fixo de 32px nas 8 rotas estáticas (N1 morre); o item ativo correto **em cada** rota, não só em `/avaliacoes` (N3 morre, e só o teste novo o pega); a fiação perfil→menu (P1 morre); o header CSRF do logout (P2 morre); a metade `margin` do reset de UI-21 (P3 morre).
 
-**Problemas** (ranqueados): (1) **N1** — UI-06 verificado em 2 de 11 telas, e o espaçamento não é fixado em valor; (2) **N2** — UI-01 não afirma que a navegação e o "Sair" vivem dentro do `<header>`.
+**Problemas**: nenhum bloqueador. Um único item aberto, ranqueado: **P4** — UI-06 sem rede de regressão nas 3 rotas dinâmicas, com o critério verificado como satisfeito hoje por inspeção do código de produção.
 
-**Next steps**: aplicar Fix A e Fix B (ambos test-side, ~10 linhas em `e2e/identidade-visual.spec.ts`) e re-despachar o Verifier. **Iteração 2 de no máximo 3** — resta uma.
+**Next steps**: a feature está pronta no recorte declarado. Se o usuário quiser fechar a Observação 1, é uma tarefa test-side isolada (fixture de curso + 3 rotas no array de `e2e/…:181`), que não bloqueia a próxima fatia (UI-08…UI-19, UI-22).

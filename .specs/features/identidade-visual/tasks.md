@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/identidade-visual/design.md`
-**Status**: Approved
+**Status**: Done
 
 > **Recorte.** Estas tarefas implementam **apenas** o recorte declarado no topo de `design.md`: a casca comum com o menu de navegação por perfil (UI-01 … UI-07) e os dois defeitos de base que são pré-requisito dele (UI-20, UI-21). UI-08 … UI-19 e UI-22 continuam `Pending` na traceability da spec e ganharão o próprio ciclo Design → Tasks.
 

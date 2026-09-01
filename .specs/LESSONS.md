@@ -180,6 +180,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: N2 - e2e/identidade-visual.spec.ts:224,403 (UI-01) (e2e)
 - last seen: 2026-08-31T22:05:18Z
 
+### L-029 - When a per-route assertion loop skips the routes that would need test fixtures, those routes stay unverified - build the fixture or record the exclusion as a named gap, never only as a code comment.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: identidade-visual
+- evidence: P4 - e2e/identidade-visual.spec.ts:181 (UI-06) (e2e)
+- last seen: 2026-09-01T19:21:26Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
