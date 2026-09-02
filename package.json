@@ -2,16 +2,21 @@
   "name": "spma",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:test": "dotenv -e .env.test -- next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
+    "start:prod": "prisma migrate deploy && next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --exclude \"**/*.integration.test.ts\"",
     "test:e2e": "playwright test --pass-with-no-tests",
     "db:generate": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
     "db:migrate": "prisma migrate dev",
     "db:test:reset": "tsx scripts/db-test-reset.ts",
     "dev:seed-demo": "tsx scripts/dev-seed-demo.ts",
