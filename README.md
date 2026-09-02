@@ -83,6 +83,11 @@ primeiro acesso. O agente cuidará disso na feature `auth-e-usuarios`.
 npm run dev
 ```
 
+## Deploy de teste (homologação com o cliente)
+
+Para publicar uma instância que o cliente valida pelo navegador, sem instalar
+nada na máquina dele, siga [`docs/DEPLOY_TESTE.md`](docs/DEPLOY_TESTE.md).
+
 ## Fluxo de desenvolvimento (spec-driven)
 
 Este projeto usa a skill **tlc-spec-driven**. O ciclo por feature é:
