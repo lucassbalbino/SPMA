@@ -1,69 +1,18 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// Raiz do site. Não tem conteúdo próprio: manda para o painel, e quem não
+// tiver sessão é desviado para /login pelo proxy (que checa presença de
+// cookie) e pela guarda de `(protegido)/layout.tsx`, que é a autoridade.
+//
+// `connection()` antes do redirect é o que impede o Next de resolver esta
+// rota no build. Prerenderizada, ela servia um HTML com scripts sem nonce e
+// o CSP de `src/proxy.ts` os bloqueava (mesma causa comentada em
+// `(public)/login/page.tsx`). Dinâmica, o redirect vira resposta de servidor
+// e nenhum HTML chega a ser servido daqui.
+//
+// Sem isto a rota `/` servia a página de boilerplate do create-next-app.
+import { connection } from "next/server";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+export default async function Home() {
+  await connection();
+  redirect("/painel");
 }
