@@ -26,10 +26,14 @@ resolve app + MySQL sem um segundo serviço.
 O serviço MySQL passa a expor `MYSQL_URL` (rede interna do projeto) e as partes
 soltas (`MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`).
 
-3. Ainda no serviço MySQL: **Settings** → **Networking** → **Public Networking**
-   → habilite o **TCP Proxy / Public Access**. Só então aparece a variável
-   `MYSQL_PUBLIC_URL`, que é a única alcançável da sua máquina — sem ela o seed
-   do passo 5 não roda.
+3. Ainda no serviço **MySQL** (não no da aplicação): **Settings** →
+   **Networking** → **TCP Proxy** → informe a porta interna **3306**. Só então
+   aparece a variável `MYSQL_PUBLIC_URL`, a única alcançável de fora do projeto
+   — sem ela o seed do passo 5 não roda da sua máquina.
+
+   No serviço da aplicação essa opção não existe: lá o Networking só oferece
+   domínio HTTP. Se preferir não expor o banco, veja "Semear sem TCP Proxy" no
+   passo 5.
 
 ## 2. Variáveis de ambiente da aplicação
 
@@ -103,6 +107,20 @@ migrations pela mesma via, antes do seed:
 ```powershell
 npx prisma migrate deploy
 ```
+
+### Semear sem TCP Proxy
+
+Alternativa que dispensa expor o banco: no serviço da aplicação, troque
+temporariamente o **Custom Start Command** por
+
+```
+prisma migrate deploy && npm run db:seed && next start
+```
+
+O deploy roda o seed de dentro da rede privada, usando a `MYSQL_URL` interna.
+O seed é idempotente (só cria o AM se nenhum existir), então rodar a cada
+deploy não duplica nada — dá até para deixar assim no ambiente de teste.
+Depois é só voltar o comando para `npm run start:prod`.
 
 ## 6. O que entregar ao cliente
 
