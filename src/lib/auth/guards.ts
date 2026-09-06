@@ -129,12 +129,22 @@ export function podeGerenciarPreCurso(
 export const podeGerenciarPosCurso = podeGerenciarPreCurso;
 
 /**
- * Guarda de criação da matrícula (AvaliacaoAluno) - AVAL-06. Mesma regra de
- * `podeGerenciarPreCurso` - o `cdOfertanteAlvo` aqui é o do curso em que o
- * Aluno está sendo matriculado. Alias, mesmo raciocínio de
- * `podeGerenciarPosCurso`.
+ * Guarda de criação da matrícula (AvaliacaoAluno) - AVAL-06. O
+ * `cdOfertanteAlvo` é o do curso em que o Aluno está sendo matriculado.
+ *
+ * Deixou de ser alias de `podeGerenciarPreCurso` (era, até a criação de Aluno
+ * passar a exigir o curso): o AM cria Aluno em qualquer Ofertante
+ * (REQ-AU-05/06) e, para o Aluno nascer matriculado, precisa matricular
+ * também - autoridade nacional, coerente com AD-012. Fora isso a regra é a
+ * mesma: só o GO vinculado ao Ofertante do curso. Preencher respostas ou
+ * encerrar continua sendo só do próprio Aluno (`podeGerenciarAvaliacao`).
  */
-export const podeMatricularAluno = podeGerenciarPreCurso;
+export function podeMatricularAluno(
+  usuario: { tipo: TipoUsuario; cdOfertante: number | null },
+  cdOfertanteAlvo: number,
+): boolean {
+  return usuario.tipo === "AM" || podeGerenciarPreCurso(usuario, cdOfertanteAlvo);
+}
 
 /**
  * Guarda de ESCRITA sobre a própria AvaliacaoAluno (AVAL-09/18) - primeira
@@ -165,4 +175,19 @@ export function podeAcessarAvaliacao(
   }
 
   return podeAcessarOfertante(usuario, alvo.cdOfertante);
+}
+
+/**
+ * Criar um Gestor Ofertante é criar, no mesmo passo, o Ofertante a que ele
+ * responde e a verba desse Ofertante: quem pode gerir verba (AM/GT,
+ * REQ-OV-08) informa `cdOfertante` + `verba` junto do usuário.
+ *
+ * Um GO criando outro GO não cai nesta regra: o escopo dele é herdado do
+ * criador (REQ-AU-08) e o GO consome verba, não a cria (REQ-OV-08).
+ */
+export function exigeOfertanteEVerba(
+  criadorTipo: TipoUsuario,
+  alvoTipo: TipoUsuario,
+): boolean {
+  return alvoTipo === "GO" && podeGerenciarVerba(criadorTipo);
 }

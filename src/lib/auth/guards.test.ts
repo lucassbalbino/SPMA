@@ -3,6 +3,7 @@
 // desvio cada guarda dispara, não o acesso ao banco.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  exigeOfertanteEVerba,
   podeAcessarAvaliacao,
   podeAcessarOfertante,
   podeEditarOfertante,
@@ -292,13 +293,10 @@ describe("podeGerenciarPosCurso", () => {
 });
 
 // AvaliacaoAluno não tem CD_Ofertante próprio - `cdOfertanteAlvo` aqui é
-// sempre o do PreCurso (curso) em que o Aluno está sendo matriculado. Alias
-// de podeGerenciarPreCurso (design.md), mesmo padrão de podeGerenciarPosCurso.
+// sempre o do PreCurso (curso) em que o Aluno está sendo matriculado. Não é
+// mais alias de podeGerenciarPreCurso: o AM matricula porque cria Aluno em
+// qualquer Ofertante, e o Aluno nasce matriculado.
 describe("podeMatricularAluno", () => {
-  it("é o mesmo comportamento de podeGerenciarPreCurso (alias, não uma função nova)", () => {
-    expect(podeMatricularAluno).toBe(podeGerenciarPreCurso);
-  });
-
   it("GO vinculado ao ofertante do curso pode matricular", () => {
     expect(podeMatricularAluno({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);
   });
@@ -307,12 +305,25 @@ describe("podeMatricularAluno", () => {
     expect(podeMatricularAluno({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
   });
 
-  it("AM não pode matricular, mesmo sendo autoridade global", () => {
-    expect(podeMatricularAluno({ tipo: "AM", cdOfertante: null }, 1)).toBe(false);
+  it("AM matricula em qualquer Ofertante (autoridade nacional, AD-012)", () => {
+    expect(podeMatricularAluno({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
+    expect(podeMatricularAluno({ tipo: "AM", cdOfertante: null }, 2)).toBe(true);
   });
 
-  it("GT não pode matricular", () => {
+  it("GT não pode matricular (nem cria Aluno, REQ-AU-05/06)", () => {
     expect(podeMatricularAluno({ tipo: "GT", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("VT/VO/AL não matriculam", () => {
+    expect(podeMatricularAluno({ tipo: "VT", cdOfertante: null }, 1)).toBe(false);
+    expect(podeMatricularAluno({ tipo: "VO", cdOfertante: 1 }, 1)).toBe(false);
+    expect(podeMatricularAluno({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("continua sem afetar quem preenche/encerra a avaliação (só o próprio Aluno)", () => {
+    expect(podeGerenciarAvaliacao({ tipo: "AM", cpf: "52998224725" }, "52998224725")).toBe(
+      false,
+    );
   });
 });
 
@@ -410,4 +421,29 @@ describe("podeAcessarAvaliacao", () => {
       ),
     ).toBe(true);
   });
+});
+
+describe("exigeOfertanteEVerba", () => {
+  it("AM criando GO informa Ofertante e verba no mesmo passo", () => {
+    expect(exigeOfertanteEVerba("AM", "GO")).toBe(true);
+  });
+
+  it("GT criando GO informa Ofertante e verba no mesmo passo", () => {
+    expect(exigeOfertanteEVerba("GT", "GO")).toBe(true);
+  });
+
+  it("GO criando GO não informa verba (herda o Ofertante e não gere verba)", () => {
+    expect(exigeOfertanteEVerba("GO", "GO")).toBe(false);
+  });
+
+  it.each(["AM", "GT"] as const)("%s criando VO não precisa de verba", (criador) => {
+    expect(exigeOfertanteEVerba(criador, "VO")).toBe(false);
+  });
+
+  it.each(["AM", "GT", "VT", "AL"] as const)(
+    "criar um %s nunca envolve verba",
+    (alvo) => {
+      expect(exigeOfertanteEVerba("AM", alvo)).toBe(false);
+    },
+  );
 });
