@@ -1,0 +1,115 @@
+==============================================================================
+SPMA - CREDENCIAIS DO CENARIO DE DEMONSTRACAO
+Ambiente de desenvolvimento local (banco `spma`, via `.env`)
+==============================================================================
+
+Senha de todos os usuarios:  SenhaDemo123
+Endereco:                    http://localhost:3000
+
+Tudo nesta folha e criado por `npm run dev:seed-demo` e espelha
+`scripts/dev-seed-demo.ts`. Se o seed mudar, atualize este arquivo junto.
+
+
+------------------------------------------------------------------------------
+1. USUARIOS
+------------------------------------------------------------------------------
+
+Na ordem da cascata de criacao: cada linha existe porque alguma acima dela a
+criou (AM cria GT; GT cria VT e GO; GO cria VO e AL).
+
+  PERFIL                       PESSOA            CPF            CRIADO POR
+  ---------------------------  ----------------  -------------  ------------
+  AM  Admin Master             Helena Souza      70000000159    -
+  GT  Gestor Turismo           Carlos Tavares    40200030094    Helena (AM)
+  VT  Visualizador Turismo     Rafael Nunes      70000000230    Carlos (GT)
+  GO  Gestor Ofertante         Marina Duarte     60000369900    Carlos (GT)
+  VO  Visualizador Ofertante   Beatriz Lima      70000000310    Marina (GO)
+  AL  Aluno                    Joana Ribeiro     60000383643    Marina (GO)
+
+O que cada um faz:
+
+  AM  Cria qualquer perfil, em qualquer ofertante. Escopo nacional.
+  GT  Gere ofertantes e verbas; cria GT, VT e GO. Escopo nacional.
+  VT  Le tudo, em ambito nacional. Nao escreve nada.
+  GO  Dona do ofertante #2: preenche pre e pos-curso, matricula aluno.
+  VO  Le so o proprio ofertante (#2). Nao escreve nada.
+  AL  Matriculada no curso #3. So ela preenche a propria avaliacao.
+
+Escopo: AM, GT e VT tem alcance nacional e nunca ficam vinculados a um
+ofertante. GO e VO ficam presos ao ofertante #2. O aluno nao tem ofertante:
+o escopo dele e o curso em que esta matriculado.
+
+Ocultar item de menu e conveniencia de tela - quem decide a autorizacao e o
+guard do backend, a cada request.
+
+
+------------------------------------------------------------------------------
+2. O CENARIO
+------------------------------------------------------------------------------
+
+Um elemento de cada, todos amarrados ao mesmo curso.
+
+  Ofertante  #2   Instituto Turismo Litoral (demo)
+                  Santos / SP - responsavel Marina Duarte
+
+  Verba      #2   R$ 250.000,00
+                  R$ 12.000,00 alocados no curso
+
+  Curso      #3   Pre-curso + pos-curso
+                  Os dois em andamento, sem respostas preenchidas
+
+  Matricula       Joana Ribeiro no curso #3
+                  Em andamento - Parte 1 ainda por preencher
+
+
+------------------------------------------------------------------------------
+3. ROTAS DO ROTEIRO
+------------------------------------------------------------------------------
+
+Todas sob http://localhost:3000
+
+  /login                        Entrada de todos
+  /painel                       Modulos do perfil logado
+  /pre-cursos                   Lista - AM, GT, VT, GO, VO
+  /pre-cursos/novo              Criacao - so a GO
+  /pre-cursos/3                 Formulario de 56 campos - so a GO edita
+  /pos-cursos                   Lista - AM, GT, VT, GO, VO
+  /pos-cursos/novo              Criacao - so a GO
+  /pos-cursos/3                 Formulario de 26 campos - so a GO edita
+  /avaliacoes                   Lista - para a aluna, so a dela
+  /avaliacoes/novo              Matricula - GO (e AM)
+  /avaliacoes/60000383643/3     Formulario da aluna - so ela preenche
+  /usuarios/novo                Criacao de usuario - AM, GT, GO
+
+
+------------------------------------------------------------------------------
+4. RECRIAR OU APAGAR
+------------------------------------------------------------------------------
+
+  npm run dev:seed-demo
+      Cria o cenario. Rodar de novo nao duplica nada.
+
+  npm run dev:seed-demo:limpar
+      Remove so o que o seed criou, na ordem das FKs.
+
+
+------------------------------------------------------------------------------
+5. TRES COISAS A SABER ANTES DE USAR ESTA FOLHA
+------------------------------------------------------------------------------
+
+  1. Os CPFs sao estaveis; os codigos nao.
+     Ofertante, verba e curso sao autoincremento: depois de um `limpar`
+     seguido de novo seed, o curso deixa de ser o #3. O seed imprime os
+     codigos novos ao terminar - confira na saida dele.
+
+  2. Isto nao e credencial de producao.
+     A senha esta em texto aberto no repositorio e o seed roda contra o banco
+     de desenvolvimento. Em ambiente real existe so o Admin Master do
+     `prisma/seed.ts`, que cadastra a propria senha no primeiro acesso.
+
+  3. O Admin Master local fica de fora.
+     O AM do `prisma/seed.ts` (CPF 52998224725) tem CPF proprio e nao e tocado
+     nem pelo seed nem pelo `limpar`. A Helena existe so para demonstrar o
+     perfil AM.
+
+==============================================================================

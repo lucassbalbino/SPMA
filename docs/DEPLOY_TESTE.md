@@ -91,8 +91,9 @@ sobrescreve o que já está no ambiente), então isso não toca no seu banco de 
 Encerrada a validação, desligue o Public Access do MySQL: com ele ligado o banco
 fica exposto na internet, protegido só pela senha.
 
-Opcional — cenário de demonstração navegável (1 ofertante, 1 verba, 2 cursos,
-1 avaliação e um usuário GT/GO/AL com senha `SenhaDemo123`):
+Opcional — cenário de demonstração navegável (1 ofertante, 1 verba, 1 curso com
+pré e pós-curso, 1 aluno matriculado e um usuário de cada perfil —
+AM/GT/VT/GO/VO/AL — com senha `SenhaDemo123`):
 
 ```powershell
 npm run dev:seed-demo
