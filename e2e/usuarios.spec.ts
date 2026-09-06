@@ -11,8 +11,14 @@
 import { expect, test } from "@playwright/test";
 import {
   criarOfertante,
+  criarPreCurso,
+  criarVerba,
+  deleteAvaliacoesPorCpf,
+  deletePreCursosPorOfertante,
   deleteUsuarios,
+  getAvaliacao,
   getUsuario,
+  getVerba,
   upsertUsuario,
 } from "./helpers/db";
 import {
@@ -36,6 +42,12 @@ const CPF_DUPLICADO = "30092003079";
 const CPF_AM_CRIADOR = "70105006068";
 const CPF_NOVO_GO_OFERTANTE_VALIDO = "70206007000";
 const CPF_NOVO_GO_OFERTANTE_INVALIDO = "70307008053";
+const CPF_NOVO_GO_SEM_VERBA = "70408009004";
+const CPF_NOVO_GO_VERBA_PELO_GO = "70509000010";
+const CPF_NOVO_AL_PELO_AM = "70601002024";
+const CPF_NOVO_AL_SEM_CURSO = "70702003077";
+const CPF_NOVO_AL_CURSO_ALHEIO = "70803004010";
+const CPF_NOVO_AL_CURSO_INEXISTENTE = "70904005062";
 
 const CPFS = [
   CPF_GO_CRIADOR,
@@ -49,10 +61,18 @@ const CPFS = [
   CPF_AM_CRIADOR,
   CPF_NOVO_GO_OFERTANTE_VALIDO,
   CPF_NOVO_GO_OFERTANTE_INVALIDO,
+  CPF_NOVO_GO_SEM_VERBA,
+  CPF_NOVO_GO_VERBA_PELO_GO,
+  CPF_NOVO_AL_PELO_AM,
+  CPF_NOVO_AL_SEM_CURSO,
+  CPF_NOVO_AL_CURSO_ALHEIO,
+  CPF_NOVO_AL_CURSO_INEXISTENTE,
 ];
 
 let cdOfertanteDoGo: number;
 let cdOfertanteAlheio: number;
+let cdCursoDoGo: number;
+let cdCursoAlheio: number;
 
 async function sessaoDoGo(): Promise<string> {
   const cliente = await novoCliente();
@@ -111,9 +131,29 @@ test.beforeAll(() => {
     cdOfertante: cdOfertanteDoGo,
   });
   upsertUsuario({ cpf: CPF_AM_CRIADOR, tipo: "AM", senha: SENHA, primeiraVez: false });
+
+  // Todo Aluno nasce matriculado (AVAL-01), então a criação de AL precisa de
+  // um curso - um no Ofertante do GO criador e outro num Ofertante alheio,
+  // para exercitar o escopo da matrícula (AVAL-05/06).
+  const cdVerbaDoGo = criarVerba({ cdOfertante: cdOfertanteDoGo, vlVerba: 10000 }).cdVerba;
+  const cdVerbaAlheia = criarVerba({ cdOfertante: cdOfertanteAlheio, vlVerba: 10000 }).cdVerba;
+  cdCursoDoGo = criarPreCurso({
+    cdOfertante: cdOfertanteDoGo,
+    cdVerba: cdVerbaDoGo,
+    vlCursoAlocado: 100,
+    criadoPor: CPF_GO_CRIADOR,
+  }).cdCurso;
+  cdCursoAlheio = criarPreCurso({
+    cdOfertante: cdOfertanteAlheio,
+    cdVerba: cdVerbaAlheia,
+    vlCursoAlocado: 100,
+    criadoPor: CPF_GO_CRIADOR,
+  }).cdCurso;
 });
 
 test.afterAll(() => {
+  deleteAvaliacoesPorCpf(CPFS);
+  deletePreCursosPorOfertante([cdOfertanteDoGo, cdOfertanteAlheio]);
   deleteUsuarios(CPFS);
 });
 
@@ -122,11 +162,14 @@ test("CA-AU-05: GO autenticado cria AL e a autoria fica registrada", async () =>
   const cliente = await novoCliente();
 
   const res = await cliente.post("/api/usuarios", {
-    data: { cpf: CPF_NOVO_AL, nome: "Aluno Novo", tipo: "AL" },
+    data: { cpf: CPF_NOVO_AL, nome: "Aluno Novo", tipo: "AL", cdCurso: cdCursoDoGo },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(201);
+
+  // AVAL-01: o Aluno nasce matriculado, no mesmo passo.
+  expect(getAvaliacao(CPF_NOVO_AL, cdCursoDoGo)?.status).toBe("EM_ANDAMENTO");
 
   const criado = getUsuario(CPF_NOVO_AL);
   expect(criado).not.toBeNull();
@@ -246,7 +289,7 @@ test("REQ-SEC-11: POST com CPF já existente devolve erro genérico + idCorrelac
 
   const clientePrimeiro = await novoCliente();
   const primeiro = await clientePrimeiro.post("/api/usuarios", {
-    data: { cpf: CPF_DUPLICADO, nome: "Primeiro Cadastro", tipo: "AL" },
+    data: { cpf: CPF_DUPLICADO, nome: "Primeiro Cadastro", tipo: "AL", cdCurso: cdCursoDoGo },
     headers,
   });
   expect(primeiro.status()).toBe(201);
@@ -255,7 +298,7 @@ test("REQ-SEC-11: POST com CPF já existente devolve erro genérico + idCorrelac
   // Prisma, não tratada na rota, capturada por `comTratamentoDeErro`.
   const clienteSegundo = await novoCliente();
   const segundo = await clienteSegundo.post("/api/usuarios", {
-    data: { cpf: CPF_DUPLICADO, nome: "Segundo Cadastro", tipo: "AL" },
+    data: { cpf: CPF_DUPLICADO, nome: "Segundo Cadastro", tipo: "AL", cdCurso: cdCursoDoGo },
     headers,
   });
 
@@ -276,7 +319,7 @@ test("REQ-SEC-11: POST com CPF já existente devolve erro genérico + idCorrelac
   await clienteSegundo.dispose();
 });
 
-test("REQ-OV-04: AM criando GO com cdOfertante existente funciona normalmente", async () => {
+test("REQ-OV-04/REQ-OV-08: AM criando GO com cdOfertante existente grava usuário e verba no mesmo passo", async () => {
   const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
 
   const cliente = await novoCliente();
@@ -286,12 +329,63 @@ test("REQ-OV-04: AM criando GO com cdOfertante existente funciona normalmente", 
       nome: "Novo GO Ofertante Válido",
       tipo: "GO",
       cdOfertante: cdOfertanteAlheio,
+      verba: { vlVerba: 12500.5, dtVerba: "2026-03-10" },
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(201);
   expect(getUsuario(CPF_NOVO_GO_OFERTANTE_VALIDO)?.cdOfertante).toBe(cdOfertanteAlheio);
+
+  // A verba tem de existir no banco, no Ofertante do GO recém-criado - a
+  // resposta HTTP sozinha não prova a persistência.
+  const corpo = await res.json();
+  const verba = getVerba(corpo.verba.cdVerba);
+  expect(verba?.cdOfertante).toBe(cdOfertanteAlheio);
+  expect(Number(verba?.vlVerba)).toBe(12500.5);
+
+  await cliente.dispose();
+});
+
+test("REQ-OV-08: AM criando GO sem verba recebe 400 e nem o usuário é criado", async () => {
+  const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/usuarios", {
+    data: {
+      cpf: CPF_NOVO_GO_SEM_VERBA,
+      nome: "GO Sem Verba",
+      tipo: "GO",
+      cdOfertante: cdOfertanteAlheio,
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  expect((await res.json()).erro).toBe(
+    "Gestor Ofertante exige um Ofertante e o valor da verba",
+  );
+  expect(getUsuario(CPF_NOVO_GO_SEM_VERBA)).toBeNull();
+
+  await cliente.dispose();
+});
+
+test("REQ-OV-08: GO não cria verba de carona na criação de outro GO - 403 e nada criado", async () => {
+  const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/usuarios", {
+    data: {
+      cpf: CPF_NOVO_GO_VERBA_PELO_GO,
+      nome: "GO Com Verba Forjada",
+      tipo: "GO",
+      verba: { vlVerba: 999 },
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(403);
+  expect(getUsuario(CPF_NOVO_GO_VERBA_PELO_GO)).toBeNull();
 
   await cliente.dispose();
 });
@@ -314,6 +408,107 @@ test("CA-OV-05: AM criando GO com cdOfertante inexistente recebe 400 claro, não
   const corpo = await res.json();
   expect(corpo.erro).toBe("Ofertante informado não existe");
   expect(getUsuario(CPF_NOVO_GO_OFERTANTE_INVALIDO)).toBeNull();
+
+  await cliente.dispose();
+});
+
+test("AVAL-01: AM cria Aluno já matriculado num curso de qualquer Ofertante", async () => {
+  const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/usuarios", {
+    data: {
+      cpf: CPF_NOVO_AL_PELO_AM,
+      nome: "Aluno Criado Pelo AM",
+      tipo: "AL",
+      // Curso de um Ofertante que não é o do AM (que não tem nenhum, AD-012).
+      cdCurso: cdCursoAlheio,
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(201);
+  expect(getUsuario(CPF_NOVO_AL_PELO_AM)?.tipo).toBe("AL");
+  expect(getAvaliacao(CPF_NOVO_AL_PELO_AM, cdCursoAlheio)?.status).toBe("EM_ANDAMENTO");
+
+  await cliente.dispose();
+});
+
+test("AVAL-01: criar Aluno sem curso recebe 400 e o usuário não é criado", async () => {
+  const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/usuarios", {
+    data: { cpf: CPF_NOVO_AL_SEM_CURSO, nome: "Aluno Sem Curso", tipo: "AL" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  expect((await res.json()).erro).toBe("Curso é obrigatório para Aluno");
+  expect(getUsuario(CPF_NOVO_AL_SEM_CURSO)).toBeNull();
+
+  await cliente.dispose();
+});
+
+test("AVAL-05/06: GO criando Aluno em curso de outro Ofertante recebe 403, nada criado", async () => {
+  const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/usuarios", {
+    data: {
+      cpf: CPF_NOVO_AL_CURSO_ALHEIO,
+      nome: "Aluno Curso Alheio",
+      tipo: "AL",
+      cdCurso: cdCursoAlheio,
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(403);
+  expect(getUsuario(CPF_NOVO_AL_CURSO_ALHEIO)).toBeNull();
+  expect(getAvaliacao(CPF_NOVO_AL_CURSO_ALHEIO, cdCursoAlheio)).toBeNull();
+
+  await cliente.dispose();
+});
+
+test("criar Aluno com cdCurso inexistente recebe 404 e nada é criado", async () => {
+  const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/usuarios", {
+    data: {
+      cpf: CPF_NOVO_AL_CURSO_INEXISTENTE,
+      nome: "Aluno Curso Inexistente",
+      tipo: "AL",
+      cdCurso: 999999999,
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(404);
+  expect((await res.json()).erro).toBe("Curso não encontrado");
+  expect(getUsuario(CPF_NOVO_AL_CURSO_INEXISTENTE)).toBeNull();
+
+  await cliente.dispose();
+});
+
+test("curso informado na criação de quem não é Aluno é rejeitado com 400", async () => {
+  const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/usuarios", {
+    data: {
+      cpf: CPF_NOVO_AL_SEM_CURSO,
+      nome: "VO Com Curso",
+      tipo: "VO",
+      cdCurso: cdCursoDoGo,
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  expect((await res.json()).erro).toBe("Curso só se aplica à criação de Aluno");
+  expect(getUsuario(CPF_NOVO_AL_SEM_CURSO)).toBeNull();
 
   await cliente.dispose();
 });
