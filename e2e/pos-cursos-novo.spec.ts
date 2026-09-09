@@ -15,6 +15,7 @@ const SENHA = "SenhaValida123";
 const CPF_GO = "52261006128";
 const CPF_GO_SEM_ELEGIVEIS = "52271006244";
 const CPF_AM = "51105006140";
+const CPF_GT = "51108009107";
 
 let cdOfertante: number;
 let cdOfertanteSemElegiveis: number;
@@ -49,6 +50,7 @@ test.beforeAll(() => {
     cdOfertante: cdOfertanteSemElegiveis,
   });
   upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
 
   cdCursoElegivel = criarPreCurso({
     cdOfertante,
@@ -83,7 +85,7 @@ test.beforeAll(() => {
 
 test.afterAll(() => {
   deletePreCursosPorOfertante([cdOfertante, cdOfertanteSemElegiveis, cdOfertanteTerceiro]);
-  deleteUsuarios([CPF_GO, CPF_GO_SEM_ELEGIVEIS, CPF_AM]);
+  deleteUsuarios([CPF_GO, CPF_GO_SEM_ELEGIVEIS, CPF_AM, CPF_GT]);
 });
 
 async function login(page: import("@playwright/test").Page, cpf: string) {
@@ -135,4 +137,14 @@ test("quando não há nenhum pré-curso elegível, a tela mostra uma mensagem in
 
   await expect(page.getByTestId("select-pre-curso")).toHaveCount(0);
   await expect(page.getByText("Nenhum pré-curso disponível")).toBeVisible();
+});
+
+test("GT não pode criar pós-curso: a tela mostra a mensagem de acesso negado, sem seletor", async ({
+  page,
+}) => {
+  await login(page, CPF_GT);
+  await page.goto("/pos-cursos/novo");
+
+  await expect(page.getByTestId("select-pre-curso")).toHaveCount(0);
+  await expect(page.getByText("Seu perfil não pode criar pós-cursos.")).toBeVisible();
 });

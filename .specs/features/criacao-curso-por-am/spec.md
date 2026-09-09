@@ -108,8 +108,8 @@ Hoje só o GO do próprio Ofertante pode criar curso (Pré-Curso, que por sua ve
 | CURSO-06 | P1: Atalho navbar | Execute | Pending |
 | CURSO-07 | P1: Atalho navbar | Execute | Pending |
 | CURSO-08 | P1: Atalho navbar | Execute | Pending |
-| CURSO-09 | Edge case | Execute | Pending |
-| CURSO-10 | Edge case | Execute | Pending |
+| CURSO-09 | Edge case | Execute | Verified |
+| CURSO-10 | Edge case | Execute | Verified |
 | CURSO-11 | Edge case | Execute | Pending |
 
 **Coverage:** 11 total, 11 mapped to Execute (Tasks phase skipped - Medium scope, <10 implicit steps), 0 unmapped.

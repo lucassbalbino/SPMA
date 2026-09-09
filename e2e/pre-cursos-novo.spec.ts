@@ -12,19 +12,26 @@ import {
 const SENHA = "SenhaValida123";
 const CPF_GO = "52111003107";
 const CPF_AM = "51104005123";
+const CPF_GT = "51106007085";
+const CPF_GO_SEM_VERBA = "51107008000";
 
 let cdOfertante: number;
 let cdOfertanteOutro: number;
+let cdOfertanteSemVerba: number;
 let cdVerba: number;
 let cdVerbaOutro: number;
 
 test.beforeAll(() => {
-  deleteUsuarios([CPF_GO, CPF_AM]);
+  deleteUsuarios([CPF_GO, CPF_AM, CPF_GT, CPF_GO_SEM_VERBA]);
 
   cdOfertante = criarOfertante({ nome: "Ofertante Novo Pré-Curso", uf: "SP" }).cdOfertante;
   cdOfertanteOutro = criarOfertante({
     nome: "Ofertante Novo Pré-Curso Outro",
     uf: "RJ",
+  }).cdOfertante;
+  cdOfertanteSemVerba = criarOfertante({
+    nome: "Ofertante Novo Pré-Curso Sem Verba",
+    uf: "MG",
   }).cdOfertante;
 
   cdVerba = criarVerba({ cdOfertante, vlVerba: 1000 }).cdVerba;
@@ -32,11 +39,19 @@ test.beforeAll(() => {
 
   upsertUsuario({ cpf: CPF_GO, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante });
   upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
+  upsertUsuario({
+    cpf: CPF_GO_SEM_VERBA,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    cdOfertante: cdOfertanteSemVerba,
+  });
 });
 
 test.afterAll(() => {
-  deletePreCursosPorOfertante([cdOfertante, cdOfertanteOutro]);
-  deleteUsuarios([CPF_GO, CPF_AM]);
+  deletePreCursosPorOfertante([cdOfertante, cdOfertanteOutro, cdOfertanteSemVerba]);
+  deleteUsuarios([CPF_GO, CPF_AM, CPF_GT, CPF_GO_SEM_VERBA]);
 });
 
 async function login(page: import("@playwright/test").Page, cpf: string = CPF_GO) {
@@ -95,4 +110,22 @@ test("valor acima do saldo disponível exibe erro com o saldo informado, sem nav
 
   await expect(page.getByTestId("erro-novo-pre-curso")).toContainText("saldo disponível");
   await expect(page).toHaveURL(/\/pre-cursos\/novo$/);
+});
+
+test("GT não pode criar pré-curso: a tela mostra a mensagem de acesso negado, sem seletor", async ({
+  page,
+}) => {
+  await login(page, CPF_GT);
+  await page.goto("/pre-cursos/novo");
+
+  await expect(page.getByTestId("select-verba")).toHaveCount(0);
+  await expect(page.getByText("Seu perfil não pode criar pré-cursos.")).toBeVisible();
+});
+
+test("GO sem nenhuma Verba vê a mensagem de lista vazia, sem seletor", async ({ page }) => {
+  await login(page, CPF_GO_SEM_VERBA);
+  await page.goto("/pre-cursos/novo");
+
+  await expect(page.getByTestId("select-verba")).toHaveCount(0);
+  await expect(page.getByText("Nenhuma verba disponível para criar um curso.")).toBeVisible();
 });
