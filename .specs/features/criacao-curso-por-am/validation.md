@@ -2,61 +2,58 @@
 
 **Date**: 2026-09-10
 **Spec**: `.specs/features/criacao-curso-por-am/spec.md`
-**Diff range**: `4f6e090~1..4187703` (7 commits, all on `main`)
-**Verifier**: independent sub-agent (author ≠ verifier)
+**Diff range**: `4f6e090~1..9724135` (9 commits, all on `main`) — iteration 2, verifying the fix commit `9724135` on top of iteration 1's `4187703`
+**Verifier**: independent sub-agent (author ≠ verifier) — fresh Verifier, iteration 2 of the fix→re-verify loop (iteration 1 report superseded by this file; see git history for the prior FAIL version)
 
 ---
 
 ## Task Completion
 
-No `tasks.md` (Medium scope, Execute ran an inline 6-step plan). Verified against the 7 commits in range instead.
+Same 7 implementation steps as iteration 1 (all ✅ Done, see prior report in git history), plus:
 
 | Step | Commit | Status | Notes |
 | --- | --- | --- | --- |
-| 1. Open the guard | `4f6e090` feat(auth): permitir AM criar curso em qualquer Ofertante | ✅ Done | `podeGerenciarPreCurso` gains `usuario.tipo === "AM" \|\|`; `podeGerenciarPosCurso` alias inherits it for free |
-| 2. API-level tests | `3d1e39e` test(cursos): cobrir AM criando pré-curso e pós-curso via API | ✅ Done | New AM happy-path tests in `e2e/pre-cursos.spec.ts`, `e2e/pos-cursos.spec.ts` |
-| 3. Pre-Curso screen | `4911846` feat(pre-cursos): liberar tela de novo curso para o AM escolher Ofertante | ✅ Done | `/pre-cursos/novo` lists all Ofertantes' Verbas for AM, shows Ofertante name |
-| 4. Pós-Curso screen | `9981d54` feat(pos-cursos): liberar tela de novo pós-curso para o AM | ✅ Done | `/pos-cursos/novo` lists all Ofertantes' eligible Pré-Cursos for AM |
-| 5. Screen-level tests | `f628e83` test(cursos): cobrir acesso negado e verba vazia nas telas de novo curso | ✅ Done | GT-denied and empty-state e2e tests added to both `*-novo.spec.ts` files |
-| 6. Navbar shortcut | `01cb483` feat(navegacao): adicionar atalho 'Novo curso' para AM e GO | ✅ Done | `CURSOS_COM_CRIACAO` wired into AM/GO modules only |
-| 7. Docs | `4187703` docs(auth): registrar AD-040 - AM pode criar curso | ✅ Done | `STATE.md` AD-040 recorded; `formulario-pre-curso/spec.md` and `formulario-pos-curso/spec.md` retificados |
+| 8. Iteration-1 Verifier report | `2fe5838` | ✅ Done | FAIL verdict recorded, 2 gaps: CURSO-02, CURSO-09 |
+| 9. Fix commit | `9724135` test(pre-cursos): fechar lacuna de cobertura do Verifier em CURSO-02/09 | ✅ Done | Extended AM Verba-selector e2e test (CURSO-02); documented CURSO-09 AM-scenario residual in spec.md with architectural rationale (no new test) |
 
 ---
 
 ## Spec-Anchored Acceptance Criteria
 
+9/11 unchanged from iteration 1 (re-verified with fresh eyes on the two files that matter — `NovoPreCursoForm.tsx`, `page.tsx` — no drift found); citing iteration 1's `validation.md` evidence for those (superseded by this file but recoverable via `git show 2fe5838:.specs/features/criacao-curso-por-am/validation.md`). Full table reproduced with the two changed rows:
+
 | Criterion | Spec-defined outcome | `file:line` + assertion | Result |
 | --- | --- | --- | --- |
-| CURSO-01: AM `POST /api/pre-cursos` com `cdVerba` de qualquer Ofertante | Cria PreCurso com `status=EM_ANDAMENTO`, `criadoPor=CPF do AM`, HTTP 201 | `e2e/pre-cursos.spec.ts:113-131` - `expect(res.status()).toBe(201)`, `expect(corpo.preCurso.cdOfertante).toBe(cdOfertante2)`, `expect(persistido?.criadoPor).toBe(CPF_AM)`. `status=EM_ANDAMENTO` is not re-asserted in this test, but it is the same unconditional `prisma.preCurso.create()` call (no role branch on `status`, DB `@default(EM_ANDAMENTO)`) already proven at `e2e/pre-cursos.spec.ts:61-81` (`expect(corpo.preCurso.status).toBe("EM_ANDAMENTO")`) | ✅ PASS (combined evidence, see note) |
-| CURSO-02: `/pre-cursos/novo` opened by AM lists Verbas of ALL Ofertantes, each option showing Ofertante name, Verba number, and available balance | Option text shows nome + número + saldo | `e2e/pre-cursos-novo.spec.ts:73-84` - `toContainText("Ofertante Novo Pré-Curso")` / `toContainText("Ofertante Novo Pré-Curso Outro")` proves the **name**. No test (new or pre-existing, for AM or GO) asserts the visible "saldo R$…" text or a literal "Verba #N" string anywhere in `/pre-cursos/novo` - only `getByTestId` (a DOM attribute, not the rendered number) is used | ❌ GAP - saldo/número display unasserted |
-| CURSO-03: GO forges `cdVerba` of a different Ofertante → 403, no PreCurso created | HTTP 403, `GET` before/after shows no new row | `e2e/pre-cursos.spec.ts:133-159` (`REQ-PC-03`, pre-existing, unmodified by this feature) - `expect(res.status()).toBe(403)`, before/after list comparison | ✅ PASS - confirmed genuinely pre-existing: the `usuario.tipo === "GO" && usuario.cdOfertante === cdOfertanteAlvo` clause is byte-identical before/after this feature (only an `AM \|\|` alternative was prepended); discrimination sensor mutation 1 (below) proves this GO branch is unaffected by the AM addition |
-| CURSO-04: AM `POST /api/pos-cursos` with `cdCurso` of a PreCurso of any Ofertante without a PosCurso | Creates PosCurso, HTTP 201 | `e2e/pos-cursos.spec.ts:132-148` - `expect(res.status()).toBe(201)`, `expect(corpo.posCurso.status).toBe("EM_ANDAMENTO")`, `expect(persistido?.criadoPor).toBe(CPF_AM)` | ✅ PASS |
-| CURSO-05: `/pos-cursos/novo` opened by AM lists all eligible Pré-Cursos (`posCurso: null`) of any Ofertante | List includes cross-Ofertante eligible courses, excludes ones with PosCurso | `e2e/pos-cursos-novo.spec.ts:107-118` - `toBeVisible()` for `cdCursoElegivel` and `cdCursoElegivelOutroOfertante` (different Ofertantes), `toHaveCount(0)` for `cdCursoComPosCurso` | ✅ PASS |
-| CURSO-06: navbar shows "Novo curso" → `/pre-cursos/novo` for AM/GO | AM and GO hrefs include `/pre-cursos/novo` | `src/lib/ui/navegacao.test.ts:87-93` - `expect(hrefsDe(TipoUsuario.AM)).toContain("/pre-cursos/novo")`, same for GO | ✅ PASS |
-| CURSO-07: GT/VT/VO/AL do NOT get the navbar item | Their hrefs exclude `/pre-cursos/novo` | `src/lib/ui/navegacao.test.ts:90-93` - `expect(hrefsDe(TipoUsuario.GT)).not.toContain(...)`, same for VT/VO/AL | ✅ PASS |
-| CURSO-08: pathname `/pre-cursos/novo` resolves the active item to "Novo curso", not "Pré-cursos" | `hrefAtivo("/pre-cursos/novo", itens)` returns `/pre-cursos/novo` | `src/lib/ui/navegacao.test.ts:154-156` - `expect(hrefAtivo("/pre-cursos/novo", itens)).toBe("/pre-cursos/novo")` | ✅ PASS |
-| CURSO-09: no Verba with balance (AM: none in any Ofertante; GO: none in own) → `/pre-cursos/novo` shows "Nenhuma verba disponível para criar um curso." without error | Exact message text, no seletor | GO scenario: `e2e/pre-cursos-novo.spec.ts:125-131` - `expect(page.getByTestId("select-verba")).toHaveCount(0)`, `expect(page.getByText("Nenhuma verba disponível para criar um curso.")).toBeVisible()`. **AM scenario has no dedicated test** - only the positive case (AM sees Verbas across Ofertantes, `e2e/pre-cursos-novo.spec.ts:73-84`) is covered; the AM branch of the Prisma `where` clause (`usuario.tipo === "AM" ? {} : {...}`) returning zero rows is never exercised | ❌ GAP - AM-specific empty state unasserted |
-| CURSO-10: GT/VT/VO/AL hitting `/pre-cursos/novo` or `/pos-cursos/novo` directly by URL → access-denied message, no listing | Denied message shown, no seletor | `e2e/pre-cursos-novo.spec.ts:115-123` and `e2e/pos-cursos-novo.spec.ts:142-150` - both test GT only, asserting `toHaveCount(0)` on the seletor and `toBeVisible()` on the denial text. VT/VO/AL are not independently tested, but the guard condition (`usuario.tipo !== "AM" && (usuario.tipo !== "GO" \|\| ...)`) has no role-specific branch beyond the AM/GO carve-out - GT, VT, VO and AL all evaluate the identical `false` path | ✅ PASS (GT is a representative sample of a non-branching condition) |
-| CURSO-11: AM tries to create Pós-Curso for a `cdCurso` that already has one → HTTP 409 | 409, no new record | `e2e/pos-cursos.spec.ts:151-163` (`REQ-PO-02`, pre-existing, unmodified) - `expect(res.status()).toBe(409)`, using CPF_GO not CPF_AM. Confirmed via code read of `src/app/api/pos-cursos/route.ts:43-55`: the `podeGerenciarPosCurso` guard (line 43) runs first, then the `posCursoExistente` 409 check (lines 49-55) is fully role-agnostic - no role reference anywhere in that branch - so a passing AM caller hits the exact same check the GO test exercises | ✅ PASS (role-blind code path, author's "regressão pré-existente" label confirmed accurate) |
+| CURSO-01: AM `POST /api/pre-cursos` with `cdVerba` of any Ofertante | Creates PreCurso, `status=EM_ANDAMENTO`, `criadoPor=CPF do AM`, HTTP 201 | `e2e/pre-cursos.spec.ts:113-131` (unchanged since iter. 1) | ✅ PASS (iter. 1 finding, unchanged) |
+| **CURSO-02: `/pre-cursos/novo` opened by AM lists Verbas of ALL Ofertantes, each option showing Ofertante name, Verba number, and available balance** | Option text shows nome + número + saldo | `e2e/pre-cursos-novo.spec.ts:73-89` - three independent `toContainText` assertions per option: `toContainText("Ofertante Novo Pré-Curso")`, `toContainText(\`Verba #${cdVerba}\`)`, `toContainText("saldo R$ 1000.00")` for the AM's own-Ofertante Verba, and the same three-way check repeated for `cdVerbaOutro`/"Ofertante Novo Pré-Curso Outro". Each fact is asserted as its own substring match (not one combined string check), so a wrong implementation that drops or garbles any one of the three facts (e.g. omits the Verba number, or hardcodes a saldo) would fail independently of the others | ✅ PASS - gap closed, re-run green (`npx playwright test e2e/pre-cursos-novo.spec.ts`, 6/6 passed) |
+| CURSO-03: GO forges `cdVerba` of a different Ofertante → 403 | HTTP 403, no PreCurso created | `e2e/pre-cursos.spec.ts:133-159` (unchanged) | ✅ PASS (iter. 1 finding, unchanged) |
+| CURSO-04: AM `POST /api/pos-cursos` for any Ofertante's eligible PreCurso | Creates PosCurso, HTTP 201 | `e2e/pos-cursos.spec.ts:132-148` (unchanged) | ✅ PASS (iter. 1 finding, unchanged) |
+| CURSO-05: `/pos-cursos/novo` opened by AM lists all eligible Pré-Cursos of any Ofertante | Cross-Ofertante list, excludes ones with PosCurso | `e2e/pos-cursos-novo.spec.ts:107-118` (unchanged) | ✅ PASS (iter. 1 finding, unchanged) |
+| CURSO-06: navbar shows "Novo curso" for AM/GO | AM and GO hrefs include `/pre-cursos/novo` | `src/lib/ui/navegacao.test.ts:87-93` (unchanged) | ✅ PASS (iter. 1 finding, unchanged) |
+| CURSO-07: GT/VT/VO/AL do NOT get the navbar item | Hrefs exclude `/pre-cursos/novo` | `src/lib/ui/navegacao.test.ts:90-93` (unchanged) | ✅ PASS (iter. 1 finding, unchanged) |
+| CURSO-08: pathname `/pre-cursos/novo` resolves active item to "Novo curso" | `hrefAtivo(...)` returns `/pre-cursos/novo` | `src/lib/ui/navegacao.test.ts:154-156` (unchanged) | ✅ PASS (iter. 1 finding, unchanged) |
+| **CURSO-09: no Verba available → `/pre-cursos/novo` shows "Nenhuma verba disponível para criar um curso." without error, for both GO and AM triggers** | Exact message text, no seletor, for either actor whose Verba universe is empty | GO scenario: `e2e/pre-cursos-novo.spec.ts:130-136` (unchanged, passing) - `toHaveCount(0)` on seletor + `toBeVisible()` on message. AM scenario: **no dedicated e2e test** (see judgment below); render-branch coverage instead rests on (a) `src/app/(protegido)/pre-cursos/novo/NovoPreCursoForm.tsx:71` - `if (opcoesVerba.length === 0)`, a single unconditional, actor-blind check already exercised by the GO test, and (b) `src/app/(protegido)/pre-cursos/novo/page.tsx:40` - `where: usuario.tipo === "AM" ? {} : { cdOfertante: ... }`, confirming the AM branch's `{}` filter can only yield `[]` when `Verba` is empty system-wide | ✅ PASS - residual accepted, see reasoning below |
+| CURSO-10: GT/VT/VO/AL direct URL access → denied message | Denied message, no listing | `e2e/pre-cursos-novo.spec.ts:120-127`, `e2e/pos-cursos-novo.spec.ts:142-150` (unchanged) | ✅ PASS (iter. 1 finding, unchanged) |
+| CURSO-11: AM re-creating Pós-Curso for a `cdCurso` that already has one → 409 | HTTP 409 | `e2e/pos-cursos.spec.ts:151-163` (unchanged) | ✅ PASS (iter. 1 finding, unchanged) |
 
-**Status**: ❌ Gaps present - 9/11 fully evidenced, 2/11 evidence gaps (CURSO-02, CURSO-09). Both are test-coverage gaps, not functional defects - confirmed by direct code reading that the underlying rendering logic is unconditional/correct in both cases.
+**Status**: ✅ All ACs covered - 11/11 matched spec outcome (2 gaps from iteration 1 closed; one by a strengthened test, one by an accepted, code-verified architectural residual)
+
+### CURSO-09 judgment (independent reasoning, not a rubber stamp)
+
+Checked three things myself, not taking the author's commit message at face value:
+
+1. **Is the branch really single and actor-blind?** Read `NovoPreCursoForm.tsx:71-77` directly: `if (opcoesVerba.length === 0)` is the only guard before the empty-message `<p>`; there is no `usuario.tipo` or role parameter passed into this component at all (its only prop is `opcoesVerba: OpcaoVerba[]`). Confirmed: the component has no way to branch on actor even if it wanted to.
+2. **Is the architectural claim about the AM query true?** Read `page.tsx:39-43`: for AM, `where: {}` (no filter at all) against `prisma.verba.findMany`. An empty `where` matches every row in `Verba`; it returns `[]` only if the table itself is empty. Confirmed - there is no other way to make `opcoesVerba.length === 0` fire for an AM than emptying the whole table.
+3. **Is "documented residual, code-read verified" an acceptable closure, or was a feasible test skipped?** I checked whether this project has any component-level rendering test convention that could exercise `NovoPreCursoForm` with `opcoesVerba: []` directly (bypassing the DB, so the shared-e2e-database constraint wouldn't apply): grepped `src/` for `testing-library`/`render(` - zero hits; `find` for `*.test.tsx` - zero files; `package.json` has no `@testing-library/react` (or `/dom`, `/jest-dom`) dependency; `vitest.config.ts:11` sets `environment: "node"` (not `jsdom`) and `include: ["src/**/*.test.ts", ...]` - `.tsx` files aren't even picked up by the runner. Component rendering tests are not this codebase's convention - they're absent everywhere, not just here. Introducing one now (new dependency, new vitest environment, new file-pattern) to cover a single, already-provably-safe render branch would itself be the kind of scope creep AGENTS.md's conventions and the Code Quality gate discourage. Combined with the genuine e2e constraint (shared test DB, no truncation between spec files, confirmed by reading `e2e/pre-cursos-novo.spec.ts`'s own `beforeAll`/`afterAll` pattern of seed-then-delete-by-own-Ofertante, never a global truncate), I concur: this is a legitimate, fully-reasoned residual, not a copout. **Accepted.**
 
 ---
 
 ## Discrimination Sensor
 
-Scratch worktree at `git worktree add /tmp/spma-sensor 4187703` (`node_modules`, `src/generated/prisma`, `.env.test` symlinked in for speed). Baseline `git status --porcelain` on the real tree was empty before and after.
+Not re-run this iteration per instructions - the fix commit (`9724135`) only touches `e2e/pre-cursos-novo.spec.ts` (test assertions) and `spec.md` (documentation); it does not touch any of the three files mutated by iteration 1's sensor (`src/lib/auth/guards.ts`, `src/lib/ui/navegacao.ts`, `src/app/(protegido)/pre-cursos/novo/page.tsx`'s access-guard line). Iteration 1's sensor result stands: **3/3 mutations killed** (guard reversion, navbar-wiring reversion, access-guard reversion - see `git show 2fe5838:.specs/features/criacao-curso-por-am/validation.md` for the full sensor table and cleanup confirmation).
 
-| Mutation | File:line | Description | Killed? |
-| --- | --- | --- | --- |
-| 1 | `src/lib/auth/guards.ts:120` | `podeGerenciarPreCurso` reverted to `usuario.tipo === "GO" && usuario.cdOfertante === cdOfertanteAlvo` (dropped the `usuario.tipo === "AM" \|\|` clause) | ✅ Killed - `src/lib/auth/guards.test.ts` 2 failed / 66 passed (both new AM assertions in `podeGerenciarPreCurso`/`podeGerenciarPosCurso` suites) |
-| 2 | `src/lib/ui/navegacao.ts:45` | AM module's "Cursos" entry changed from `CURSOS_COM_CRIACAO` back to `CURSOS` (dropped the navbar shortcut wiring for AM) | ✅ Killed - `src/lib/ui/navegacao.test.ts` 2 failed / 25 passed (`hrefsDe(AM)` no longer contains `/pre-cursos/novo`) |
-| 3 | `src/app/(protegido)/pre-cursos/novo/page.tsx:22` | Access guard reverted to `usuario.tipo !== "GO" \|\| usuario.cdOfertante === null` (dropped the AM carve-out) | ✅ Killed - `npx playwright test e2e/pre-cursos-novo.spec.ts -g "AD-040"` timed out waiting for `getByTestId("select-verba")` (AM now hits the access-denied branch instead of the seletor) |
-
-**Sensor depth**: lightweight (3 targeted mutations, standard-tier feature)
-**Result**: 3/3 killed - PASS ✅
-
-Cleanup: `git worktree remove --force /tmp/spma-sensor`; `git status --porcelain` on the real tree confirmed unchanged (empty) after removal. No `git stash` used at any point.
+**Sensor depth**: lightweight (3 targeted mutations, standard-tier feature) - carried over from iteration 1, not re-run
+**Result**: 3/3 killed (iteration 1) - PASS ✅
 
 ---
 
@@ -64,81 +61,71 @@ Cleanup: `git worktree remove --force /tmp/spma-sensor`; `git status --porcelain
 
 | Principle | Status |
 | --- | --- |
-| Minimum code | ✅ - one boolean clause in the guard, one alias reused for free, one array constant reused twice |
-| Surgical changes | ✅ - only the 2 `*-novo` pages, the shared guard, the nav table, and their tests/docs touched |
-| No scope creep | ✅ - diff stat is exactly the 15 files implicated by the spec; no unrelated refactors |
-| Matches patterns | ✅ - the `usuario.tipo === "AM" \|\|` shape mirrors the pre-existing `podeMatricularAluno` pattern cited in spec.md; `CURSOS_COM_CRIACAO` follows the existing `CURSOS` array convention |
-| Spec-anchored outcome check (asserted values match spec) | ⚠️ - 9/11 match precisely; CURSO-02 and CURSO-09 have partial evidence (see AC table) |
-| Per-layer Coverage Expectation met (domain 1:1 ACs; routes/e2e happy+edge+error) | ⚠️ - guard-level (unit) and route-level (e2e) both covered per AC; the two gaps above are within the e2e/UI layer, not domain logic |
-| Every test maps to a spec requirement - no unclaimed tests | ✅ - every new test carries an `AD-040`/`CURSO` marker or maps directly to an edge case in spec.md |
-| Documented guidelines followed | ✅ - `AGENTS.md`'s AD-039 conventions (single-source navigation via `src/lib/ui/navegacao.ts`, no literal color in `.tsx`) are respected; no visual-layer files touched by this feature |
+| Minimum code | ✅ - fix commit adds 3 assertion lines to an existing test + a documentation paragraph; no production code touched |
+| Surgical changes | ✅ - only `e2e/pre-cursos-novo.spec.ts` and `spec.md` changed by the fix |
+| No scope creep | ✅ - no new dependency, no new test infrastructure added to force a CURSO-09 AM test; the residual is documented instead, which is the proportionate response given the codebase has no component-test convention (verified above) |
+| Matches patterns | ✅ - new assertions use the same `toContainText`/`getByTestId` idioms already in the file |
+| Spec-anchored outcome check (asserted values match spec) | ✅ - 11/11 match precisely (up from 9/11) |
+| Per-layer Coverage Expectation met (domain 1:1 ACs; routes/e2e happy+edge+error) | ✅ - CURSO-09's AM edge is covered by code-path proof rather than an e2e assertion, which is an explicit, reasoned exception, not a silent gap |
+| Every test maps to a spec requirement - no unclaimed tests | ✅ |
+| Documented guidelines followed | ✅ - AGENTS.md's AD-039 (single-source navigation, no literal color in `.tsx`) untouched by this fix; no visual-layer files involved |
 
 ---
 
 ## Edge Cases
 
-- [x] CURSO-09 (GO scenario): Handled and tested (`e2e/pre-cursos-novo.spec.ts:125-131`)
-- [ ] CURSO-09 (AM scenario): Code is correct by inspection (role-blind render condition) but has no dedicated test - flagged as gap above
-- [x] CURSO-10: Handled and tested for GT; VT/VO/AL share the identical non-branching condition
+- [x] CURSO-09 (GO scenario): Handled and tested (`e2e/pre-cursos-novo.spec.ts:130-136`)
+- [x] CURSO-09 (AM scenario): Documented residual, code-read verified independently (see judgment above) - accepted as closure
+- [x] CURSO-10: Handled and tested for GT; VT/VO/AL share the identical non-branching condition (iter. 1 finding, unchanged)
 
 ---
 
 ## Gate Check
 
-- **Gate command**: `npm run lint && npm run typecheck && npm run test:unit && npm run test:integration` (run independently by the Verifier). `npm run build` and `npm run test:e2e` were **skipped** by the Verifier as impractical for this session's time budget - the author reports running the full gate (lint clean, build clean, typecheck clean, 505 unit + 27 integration + 244 e2e all passing) but this was not independently re-verified for `build`/`test:e2e`.
-- **Result**: lint 0 errors / 34 pre-existing warnings (none in changed files' new code); typecheck 0 errors; test:unit 505 passed, 0 failed (25 files); test:integration 27 passed, 0 failed (6 files)
-- **Test count before feature**: `guards.test.ts` had 62 `it()` blocks before and after (2 modified in place, strengthened from `false`→`true`, none deleted); `navegacao.test.ts` had 15 `it()` blocks before, 17 after (+2 net new)
-- **Test count after feature**: 505 unit / 27 integration (both match author's claim)
-- **Delta**: +2 net new unit test cases (`navegacao.test.ts`); guards.test.ts tests were modified in place, not added/removed - consistent with the guard's behavior actually flipping (was `false`, now `true`) rather than being newly introduced
-- **Skipped tests**: none found in the diff
+- **Gate command (this iteration, targeted re-run per instructions)**: `npm run test:unit` and `npx playwright test e2e/pre-cursos-novo.spec.ts`
+- **Result**: `test:unit` - 505 passed, 0 failed (25 files) - identical count to iteration 1, no regression. `e2e/pre-cursos-novo.spec.ts` - 6 passed, 0 failed (includes the strengthened CURSO-02 test and the unchanged CURSO-09/GO test)
+- **Broader gate status**: iteration 1 independently ran and recorded green `lint` (0 errors), `typecheck` (0 errors), `test:integration` (27 passed); those are unaffected by this iteration's fix (no source files in scope) and are not re-run here per instructions - see `git show 2fe5838:.specs/features/criacao-curso-por-am/validation.md` for that record. `build` and the full `test:e2e` suite were not independently run by either iteration (iteration 1 noted this as a time-budget skip, author self-reported them green)
+- **Test count before this iteration's fix**: `pre-cursos-novo.spec.ts` had 6 `it()`/`test()` blocks before and after (test #2 extended in place with 2 more assertions, not duplicated)
+- **Delta**: 0 new test cases, +2 assertions inside the existing AM test
+- **Skipped tests**: none
 - **Failures**: none
 
 ---
 
 ## Fix Plans
 
-### Fix 1: CURSO-02 - Verba option text (saldo, número) is unasserted
-
-- **Root cause**: The new AM test (`e2e/pre-cursos-novo.spec.ts:73-84`) only checks `toContainText` for the Ofertante name; it never checks for the "saldo R$" or "Verba #N" substrings. This gap predates the feature (the original GO test at line 64-71 also never checked option text, only visibility/count) but CURSO-02 is a new AC that explicitly names all three display facts.
-- **Fix task**: Add `toContainText` assertions for `Verba #${cdVerba}` and `saldo R$` (or the specific formatted balance) to both the GO test (line 64-71) and the AM test (line 73-84) in `e2e/pre-cursos-novo.spec.ts`.
-- **Priority**: Minor (test-only; the underlying `NovoPreCursoForm.tsx` JSX unconditionally renders all three facts - confirmed by direct code read, not a suspected functional bug).
-
-### Fix 2: CURSO-09 - AM-specific empty-Verba state has no dedicated test
-
-- **Root cause**: `/pre-cursos/novo`'s AM query branch (`usuario.tipo === "AM" ? {} : {...}`) is only exercised in its non-empty form; a scenario where the AM sees zero Verbas system-wide is never constructed.
-- **Fix task**: Either (a) accept as untestable in the current shared-DB e2e model and note the gap explicitly in spec.md's CURSO-09 status, or (b) add an integration-level test (not full e2e) that stubs/isolates the Prisma call to assert `NovoPreCursoForm` renders the empty message when `opcoesVerba=[]`, independent of role.
-- **Priority**: Minor (same reasoning as Fix 1 - code read confirms the render condition is role-blind and correct).
+None - both gaps from iteration 1 are resolved (CURSO-02 by a strengthened assertion, CURSO-09 by an accepted, independently-verified architectural residual).
 
 ---
 
 ## Requirement Traceability Update
 
-| Requirement | Author's Status | Verifier's Status |
+| Requirement | Iteration 1 Status | Iteration 2 Status |
 | --- | --- | --- |
-| CURSO-01 | Verified | ✅ Verified (combined evidence, see AC table) |
-| CURSO-02 | Verified | ❌ Needs Fix (test-coverage gap) |
-| CURSO-03 | Verified (regressão pré-existente) | ✅ Verified - claim confirmed accurate |
-| CURSO-04 | Verified | ✅ Verified |
-| CURSO-05 | Verified | ✅ Verified |
-| CURSO-06 | Verified | ✅ Verified |
-| CURSO-07 | Verified | ✅ Verified |
-| CURSO-08 | Verified | ✅ Verified |
-| CURSO-09 | Verified | ❌ Needs Fix (test-coverage gap, AM scenario) |
-| CURSO-10 | Verified | ✅ Verified (GT representative sample accepted) |
-| CURSO-11 | Verified (regressão pré-existente, independente de papel) | ✅ Verified - claim confirmed accurate via code read |
+| CURSO-01 | ✅ Verified | ✅ Verified (unchanged) |
+| CURSO-02 | ❌ Needs Fix | ✅ Verified - gap closed |
+| CURSO-03 | ✅ Verified | ✅ Verified (unchanged) |
+| CURSO-04 | ✅ Verified | ✅ Verified (unchanged) |
+| CURSO-05 | ✅ Verified | ✅ Verified (unchanged) |
+| CURSO-06 | ✅ Verified | ✅ Verified (unchanged) |
+| CURSO-07 | ✅ Verified | ✅ Verified (unchanged) |
+| CURSO-08 | ✅ Verified | ✅ Verified (unchanged) |
+| CURSO-09 | ❌ Needs Fix | ✅ Verified - residual accepted after independent code-path verification |
+| CURSO-10 | ✅ Verified | ✅ Verified (unchanged) |
+| CURSO-11 | ✅ Verified | ✅ Verified (unchanged) |
 
 ---
 
 ## Summary
 
-**Overall**: ⚠️ Issues
+**Overall**: ✅ Ready
 
-**Spec-anchored check**: 9/11 ACs matched spec outcome with solid evidence; 2/11 evidence gaps (CURSO-02, CURSO-09)
-**Sensor**: 3/3 mutations killed
-**Gate**: lint + typecheck + test:unit (505) + test:integration (27) all green; `build`/`test:e2e` not independently re-run this session
+**Spec-anchored check**: 11/11 ACs matched spec outcome
+**Sensor**: 3/3 mutations killed (carried over from iteration 1, not re-run - fix commit doesn't touch mutated code paths)
+**Gate**: `test:unit` 505 passed / `e2e/pre-cursos-novo.spec.ts` 6 passed, both green this iteration; `lint`/`typecheck`/`test:integration` green per iteration 1's independent run (not re-run this iteration, out of scope of the fix)
 
-**What works**: The authorization change is minimal and correctly mirrors the established `podeMatricularAluno` pattern; the `podeGerenciarPosCurso` alias means Pós-Curso needed zero new authorization code; the GO regression path (CURSO-03, CURSO-11) is genuinely unchanged and the sensor confirms the AM addition doesn't leak into the GO branch; the navbar wiring is fully unit-tested including the "no shortcut for GT/VT/VO/AL" and "longer href wins" edge cases.
+**What works**: Both iteration-1 gaps are genuinely closed. CURSO-02's fix is a real strengthening - three independently-asserted substrings (Ofertante name, Verba number, saldo) per option, for both the AM's own-Ofertante Verba and a cross-Ofertante one, leaving no room for a wrong implementation to slip through a combined-string check. CURSO-09's resolution was judged on its merits, not rubber-stamped: I independently re-read `NovoPreCursoForm.tsx` (single unconditional `if (opcoesVerba.length === 0)`, no actor awareness possible) and `page.tsx` (AM's `where: {}` can only yield zero rows when the whole `Verba` table is empty), and separately confirmed this codebase has zero component-rendering-test infrastructure (no `@testing-library/react`, `vitest.config.ts` runs in `node` environment and doesn't even glob `.tsx` files) - so no feasible test was skipped; e2e is the only UI-testing convention this project has, and the e2e constraint (shared test DB, no truncation between spec files) is real, confirmed by reading the file's own seed/cleanup pattern.
 
-**Issues found**: CURSO-02 (Verba option's visible saldo/número text is never asserted by any test, for either GO or AM) and CURSO-09 (the AM-specific "zero Verbas anywhere" empty state is never independently exercised, only the GO empty state and the AM non-empty state are). Both are test-coverage gaps, not functional defects - direct reading of `NovoPreCursoForm.tsx` and `pre-cursos/novo/page.tsx` confirms the code is correct and role-blind at the exact lines in question.
+**Issues found**: None remaining.
 
-**Next steps**: Route Fix 1 and Fix 2 above to an implementer; both are additive, test-only changes. Re-run the Verifier after, per the 3-iteration fix→re-verify bound.
+**Next steps**: Feature is ready to close. No further fix→re-verify iterations needed.
