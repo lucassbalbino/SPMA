@@ -21,7 +21,7 @@ import {
 import { criarPreCursoSchema } from "@/lib/validation/schemas/pre-curso.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
 
-type OpcaoVerba = { cdVerba: number; saldoDisponivel: number };
+type OpcaoVerba = { cdVerba: number; saldoDisponivel: number; nomeOfertante?: string };
 
 export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
   const router = useRouter();
@@ -71,7 +71,7 @@ export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] })
   if (opcoesVerba.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Nenhuma verba disponível para o seu Ofertante.
+        Nenhuma verba disponível para criar um curso.
       </p>
     );
   }
@@ -92,6 +92,7 @@ export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] })
                   value={String(opcao.cdVerba)}
                   data-testid={`opcao-verba-${opcao.cdVerba}`}
                 >
+                  {opcao.nomeOfertante ? `${opcao.nomeOfertante} — ` : ""}
                   Verba #{opcao.cdVerba} — saldo R$ {opcao.saldoDisponivel.toFixed(2)}
                 </SelectItem>
               ))}

@@ -101,7 +101,7 @@ Hoje só o GO do próprio Ofertante pode criar curso (Pré-Curso, que por sua ve
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
 | CURSO-01 | P1: AM cria curso | Execute | Verified |
-| CURSO-02 | P1: AM cria curso | Execute | Pending |
+| CURSO-02 | P1: AM cria curso | Execute | Verified |
 | CURSO-03 | P1: AM cria curso | Execute | Verified (regressão pré-existente) |
 | CURSO-04 | P1: AM inicia Pós-Curso | Execute | Verified |
 | CURSO-05 | P1: AM inicia Pós-Curso | Execute | Pending |

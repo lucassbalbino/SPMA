@@ -11,6 +11,7 @@ import {
 
 const SENHA = "SenhaValida123";
 const CPF_GO = "52111003107";
+const CPF_AM = "51104005123";
 
 let cdOfertante: number;
 let cdOfertanteOutro: number;
@@ -18,7 +19,7 @@ let cdVerba: number;
 let cdVerbaOutro: number;
 
 test.beforeAll(() => {
-  deleteUsuarios([CPF_GO]);
+  deleteUsuarios([CPF_GO, CPF_AM]);
 
   cdOfertante = criarOfertante({ nome: "Ofertante Novo Pré-Curso", uf: "SP" }).cdOfertante;
   cdOfertanteOutro = criarOfertante({
@@ -30,16 +31,17 @@ test.beforeAll(() => {
   cdVerbaOutro = criarVerba({ cdOfertante: cdOfertanteOutro, vlVerba: 1000 }).cdVerba;
 
   upsertUsuario({ cpf: CPF_GO, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante });
+  upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
 });
 
 test.afterAll(() => {
   deletePreCursosPorOfertante([cdOfertante, cdOfertanteOutro]);
-  deleteUsuarios([CPF_GO]);
+  deleteUsuarios([CPF_GO, CPF_AM]);
 });
 
-async function login(page: import("@playwright/test").Page) {
+async function login(page: import("@playwright/test").Page, cpf: string = CPF_GO) {
   const login = await page.request.post("/api/auth/login", {
-    data: { cpf: CPF_GO, senha: SENHA },
+    data: { cpf, senha: SENHA },
   });
   expect(login.ok()).toBe(true);
 }
@@ -51,6 +53,19 @@ test("seletor de Verba mostra só as Verbas do Ofertante do GO autenticado", asy
   await page.getByTestId("select-verba").click();
   await expect(page.getByTestId(`opcao-verba-${cdVerba}`)).toBeVisible();
   await expect(page.getByTestId(`opcao-verba-${cdVerbaOutro}`)).toHaveCount(0);
+});
+
+test("AD-040: seletor de Verba do AM mostra as Verbas de TODOS os Ofertantes, com o nome do Ofertante", async ({
+  page,
+}) => {
+  await login(page, CPF_AM);
+  await page.goto("/pre-cursos/novo");
+
+  await page.getByTestId("select-verba").click();
+  await expect(page.getByTestId(`opcao-verba-${cdVerba}`)).toContainText("Ofertante Novo Pré-Curso");
+  await expect(page.getByTestId(`opcao-verba-${cdVerbaOutro}`)).toContainText(
+    "Ofertante Novo Pré-Curso Outro",
+  );
 });
 
 test("GO cria pré-curso dentro do saldo e é redirecionado para a tela de preenchimento", async ({
