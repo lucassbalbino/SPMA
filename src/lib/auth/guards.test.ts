@@ -232,10 +232,11 @@ describe("podeGerenciarPreCurso", () => {
     expect(podeGerenciarPreCurso({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
   });
 
-  // Diferente de podeEditarOfertante/podeGerenciarVerba: nem AM nem GT
-  // escrevem pré-curso, só o GO dono (seção 4 do documento fonte).
-  it("AM não pode gerenciar, mesmo sendo autoridade global", () => {
-    expect(podeGerenciarPreCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(false);
+  // AD-040: exceção administrativa para o AM, autoridade nacional (AD-012) -
+  // qualquer Ofertante alvo, sem vínculo.
+  it("AM pode gerenciar qualquer ofertante, por ser autoridade global", () => {
+    expect(podeGerenciarPreCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
+    expect(podeGerenciarPreCurso({ tipo: "AM", cdOfertante: null }, 2)).toBe(true);
   });
 
   it("GT não pode gerenciar", () => {
@@ -271,8 +272,8 @@ describe("podeGerenciarPosCurso", () => {
     expect(podeGerenciarPosCurso({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
   });
 
-  it("AM não pode gerenciar, mesmo sendo autoridade global", () => {
-    expect(podeGerenciarPosCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(false);
+  it("AM pode gerenciar qualquer ofertante, por ser autoridade global", () => {
+    expect(podeGerenciarPosCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
   });
 
   it("GT não pode gerenciar", () => {

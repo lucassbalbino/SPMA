@@ -107,16 +107,17 @@ export function podeGerenciarVerba(tipo: TipoUsuario): boolean {
 }
 
 /**
- * Guarda de ESCRITA sobre PreCurso (REQ-PC-15). Diferente de
- * `podeEditarOfertante`/`podeGerenciarVerba`, aqui nem AM nem GT escrevem:
- * a seção 4 do documento fonte atribui o preenchimento do pré-curso
- * exclusivamente ao Gestor Ofertante vinculado, sem exceção administrativa.
+ * Guarda de ESCRITA sobre PreCurso (REQ-PC-15). A seção 4 do documento fonte
+ * atribui o preenchimento do pré-curso ao Gestor Ofertante vinculado; AD-040
+ * abriu exceção administrativa para o AM (autoridade nacional, AD-012),
+ * mesmo padrão já usado em `podeMatricularAluno`. GT continua de fora - só
+ * gere Verba, não Curso.
  */
 export function podeGerenciarPreCurso(
   usuario: { tipo: TipoUsuario; cdOfertante: number | null },
   cdOfertanteAlvo: number,
 ): boolean {
-  return usuario.tipo === "GO" && usuario.cdOfertante === cdOfertanteAlvo;
+  return usuario.tipo === "AM" || (usuario.tipo === "GO" && usuario.cdOfertante === cdOfertanteAlvo);
 }
 
 /**
