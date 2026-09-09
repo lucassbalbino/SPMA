@@ -77,10 +77,15 @@ test("AD-040: seletor de Verba do AM mostra as Verbas de TODOS os Ofertantes, co
   await page.goto("/pre-cursos/novo");
 
   await page.getByTestId("select-verba").click();
-  await expect(page.getByTestId(`opcao-verba-${cdVerba}`)).toContainText("Ofertante Novo Pré-Curso");
-  await expect(page.getByTestId(`opcao-verba-${cdVerbaOutro}`)).toContainText(
-    "Ofertante Novo Pré-Curso Outro",
-  );
+  const opcaoVerba = page.getByTestId(`opcao-verba-${cdVerba}`);
+  await expect(opcaoVerba).toContainText("Ofertante Novo Pré-Curso");
+  await expect(opcaoVerba).toContainText(`Verba #${cdVerba}`);
+  await expect(opcaoVerba).toContainText("saldo R$ 1000.00");
+
+  const opcaoVerbaOutro = page.getByTestId(`opcao-verba-${cdVerbaOutro}`);
+  await expect(opcaoVerbaOutro).toContainText("Ofertante Novo Pré-Curso Outro");
+  await expect(opcaoVerbaOutro).toContainText(`Verba #${cdVerbaOutro}`);
+  await expect(opcaoVerbaOutro).toContainText("saldo R$ 1000.00");
 });
 
 test("GO cria pré-curso dentro do saldo e é redirecionado para a tela de preenchimento", async ({

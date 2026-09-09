@@ -90,7 +90,7 @@ Hoje só o GO do próprio Ofertante pode criar curso (Pré-Curso, que por sua ve
 
 ## Edge Cases
 
-- IF não há nenhuma Verba com saldo disponível (para AM, em nenhum Ofertante; para GO, no próprio) THEN a tela `/pre-cursos/novo` SHALL exibir "Nenhuma verba disponível para criar um curso." sem erro. (CURSO-09)
+- IF não há nenhuma Verba disponível (para AM, em nenhum Ofertante; para GO, no próprio) THEN a tela `/pre-cursos/novo` SHALL exibir "Nenhuma verba disponível para criar um curso." sem erro. (CURSO-09) — **Residual declarado, não escondido**: o branch é um único `if (opcoesVerba.length === 0)` em `NovoPreCursoForm.tsx`, agnóstico de papel, e o caso GO está coberto (`e2e/pre-cursos-novo.spec.ts`, "GO sem nenhuma Verba..."). O caso AM só dispara com zero linhas de `Verba` em todo o banco - inatingível na suíte e2e deste projeto, que roda todos os arquivos sobre o mesmo banco sem truncar entre eles (cada spec cria as próprias Verbas, nenhuma é removida até o fim do arquivo). Escrever esse teste exigiria isolar o banco ou truncar `TB_Verba` no meio da suíte, quebrando fixtures concorrentes de outros arquivos - not worth the fragility for a render branch already proven actor-agnostic pelo caso GO.
 - IF um usuário sem permissão (GT, VT, VO, AL) acessa `/pre-cursos/novo` ou `/pos-cursos/novo` diretamente pela URL THEN o sistema SHALL exibir a mensagem de acesso negado da própria tela, sem listar Verbas/Pré-Cursos. (CURSO-10)
 - IF um AM tenta criar Pós-Curso para um `cdCurso` que já tem Pós-Curso THEN o sistema SHALL responder HTTP 409 (comportamento já existente, preservado). (CURSO-11)
 
@@ -108,7 +108,7 @@ Hoje só o GO do próprio Ofertante pode criar curso (Pré-Curso, que por sua ve
 | CURSO-06 | P1: Atalho navbar | Execute | Verified |
 | CURSO-07 | P1: Atalho navbar | Execute | Verified |
 | CURSO-08 | P1: Atalho navbar | Execute | Verified |
-| CURSO-09 | Edge case | Execute | Verified |
+| CURSO-09 | Edge case | Execute | Verified (GO testado; AM residual declarado, ver Edge Cases) |
 | CURSO-10 | Edge case | Execute | Verified |
 | CURSO-11 | Edge case | Execute | Verified (regressão pré-existente, independente de papel) |
 
