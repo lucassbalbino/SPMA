@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { obterSessao } from "@/lib/auth/session";
-import { podeAcessarOfertante, podeGerenciarVerba } from "@/lib/auth/guards";
+import { podeAcessarVerba, podeGerenciarVerba } from "@/lib/auth/guards";
 import { edicaoVerbaSchema } from "@/lib/validation/schemas/verba.schema";
 import { calcularSaldoVerba, validarNovoValorTotal } from "@/lib/verba/saldo";
 import { verificarCSRF } from "@/lib/security/csrf";
@@ -35,7 +35,7 @@ async function consultarVerba(_request: Request, { params }: Contexto) {
     return NextResponse.json({ erro: "Verba não encontrada" }, { status: 404 });
   }
 
-  if (!podeAcessarOfertante(sessao.usuario, verba.cdOfertante)) {
+  if (!podeAcessarVerba(sessao.usuario, verba.cdOfertante)) {
     return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
   }
 
@@ -72,6 +72,16 @@ async function editarVerba(request: Request, { params }: Contexto) {
 
   if (!verbaExistente) {
     return NextResponse.json({ erro: "Verba não encontrada" }, { status: 404 });
+  }
+
+  // AD-040: a verba ilimitada não tem valor total a editar - alterar o número
+  // dela não mudaria teto nenhum, porque ela não tem teto. Rejeitar é mais
+  // honesto que aceitar uma edição sem efeito.
+  if (verbaExistente.ilimitada) {
+    return NextResponse.json(
+      { erro: "Verba ilimitada não tem valor a editar" },
+      { status: 409 },
+    );
   }
 
   const corpo = await request.json().catch(() => null);

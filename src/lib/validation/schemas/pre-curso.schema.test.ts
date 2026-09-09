@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  criarPreCursoAmSchema,
   criarPreCursoSchema,
   ordemDatasValida,
   respostasPreCursoSchema,
@@ -108,6 +109,43 @@ describe("criarPreCursoSchema", () => {
   it("aceita payload válido", () => {
     const result = criarPreCursoSchema.safeParse({
       cdVerba: 1,
+      vlCursoAlocado: 1000,
+    });
+
+    expect(result.success).toBe(true);
+  });
+});
+
+// AD-040: entrada do AM. Ele informa o Ofertante (não a verba - o custeio
+// sai sempre da verba ilimitada) e o valor do curso continua obrigatório.
+describe("criarPreCursoAmSchema", () => {
+  it("rejeita cdOfertante ausente", () => {
+    const result = criarPreCursoAmSchema.safeParse({ vlCursoAlocado: 1000 });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita cdOfertante não-positivo", () => {
+    const result = criarPreCursoAmSchema.safeParse({
+      cdOfertante: 0,
+      vlCursoAlocado: 1000,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita vlCursoAlocado não-positivo (verba sem teto não é curso sem valor)", () => {
+    const result = criarPreCursoAmSchema.safeParse({
+      cdOfertante: 1,
+      vlCursoAlocado: 0,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("aceita payload válido", () => {
+    const result = criarPreCursoAmSchema.safeParse({
+      cdOfertante: 1,
       vlCursoAlocado: 1000,
     });
 

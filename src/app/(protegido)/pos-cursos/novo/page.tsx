@@ -1,10 +1,12 @@
-// /pos-cursos/novo (REQ-PO-01/02/03, tela).
+// /pos-cursos/novo (REQ-PO-01/02/03, AD-040, tela).
 //
-// Server Component: carrega os Pré-Cursos do próprio Ofertante do GO que
-// ainda não têm Pós-Curso (`posCurso: null`, back-relation já existente no
-// schema - design.md) para popular o seletor. O servidor reavalia tudo de
-// novo em POST /api/pos-cursos (AD-033), esta tela só evita que o GO
-// escolha algo fora do próprio escopo ou já usado.
+// Server Component: carrega os Pré-Cursos que ainda não têm Pós-Curso
+// (`posCurso: null`, back-relation já existente no schema - design.md) para
+// popular o seletor. O escopo dessa lista é o do perfil: o GO vê os do
+// próprio Ofertante, o AM vê os de qualquer um (AD-012/AD-040, mesma
+// autoridade que `podeGerenciarPosCurso` reavalia em POST /api/pos-cursos).
+// O servidor reavalia tudo de novo lá (AD-033), esta tela só evita que se
+// escolha algo fora do escopo ou já usado.
 import { requireSession } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +15,14 @@ import { NovoPosCursoForm } from "./NovoPosCursoForm";
 export default async function NovoPosCursoPage() {
   const { usuario } = await requireSession();
 
-  if (usuario.tipo !== "GO" || usuario.cdOfertante === null) {
+  const escopo =
+    usuario.tipo === "AM"
+      ? {}
+      : usuario.tipo === "GO" && usuario.cdOfertante !== null
+        ? { cdOfertante: usuario.cdOfertante }
+        : null;
+
+  if (escopo === null) {
     return (
       <>
         <Card className="w-full max-w-sm">
@@ -31,7 +40,7 @@ export default async function NovoPosCursoPage() {
   }
 
   const preCursosElegiveis = await prisma.preCurso.findMany({
-    where: { cdOfertante: usuario.cdOfertante, posCurso: null },
+    where: { ...escopo, posCurso: null },
     orderBy: { cdCurso: "asc" },
     select: { cdCurso: true },
   });

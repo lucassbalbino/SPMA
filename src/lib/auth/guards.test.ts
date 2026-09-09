@@ -6,6 +6,7 @@ import {
   exigeOfertanteEVerba,
   podeAcessarAvaliacao,
   podeAcessarOfertante,
+  podeAcessarVerba,
   podeEditarOfertante,
   podeGerenciarAvaliacao,
   podeGerenciarPosCurso,
@@ -164,6 +165,29 @@ describe("podeAcessarOfertante", () => {
   });
 });
 
+// A verba ilimitada do AM (AD-040) é a única sem Ofertante dono. Fora ela,
+// `podeAcessarVerba` é `podeAcessarOfertante` - por isso os casos abaixo se
+// concentram no null.
+describe("podeAcessarVerba", () => {
+  it("delega ao escopo de Ofertante quando a verba tem dono", () => {
+    expect(podeAcessarVerba({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);
+    expect(podeAcessarVerba({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
+    expect(podeAcessarVerba({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
+  });
+
+  it("verba sem Ofertante (ilimitada, AD-040) é visível aos perfis nacionais", () => {
+    expect(podeAcessarVerba({ tipo: "AM", cdOfertante: null }, null)).toBe(true);
+    expect(podeAcessarVerba({ tipo: "GT", cdOfertante: null }, null)).toBe(true);
+    expect(podeAcessarVerba({ tipo: "VT", cdOfertante: null }, null)).toBe(true);
+  });
+
+  it("verba sem Ofertante não é visível a quem tem escopo de Ofertante ou de curso", () => {
+    expect(podeAcessarVerba({ tipo: "GO", cdOfertante: 1 }, null)).toBe(false);
+    expect(podeAcessarVerba({ tipo: "VO", cdOfertante: 1 }, null)).toBe(false);
+    expect(podeAcessarVerba({ tipo: "AL", cdOfertante: null }, null)).toBe(false);
+  });
+});
+
 describe("podeEditarOfertante", () => {
   it("AM sempre pode editar, para qualquer cdOfertanteAlvo", () => {
     expect(podeEditarOfertante({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
@@ -232,10 +256,12 @@ describe("podeGerenciarPreCurso", () => {
     expect(podeGerenciarPreCurso({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
   });
 
-  // Diferente de podeEditarOfertante/podeGerenciarVerba: nem AM nem GT
-  // escrevem pré-curso, só o GO dono (seção 4 do documento fonte).
-  it("AM não pode gerenciar, mesmo sendo autoridade global", () => {
-    expect(podeGerenciarPreCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(false);
+  // AD-040: o AM passou a criar e gerir curso, em qualquer Ofertante - mesma
+  // autoridade nacional que ele já tinha em podeEditarOfertante. O GT segue
+  // de fora (gere verba e Ofertante, não formulário de curso).
+  it("AM gerencia pré-curso de qualquer Ofertante (AD-040)", () => {
+    expect(podeGerenciarPreCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
+    expect(podeGerenciarPreCurso({ tipo: "AM", cdOfertante: null }, 2)).toBe(true);
   });
 
   it("GT não pode gerenciar", () => {
@@ -271,8 +297,9 @@ describe("podeGerenciarPosCurso", () => {
     expect(podeGerenciarPosCurso({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
   });
 
-  it("AM não pode gerenciar, mesmo sendo autoridade global", () => {
-    expect(podeGerenciarPosCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(false);
+  it("AM gerencia pós-curso de qualquer Ofertante (AD-040)", () => {
+    expect(podeGerenciarPosCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
+    expect(podeGerenciarPosCurso({ tipo: "AM", cdOfertante: null }, 2)).toBe(true);
   });
 
   it("GT não pode gerenciar", () => {
@@ -293,9 +320,10 @@ describe("podeGerenciarPosCurso", () => {
 });
 
 // AvaliacaoAluno não tem CD_Ofertante próprio - `cdOfertanteAlvo` aqui é
-// sempre o do PreCurso (curso) em que o Aluno está sendo matriculado. Não é
-// mais alias de podeGerenciarPreCurso: o AM matricula porque cria Aluno em
-// qualquer Ofertante, e o Aluno nasce matriculado.
+// sempre o do PreCurso (curso) em que o Aluno está sendo matriculado. O AM
+// matricula porque cria Aluno em qualquer Ofertante, e o Aluno nasce
+// matriculado; desde o AD-040 isso coincide com podeGerenciarPreCurso, mas
+// segue sendo função própria - a regra é sobre o Aluno.
 describe("podeMatricularAluno", () => {
   it("GO vinculado ao ofertante do curso pode matricular", () => {
     expect(podeMatricularAluno({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);

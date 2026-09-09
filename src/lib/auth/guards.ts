@@ -74,6 +74,24 @@ export function podeAcessarOfertante(
 }
 
 /**
+ * Guarda de LEITURA de uma Verba. Quase sempre é o escopo do Ofertante dono
+ * dela (`podeAcessarOfertante`); a exceção é a verba ilimitada do AM
+ * (AD-040), que não tem dono - `cdOfertante` null. Verba sem dono é nacional
+ * como o próprio AM, então só os perfis de escopo nacional a enxergam; GO/VO
+ * não têm o que ver numa verba que nenhum Ofertante consome.
+ */
+export function podeAcessarVerba(
+  usuario: { tipo: TipoUsuario; cdOfertante: number | null },
+  cdOfertanteDaVerba: number | null,
+): boolean {
+  if (cdOfertanteDaVerba === null) {
+    return usuario.tipo === "AM" || usuario.tipo === "GT" || usuario.tipo === "VT";
+  }
+
+  return podeAcessarOfertante(usuario, cdOfertanteDaVerba);
+}
+
+/**
  * Guarda de ESCRITA sobre um Ofertante (REQ-OV-02/03). Deliberadamente
  * separada de `podeAcessarOfertante`: aquela devolve `true` para VT (leitura
  * nacional), e VT nunca deve poder editar - "somente leitura" é a própria
@@ -107,15 +125,25 @@ export function podeGerenciarVerba(tipo: TipoUsuario): boolean {
 }
 
 /**
- * Guarda de ESCRITA sobre PreCurso (REQ-PC-15). Diferente de
- * `podeEditarOfertante`/`podeGerenciarVerba`, aqui nem AM nem GT escrevem:
- * a seção 4 do documento fonte atribui o preenchimento do pré-curso
- * exclusivamente ao Gestor Ofertante vinculado, sem exceção administrativa.
+ * Guarda de ESCRITA sobre PreCurso (REQ-PC-15). Duas autoridades, e só duas:
+ * o GO vinculado ao Ofertante do curso (seção 4 do documento fonte, que
+ * atribui o preenchimento do pré-curso ao Gestor Ofertante) e o AM, em
+ * qualquer Ofertante (AD-040, decisão explícita do usuário).
+ *
+ * A entrada do AM aqui é a mesma autoridade nacional que ele já tem em
+ * `podeEditarOfertante` e `podeGerenciarVerba` (AD-012), e é o que sustenta
+ * o curso criado por ele: quem cria o pré-curso precisa poder preenchê-lo e
+ * encerrá-lo. O GT continua de fora - ele gere verba e Ofertante, não
+ * formulário de curso.
  */
 export function podeGerenciarPreCurso(
   usuario: { tipo: TipoUsuario; cdOfertante: number | null },
   cdOfertanteAlvo: number,
 ): boolean {
+  if (usuario.tipo === "AM") {
+    return true;
+  }
+
   return usuario.tipo === "GO" && usuario.cdOfertante === cdOfertanteAlvo;
 }
 
@@ -132,18 +160,20 @@ export const podeGerenciarPosCurso = podeGerenciarPreCurso;
  * Guarda de criação da matrícula (AvaliacaoAluno) - AVAL-06. O
  * `cdOfertanteAlvo` é o do curso em que o Aluno está sendo matriculado.
  *
- * Deixou de ser alias de `podeGerenciarPreCurso` (era, até a criação de Aluno
- * passar a exigir o curso): o AM cria Aluno em qualquer Ofertante
- * (REQ-AU-05/06) e, para o Aluno nascer matriculado, precisa matricular
- * também - autoridade nacional, coerente com AD-012. Fora isso a regra é a
- * mesma: só o GO vinculado ao Ofertante do curso. Preencher respostas ou
- * encerrar continua sendo só do próprio Aluno (`podeGerenciarAvaliacao`).
+ * A regra: o GO vinculado ao Ofertante do curso, e o AM em qualquer um -
+ * ele cria Aluno em qualquer Ofertante (REQ-AU-05/06) e, para o Aluno nascer
+ * matriculado, precisa matricular também. Isso hoje é exatamente o que
+ * `podeGerenciarPreCurso` responde (o AM entrou lá pelo AD-040), e a
+ * cláusula explícita do AM que existia aqui virou redundante. Segue sendo
+ * função própria, e não um alias: a regra da matrícula é sobre o Aluno, e o
+ * dia em que divergir da do pré-curso ela muda só aqui. Preencher respostas
+ * ou encerrar continua sendo só do próprio Aluno (`podeGerenciarAvaliacao`).
  */
 export function podeMatricularAluno(
   usuario: { tipo: TipoUsuario; cdOfertante: number | null },
   cdOfertanteAlvo: number,
 ): boolean {
-  return usuario.tipo === "AM" || podeGerenciarPreCurso(usuario, cdOfertanteAlvo);
+  return podeGerenciarPreCurso(usuario, cdOfertanteAlvo);
 }
 
 /**

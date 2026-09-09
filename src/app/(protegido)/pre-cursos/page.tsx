@@ -39,7 +39,8 @@ export default async function PreCursosPage() {
       <Card className="w-full max-w-2xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Pré-cursos</CardTitle>
-          {usuario.tipo === "GO" && (
+          {/* AD-040: o AM também cria pré-curso, custeado pela verba ilimitada. */}
+          {(usuario.tipo === "GO" || usuario.tipo === "AM") && (
             <Button render={<Link href="/pre-cursos/novo">Novo pré-curso</Link>} />
           )}
         </CardHeader>

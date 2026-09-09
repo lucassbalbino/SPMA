@@ -13,6 +13,9 @@ const DOMAIN_TABLES = [
   "TB_Avaliacao_Aluno",
   "TB_Pos_Curso",
   "TB_Pre_Curso",
+  // Truncar TB_Verba apaga também a verba ilimitada do AM (AD-040), que em
+  // produção nasce na migration. Nada a recriar aqui: `obterVerbaIlimitada`
+  // a cria sob demanda no primeiro curso do AM.
   "TB_Verba",
   "TB_Ofertante",
   "TB_Sessao",

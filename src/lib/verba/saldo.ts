@@ -2,17 +2,19 @@
 // AD-015, AD-016). O teto é só de VALOR - uma Verba pode custear quantos
 // cursos couberem dentro do seu valor total, sem limite de quantidade.
 //
-// `PreCurso` já existe no schema (desenhado antecipadamente), mesmo sem
-// nenhuma rota de criação de curso ainda (isso é escopo de
-// `formulario-pre-curso`) - por isso as funções aqui são consumidas por
-// integration test direto via Prisma, não por uma rota própria.
+// Exceção única: a verba ilimitada do Administrador Master (AD-040), que não
+// tem teto nenhum. Nela `saldoDisponivel` é `null` - "sem teto" não é um
+// número, e devolver 0 (ou o total menos o alocado, que ficaria negativo)
+// faria a API mentir sobre uma verba que sempre aceita a próxima alocação.
 import { prisma } from "../db/prisma";
 import { Prisma } from "../../generated/prisma/client";
 
 export interface SaldoVerba {
   valorTotal: Prisma.Decimal;
   totalAlocado: Prisma.Decimal;
-  saldoDisponivel: Prisma.Decimal;
+  ilimitada: boolean;
+  /** `null` quando a verba é ilimitada (AD-040): não há saldo a esgotar. */
+  saldoDisponivel: Prisma.Decimal | null;
 }
 
 async function obterTotalAlocado(cdVerba: number): Promise<Prisma.Decimal> {
@@ -27,7 +29,7 @@ async function obterTotalAlocado(cdVerba: number): Promise<Prisma.Decimal> {
 export async function calcularSaldoVerba(cdVerba: number): Promise<SaldoVerba> {
   const verba = await prisma.verba.findUniqueOrThrow({
     where: { cdVerba },
-    select: { vlVerba: true },
+    select: { vlVerba: true, ilimitada: true },
   });
 
   const totalAlocado = await obterTotalAlocado(cdVerba);
@@ -35,7 +37,8 @@ export async function calcularSaldoVerba(cdVerba: number): Promise<SaldoVerba> {
   return {
     valorTotal: verba.vlVerba,
     totalAlocado,
-    saldoDisponivel: verba.vlVerba.minus(totalAlocado),
+    ilimitada: verba.ilimitada,
+    saldoDisponivel: verba.ilimitada ? null : verba.vlVerba.minus(totalAlocado),
   };
 }
 
@@ -43,6 +46,9 @@ export async function calcularSaldoVerba(cdVerba: number): Promise<SaldoVerba> {
  * Usado na edição do valor total da Verba (REQ-OV-09/CA-OV-14): o novo valor
  * nunca pode ficar abaixo do que já foi alocado a cursos. Igualdade é
  * permitida (AD-016 - uso de até 100%).
+ *
+ * Não vale para a verba ilimitada (AD-040), que não tem valor a editar - a
+ * rota de edição a rejeita antes de chegar aqui.
  */
 export async function validarNovoValorTotal(
   cdVerba: number,
@@ -58,15 +64,21 @@ export async function validarNovoValorTotal(
  * valor proposto só é válido se não exceder o saldo disponível ATUAL da
  * Verba (RN-10/CA-16 do documento fonte). Igualar o saldo a zero é permitido
  * (AD-016). `saldoDisponivel` no retorno é o saldo antes da alocação
- * proposta - a rota chamadora (a criação de curso em si, escopo de
- * `formulario-pre-curso`) usa isso para informar o saldo ao usuário quando
- * rejeita.
+ * proposta - a rota chamadora (POST /api/pre-cursos) usa isso para informar o
+ * saldo ao usuário quando rejeita.
+ *
+ * Numa verba ilimitada (AD-040) qualquer valor passa e `saldoDisponivel` vem
+ * `null`: é o que permite ao AM criar curso sem consumir verba de Ofertante.
  */
 export async function validarAlocacao(
   cdVerba: number,
   valorProposto: number,
-): Promise<{ valido: boolean; saldoDisponivel: Prisma.Decimal }> {
+): Promise<{ valido: boolean; saldoDisponivel: Prisma.Decimal | null }> {
   const { saldoDisponivel } = await calcularSaldoVerba(cdVerba);
+
+  if (saldoDisponivel === null) {
+    return { valido: true, saldoDisponivel: null };
+  }
 
   return {
     valido: new Prisma.Decimal(valorProposto).lessThanOrEqualTo(saldoDisponivel),

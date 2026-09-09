@@ -1,13 +1,26 @@
 import { z } from "zod";
 import { multiplaComExclusiva } from "../multipla";
 
-// Criação do pré-curso (REQ-PC-01).
+// Criação do pré-curso pelo GO (REQ-PC-01): ele escolhe uma das verbas do
+// próprio Ofertante, e é a verba que diz a qual Ofertante o curso pertence.
 export const criarPreCursoSchema = z.object({
   cdVerba: z.number().int().positive({ message: "Verba é obrigatória" }),
   vlCursoAlocado: z.number().positive({ message: "Valor alocado deve ser positivo" }),
 });
 
 export type CriarPreCursoInput = z.infer<typeof criarPreCursoSchema>;
+
+// Criação do pré-curso pelo AM (AD-040). A entrada é a inversa da do GO: o
+// AM não escolhe verba - ele custeia pela verba ilimitada, sempre - então
+// informa diretamente o Ofertante do curso, que o GO obtinha da verba.
+// O valor alocado continua obrigatório: o curso tem um custo, o que a verba
+// ilimitada dispensa é o teto, não o registro do valor.
+export const criarPreCursoAmSchema = z.object({
+  cdOfertante: z.number().int().positive({ message: "Ofertante é obrigatório" }),
+  vlCursoAlocado: z.number().positive({ message: "Valor alocado deve ser positivo" }),
+});
+
+export type CriarPreCursoAmInput = z.infer<typeof criarPreCursoAmSchema>;
 
 // Escala das perguntas 23 e 24 do questionário fonte (RN-05, AD-019):
 // 0=Não há disponibilidade, 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Ótimo.

@@ -100,6 +100,22 @@ Uma verba pode custear vários cursos. A FK fica no Curso (`TB_Pre_Curso.CD_Verb
 
 **AD-016 — Teto da verba:** o somatório dos valores alocados aos cursos de uma verba pode IGUALAR o valor total da verba (validação `<=`, uso de até 100%). Ultrapassar é bloqueado.
 
+**AD-040 — Verba ilimitada do Administrador Master: o AM passa a criar cursos.**
+Decisão explícita do usuário nesta sessão. Até aqui o AM não criava curso nenhum — o pré-curso era exclusividade do GO (seção 4 do documento fonte, gravada em `podeGerenciarPreCurso`) — e nem teria como: todo curso é custeado por uma Verba (AD-015), e o AM não tem Ofertante (AD-012), logo não tem verba.
+
+A saída é uma **única verba nacional, sem Ofertante dono e sem teto**:
+- `TB_Verba.CD_Ofertante` passa a aceitar NULL, e é NULL só nela — verba de Ofertante continua obrigatoriamente vinculada (AD-015). A FK segue `ON DELETE RESTRICT` explícito no schema: o padrão do Prisma para relação opcional seria SetNull, e apagar um Ofertante transformaria as verbas dele em verbas nacionais.
+- `TB_Verba.Ilimitada` marca a verba sem teto. Nela o AD-016 não se aplica: `calcularSaldoVerba` devolve `saldoDisponivel: null` ("sem teto" não é um número, e 0 ou negativo mentiria) e `validarAlocacao` aceita qualquer valor.
+- Ela nasce na migration `20260909120000_verba_ilimitada_am`, não por rota: `verbaSchema` exige Ofertante, então **nenhuma API cria uma segunda**. `obterVerbaIlimitada` (`src/lib/verba/ilimitada.ts`) é find-or-create só como rede para bancos montados por outro caminho — entre eles o próprio `db-test-reset`, que trunca `TB_Verba`.
+- O valor alocado ao curso continua obrigatório: o que a verba ilimitada dispensa é o teto, não o registro do custo.
+
+Consequências na autorização e nas telas:
+- `podeGerenciarPreCurso` (e seu alias `podeGerenciarPosCurso`) passa a responder `true` para AM em qualquer Ofertante — a mesma autoridade nacional que ele já tinha em `podeEditarOfertante`/`podeGerenciarVerba`. Quem cria o curso precisa poder preenchê-lo e encerrá-lo, então isso vale para o ciclo todo, do pré ao pós. **O GT continua de fora**: ele gere verba e Ofertante, não formulário de curso.
+- Com isso a cláusula explícita de AM em `podeMatricularAluno` virou redundante; a função permanece (a regra é sobre o Aluno) delegando à do pré-curso.
+- `POST /api/pre-cursos` ganha um caminho para o AM, com a entrada invertida: ele informa `cdOfertante` (`criarPreCursoAmSchema`) em vez de `cdVerba`, porque o custeio é sempre a verba ilimitada. Verba sem Ofertante não é escolhível pelo caminho do GO.
+- Leitura de verba passa por `podeAcessarVerba`: verba sem dono é nacional como o AM, visível a AM/GT/VT e invisível a GO/VO/AL. Editar o valor da verba ilimitada é 409 — não há teto a mudar.
+- `/pre-cursos/novo` é a mesma tela com a escolha invertida (prop `fonte`): o GO escolhe verba com saldo, o AM escolhe Ofertante. `/pos-cursos/novo` e os botões "Novo pré/pós-curso" seguem a mesma autoridade.
+
 ### Formulários e Status
 
 **AD-017 — Três formulários independentes:** TB_Pre_Curso (GO, antes), TB_Pos_Curso (GO, durante+depois), TB_Avaliacao_Aluno (AL).

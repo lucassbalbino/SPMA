@@ -1,9 +1,16 @@
-// Formulário de criação de pré-curso (REQ-PC-01/02/03), colocado junto de
-// `page.tsx` (T9). Client Component separado pelo mesmo motivo de
+// Formulário de criação de pré-curso (REQ-PC-01/02/03, AD-040), colocado
+// junto de `page.tsx` (T9). Client Component separado pelo mesmo motivo de
 // `NovoUsuarioForm.tsx`: `page.tsx` precisa continuar Server Component para
 // chamar `requireSession()`. Estado simples (2 campos) - useState direto,
 // sem o padrão de `respostas` genérico usado no formulário de 56 campos
 // (T10).
+//
+// Dois perfis criam pré-curso, e cada um escolhe uma coisa diferente: o GO
+// escolhe entre as verbas do próprio Ofertante (e o Ofertante do curso sai
+// da verba), o AM escolhe o Ofertante (e o custeio sai sempre da verba
+// ilimitada, AD-040). É a mesma tela com uma escolha diferente, então o que
+// varia é uma prop `fonte`, não um segundo componente: o servidor já resolve
+// qual lista mostrar e a rota reavalia tudo de novo (AD-033).
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -18,15 +25,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { criarPreCursoSchema } from "@/lib/validation/schemas/pre-curso.schema";
+import {
+  criarPreCursoAmSchema,
+  criarPreCursoSchema,
+} from "@/lib/validation/schemas/pre-curso.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
 
-type OpcaoVerba = { cdVerba: number; saldoDisponivel: number };
+/** O que o perfil escolhe: a verba que custeia (GO) ou o Ofertante (AM). */
+export type FonteDoCurso = "verba" | "ofertante";
 
-export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
+/** Opção já formatada pelo servidor - a tela não recalcula saldo nem nome. */
+export type OpcaoDoCurso = { valor: number; rotulo: string };
+
+const TEXTOS: Record<
+  FonteDoCurso,
+  {
+    rotulo: string;
+    placeholder: string;
+    vazio: string;
+    campo: "cdVerba" | "cdOfertante";
+  }
+> = {
+  verba: {
+    rotulo: "Verba",
+    placeholder: "Selecione uma verba",
+    vazio: "Nenhuma verba disponível para o seu Ofertante.",
+    campo: "cdVerba",
+  },
+  ofertante: {
+    rotulo: "Ofertante",
+    placeholder: "Selecione um Ofertante",
+    vazio: "Nenhum Ofertante cadastrado.",
+    campo: "cdOfertante",
+  },
+};
+
+export function NovoPreCursoForm({
+  fonte,
+  opcoes,
+}: {
+  fonte: FonteDoCurso;
+  opcoes: OpcaoDoCurso[];
+}) {
   const router = useRouter();
+  const textos = TEXTOS[fonte];
 
-  const [cdVerba, setCdVerba] = useState<string | null>(null);
+  const [escolha, setEscolha] = useState<string | null>(null);
   const [vlCursoAlocado, setVlCursoAlocado] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -35,8 +79,9 @@ export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] })
     event.preventDefault();
     setErro(null);
 
-    const entrada = criarPreCursoSchema.safeParse({
-      cdVerba: cdVerba ? Number(cdVerba) : undefined,
+    const schema = fonte === "verba" ? criarPreCursoSchema : criarPreCursoAmSchema;
+    const entrada = schema.safeParse({
+      [textos.campo]: escolha ? Number(escolha) : undefined,
       vlCursoAlocado: vlCursoAlocado ? Number(vlCursoAlocado) : undefined,
     });
     if (!entrada.success) {
@@ -68,31 +113,31 @@ export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] })
     }
   }
 
-  if (opcoesVerba.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Nenhuma verba disponível para o seu Ofertante.
-      </p>
-    );
+  if (opcoes.length === 0) {
+    return <p className="text-sm text-muted-foreground">{textos.vazio}</p>;
   }
 
   return (
     <form onSubmit={handleSubmit} noValidate>
       <FieldGroup>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="cdVerba">Verba</FieldLabel>
-          <Select value={cdVerba} onValueChange={(valor) => setCdVerba(valor as string)}>
-            <SelectTrigger id="cdVerba" data-testid="select-verba" disabled={enviando}>
-              <SelectValue placeholder="Selecione uma verba" />
+          <FieldLabel htmlFor={textos.campo}>{textos.rotulo}</FieldLabel>
+          <Select value={escolha} onValueChange={(valor) => setEscolha(valor as string)}>
+            <SelectTrigger
+              id={textos.campo}
+              data-testid={`select-${fonte}`}
+              disabled={enviando}
+            >
+              <SelectValue placeholder={textos.placeholder} />
             </SelectTrigger>
             <SelectContent>
-              {opcoesVerba.map((opcao) => (
+              {opcoes.map((opcao) => (
                 <SelectItem
-                  key={opcao.cdVerba}
-                  value={String(opcao.cdVerba)}
-                  data-testid={`opcao-verba-${opcao.cdVerba}`}
+                  key={opcao.valor}
+                  value={String(opcao.valor)}
+                  data-testid={`opcao-${fonte}-${opcao.valor}`}
                 >
-                  Verba #{opcao.cdVerba} — saldo R$ {opcao.saldoDisponivel.toFixed(2)}
+                  {opcao.rotulo}
                 </SelectItem>
               ))}
             </SelectContent>

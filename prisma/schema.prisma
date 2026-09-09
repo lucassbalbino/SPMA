@@ -128,16 +128,29 @@ model Ofertante {
 }
 
 // ─────────────────────────────────────────────────────────────
-// VERBA  (AD-015: pertence ao Ofertante, 1:N com Curso; AD-016: teto <=)
+// VERBA  (AD-015: pertence ao Ofertante, 1:N com Curso; AD-016: teto <=;
+// AD-040: a verba ilimitada do AM é nacional e não pertence a Ofertante)
 // ─────────────────────────────────────────────────────────────
 
 model Verba {
   cdVerba        Int        @id @default(autoincrement()) @map("CD_Verba")
-  cdOfertante    Int        @map("CD_Ofertante")
-  ofertante      Ofertante  @relation(fields: [cdOfertante], references: [cdOfertante])
+
+  // Null SÓ na verba ilimitada do Administrador Master (AD-040): ela é
+  // nacional, como o próprio AM (AD-012), e por isso não tem dono. Toda
+  // verba comum continua obrigatoriamente vinculada a um Ofertante (AD-015).
+  // `onDelete: Restrict` é explícito de propósito: o padrão do Prisma para
+  // relação opcional seria SetNull, e apagar um Ofertante transformaria as
+  // verbas dele em verbas nacionais.
+  cdOfertante    Int?       @map("CD_Ofertante")
+  ofertante      Ofertante? @relation(fields: [cdOfertante], references: [cdOfertante], onDelete: Restrict)
 
   dtVerba        DateTime?  @map("DT_Verba") @db.Date
   vlVerba        Decimal    @map("VL_Verba") @db.Decimal(10, 2) // valor TOTAL da verba
+
+  // AD-040: verba sem teto. `vlVerba` não significa nada aqui (fica 0) e o
+  // saldo disponível é "sem teto", não um número. Só a verba do AM é assim,
+  // e nenhuma rota cria outra: ela nasce na migration.
+  ilimitada      Boolean    @default(false) @map("Ilimitada")
 
   dataCriacao    DateTime   @default(now()) @map("Data_Criacao")
 
@@ -145,6 +158,7 @@ model Verba {
   cursos         PreCurso[]
 
   @@index([cdOfertante])
+  @@index([ilimitada])
   @@map("TB_Verba")
 }
 

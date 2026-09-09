@@ -41,7 +41,8 @@ export default async function PosCursosPage() {
       <Card className="w-full max-w-2xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Pós-cursos</CardTitle>
-          {usuario.tipo === "GO" && (
+          {/* AD-040: o AM gere o curso que cria, do pré ao pós. */}
+          {(usuario.tipo === "GO" || usuario.tipo === "AM") && (
             <Button render={<Link href="/pos-cursos/novo">Novo pós-curso</Link>} />
           )}
         </CardHeader>
