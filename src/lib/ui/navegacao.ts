@@ -24,6 +24,7 @@ export interface Modulo {
 
 const PAINEL: ItemNavegacao = { rotulo: "Painel", href: "/painel" };
 const NOVO_USUARIO: ItemNavegacao = { rotulo: "Novo usuário", href: "/usuarios/novo" };
+const NOVO_CURSO: ItemNavegacao = { rotulo: "Novo curso", href: "/pre-cursos/novo" };
 const PRE_CURSOS: ItemNavegacao = { rotulo: "Pré-cursos", href: "/pre-cursos" };
 const POS_CURSOS: ItemNavegacao = { rotulo: "Pós-cursos", href: "/pos-cursos" };
 const AVALIACOES: ItemNavegacao = { rotulo: "Avaliações", href: "/avaliacoes" };
@@ -31,6 +32,9 @@ const AVALIACOES: ItemNavegacao = { rotulo: "Avaliações", href: "/avaliacoes" 
 const MINHA_AVALIACAO: ItemNavegacao = { rotulo: "Minha avaliação", href: "/avaliacoes" };
 
 const CURSOS = [PRE_CURSOS, POS_CURSOS, AVALIACOES];
+// AD-040: quem pode criar curso (AM e GO, `podeGerenciarPreCurso`) ganha o
+// atalho de criação junto da lista - GT/VT/VO só enxergam (CURSOS puro).
+const CURSOS_COM_CRIACAO = [NOVO_CURSO, ...CURSOS];
 
 // "Ofertantes", "Verbas" e "Relatórios" só existem como API, ou nem isso:
 // ficam listados no painel com o texto de hoje e não viram link.
@@ -39,7 +43,7 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
     { rotulo: "Gestão de usuários", itens: [NOVO_USUARIO] },
     { rotulo: "Ofertantes", itens: [] },
     { rotulo: "Verbas", itens: [] },
-    { rotulo: "Cursos", itens: CURSOS },
+    { rotulo: "Cursos", itens: CURSOS_COM_CRIACAO },
     { rotulo: "Relatórios", itens: [] },
   ],
   [TipoUsuario.GT]: [
@@ -54,7 +58,7 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
   ],
   [TipoUsuario.GO]: [
     { rotulo: "Gestão de usuários", itens: [NOVO_USUARIO] },
-    { rotulo: "Meus cursos", itens: CURSOS },
+    { rotulo: "Meus cursos", itens: CURSOS_COM_CRIACAO },
   ],
   [TipoUsuario.VO]: [{ rotulo: "Meus cursos", itens: CURSOS }],
   [TipoUsuario.AL]: [{ rotulo: "Minha avaliação", itens: [MINHA_AVALIACAO] }],

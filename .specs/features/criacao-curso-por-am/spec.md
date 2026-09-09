@@ -105,9 +105,9 @@ Hoje só o GO do próprio Ofertante pode criar curso (Pré-Curso, que por sua ve
 | CURSO-03 | P1: AM cria curso | Execute | Verified (regressão pré-existente) |
 | CURSO-04 | P1: AM inicia Pós-Curso | Execute | Verified |
 | CURSO-05 | P1: AM inicia Pós-Curso | Execute | Verified |
-| CURSO-06 | P1: Atalho navbar | Execute | Pending |
-| CURSO-07 | P1: Atalho navbar | Execute | Pending |
-| CURSO-08 | P1: Atalho navbar | Execute | Pending |
+| CURSO-06 | P1: Atalho navbar | Execute | Verified |
+| CURSO-07 | P1: Atalho navbar | Execute | Verified |
+| CURSO-08 | P1: Atalho navbar | Execute | Verified |
 | CURSO-09 | Edge case | Execute | Verified |
 | CURSO-10 | Edge case | Execute | Verified |
 | CURSO-11 | Edge case | Execute | Pending |

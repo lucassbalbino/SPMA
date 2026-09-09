@@ -10,10 +10,24 @@ import {
 // Tabela esperada escrita diretamente a partir de design.md ("A tabela de
 // navegação"), não lida do módulo sob teste.
 const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
-  AM: ["/painel", "/usuarios/novo", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
+  AM: [
+    "/painel",
+    "/usuarios/novo",
+    "/pre-cursos/novo",
+    "/pre-cursos",
+    "/pos-cursos",
+    "/avaliacoes",
+  ],
   GT: ["/painel", "/usuarios/novo", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
   VT: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
-  GO: ["/painel", "/usuarios/novo", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
+  GO: [
+    "/painel",
+    "/usuarios/novo",
+    "/pre-cursos/novo",
+    "/pre-cursos",
+    "/pos-cursos",
+    "/avaliacoes",
+  ],
   VO: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
   AL: ["/painel", "/avaliacoes"],
 };
@@ -70,6 +84,15 @@ describe("navegacaoDoPerfil", () => {
     expect(hrefsDe(TipoUsuario.AL)).not.toContain("/usuarios/novo");
   });
 
+  it("só AM e GO recebem /pre-cursos/novo (AD-040, quem pode criar curso)", () => {
+    expect(hrefsDe(TipoUsuario.AM)).toContain("/pre-cursos/novo");
+    expect(hrefsDe(TipoUsuario.GO)).toContain("/pre-cursos/novo");
+    expect(hrefsDe(TipoUsuario.GT)).not.toContain("/pre-cursos/novo");
+    expect(hrefsDe(TipoUsuario.VT)).not.toContain("/pre-cursos/novo");
+    expect(hrefsDe(TipoUsuario.VO)).not.toContain("/pre-cursos/novo");
+    expect(hrefsDe(TipoUsuario.AL)).not.toContain("/pre-cursos/novo");
+  });
+
   it("o item de /avaliacoes se chama 'Minha avaliação' para AL", () => {
     expect(rotuloDe(TipoUsuario.AL, "/avaliacoes")).toBe("Minha avaliação");
   });
@@ -108,6 +131,7 @@ describe("hrefAtivo", () => {
     { rotulo: "Usuários", href: "/usuarios" },
     { rotulo: "Novo usuário", href: "/usuarios/novo" },
     { rotulo: "Pré-cursos", href: "/pre-cursos" },
+    { rotulo: "Novo curso", href: "/pre-cursos/novo" },
     { rotulo: "Avaliações", href: "/avaliacoes" },
   ];
 
@@ -125,6 +149,11 @@ describe("hrefAtivo", () => {
 
   it("o href mais longo vence quando dois casam", () => {
     expect(hrefAtivo("/usuarios/novo", itens)).toBe("/usuarios/novo");
+  });
+
+  // AD-040/CURSO-08: "Novo curso" não pode ser ofuscado por "Pré-cursos".
+  it("/pre-cursos/novo casa com 'Novo curso', não com 'Pré-cursos'", () => {
+    expect(hrefAtivo("/pre-cursos/novo", itens)).toBe("/pre-cursos/novo");
   });
 
   it("pathname desconhecido não marca nenhum item", () => {
