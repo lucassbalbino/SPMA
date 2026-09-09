@@ -137,6 +137,8 @@ Chaves em camelCase, para uso direto como propriedades do JSON `PosCurso.respost
 
 **Why P1**: Sem criação não há registro para preencher — é o ponto de entrada de toda a feature.
 
+**AD-040 (2026-09):** o product owner ampliou esta regra para dar ao AM a mesma autoridade sobre Pós-Curso que sobre Pré-Curso (autoridade nacional, AD-012) - ver `.specs/features/criacao-curso-por-am/spec.md`. Os critérios abaixo, escritos para o GO, valem também para o AM sem a restrição "do próprio Ofertante".
+
 **Acceptance Criteria**:
 
 1. WHEN um GO autenticado cria um Pós-Curso informando o `cdCurso` de um Pré-Curso do próprio Ofertante (em qualquer status), o system SHALL criar o registro com `status=EM_ANDAMENTO`, `respostas=null`, `criadoPor=CPF do GO`. (REQ-PO-01)

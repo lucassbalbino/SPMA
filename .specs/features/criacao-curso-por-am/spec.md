@@ -10,9 +10,9 @@ Hoje só o GO do próprio Ofertante pode criar curso (Pré-Curso, que por sua ve
 
 ## Goals
 
-- [ ] AM cria Pré-Curso (= "curso") para qualquer Ofertante, escolhendo entre as Verbas existentes desse Ofertante.
-- [ ] AM inicia Pós-Curso para qualquer Pré-Curso elegível de qualquer Ofertante (decorre da guarda compartilhada, `podeGerenciarPosCurso` é alias de `podeGerenciarPreCurso`).
-- [ ] Navbar exibe "Novo curso" → `/pre-cursos/novo`, apenas para quem tem permissão de criar curso (AM, GO) - GT/VT/VO/AL não veem o atalho.
+- [x] AM cria Pré-Curso (= "curso") para qualquer Ofertante, escolhendo entre as Verbas existentes desse Ofertante.
+- [x] AM inicia Pós-Curso para qualquer Pré-Curso elegível de qualquer Ofertante (decorre da guarda compartilhada, `podeGerenciarPosCurso` é alias de `podeGerenciarPreCurso`).
+- [x] Navbar exibe "Novo curso" → `/pre-cursos/novo`, apenas para quem tem permissão de criar curso (AM, GO) - GT/VT/VO/AL não veem o atalho.
 - [ ] Documentação (`.specs/features/formulario-pre-curso/spec.md`, `.specs/STATE.md`) deixa de contradizer o código: a regra "apenas GO cria pré-curso" é substituída, registrada como AD-040.
 
 ## Out of Scope
@@ -110,9 +110,9 @@ Hoje só o GO do próprio Ofertante pode criar curso (Pré-Curso, que por sua ve
 | CURSO-08 | P1: Atalho navbar | Execute | Verified |
 | CURSO-09 | Edge case | Execute | Verified |
 | CURSO-10 | Edge case | Execute | Verified |
-| CURSO-11 | Edge case | Execute | Pending |
+| CURSO-11 | Edge case | Execute | Verified (regressão pré-existente, independente de papel) |
 
-**Coverage:** 11 total, 11 mapped to Execute (Tasks phase skipped - Medium scope, <10 implicit steps), 0 unmapped.
+**Coverage:** 11 total, 11 mapped to Execute (Tasks phase skipped - Medium scope, <10 implicit steps), 0 unmapped, 11 Verified.
 
 ---
 

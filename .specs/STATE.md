@@ -48,6 +48,8 @@ Este arquivo é a fonte de verdade das decisões travadas. Não reabrir uma AD s
   - **Gate após a troca:** `lint` (0 erros), `typecheck` (limpo) e `test:unit` (418 testes, 20 arquivos) verdes. `test:e2e` **reexecutado em 2026-08-30**, no Execute de `identidade-visual`: 202 testes verdes no HEAD anterior à feature. A troca dos questionários está confirmada de ponta a ponta; o aviso anterior sobre a porta 3000 está resolvido.
   - **Re-verificação pendente:** os 3 `validation.md` registram PASS contra o dicionário derivado e foram anotados com esse aviso no topo. Vale um novo ciclo do Verifier por feature.
 - **Pendências abertas:** nenhuma de domínio, exceto os indicadores do dashboard (feature adiada por decisão AD-024) e as poucas linhas ainda marcadas `Confirmed? n` nos `spec.md` (ex.: Q16 do pós-curso não oferecer alternativa "não houve abandono"; Q36 vs Q38 do aluno, uma exigida e a outra opcional).
+- **`criacao-curso-por-am` (2026-09): 6/6 passos do plano inline implementados e commitados, todos os 11 requisitos (`CURSO-01`...`CURSO-11`) Verified em `spec.md`.** AD-040: AM ganha a mesma autoridade que o GO para criar curso (Pré-Curso e, via guarda compartilhada, Pós-Curso), em qualquer Ofertante; atalho "Novo curso" na navbar para AM e GO. `formulario-pre-curso/spec.md` e `formulario-pos-curso/spec.md` retificados para não contradizer o código. Falta rodar o Verifier independente (author != verifier) antes de fechar a feature.
+  - **Arquivos da feature:** `.specs/features/criacao-curso-por-am/spec.md` (sem `design.md`/`tasks.md` - Medium, plano inline em vez de `tasks.md` formal; `validation.md` ainda não escrito, pendente do Verifier).
 
 ---
 
@@ -171,6 +173,13 @@ Toda cor, raio e fonte vive em `src/app/globals.css`, como token. Nenhum `.tsx` 
 A navegação segue a mesma lógica de fonte única, um nível acima: `src/lib/ui/navegacao.ts` descreve, por perfil, os módulos do painel e os itens navegáveis, e tanto o `/painel` quanto o cabeçalho leem dali. Duas listas divergiriam no primeiro módulo novo. **Isso é conveniência de UI, nunca autorização** — a cascata (AD-009) e o escopo (AD-012) continuam reavaliados no backend a cada request, e esconder um item só evita oferecer um beco sem saída.
 
 Este é o número correto da decisão: o cabeçalho de `identidade-visual/spec.md` citava "AD-035", número já ocupado pelos questionários fonte desde 2026-08-29.
+
+**AD-040 (2026-09) — AM também cria curso (Pré-Curso e Pós-Curso), além do GO do próprio Ofertante.**
+Rescinde a leitura anterior da seção 4 do documento fonte ("Preenchido pelo Gestor Ofertante", sem exceção administrativa - registrada em `formulario-pre-curso/spec.md`, linha "Quem pode criar pré-curso"). Pedido do usuário: um atalho "Novo curso" na navbar para todo perfil com essa permissão, incluindo o AM - que hoje não tinha. Decisão de escopo tomada junto: Pré-Curso e Pós-Curso não são "dois cursos" - `PosCurso.CD_Curso` é PK e FK 1:1 para `PreCurso.CD_Curso`, sem identidade própria -, então "criar um curso" é só `/pre-cursos/novo`; Pós-Curso segue como questionário de acompanhamento de um curso já existente, sem atalho próprio.
+
+Implementação: `podeGerenciarPreCurso` (`src/lib/auth/guards.ts`) passa a aceitar `usuario.tipo === "AM"` para qualquer `cdOfertanteAlvo` - mesmo padrão já usado em `podeMatricularAluno` (AD-012). Como `podeGerenciarPosCurso` é alias da mesma função (AD-017/design.md), o Pós-Curso ganha a mesma abertura sem código novo. GT continua de fora (só gere Verba, `podeGerenciarVerba`); GO mantém o comportamento anterior (só o próprio Ofertante). Telas `/pre-cursos/novo` e `/pos-cursos/novo` passam a listar Verbas/Pré-Cursos de qualquer Ofertante quando quem acessa é o AM (com o nome do Ofertante no seletor de Verba, já que o AM escolhe entre vários).
+
+Feature registrada em `.specs/features/criacao-curso-por-am/{spec.md}` (Medium, sem `design.md`/`tasks.md` - Execute com plano inline de 6 passos). `formulario-pre-curso/spec.md` e `formulario-pos-curso/spec.md` foram retificados para não contradizer o código.
 
 ---
 
