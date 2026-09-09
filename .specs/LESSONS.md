@@ -186,6 +186,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: P4 - e2e/identidade-visual.spec.ts:181 (UI-06) (e2e)
 - last seen: 2026-09-01T19:21:26Z
 
+### L-030 - When a spec AC lists multiple visible facts for one UI element (name, number, balance, etc.), assert each fact's rendered text individually - a testid match or a single field checked is not evidence for the others.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: criacao-curso-por-am
+- evidence: CURSO-02 (e2e/pre-cursos-novo.spec.ts:73-84) (e2e)
+- last seen: 2026-09-09T23:52:19Z
+
+### L-031 - When a spec edge case names multiple actor scenarios (e.g. 'for role A ... ; for role B ...'), write a dedicated test for each named actor - one representative role's test is not evidence for the others when the underlying query branches by role.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: criacao-curso-por-am
+- evidence: CURSO-09 (e2e/pre-cursos-novo.spec.ts:125-131) (e2e)
+- last seen: 2026-09-09T23:52:24Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 30,
+  "next_id": 32,
   "lessons": [
     {
       "id": "L-001",
@@ -528,6 +528,42 @@
       ],
       "created": "2026-09-01T19:21:26Z",
       "last_seen": "2026-09-01T19:21:26Z"
+    },
+    {
+      "id": "L-030",
+      "key": "ac_gap::when a spec ac lists multiple visible facts for one ui element name number balance etc assert each fact s rendered text individually a testid match or a single field checked is not evidence for the others",
+      "text": "When a spec AC lists multiple visible facts for one UI element (name, number, balance, etc.), assert each fact's rendered text individually - a testid match or a single field checked is not evidence for the others.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "criacao-curso-por-am"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CURSO-02 (e2e/pre-cursos-novo.spec.ts:73-84) (e2e)"
+      ],
+      "created": "2026-09-09T23:52:19Z",
+      "last_seen": "2026-09-09T23:52:19Z"
+    },
+    {
+      "id": "L-031",
+      "key": "ac_gap::when a spec edge case names multiple actor scenarios e g for role a for role b write a dedicated test for each named actor one representative role s test is not evidence for the others when the underlying query branches by role",
+      "text": "When a spec edge case names multiple actor scenarios (e.g. 'for role A ... ; for role B ...'), write a dedicated test for each named actor - one representative role's test is not evidence for the others when the underlying query branches by role.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "criacao-curso-por-am"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CURSO-09 (e2e/pre-cursos-novo.spec.ts:125-131) (e2e)"
+      ],
+      "created": "2026-09-09T23:52:24Z",
+      "last_seen": "2026-09-09T23:52:24Z"
     }
   ]
 }
