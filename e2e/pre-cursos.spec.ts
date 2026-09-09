@@ -16,13 +16,15 @@ const CPF_GT = "51102003000";
 const CPF_GO = "51203004052";
 const CPF_GO_2 = "51304005003";
 const CPF_AL = "51405006048";
+const CPF_AM = "51102003190";
 
-const CPFS = [CPF_GT, CPF_GO, CPF_GO_2, CPF_AL];
+const CPFS = [CPF_GT, CPF_GO, CPF_GO_2, CPF_AL, CPF_AM];
 
 let cdOfertante: number;
 let cdOfertante2: number;
 let cdVerba: number;
 let cdVerbaPequena: number;
+let cdVerba2Am: number;
 
 async function logarComCsrf(cpf: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
@@ -42,11 +44,13 @@ test.beforeAll(() => {
   cdOfertante2 = criarOfertante({ nome: "Ofertante Pré-Curso Teste 2", uf: "RJ" }).cdOfertante;
   cdVerba = criarVerba({ cdOfertante, vlVerba: 10000 }).cdVerba;
   cdVerbaPequena = criarVerba({ cdOfertante, vlVerba: 500 }).cdVerba;
+  cdVerba2Am = criarVerba({ cdOfertante: cdOfertante2, vlVerba: 1000 }).cdVerba;
 
   upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_GO, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante });
   upsertUsuario({ cpf: CPF_GO_2, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante: cdOfertante2 });
   upsertUsuario({ cpf: CPF_AL, tipo: "AL", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
 });
 
 test.afterAll(() => {
@@ -102,6 +106,26 @@ test("AD-016: valor exatamente igual ao saldo disponível é aceito", async () =
   });
 
   expect(res.status()).toBe(201);
+
+  await cliente.dispose();
+});
+
+test("AD-040: AM cria pré-curso para Ofertante ao qual não está vinculado -> 201, curso pertence a esse Ofertante", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AM);
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/pre-cursos", {
+    data: { cdVerba: cdVerba2Am, vlCursoAlocado: 100 },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(201);
+  const corpo = await res.json();
+  expect(corpo.preCurso.cdOfertante).toBe(cdOfertante2);
+
+  const persistido = getPreCurso(corpo.preCurso.cdCurso);
+  expect(persistido?.cdOfertante).toBe(cdOfertante2);
+  expect(persistido?.criadoPor).toBe(CPF_AM);
 
   await cliente.dispose();
 });

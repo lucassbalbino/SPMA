@@ -23,8 +23,9 @@ const CPF_GT = "52161005120";
 const CPF_GO = "52171005246";
 const CPF_GO_2 = "52181005362";
 const CPF_AL = "52191005489";
+const CPF_AM = "51103004107";
 
-const CPFS = [CPF_GT, CPF_GO, CPF_GO_2, CPF_AL];
+const CPFS = [CPF_GT, CPF_GO, CPF_GO_2, CPF_AL, CPF_AM];
 
 let cdOfertante: number;
 let cdOfertante2: number;
@@ -33,6 +34,7 @@ let cdCursoDoGo: number;
 let cdCursoDoGo2: number;
 let cdCursoJaComPosCurso: number;
 let cdCursoParaTesteEscopo: number;
+let cdCursoParaAm: number;
 
 async function logarComCsrf(cpf: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
@@ -63,6 +65,7 @@ test.beforeAll(() => {
     cdOfertante: cdOfertante2,
   });
   upsertUsuario({ cpf: CPF_AL, tipo: "AL", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
 
   cdCursoDoGo = criarPreCurso({
     cdOfertante,
@@ -90,6 +93,13 @@ test.beforeAll(() => {
     vlCursoAlocado: 100,
     criadoPor: CPF_GO,
   }).cdCurso;
+
+  cdCursoParaAm = criarPreCurso({
+    cdOfertante: cdOfertante2,
+    cdVerba: cdVerba2,
+    vlCursoAlocado: 100,
+    criadoPor: CPF_GO_2,
+  }).cdCurso;
 });
 
 test.afterAll(() => {
@@ -115,6 +125,25 @@ test("GO cria pós-curso para um pré-curso do próprio Ofertante -> 201, EM_AND
   expect(persistido?.status).toBe("EM_ANDAMENTO");
   expect(persistido?.respostas).toBeNull();
   expect(persistido?.criadoPor).toBe(CPF_GO);
+
+  await cliente.dispose();
+});
+
+test("AD-040: AM cria pós-curso para pré-curso de Ofertante ao qual não está vinculado -> 201", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AM);
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/pos-cursos", {
+    data: { cdCurso: cdCursoParaAm },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(201);
+  const corpo = await res.json();
+  expect(corpo.posCurso.status).toBe("EM_ANDAMENTO");
+
+  const persistido = getPosCurso(cdCursoParaAm);
+  expect(persistido?.criadoPor).toBe(CPF_AM);
 
   await cliente.dispose();
 });
