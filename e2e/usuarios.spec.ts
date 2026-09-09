@@ -283,7 +283,14 @@ test("CA-SEC-15: POST sem token CSRF válido é rejeitado com 403, nenhum usuár
   await cliente.dispose();
 });
 
-test("REQ-SEC-11: POST com CPF já existente devolve erro genérico + idCorrelacao, nunca o erro cru do Prisma", async () => {
+// A unicidade de `cpf` (@id) é tratada na rota: 409 com mensagem acionável,
+// em vez do 500 genérico que esta violação produzia quando era exceção não
+// tratada. REQ-SEC-11 não perde cobertura - `comTratamentoDeErro` continua
+// montado nesta rota (a corrida entre dois POSTs simultâneos com o mesmo CPF
+// ainda cai nele) e o 500 genérico + idCorrelacao é provado diretamente em
+// `src/lib/errors/api-error.test.ts`. A metade de segurança do caso, que o
+// corpo nunca carregue o erro cru do Prisma, segue afirmada aqui.
+test("POST com CPF já existente devolve 409 com mensagem clara, nunca o erro cru do Prisma", async () => {
   const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
   const headers = cabecalhosAutenticados(idSessao, idCsrf);
 
@@ -294,26 +301,26 @@ test("REQ-SEC-11: POST com CPF já existente devolve erro genérico + idCorrelac
   });
   expect(primeiro.status()).toBe(201);
 
-  // Mesmo CPF de novo: viola a unicidade (`cpf` é @id) - exceção real do
-  // Prisma, não tratada na rota, capturada por `comTratamentoDeErro`.
   const clienteSegundo = await novoCliente();
   const segundo = await clienteSegundo.post("/api/usuarios", {
     data: { cpf: CPF_DUPLICADO, nome: "Segundo Cadastro", tipo: "AL", cdCurso: cdCursoDoGo },
     headers,
   });
 
-  expect(segundo.status()).toBe(500);
+  expect(segundo.status()).toBe(409);
   const corpo = await segundo.json();
-  expect(corpo.erro).toBe("Erro interno. Contate o suporte informando o código.");
-  expect(corpo.idCorrelacao).toMatch(
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-  );
+  expect(corpo.erro).toBe("Já existe um usuário com este CPF");
+  // 409 é erro previsto, não falha interna: nada de id de correlação.
+  expect(corpo.idCorrelacao).toBeUndefined();
   // Nunca o erro cru do Prisma (nome de constraint, classe do erro, etc.)
   // no corpo devolvido ao cliente.
   const texto = JSON.stringify(corpo);
   expect(texto).not.toMatch(/prisma/i);
   expect(texto).not.toMatch(/constraint/i);
   expect(texto).not.toMatch(/unique/i);
+
+  // O primeiro cadastro continua intacto - a segunda tentativa não sobrescreve.
+  expect(getUsuario(CPF_DUPLICADO)?.nome).toBe("Primeiro Cadastro");
 
   await clientePrimeiro.dispose();
   await clienteSegundo.dispose();

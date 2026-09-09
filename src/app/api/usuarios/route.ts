@@ -135,15 +135,35 @@ async function criarUsuario(request: Request) {
     );
   }
 
+  // `cpf` é @id: recadastrar um CPF existente violaria a unicidade. Checagem
+  // explícita antes do create para devolver um 409 limpo - mesmo padrão de
+  // POST /api/pos-cursos (REQ-PO-02) e POST /api/avaliacoes (AVAL-03). "Já
+  // existe um usuário com este CPF" diz a quem cadastra o que fazer a
+  // seguir; o 500 genérico que esta rota devolvia antes, não.
+  //
+  // Depois dos guards de propósito: quem não pode criar o tipo alvo leva 403
+  // acima e nunca usa esta rota para descobrir se um CPF está cadastrado
+  // (AD-029).
+  const usuarioExistente = await prisma.usuario.findUnique({
+    where: { cpf: dados.cpf },
+  });
+
+  if (usuarioExistente) {
+    return NextResponse.json(
+      { erro: "Já existe um usuário com este CPF" },
+      { status: 409 },
+    );
+  }
+
   // Usuário, verba e matrícula são um passo só: um erro no meio não pode deixar uma
   // verba órfã nem um GO sem orçamento (mesmo motivo da transação do
   // auto-cadastro em POST /api/ofertantes).
   //
-  // CPF duplicado (violação de unicidade, `cpf` é @id) lança uma exceção do
-  // Prisma não tratada aqui de propósito - `comTratamentoDeErro` (REQ-SEC-11)
-  // é quem a converte num 500 genérico com id de correlação, nunca o erro
-  // cru do Prisma no corpo da resposta. Dentro da transação, ela também
-  // desfaz a verba que porventura já tenha sido criada.
+  // A checagem acima não elimina a corrida entre duas requisições simultâneas
+  // com o mesmo CPF: a segunda ainda estoura na unicidade dentro da
+  // transação, e aí `comTratamentoDeErro` (REQ-SEC-11) a converte num 500
+  // genérico com id de correlação - nunca o erro cru do Prisma no corpo. A
+  // transação também desfaz a verba que porventura já tenha sido criada.
   const { usuario, verba, avaliacao } = await prisma.$transaction(async (tx) => {
     const usuarioCriado = await tx.usuario.create({
       data: {

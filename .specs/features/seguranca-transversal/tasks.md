@@ -429,6 +429,8 @@ Nota: os 2 testes pré-existentes deste arquivo (que só enviam o cookie de sess
 - [x] e2e: POST sem token CSRF válido é rejeitado com 403, nenhum usuário criado
 - [x] integration/e2e: POST com CPF já existente (violação de unicidade no banco, hoje não tratada) devolve o erro genérico + `idCorrelacao` de `comTratamentoDeErro`, nunca o erro cru do Prisma - prova concreta de REQ-SEC-11 usando um caminho de exceção real já existente na base
 
+Nota (posterior a esta feature): a violação de unicidade do CPF deixou de ser "não tratada" - `POST /api/usuarios` passou a checá-la explicitamente e a responder **409** com mensagem acionável, como já faziam `pos-cursos` (REQ-PO-02) e `avaliacoes` (AVAL-03). O e2e citado acima virou a asserção de 409 e mantém a metade de segurança (corpo nunca carrega o erro cru do Prisma). REQ-SEC-11 segue coberto: `comTratamentoDeErro` continua montado na rota (a corrida entre dois POSTs simultâneos com o mesmo CPF ainda cai nele) e o 500 genérico + `idCorrelacao` é provado diretamente em `src/lib/errors/api-error.test.ts`.
+
 Nota: 3 testes pré-existentes deste arquivo (CA-AU-05, REQ-AU-08, "sem sessão válida") agora falham com 403 - mesma regressão documentada em T13/T14, diferida para T18-T20. Um 4º teste pré-existente (CA-AU-06, que já esperava 403 por outro motivo - permissão negada) continua "passando", mas agora por interceptação do CSRF antes da checagem de permissão - anotado para quando T20 atualizar este arquivo, não é uma falha nova.
 
 **Tests**: e2e
