@@ -10,6 +10,7 @@
 // (ver design.md, "A tabela de navegação"), derivado do escopo já
 // implementado nas telas.
 import { TipoUsuario } from "../../generated/prisma/enums";
+import { podeCriar } from "../auth/cascata";
 
 export interface ItemNavegacao {
   rotulo: string;
@@ -24,6 +25,7 @@ export interface Modulo {
 
 const PAINEL: ItemNavegacao = { rotulo: "Painel", href: "/painel" };
 const NOVO_USUARIO: ItemNavegacao = { rotulo: "Novo usuário", href: "/usuarios/novo" };
+const CADASTRAR_ALUNO: ItemNavegacao = { rotulo: "Cadastrar aluno", href: "/alunos/novo" };
 const PRE_CURSOS: ItemNavegacao = { rotulo: "Pré-cursos", href: "/pre-cursos" };
 const POS_CURSOS: ItemNavegacao = { rotulo: "Pós-cursos", href: "/pos-cursos" };
 const AVALIACOES: ItemNavegacao = { rotulo: "Avaliações", href: "/avaliacoes" };
@@ -32,18 +34,36 @@ const MINHA_AVALIACAO: ItemNavegacao = { rotulo: "Minha avaliação", href: "/av
 
 const CURSOS = [PRE_CURSOS, POS_CURSOS, AVALIACOES];
 
+/**
+ * Itens do módulo "Gestão de usuários". "Cadastrar aluno" é um atalho para o
+ * caso mais frequente de `/usuarios/novo` e, por isso, não é uma lista à
+ * parte: aparece exatamente para quem a cascata (AD-009) deixa criar um AL -
+ * hoje AM e GO (`TIPOS_PERMITIDOS`). Escrever a lista à mão faria a tela
+ * divergir da regra no dia em que a cascata mudar; continua sendo
+ * conveniência de UI, e `POST /api/usuarios` reavalia `podeCriar` a cada
+ * request (AD-033).
+ */
+function gestaoDeUsuarios(tipo: TipoUsuario): Modulo {
+  return {
+    rotulo: "Gestão de usuários",
+    itens: podeCriar(tipo, TipoUsuario.AL)
+      ? [NOVO_USUARIO, CADASTRAR_ALUNO]
+      : [NOVO_USUARIO],
+  };
+}
+
 // "Ofertantes", "Verbas" e "Relatórios" só existem como API, ou nem isso:
 // ficam listados no painel com o texto de hoje e não viram link.
 export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
   [TipoUsuario.AM]: [
-    { rotulo: "Gestão de usuários", itens: [NOVO_USUARIO] },
+    gestaoDeUsuarios(TipoUsuario.AM),
     { rotulo: "Ofertantes", itens: [] },
     { rotulo: "Verbas", itens: [] },
     { rotulo: "Cursos", itens: CURSOS },
     { rotulo: "Relatórios", itens: [] },
   ],
   [TipoUsuario.GT]: [
-    { rotulo: "Gestão de usuários", itens: [NOVO_USUARIO] },
+    gestaoDeUsuarios(TipoUsuario.GT),
     { rotulo: "Ofertantes", itens: [] },
     { rotulo: "Verbas", itens: [] },
     { rotulo: "Cursos", itens: CURSOS },
@@ -53,7 +73,7 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
     { rotulo: "Relatórios", itens: [] },
   ],
   [TipoUsuario.GO]: [
-    { rotulo: "Gestão de usuários", itens: [NOVO_USUARIO] },
+    gestaoDeUsuarios(TipoUsuario.GO),
     { rotulo: "Meus cursos", itens: CURSOS },
   ],
   [TipoUsuario.VO]: [{ rotulo: "Meus cursos", itens: CURSOS }],

@@ -61,11 +61,14 @@ O critério não é "o que o perfil vê no painel", é **"que página desse perf
 | --- | --- | :-: | :-: | :-: | :-: | :-: | :-: | --- |
 | Painel | `/painel` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `requireSession` só; landing de todo perfil |
 | Novo usuário | `/usuarios/novo` | ✅ | ✅ | — | ✅ | — | — | `TIPOS_PERMITIDOS` (`src/lib/auth/cascata.ts:7`): VT/VO/AL têm lista vazia — a tela abriria com um `select` sem opção |
+| Cadastrar aluno² | `/alunos/novo` | ✅ | — | — | ✅ | — | — | `podeCriar(tipo, AL)` (`src/lib/auth/cascata.ts`): só AM e GO criam Aluno — GT cria GT/VT/GO e cairia num formulário que a API nega |
 | Pré-cursos | `/pre-cursos` | ✅ | ✅ | ✅ | ✅ | ✅ | — | `pre-cursos/page.tsx:28` força `cdOfertante: -1` para AL → lista sempre vazia |
 | Pós-cursos | `/pos-cursos` | ✅ | ✅ | ✅ | ✅ | ✅ | — | `pos-cursos/page.tsx` idem, via `preCurso.cdOfertante` |
 | Avaliações¹ | `/avaliacoes` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `avaliacoes/page.tsx:26` dá ao AL o escopo pelo próprio CPF |
 
 ¹ Rótulo do item é **"Minha avaliação"** para AL e **"Avaliações"** para os demais — a mesma rota, nome diferente, porque para o AL ela nunca lista mais que a própria.
+
+² Único item **derivado de uma regra** em vez de escrito na tabela: `gestaoDeUsuarios(tipo)` inclui "Cadastrar aluno" exatamente quando `podeCriar(tipo, AL)`. A tela é um atalho para o caso mais frequente de `/usuarios/novo` (Aluno é de longe o perfil mais criado) e existe para que quem cadastra não precise saber que "Aluno" é um *tipo de usuário*; ela envia para a mesma `POST /api/usuarios`, com `tipo` fixo em `AL`. Escrever a lista à mão faria o menu divergir da cascata no dia em que ela mudar — por isso o teste unitário compara o item com `podeCriar`, não com uma lista literal.
 
 **Módulos sem tela** — "Ofertantes", "Verbas", "Relatórios" (só existem como API, ou nem isso) — continuam listados no `/painel` exatamente com o texto de hoje, e **não viram link**. Um link para 404 é pior que a ausência dele (assunção confirmada na spec).
 
@@ -103,7 +106,7 @@ O critério não é "o que o perfil vê no painel", é **"que página desse perf
   /** href do item ativo, ou null. Casa a rota-pai mais específica. */
   export function hrefAtivo(pathname: string, itens: ItemNavegacao[]): string | null;
   ```
-- **Dependencies**: `TipoUsuario` apenas.
+- **Dependencies**: `TipoUsuario` e `podeCriar` (`lib/auth/cascata.ts`, módulo puro sem Prisma — importável dos dois lados, como o próprio `NovoUsuarioForm` já faz).
 - **Reuses**: substitui o literal de `painel/page.tsx:10`, preservando os sete rótulos existentes ("Gestão de usuários", "Ofertantes", "Verbas", "Cursos", "Relatórios", "Meus cursos", "Minha avaliação").
 
 `hrefAtivo` resolve os dois casos que a spec exige: correspondência exata (UI-03) e **sub-rota casando com a rota-pai** (`/avaliacoes/novo` → `/avaliacoes`; `/pre-cursos/12` → `/pre-cursos`). Regra: um item casa quando `pathname === href` ou `pathname.startsWith(href + "/")`; havendo mais de um casamento, vence o `href` mais longo (garante que `/usuarios/novo` não seja ofuscado por um futuro `/usuarios`). Sem nenhum casamento, devolve `null` — nenhum item marcado, como o edge case pede.
@@ -169,7 +172,7 @@ O critério não é "o que o perfil vê no painel", é **"que página desse perf
 | Decision | Choice | Rationale |
 | --- | --- | --- |
 | Onde vive a lista de módulos | `src/lib/ui/navegacao.ts`, função pura | Uma lista só para painel e cabeçalho; duas divergiriam no primeiro módulo novo |
-| Forma da navegação | Barra horizontal no cabeçalho, links `flex-wrap` | Máximo de 5 itens por perfil (AM). Sidebar ou drawer custa JS e estado para um problema que não existe nesta escala; UI-07 proíbe depender de JS |
+| Forma da navegação | Barra horizontal no cabeçalho, links `flex-wrap` | Máximo de 6 itens por perfil (AM/GO). Sidebar ou drawer custa JS e estado para um problema que não existe nesta escala; UI-07 proíbe depender de JS |
 | Fronteira servidor/cliente | Casca no servidor; só `NavegacaoPerfil` e `BotaoSair` no cliente | `usePathname` e `fetch` exigem cliente; manter o resto no servidor evita mandar o objeto `usuario` inteiro para o bundle |
 | Sinal de item ativo | `aria-current="page"` | É o requisito literal de UI-03, é acessível, e dá ao e2e um seletor que não depende de classe de estilo |
 | Rótulo por perfil (AL) | `MODULOS_POR_PERFIL` carrega o `rotulo` já resolvido por perfil | "Minha avaliação" para AL preserva o vocabulário que o painel já usa hoje |

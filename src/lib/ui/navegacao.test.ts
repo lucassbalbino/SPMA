@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TipoUsuario } from "../../generated/prisma/enums";
+import { podeCriar } from "../auth/cascata";
 import {
   hrefAtivo,
   modulosDoPerfil,
@@ -10,10 +11,24 @@ import {
 // Tabela esperada escrita diretamente a partir de design.md ("A tabela de
 // navegação"), não lida do módulo sob teste.
 const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
-  AM: ["/painel", "/usuarios/novo", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
+  AM: [
+    "/painel",
+    "/usuarios/novo",
+    "/alunos/novo",
+    "/pre-cursos",
+    "/pos-cursos",
+    "/avaliacoes",
+  ],
   GT: ["/painel", "/usuarios/novo", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
   VT: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
-  GO: ["/painel", "/usuarios/novo", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
+  GO: [
+    "/painel",
+    "/usuarios/novo",
+    "/alunos/novo",
+    "/pre-cursos",
+    "/pos-cursos",
+    "/avaliacoes",
+  ],
   VO: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
   AL: ["/painel", "/avaliacoes"],
 };
@@ -33,6 +48,7 @@ const MODULOS_ESPERADOS: Record<TipoUsuario, string[]> = {
 const ROTAS_IMPLEMENTADAS = [
   "/painel",
   "/usuarios/novo",
+  "/alunos/novo",
   "/pre-cursos",
   "/pre-cursos/novo",
   "/pre-cursos/[id]",
@@ -68,6 +84,27 @@ describe("navegacaoDoPerfil", () => {
     expect(hrefsDe(TipoUsuario.VT)).not.toContain("/usuarios/novo");
     expect(hrefsDe(TipoUsuario.VO)).not.toContain("/usuarios/novo");
     expect(hrefsDe(TipoUsuario.AL)).not.toContain("/usuarios/novo");
+  });
+
+  // "Cadastrar aluno" é o único item derivado de uma regra em vez de escrito
+  // na tabela: quem pode criar um AL na cascata vê o atalho, quem não pode
+  // não vê. Asserção contra `podeCriar`, não contra a lista literal, para que
+  // uma mudança na cascata derrube o teste em vez de silenciosamente deixar
+  // um perfil sem a opção (ou com uma opção que a API nega).
+  it("'Cadastrar aluno' aparece exatamente para quem pode criar um AL", () => {
+    for (const tipo of TODOS_OS_TIPOS) {
+      const temItem = hrefsDe(tipo).includes("/alunos/novo");
+      expect(temItem).toBe(podeCriar(tipo, TipoUsuario.AL));
+    }
+  });
+
+  it("o rótulo de /alunos/novo é 'Cadastrar aluno'", () => {
+    expect(rotuloDe(TipoUsuario.AM, "/alunos/novo")).toBe("Cadastrar aluno");
+    expect(rotuloDe(TipoUsuario.GO, "/alunos/novo")).toBe("Cadastrar aluno");
+  });
+
+  it("GT não recebe /alunos/novo - a cascata não deixa GT criar AL", () => {
+    expect(hrefsDe(TipoUsuario.GT)).not.toContain("/alunos/novo");
   });
 
   it("o item de /avaliacoes se chama 'Minha avaliação' para AL", () => {

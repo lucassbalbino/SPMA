@@ -17,6 +17,7 @@
 // também vem daqui, no mesmo escopo de quem matricula (AVAL-05/06): o AM vê
 // os cursos de qualquer Ofertante, o GO só os do seu.
 import { podeGerenciarVerba, requireSession } from "@/lib/auth/guards";
+import { cursosMatriculaveis } from "@/lib/pre-curso/cursos-matriculaveis";
 import { prisma } from "@/lib/db/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NovoUsuarioForm } from "./NovoUsuarioForm";
@@ -32,22 +33,9 @@ export default async function NovoUsuarioPage() {
       })
     : [];
 
-  // Mesmo escopo de `podeMatricularAluno`, escrito como filtro que o banco
-  // entende - o servidor reavalia o curso escolhido em POST /api/usuarios
-  // (AD-033). AM não tem cdOfertante (AD-012), então vê os cursos de todos.
-  const cursos =
-    usuario.tipo === "AM"
-      ? await prisma.preCurso.findMany({
-          orderBy: { cdCurso: "asc" },
-          select: { cdCurso: true },
-        })
-      : usuario.tipo === "GO" && usuario.cdOfertante !== null
-        ? await prisma.preCurso.findMany({
-            where: { cdOfertante: usuario.cdOfertante },
-            orderBy: { cdCurso: "asc" },
-            select: { cdCurso: true },
-          })
-        : [];
+  // Mesmo escopo de `podeMatricularAluno`, compartilhado com /alunos/novo -
+  // o servidor reavalia o curso escolhido em POST /api/usuarios (AD-033).
+  const cdCursosDisponiveis = await cursosMatriculaveis(usuario);
 
   return (
     <>
@@ -60,7 +48,7 @@ export default async function NovoUsuarioPage() {
             tipoCriador={usuario.tipo}
             escolheOfertante={escolheOfertante}
             ofertantes={ofertantes}
-            cdCursosDisponiveis={cursos.map((curso) => curso.cdCurso)}
+            cdCursosDisponiveis={cdCursosDisponiveis}
           />
         </CardContent>
       </Card>
