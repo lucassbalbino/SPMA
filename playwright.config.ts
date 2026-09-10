@@ -41,6 +41,14 @@ export default defineConfig({
     // para `.env.test`) seria adotado silenciosamente pela suíte, e as
     // fixtures destrutivas dos specs apagariam dados de dev. Quem liga a
     // flag é quem subiu o servidor e sabe qual banco ele está usando.
+    //
+    // LIMITE MEDIDO: com um `dev:test` de vida longa, os specs de UI
+    // pesada (`pre-cursos-formulario`, `pos-cursos-formulario`) dão falso
+    // negativo intermitente em clique de checkbox/radio. Reproduzido com e
+    // sem mudança de produção, isolado e em conjunto, e 100% verde com
+    // servidor fresco do Playwright. Use a flag para specs de API, não
+    // para specs de formulário - e nunca num gate que precise valer como
+    // evidência final.
     reuseExistingServer: !!process.env.E2E_REUSE_SERVER,
     // Bumped from 60s after Batch 3 saw one flaky boot right at the
     // threshold (passed on immediate retry, nothing else held the port).
