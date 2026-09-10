@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { podeAcessarOfertante, podeGerenciarPosCurso, requireSession } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
 import type { RespostasPosCursoParcial } from "@/lib/validation/schemas/pos-curso.schema";
+import { lerRespostas } from "@/lib/respostas/repositorio";
 import { PosCursoForm } from "./PosCursoForm";
 
 type Props = { params: Promise<{ cdCurso: string }> };
@@ -33,12 +34,17 @@ export default async function PosCursoPage({ params }: Props) {
     posCurso.status === "EM_ANDAMENTO" &&
     podeGerenciarPosCurso(usuario, posCurso.preCurso.cdOfertante);
 
+  const respostasIniciais = (await lerRespostas(prisma, {
+    formulario: "posCurso",
+    cdCurso: posCurso.cdCurso,
+  })) as RespostasPosCursoParcial;
+
   return (
     <>
       <PosCursoForm
         cdCurso={posCurso.cdCurso}
         status={posCurso.status}
-        respostasIniciais={(posCurso.respostas as RespostasPosCursoParcial | null) ?? {}}
+        respostasIniciais={respostasIniciais}
         podeEditar={podeEditar}
       />
     </>

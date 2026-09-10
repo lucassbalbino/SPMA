@@ -376,7 +376,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T11: Tela do Pós-Curso lê pelo repositório
+### T11: Tela do Pós-Curso lê pelo repositório ✅
 
 **What**: mesma troca da T8, no Server Component do pós-curso.
 **Where**: `src/app/(protegido)/pos-cursos/[cdCurso]/page.tsx`
@@ -391,9 +391,9 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Prop do formulário idêntica; componente cliente intocado
-- [ ] e2e da tela passa sem alterar asserção
-- [ ] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Prop do formulário idêntica; componente cliente intocado
+- [x] e2e da tela passa sem alterar asserção
+- [x] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` (0 erros de lint, build ok, typecheck ok, 580 unit, 49 integration, 244 e2e em 23.2min)
 
 **Tests**: e2e
 **Gate**: build
