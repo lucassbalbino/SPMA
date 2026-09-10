@@ -140,7 +140,7 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 | RESP-04 | P1: Resposta como entidade | Execute | Done (T3) |
 | RESP-05 | P1: Resposta como entidade | Execute | Done (T2) |
 | RESP-06 | P1: Resposta como entidade | Execute | Done (T2) |
-| RESP-07 | P1: Sem regressão | Execute | Em progresso (T7, T8, T11) |
+| RESP-07 | P1: Sem regressão | Execute | Em progresso (T7, T8, T11, T13, T14) |
 | RESP-08 | P1: Sem regressão | Execute | Done (T3, T7, T10, T13) |
 | RESP-09 | P1: Sem regressão | Execute | Done (T6, T9, T12) |
 | RESP-10 | P1: Sem regressão | Execute | Done (T12) |

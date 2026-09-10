@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
 import type { RespostasAvaliacaoParcial } from "@/lib/validation/schemas/avaliacao.schema";
+import { lerRespostas } from "@/lib/respostas/repositorio";
 import { AvaliacaoForm } from "./AvaliacaoForm";
 
 type Props = { params: Promise<{ cpf: string; cdCurso: string }> };
@@ -43,6 +44,12 @@ export default async function AvaliacaoPage({ params }: Props) {
   const podeEditar =
     avaliacao.status === "EM_ANDAMENTO" && podeGerenciarAvaliacao(usuario, avaliacao.cpf);
 
+  const respostasIniciais = (await lerRespostas(prisma, {
+    formulario: "avaliacao",
+    cpf: avaliacao.cpf,
+    cdCurso: avaliacao.cdCurso,
+  })) as RespostasAvaliacaoParcial;
+
   return (
     <>
       <AvaliacaoForm
@@ -50,7 +57,7 @@ export default async function AvaliacaoPage({ params }: Props) {
         cdCurso={avaliacao.cdCurso}
         status={avaliacao.status}
         parte1CompletaInicial={avaliacao.parte1Completa}
-        respostasIniciais={(avaliacao.respostas as RespostasAvaliacaoParcial | null) ?? {}}
+        respostasIniciais={respostasIniciais}
         podeEditar={podeEditar}
       />
     </>

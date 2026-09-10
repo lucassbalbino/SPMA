@@ -456,7 +456,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T14: Tela da Avaliação lê pelo repositório
+### T14: Tela da Avaliação lê pelo repositório ✅
 
 **What**: mesma troca da T8, no Server Component da avaliação.
 **Where**: `src/app/(protegido)/avaliacoes/[cpf]/[cdCurso]/page.tsx`
@@ -471,9 +471,9 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Prop do formulário idêntica; componente cliente intocado
-- [ ] e2e da tela passa sem alterar asserção
-- [ ] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Prop do formulário idêntica; componente cliente intocado
+- [x] e2e da tela passa sem alterar asserção
+- [x] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` (0 erros de lint, build ok, typecheck ok, 580 unit, 49 integration, 244 e2e em 20.7min)
 
 **Tests**: e2e
 **Gate**: build
