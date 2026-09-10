@@ -297,7 +297,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T8: Tela do Pré-Curso lê pelo repositório
+### T8: Tela do Pré-Curso lê pelo repositório ✅
 
 **What**: o Server Component da tela passa a montar as respostas iniciais do formulário pelo repositório.
 **Where**: `src/app/(protegido)/pre-cursos/[id]/page.tsx`
@@ -312,9 +312,9 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] O formulário React recebe exatamente a mesma prop de hoje, sem alteração no componente cliente
-- [ ] e2e que abre a tela e confere valores já preenchidos passa sem alterar asserção
-- [ ] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] O formulário React recebe exatamente a mesma prop de hoje, sem alteração no componente cliente
+- [x] e2e que abre a tela e confere valores já preenchidos passa sem alterar asserção
+- [x] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` (0 erros de lint, build ok, typecheck ok, 580 unit, 49 integration, 244 e2e em 21.7min)
 
 **Tests**: e2e
 **Gate**: build

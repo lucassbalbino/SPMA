@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import { podeAcessarOfertante, podeGerenciarPreCurso, requireSession } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
 import type { RespostasPreCursoParcial } from "@/lib/validation/schemas/pre-curso.schema";
+import { lerRespostas } from "@/lib/respostas/repositorio";
 import { PreCursoForm } from "./PreCursoForm";
 
 type Props = { params: Promise<{ id: string }> };
@@ -32,12 +33,17 @@ export default async function PreCursoPage({ params }: Props) {
     preCurso.status === "EM_ANDAMENTO" &&
     podeGerenciarPreCurso(usuario, preCurso.cdOfertante);
 
+  const respostasIniciais = (await lerRespostas(prisma, {
+    formulario: "preCurso",
+    cdCurso: preCurso.cdCurso,
+  })) as RespostasPreCursoParcial;
+
   return (
     <>
       <PreCursoForm
         cdCurso={preCurso.cdCurso}
         status={preCurso.status}
-        respostasIniciais={(preCurso.respostas as RespostasPreCursoParcial | null) ?? {}}
+        respostasIniciais={respostasIniciais}
         podeEditar={podeEditar}
       />
     </>
