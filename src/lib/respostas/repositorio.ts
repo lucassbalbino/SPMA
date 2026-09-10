@@ -1,0 +1,281 @@
+// Repositório de respostas (RESP-01, RESP-03, RESP-04, RESP-19, RESP-21).
+//
+// Traduz entre o objeto `{ chave: valor }` que o domínio usa - completude,
+// condicionais, schemas Zod e formulários React continuam vendo exatamente
+// o mesmo objeto de sempre - e as linhas que o banco guarda.
+//
+// SPEC_DEVIATION: `design.md` esboça as assinaturas como
+// `(tx, formulario, id)`. Aqui `formulario` e `id` viajam juntos num único
+// `alvo` discriminado, porque a chave-pai da avaliação é composta e separar
+// os dois parâmetros exigiria sobrecarga em cada uma das três funções sem
+// nenhum ganho de expressividade.
+// Reason: mesma informação, menos superfície e tipagem exata por formulário.
+import { Prisma } from "../../generated/prisma/client";
+import { respostasAvaliacaoSchema } from "../validation/schemas/avaliacao.schema";
+import { respostasPosCursoSchema } from "../validation/schemas/pos-curso.schema";
+import { respostasPreCursoSchema } from "../validation/schemas/pre-curso.schema";
+import { classificarChave, desserializar, serializar } from "./forma";
+
+/** Aceita tanto o client normal quanto o client de dentro de `$transaction`. */
+export type ClienteRespostas = Prisma.TransactionClient;
+
+export type AlvoRespostas =
+  | { formulario: "preCurso"; cdCurso: number }
+  | { formulario: "posCurso"; cdCurso: number }
+  | { formulario: "avaliacao"; cpf: string; cdCurso: number };
+
+export type Respostas = Record<string, unknown>;
+
+const SCHEMAS = {
+  preCurso: respostasPreCursoSchema,
+  posCurso: respostasPosCursoSchema,
+  avaliacao: respostasAvaliacaoSchema,
+} as const;
+
+type LinhaResposta = { chave: string; ordem: number; valor: string };
+
+/** Filtro das linhas de um único registro de formulário. */
+function filtroDoPai(alvo: AlvoRespostas) {
+  return alvo.formulario === "avaliacao"
+    ? { cpf: alvo.cpf, cdCurso: alvo.cdCurso }
+    : { cdCurso: alvo.cdCurso };
+}
+
+async function buscarLinhas(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+): Promise<LinhaResposta[]> {
+  const orderBy = [{ chave: "asc" }, { ordem: "asc" }] as const;
+
+  if (alvo.formulario === "preCurso") {
+    return tx.respostaPreCurso.findMany({
+      where: { cdCurso: alvo.cdCurso },
+      orderBy: [...orderBy],
+    });
+  }
+
+  if (alvo.formulario === "posCurso") {
+    return tx.respostaPosCurso.findMany({
+      where: { cdCurso: alvo.cdCurso },
+      orderBy: [...orderBy],
+    });
+  }
+
+  return tx.respostaAvaliacao.findMany({
+    where: { cpf: alvo.cpf, cdCurso: alvo.cdCurso },
+    orderBy: [...orderBy],
+  });
+}
+
+async function apagarLinhas(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+  chaves: string[],
+): Promise<void> {
+  if (chaves.length === 0) return;
+
+  if (alvo.formulario === "preCurso") {
+    await tx.respostaPreCurso.deleteMany({
+      where: { cdCurso: alvo.cdCurso, chave: { in: chaves } },
+    });
+    return;
+  }
+
+  if (alvo.formulario === "posCurso") {
+    await tx.respostaPosCurso.deleteMany({
+      where: { cdCurso: alvo.cdCurso, chave: { in: chaves } },
+    });
+    return;
+  }
+
+  await tx.respostaAvaliacao.deleteMany({
+    where: { cpf: alvo.cpf, cdCurso: alvo.cdCurso, chave: { in: chaves } },
+  });
+}
+
+async function inserirLinhas(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+  linhas: LinhaResposta[],
+): Promise<void> {
+  if (linhas.length === 0) return;
+
+  const pai = filtroDoPai(alvo);
+  const dados = linhas.map((linha) => ({ ...pai, ...linha }));
+
+  if (alvo.formulario === "preCurso") {
+    await tx.respostaPreCurso.createMany({
+      data: dados as Prisma.RespostaPreCursoCreateManyInput[],
+    });
+    return;
+  }
+
+  if (alvo.formulario === "posCurso") {
+    await tx.respostaPosCurso.createMany({
+      data: dados as Prisma.RespostaPosCursoCreateManyInput[],
+    });
+    return;
+  }
+
+  await tx.respostaAvaliacao.createMany({
+    data: dados as Prisma.RespostaAvaliacaoCreateManyInput[],
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ESPELHO TRANSITÓRIO DA COLUNA JSON
+//
+// Enquanto `Respostas Json?` existir, toda escrita de linha também
+// atualiza a coluna: as rotas e as telas ainda leem o JSON, e as duas
+// representações precisam ficar em sincronia até a última delas migrar.
+// A T15 (`refactor(respostas): parar de espelhar a coluna JSON`) remove
+// estas três funções e a chamada delas; a T16 dropa a coluna.
+// ─────────────────────────────────────────────────────────────
+
+async function lerJsonEspelhado(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+): Promise<Respostas> {
+  const registro =
+    alvo.formulario === "preCurso"
+      ? await tx.preCurso.findUnique({
+          where: { cdCurso: alvo.cdCurso },
+          select: { respostas: true },
+        })
+      : alvo.formulario === "posCurso"
+        ? await tx.posCurso.findUnique({
+            where: { cdCurso: alvo.cdCurso },
+            select: { respostas: true },
+          })
+        : await tx.avaliacaoAluno.findUnique({
+            where: { cpf_cdCurso: { cpf: alvo.cpf, cdCurso: alvo.cdCurso } },
+            select: { respostas: true },
+          });
+
+  return (registro?.respostas as Respostas | null) ?? {};
+}
+
+async function gravarJsonEspelhado(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+  respostas: Respostas,
+): Promise<void> {
+  // O tipo do domínio é `Record<string, unknown>`; o Prisma exige o tipo
+  // dele para coluna JSON. Mesma conversão que as rotas já fazem hoje.
+  const json = respostas as Prisma.InputJsonValue;
+
+  if (alvo.formulario === "preCurso") {
+    await tx.preCurso.update({
+      where: { cdCurso: alvo.cdCurso },
+      data: { respostas: json },
+    });
+    return;
+  }
+
+  if (alvo.formulario === "posCurso") {
+    await tx.posCurso.update({
+      where: { cdCurso: alvo.cdCurso },
+      data: { respostas: json },
+    });
+    return;
+  }
+
+  await tx.avaliacaoAluno.update({
+    where: { cpf_cdCurso: { cpf: alvo.cpf, cdCurso: alvo.cdCurso } },
+    data: { respostas: json },
+  });
+}
+
+async function espelharJson(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+  aplicar: (atual: Respostas) => Respostas,
+): Promise<void> {
+  await gravarJsonEspelhado(tx, alvo, aplicar(await lerJsonEspelhado(tx, alvo)));
+}
+
+// ─────────────────────────────────────────────────────────────
+// API do repositório
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Remonta o objeto de respostas a partir das linhas. Registro sem nenhuma
+ * linha devolve `{}` (RESP-16). O tipo de cada valor vem da forma do schema
+ * Zod; chave que o schema atual não conhece volta como texto (RESP-14).
+ */
+export async function lerRespostas(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+): Promise<Respostas> {
+  const linhas = await buscarLinhas(tx, alvo);
+  const itensPorChave = new Map<string, string[]>();
+
+  for (const linha of linhas) {
+    const itens = itensPorChave.get(linha.chave);
+    if (itens) {
+      itens.push(linha.valor);
+    } else {
+      itensPorChave.set(linha.chave, [linha.valor]);
+    }
+  }
+
+  const schema = SCHEMAS[alvo.formulario];
+  const respostas: Respostas = {};
+
+  for (const [chave, itens] of itensPorChave) {
+    respostas[chave] = desserializar(itens, classificarChave(schema, chave));
+  }
+
+  return respostas;
+}
+
+/**
+ * Merge raso por chave (RESP-03): apaga as linhas das chaves presentes no
+ * patch e insere as novas. É isso que faz uma lista que encolhe perder as
+ * opções que saíram (RESP-04) e uma regravação idêntica manter uma linha só
+ * (RESP-19). Chamar dentro de `$transaction` para que nada fique
+ * meio-gravado (RESP-21).
+ */
+export async function gravarRespostas(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+  patch: Respostas,
+): Promise<void> {
+  const chaves = Object.keys(patch);
+
+  if (chaves.length === 0) return;
+
+  const linhas: LinhaResposta[] = [];
+
+  for (const chave of chaves) {
+    const valor = patch[chave];
+    if (valor === undefined || valor === null) continue;
+
+    serializar(valor).forEach((item, ordem) => {
+      linhas.push({ chave, ordem, valor: item });
+    });
+  }
+
+  await apagarLinhas(tx, alvo, chaves);
+  await inserirLinhas(tx, alvo, linhas);
+  await espelharJson(tx, alvo, (atual) => ({ ...atual, ...patch }));
+}
+
+/**
+ * Remove as chaves informadas. Usado pelo encerramento para descartar a
+ * resposta condicional que não se aplica (AD-038, RESP-08).
+ */
+export async function apagarRespostas(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+  chaves: string[],
+): Promise<void> {
+  if (chaves.length === 0) return;
+
+  await apagarLinhas(tx, alvo, chaves);
+  await espelharJson(tx, alvo, (atual) => {
+    const restante = { ...atual };
+    for (const chave of chaves) delete restante[chave];
+    return restante;
+  });
+}

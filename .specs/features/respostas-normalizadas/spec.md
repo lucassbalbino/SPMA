@@ -134,14 +134,14 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| RESP-01 | P1: Resposta como entidade | Design | Pending |
+| RESP-01 | P1: Resposta como entidade | Execute | Em progresso (T3) |
 | RESP-02 | P1: Resposta como entidade | Execute | Done (T1) |
-| RESP-03 | P1: Resposta como entidade | Design | Pending |
-| RESP-04 | P1: Resposta como entidade | Design | Pending |
+| RESP-03 | P1: Resposta como entidade | Execute | Em progresso (T3) |
+| RESP-04 | P1: Resposta como entidade | Execute | Done (T3) |
 | RESP-05 | P1: Resposta como entidade | Execute | Done (T2) |
 | RESP-06 | P1: Resposta como entidade | Execute | Done (T2) |
 | RESP-07 | P1: Sem regressão | Design | Pending |
-| RESP-08 | P1: Sem regressão | Design | Pending |
+| RESP-08 | P1: Sem regressão | Execute | Em progresso (T3) |
 | RESP-09 | P1: Sem regressão | Design | Pending |
 | RESP-10 | P1: Sem regressão | Design | Pending |
 | RESP-11 | P1: Sem regressão | Design | Pending |
@@ -149,12 +149,12 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 | RESP-13 | P1: Migração | Design | Pending |
 | RESP-14 | P1: Migração | Execute | Em progresso (T1) |
 | RESP-15 | P1: Migração | Design | Pending |
-| RESP-16 | P1: Migração | Design | Pending |
+| RESP-16 | P1: Migração | Execute | Em progresso (T3) |
 | RESP-17 | P1: Agregação | Design | Pending |
 | RESP-18 | P1: Agregação | Execute | Em progresso (T2) |
-| RESP-19 | Edge case | Design | Pending |
+| RESP-19 | Edge case | Execute | Done (T3) |
 | RESP-20 | Edge case | Design | Pending |
-| RESP-21 | Edge case | Design | Pending |
+| RESP-21 | Edge case | Execute | Done (T3) |
 
 **Coverage:** 21 total, 21 a mapear em tasks no Design, 0 unmapped.
 

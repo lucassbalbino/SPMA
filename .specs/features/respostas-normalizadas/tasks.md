@@ -143,7 +143,7 @@ T14 → T15 → T16 → T17 → T18
 
 ---
 
-### T3: Repositório de respostas
+### T3: Repositório de respostas ✅
 
 **What**: ler, gravar e apagar respostas em linhas, expondo para o resto do sistema o mesmo objeto `{ chave: valor }` de hoje; espelha a escrita na coluna JSON enquanto ela existir.
 **Where**: `src/lib/respostas/repositorio.ts`
@@ -158,15 +158,15 @@ T14 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] `lerRespostas` remonta o objeto; registro sem linhas devolve `{}` (RESP-16)
-- [ ] `gravarRespostas` faz merge raso por chave: apaga as linhas das chaves do patch e insere as novas, tudo em uma transação (RESP-03, RESP-21)
-- [ ] Chave de lista que encolhe perde as linhas das opções que saíram (RESP-04)
-- [ ] Regravar a mesma chave com o mesmo valor mantém uma única linha (RESP-19)
-- [ ] `apagarRespostas` remove as chaves informadas, para o encerramento usar (RESP-08)
-- [ ] Espelho do JSON documentado em comentário como transitório, com referência à T15 que o remove
-- [ ] Teste de integração cobre: leitura vazia, gravação escalar, gravação de lista, lista que encolhe, regravação idempotente, e isolamento entre dois registros diferentes
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
-- [ ] Test count: 27 de integração + novos, nenhum apagado
+- [x] `lerRespostas` remonta o objeto; registro sem linhas devolve `{}` (RESP-16)
+- [x] `gravarRespostas` faz merge raso por chave: apaga as linhas das chaves do patch e insere as novas, tudo em uma transação (RESP-03, RESP-21)
+- [x] Chave de lista que encolhe perde as linhas das opções que saíram (RESP-04)
+- [x] Regravar a mesma chave com o mesmo valor mantém uma única linha (RESP-19)
+- [x] `apagarRespostas` remove as chaves informadas, para o encerramento usar (RESP-08)
+- [x] Espelho do JSON documentado em comentário como transitório, com referência à T15 que o remove
+- [x] Teste de integração cobre: leitura vazia, gravação escalar, gravação de lista, lista que encolhe, regravação idempotente, e isolamento entre dois registros diferentes
+- [x] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e` (580 unit, 41 integration, 244 e2e)
+- [x] Test count: 27 de integração + novos, nenhum apagado (41 de integração)
 
 **Tests**: integration
 **Gate**: full
