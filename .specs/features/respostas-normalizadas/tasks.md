@@ -323,7 +323,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T9: PATCH do Pós-Curso lê e grava por linhas
+### T9: PATCH do Pós-Curso lê e grava por linhas ✅
 
 **What**: mesma troca da T6, na rota de gravação parcial do pós-curso.
 **Where**: `src/app/api/pos-cursos/[cdCurso]/route.ts`
@@ -338,10 +338,10 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Merge raso, 409 de encerrado e 400 de Zod com o mesmo comportamento de hoje
-- [ ] Validação de ordem das datas reais continua sobre o estado mesclado
-- [ ] e2e de `pos-cursos-id`/`pos-cursos-formulario` passam sem alterar asserção
-- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
+- [x] Merge raso, 409 de encerrado e 400 de Zod com o mesmo comportamento de hoje
+- [x] Validação de ordem das datas reais continua sobre o estado mesclado
+- [x] e2e de `pos-cursos-id`/`pos-cursos-formulario` passam sem alterar asserção
+- [x] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` (580 unit, 49 integration) + `npm run test:e2e -- e2e/pos-cursos-id.spec.ts e2e/pos-cursos-formulario.spec.ts` (16/16, servidor fresco do Playwright - ver nota de T6 sobre flakiness do `E2E_REUSE_SERVER` em specs de UI)
 
 **Tests**: e2e
 **Gate**: alvo

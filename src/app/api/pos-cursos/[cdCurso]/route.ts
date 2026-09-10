@@ -11,6 +11,7 @@ import {
 } from "@/lib/validation/schemas/pos-curso.schema";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { gravarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ cdCurso: string }> };
 
@@ -99,9 +100,11 @@ async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
     );
   }
 
-  // REQ-PO-04: merge raso em memória - só as chaves enviadas são alteradas.
-  const respostasAtuais =
-    (posCursoExistente.respostas as Record<string, unknown> | null) ?? {};
+  const alvo = { formulario: "posCurso" as const, cdCurso };
+
+  // REQ-PO-04: merge raso - só as chaves enviadas são alteradas (RESP-01,
+  // RESP-03).
+  const respostasAtuais = await lerRespostas(prisma, alvo);
   const respostasMescladas = { ...respostasAtuais, ...entrada.data };
 
   // REQ-PO-06: a validação roda contra o estado MESCLADO, não só o corpo do
@@ -114,9 +117,9 @@ async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
     );
   }
 
-  const posCurso = await prisma.posCurso.update({
-    where: { cdCurso },
-    data: { respostas: respostasMescladas },
+  const posCurso = await prisma.$transaction(async (tx) => {
+    await gravarRespostas(tx, alvo, entrada.data);
+    return tx.posCurso.findUniqueOrThrow({ where: { cdCurso } });
   });
 
   return NextResponse.json({ posCurso });
