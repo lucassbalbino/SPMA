@@ -10,6 +10,13 @@ import { PrismaClient } from "../src/generated/prisma/client";
 loadEnv({ path: ".env.test" });
 
 const DOMAIN_TABLES = [
+  // Respostas normalizadas: `TRUNCATE` do pai roda com FOREIGN_KEY_CHECKS=0
+  // e não dispara o CASCADE, e também zera o AUTO_INCREMENT do pai. Sem
+  // truncar estas três, a rodada seguinte reusa os mesmos CD_Curso e bate na
+  // unicidade de (registro, chave, ordem) com linha de uma rodada anterior.
+  "TB_Resposta_Avaliacao",
+  "TB_Resposta_Pos_Curso",
+  "TB_Resposta_Pre_Curso",
   "TB_Avaliacao_Aluno",
   "TB_Pos_Curso",
   "TB_Pre_Curso",

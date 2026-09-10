@@ -78,8 +78,10 @@ T11 → T12 → T13 → T14
 
 ### Phase 6: Contração e fechamento
 
+A T19 vem antes da T15 de propósito: enquanto o espelho ainda está ligado, linhas e coluna concordam, então trocar a leitura dos helpers é comportamentalmente neutro e a suíte segue verde. Só depois o espelho pode ser desligado.
+
 ```
-T14 → T15 → T16 → T17 → T18
+T14 → T19 → T15 → T16 → T17 → T18
 ```
 
 ---
@@ -205,7 +207,7 @@ T14 → T15 → T16 → T17 → T18
 
 ---
 
-### T5: Fixtures e2e semeiam pelo repositório
+### T5: Fixtures e2e semeiam pelo repositório ✅
 
 **What**: os helpers que semeiam respostas passam a gravar pelo repositório, mantendo a mesma assinatura de objeto para os specs que os chamam.
 **Where**: `e2e/helpers/db.ts`
@@ -220,11 +222,12 @@ T14 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Os helpers continuam recebendo o mesmo objeto de respostas - nenhum dos 11 specs que os chamam muda
-- [ ] Linhas e coluna JSON ficam em sincronia (o repositório espelha, T3)
-- [ ] Nenhuma asserção de teste existente foi alterada ou afrouxada
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
-- [ ] Test count: 244 e2e, todos passando
+- [x] Os helpers continuam recebendo o mesmo objeto de respostas - nenhum dos 11 specs que os chamam muda
+- [x] Linhas e coluna JSON ficam em sincronia (o repositório espelha, T3)
+- [x] Nenhuma asserção de teste existente foi alterada ou afrouxada
+- [x] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e` (580 unit, 49 integration, 244 e2e)
+- [x] Test count: 244 e2e, todos passando
+- [x] `scripts/db-test-reset.ts` trunca as três tabelas novas: `TRUNCATE` do pai roda com `FOREIGN_KEY_CHECKS=0`, não dispara CASCADE e zera o AUTO_INCREMENT, então sem isso a rodada seguinte reusa `CD_Curso` e colide na unicidade
 
 **Tests**: none
 **Gate**: full
@@ -476,11 +479,39 @@ T14 → T15 → T16 → T17 → T18
 
 ---
 
+### T19: Helpers de leitura e2e remontam respostas por linha
+
+**What**: as funções de leitura usadas pelas fixtures (`getPreCurso`, `getPosCurso`, `getAvaliacao`) passam a montar o campo `respostas` a partir das linhas, em vez de devolver a coluna JSON.
+**Where**: `scripts/e2e-fixture.ts`
+**Depends on**: T14
+**Reuses**: `lerRespostas` de `src/lib/respostas/repositorio.ts`
+**Requirement**: RESP-07
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] `getPreCurso`, `getPosCurso` e `getAvaliacao` montam `respostas` por `lerRespostas`, sem ler a coluna JSON
+- [ ] Executada **antes** da T15 de propósito: com o espelho ainda ligado, linhas e coluna concordam, então a troca é comportamentalmente neutra e a suíte segue verde
+- [ ] Nenhuma asserção de teste existente alterada - em especial as de `pre-cursos-encerrar.spec.ts` (`expect(respostas).not.toHaveProperty(...)`), que provam o descarte de condicional órfã lendo este campo
+- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [ ] Test count: 244 e2e, todos passando
+
+**Tests**: none
+**Gate**: full
+
+**Commit**: `test(respostas): ler respostas por linha nos helpers e2e`
+
+---
+
 ### T15: Remover o espelho do JSON do repositório
 
 **What**: o repositório para de escrever na coluna `Respostas`; as linhas passam a ser a única fonte.
 **Where**: `src/lib/respostas/repositorio.ts`
-**Depends on**: T14
+**Depends on**: T19
 **Reuses**: -
 **Requirement**: RESP-01
 
@@ -595,12 +626,12 @@ Phase 2:  T4 ------→ T5
 Phase 3:  T6 ------→ T7 ------→ T8
 Phase 4:  T9 ------→ T10 -----→ T11
 Phase 5:  T12 -----→ T13 -----→ T14
-Phase 6:  T15 -----→ T16 -----→ T17 -----→ T18
+Phase 6:  T19 -----→ T15 -----→ T16 -----→ T17 -----→ T18
 ```
 
 Execução é estritamente sequencial - não há paralelismo dentro da fase.
 
-**Empacotamento previsto:** 18 tarefas, orçamento de ~7 por worker, cortando só em fronteira de fase → **3 batches** (Fases 1-2 = 5 tarefas; Fases 3-4 = 6 tarefas; Fases 5-6 = 7 tarefas). Como isso passa de um batch, o Execute **precisa** apresentar a oferta de sub-agentes antes de começar.
+**Empacotamento previsto:** 19 tarefas, orçamento de ~7 por worker, cortando só em fronteira de fase → **3 batches** (Fases 1-2 = 5 tarefas; Fases 3-4 = 6 tarefas; Fases 5-6 = 8 tarefas). Como isso passa de um batch, o Execute **precisa** apresentar a oferta de sub-agentes antes de começar.
 
 ---
 
@@ -616,6 +647,7 @@ Execução é estritamente sequencial - não há paralelismo dentro da fase.
 | T6/T9/T12: PATCH por formulário | 1 rota cada | ✅ Granular |
 | T7/T10/T13: Encerrar por formulário | 1 rota cada | ✅ Granular |
 | T8/T11/T14: Tela por formulário | 1 Server Component cada | ✅ Granular |
+| T19: Helpers de leitura e2e | 1 arquivo de fixture | ✅ Granular |
 | T15: Remover espelho | 1 módulo | ✅ Granular |
 | T16: Dropar coluna | 1 arquivo de schema | ✅ Granular |
 | T17: Prova de agregação | 1 arquivo de teste | ✅ Granular |
@@ -641,7 +673,8 @@ Execução é estritamente sequencial - não há paralelismo dentro da fase.
 | T12 | T11 | Fase 4 → Fase 5, início | ✅ Match |
 | T13 | T12 | T12 → T13 | ✅ Match |
 | T14 | T13 | T13 → T14 | ✅ Match |
-| T15 | T14 | Fase 5 → Fase 6, início | ✅ Match |
+| T19 | T14 | Fase 5 → Fase 6, início | ✅ Match |
+| T15 | T19 | T19 → T15 | ✅ Match |
 | T16 | T15 | T15 → T16 | ✅ Match |
 | T17 | T16 | T16 → T17 | ✅ Match |
 | T18 | T17 | T17 → T18 | ✅ Match |
@@ -668,6 +701,7 @@ Nenhuma dependência aponta para fase posterior.
 | T12 | Rota API | e2e | e2e | ✅ OK |
 | T13 | Rota API | e2e | e2e | ✅ OK |
 | T14 | Tela | e2e | e2e | ✅ OK |
+| T19 | Infra de teste | none | none | ✅ OK |
 | T15 | Acesso a dados | integration | integration | ✅ OK |
 | T16 | Schema Prisma | none | none | ✅ OK |
 | T17 | Acesso a dados | integration | integration | ✅ OK |

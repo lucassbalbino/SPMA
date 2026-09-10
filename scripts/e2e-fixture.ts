@@ -12,8 +12,9 @@
 // dotenv/tsx escrevem em stdout.
 import { config as loadEnv } from "dotenv";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { Prisma, PrismaClient } from "../src/generated/prisma/client";
+import { PrismaClient } from "../src/generated/prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
+import { gravarRespostas } from "../src/lib/respostas/repositorio";
 import type { TipoUsuario } from "../src/generated/prisma/enums";
 
 loadEnv({ path: ".env.test" });
@@ -180,6 +181,11 @@ async function executar(
     // e2e de T5/T6 que não precisam exercitar a rota de matrícula (T4) em
     // si, ou que precisam de um estado inicial (respostas parciais,
     // parte1Completa) que a rota de matrícula nunca produz sozinha.
+    //
+    // As respostas entram pelo repositório (RESP-07), na mesma transação da
+    // matrícula: o spec continua passando o mesmo objeto de sempre, e o que
+    // fica no banco são as linhas de `TB_Resposta_Avaliacao` mais a coluna
+    // JSON que o repositório espelha enquanto ela existir.
     case "criarAvaliacao": {
       const dados = argumento as {
         cpf: string;
@@ -188,16 +194,30 @@ async function executar(
         parte1Completa?: boolean;
         respostas?: Record<string, unknown>;
       };
-      return prisma.avaliacaoAluno.create({
-        data: {
-          cpf: dados.cpf,
-          cdCurso: dados.cdCurso,
-          status: dados.status ?? "EM_ANDAMENTO",
-          parte1Completa: dados.parte1Completa ?? false,
-          ...(dados.respostas !== undefined
-            ? { respostas: dados.respostas as Prisma.InputJsonValue }
-            : {}),
-        },
+
+      return prisma.$transaction(async (tx) => {
+        const avaliacao = await tx.avaliacaoAluno.create({
+          data: {
+            cpf: dados.cpf,
+            cdCurso: dados.cdCurso,
+            status: dados.status ?? "EM_ANDAMENTO",
+            parte1Completa: dados.parte1Completa ?? false,
+          },
+        });
+
+        if (dados.respostas === undefined) {
+          return avaliacao;
+        }
+
+        await gravarRespostas(
+          tx,
+          { formulario: "avaliacao", cpf: dados.cpf, cdCurso: dados.cdCurso },
+          dados.respostas,
+        );
+
+        return tx.avaliacaoAluno.findUnique({
+          where: { cpf_cdCurso: { cpf: dados.cpf, cdCurso: dados.cdCurso } },
+        });
       });
     }
 
