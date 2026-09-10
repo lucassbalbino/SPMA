@@ -11,6 +11,7 @@ import {
 } from "@/lib/validation/schemas/pre-curso.schema";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { gravarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ id: string }> };
 
@@ -91,9 +92,11 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
     );
   }
 
-  // REQ-PC-04: merge raso em memória - só as chaves enviadas são alteradas.
-  const respostasAtuais =
-    (preCursoExistente.respostas as Record<string, unknown> | null) ?? {};
+  const alvo = { formulario: "preCurso" as const, cdCurso };
+
+  // REQ-PC-04: merge raso - só as chaves enviadas são alteradas
+  // (RESP-01, RESP-03).
+  const respostasAtuais = await lerRespostas(prisma, alvo);
   const respostasMescladas = { ...respostasAtuais, ...entrada.data };
 
   // Edge case da spec (Planejamento): a validação roda contra o estado
@@ -107,9 +110,9 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
     );
   }
 
-  const preCurso = await prisma.preCurso.update({
-    where: { cdCurso },
-    data: { respostas: respostasMescladas },
+  const preCurso = await prisma.$transaction(async (tx) => {
+    await gravarRespostas(tx, alvo, entrada.data);
+    return tx.preCurso.findUniqueOrThrow({ where: { cdCurso } });
   });
 
   return NextResponse.json({ preCurso });

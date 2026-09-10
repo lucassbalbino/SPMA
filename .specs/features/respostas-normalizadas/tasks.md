@@ -239,7 +239,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T6: PATCH do Pré-Curso lê e grava por linhas
+### T6: PATCH do Pré-Curso lê e grava por linhas ✅
 
 **What**: a rota de gravação parcial do pré-curso troca `registro.respostas` e `data: { respostas }` pelas chamadas do repositório.
 **Where**: `src/app/api/pre-cursos/[id]/route.ts`
@@ -254,13 +254,13 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Merge raso preservado: só as chaves enviadas mudam (RESP-03)
-- [ ] 409 em formulário encerrado, antes de abrir transação (RESP-09)
-- [ ] 400 de Zod não grava nenhuma linha (RESP-11)
-- [ ] Validação de ordem das datas continua rodando sobre o estado mesclado
-- [ ] Contrato HTTP idêntico: mesmo corpo de request e response
-- [ ] e2e de `pre-cursos-id`/`pre-cursos-formulario` passam sem alterar asserção
-- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
+- [x] Merge raso preservado: só as chaves enviadas mudam (RESP-03)
+- [x] 409 em formulário encerrado, antes de abrir transação (RESP-09)
+- [x] 400 de Zod não grava nenhuma linha (RESP-11)
+- [x] Validação de ordem das datas continua rodando sobre o estado mesclado
+- [x] Contrato HTTP idêntico: mesmo corpo de request e response
+- [x] e2e de `pre-cursos-id`/`pre-cursos-formulario` passam sem alterar asserção
+- [x] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` (580 unit, 49 integration) + `npm run test:e2e -- e2e/pre-cursos-id.spec.ts e2e/pre-cursos-formulario.spec.ts` (16/16). Rodado com servidor fresco do Playwright, sem `E2E_REUSE_SERVER`: o `dev:test` de longa duração produziu 1-2 falhas intermitentes em cliques de checkbox/radio (`suporteEstrategias-opcao-8`, `publicoInstituicaoExecutora-opcao-2`) que também reproduzem na baseline sem T6 - ambiente, não regressão (ver Desvios no handoff desta tarefa).
 
 **Tests**: e2e
 **Gate**: alvo

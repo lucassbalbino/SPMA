@@ -134,17 +134,17 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| RESP-01 | P1: Resposta como entidade | Execute | Em progresso (T3) |
+| RESP-01 | P1: Resposta como entidade | Execute | Em progresso (T3, T6) |
 | RESP-02 | P1: Resposta como entidade | Execute | Done (T1) |
-| RESP-03 | P1: Resposta como entidade | Execute | Em progresso (T3) |
+| RESP-03 | P1: Resposta como entidade | Execute | Em progresso (T3, T6) |
 | RESP-04 | P1: Resposta como entidade | Execute | Done (T3) |
 | RESP-05 | P1: Resposta como entidade | Execute | Done (T2) |
 | RESP-06 | P1: Resposta como entidade | Execute | Done (T2) |
 | RESP-07 | P1: Sem regressão | Design | Pending |
 | RESP-08 | P1: Sem regressão | Execute | Em progresso (T3) |
-| RESP-09 | P1: Sem regressão | Design | Pending |
+| RESP-09 | P1: Sem regressão | Execute | Em progresso (T6) |
 | RESP-10 | P1: Sem regressão | Design | Pending |
-| RESP-11 | P1: Sem regressão | Design | Pending |
+| RESP-11 | P1: Sem regressão | Execute | Em progresso (T6) |
 | RESP-12 | P1: Sem regressão | Design | Pending |
 | RESP-13 | P1: Migração | Execute | Done (T4) |
 | RESP-14 | P1: Migração | Execute | Done (T4) |
