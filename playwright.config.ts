@@ -31,7 +31,17 @@ export default defineConfig({
   webServer: {
     command: "npm run dev:test",
     url: "http://localhost:3000",
-    reuseExistingServer: false,
+    // Reuso é OPT-IN, nunca automático. Ligado (`E2E_REUSE_SERVER=1`), a
+    // suíte aproveita um `npm run dev:test` já de pé e economiza o boot do
+    // Turbopack a cada invocação - o que só compensa em rodadas repetidas
+    // de poucos arquivos, durante desenvolvimento.
+    //
+    // O default segue `false` de propósito: com reuso automático, um
+    // `npm run dev` comum (que aponta para o banco de DESENVOLVIMENTO, não
+    // para `.env.test`) seria adotado silenciosamente pela suíte, e as
+    // fixtures destrutivas dos specs apagariam dados de dev. Quem liga a
+    // flag é quem subiu o servidor e sabe qual banco ele está usando.
+    reuseExistingServer: !!process.env.E2E_REUSE_SERVER,
     // Bumped from 60s after Batch 3 saw one flaky boot right at the
     // threshold (passed on immediate retry, nothing else held the port).
     timeout: 90_000,

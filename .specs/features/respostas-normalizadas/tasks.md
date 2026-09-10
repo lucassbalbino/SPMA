@@ -33,8 +33,11 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | Gate Level | When to Use | Command |
 | --- | --- | --- |
 | Quick | Depois de tarefas só com teste unitário | `npm run test:unit` |
-| Full | Depois de tarefas com teste e2e ou de integração | `npm run test:unit && npm run test:integration && npm run test:e2e` |
+| Alvo | Depois de tarefas de rota/tela, durante a fase | `npm run test:unit && npm run test:integration` + só os arquivos e2e que a tarefa toca (`npm run test:e2e -- <arquivos>`), com `E2E_REUSE_SERVER=1` e um `npm run dev:test` já de pé |
+| Full | Depois de tarefas com teste de integração que não tocam rota | `npm run test:unit && npm run test:integration && npm run test:e2e` |
 | Build | Fim de fase, ou tarefa só de schema/config | `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` |
+
+**Política de gate por tarefa (revisada durante o Execute):** a suíte e2e completa leva ~21 minutos e roda serializada de propósito (`workers: 1`, banco compartilhado). Rodá-la em cada uma das 14 tarefas restantes seriam ~3h30 de teste, e foi o que estourou o limite de sessão do primeiro worker. Então: tarefa de rota/tela usa o gate **Alvo** (só os arquivos e2e que ela toca), e a **última tarefa de cada fase mantém o gate Build**, que roda a suíte inteira. Nenhuma tarefa fica sem verificação, a rede de regressão completa passa cinco vezes ao longo da feature (T8, T11, T14, T16, T18), e o Verifier no fim roda tudo de novo de forma independente.
 
 ---
 
@@ -257,10 +260,10 @@ T14 → T19 → T15 → T16 → T17 → T18
 - [ ] Validação de ordem das datas continua rodando sobre o estado mesclado
 - [ ] Contrato HTTP idêntico: mesmo corpo de request e response
 - [ ] e2e de `pre-cursos-id`/`pre-cursos-formulario` passam sem alterar asserção
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
 
 **Tests**: e2e
-**Gate**: full
+**Gate**: alvo
 
 **Commit**: `refactor(pre-cursos): gravar respostas por linhas no PATCH`
 
@@ -285,10 +288,10 @@ T14 → T19 → T15 → T16 → T17 → T18
 - [ ] Completude avaliada sobre o objeto remontado, com o mesmo veredito de antes (RESP-07)
 - [ ] Encerramento continua irreversível
 - [ ] e2e de `pre-cursos-encerrar` passa sem alterar asserção
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
 
 **Tests**: e2e
-**Gate**: full
+**Gate**: alvo
 
 **Commit**: `refactor(pre-cursos): descartar condicional orfa por linha no encerramento`
 
@@ -338,10 +341,10 @@ T14 → T19 → T15 → T16 → T17 → T18
 - [ ] Merge raso, 409 de encerrado e 400 de Zod com o mesmo comportamento de hoje
 - [ ] Validação de ordem das datas reais continua sobre o estado mesclado
 - [ ] e2e de `pos-cursos-id`/`pos-cursos-formulario` passam sem alterar asserção
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
 
 **Tests**: e2e
-**Gate**: full
+**Gate**: alvo
 
 **Commit**: `refactor(pos-cursos): gravar respostas por linhas no PATCH`
 
@@ -364,10 +367,10 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 - [ ] Linhas órfãs removidas na transação do encerramento (RESP-08)
 - [ ] e2e de `pos-cursos-encerrar` passa sem alterar asserção
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
 
 **Tests**: e2e
-**Gate**: full
+**Gate**: alvo
 
 **Commit**: `refactor(pos-cursos): descartar condicional orfa por linha no encerramento`
 
@@ -418,10 +421,10 @@ T14 → T19 → T15 → T16 → T17 → T18
 - [ ] `parte1Completa` continua recalculado sobre o estado resultante, na mesma transação
 - [ ] Merge raso, 409 de encerrado e 400 de Zod inalterados
 - [ ] e2e de `avaliacoes-id` passa sem alterar asserção, incluindo o caso de preservação de resposta condicional já salva
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
 
 **Tests**: e2e
-**Gate**: full
+**Gate**: alvo
 
 **Commit**: `refactor(avaliacoes): gravar respostas por linhas no PATCH`
 
@@ -444,10 +447,10 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 - [ ] As 22 chaves condicionais a "concluiu o curso" somem como linhas quando não se aplicam (RESP-08)
 - [ ] e2e de `avaliacoes-encerrar` passa sem alterar asserção
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
 
 **Tests**: e2e
-**Gate**: full
+**Gate**: alvo
 
 **Commit**: `refactor(avaliacoes): descartar condicional orfa por linha no encerramento`
 
@@ -497,11 +500,11 @@ T14 → T19 → T15 → T16 → T17 → T18
 - [ ] `getPreCurso`, `getPosCurso` e `getAvaliacao` montam `respostas` por `lerRespostas`, sem ler a coluna JSON
 - [ ] Executada **antes** da T15 de propósito: com o espelho ainda ligado, linhas e coluna concordam, então a troca é comportamentalmente neutra e a suíte segue verde
 - [ ] Nenhuma asserção de teste existente alterada - em especial as de `pre-cursos-encerrar.spec.ts` (`expect(respostas).not.toHaveProperty(...)`), que provam o descarte de condicional órfã lendo este campo
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
 - [ ] Test count: 244 e2e, todos passando
 
 **Tests**: none
-**Gate**: full
+**Gate**: alvo
 
 **Commit**: `test(respostas): ler respostas por linha nos helpers e2e`
 
@@ -525,10 +528,10 @@ T14 → T19 → T15 → T16 → T17 → T18
 - [ ] Nenhuma escrita na coluna `Respostas` resta no código (`grep -rn "respostas:" src/app src/lib` só encontra o objeto em memória)
 - [ ] Comentário transitório da T3 removido junto
 - [ ] Teste de integração do repositório continua verde sem afrouxar asserção
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
 
 **Tests**: integration
-**Gate**: full
+**Gate**: alvo
 
 **Commit**: `refactor(respostas): parar de espelhar a coluna JSON`
 
@@ -579,10 +582,10 @@ T14 → T19 → T15 → T16 → T17 → T18
 - [ ] Semeia respostas de vários alunos do mesmo curso e afirma a contagem correta por opção (RESP-17)
 - [ ] Afirma que o plano de execução da consulta usa o índice de `chave` (RESP-18)
 - [ ] Nenhuma função de JSON no `WHERE` nem no `GROUP BY`
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
 
 **Tests**: integration
-**Gate**: full
+**Gate**: alvo
 
 **Commit**: `test(respostas): provar agregacao por pergunta com indice`
 
