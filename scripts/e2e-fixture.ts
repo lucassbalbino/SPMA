@@ -14,7 +14,11 @@ import { config as loadEnv } from "dotenv";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
-import { gravarRespostas } from "../src/lib/respostas/repositorio";
+import {
+  gravarRespostas,
+  lerRespostas,
+  type AlvoRespostas,
+} from "../src/lib/respostas/repositorio";
 import type { TipoUsuario } from "../src/generated/prisma/enums";
 
 loadEnv({ path: ".env.test" });
@@ -44,6 +48,22 @@ type UsuarioFixture = {
   primeiraVez?: boolean;
   cdOfertante?: number | null;
 };
+
+/**
+ * As respostas que os specs inspecionam saem das linhas de `TB_Resposta_*`,
+ * não da coluna JSON (RESP-07).
+ *
+ * Registro sem nenhuma linha devolve `null`, e não `{}`: é exatamente o que a
+ * coluna devolvia, e é o que os specs de criação afirmam ("respostas nulas").
+ */
+async function respostasPorLinha(
+  prisma: PrismaClient,
+  alvo: AlvoRespostas,
+): Promise<Record<string, unknown> | null> {
+  const respostas = await lerRespostas(prisma, alvo);
+
+  return Object.keys(respostas).length === 0 ? null : respostas;
+}
 
 async function executar(
   prisma: PrismaClient,
@@ -121,8 +141,17 @@ async function executar(
     case "getVerba":
       return prisma.verba.findUnique({ where: { cdVerba: argumento as number } });
 
-    case "getPreCurso":
-      return prisma.preCurso.findUnique({ where: { cdCurso: argumento as number } });
+    case "getPreCurso": {
+      const cdCurso = argumento as number;
+      const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso } });
+
+      if (!preCurso) return null;
+
+      return {
+        ...preCurso,
+        respostas: await respostasPorLinha(prisma, { formulario: "preCurso", cdCurso }),
+      };
+    }
 
     // Marca um PreCurso de fixture como ENCERRADO direto no banco - usado
     // pelos e2e que precisam testar o gate de somente-leitura (REQ-PC-12)
@@ -158,8 +187,17 @@ async function executar(
       return { count };
     }
 
-    case "getPosCurso":
-      return prisma.posCurso.findUnique({ where: { cdCurso: argumento as number } });
+    case "getPosCurso": {
+      const cdCurso = argumento as number;
+      const posCurso = await prisma.posCurso.findUnique({ where: { cdCurso } });
+
+      if (!posCurso) return null;
+
+      return {
+        ...posCurso,
+        respostas: await respostasPorLinha(prisma, { formulario: "posCurso", cdCurso }),
+      };
+    }
 
     // Marca um PosCurso de fixture como ENCERRADO direto no banco - usado
     // pelos e2e que precisam testar o gate de somente-leitura (REQ-PO-08)
@@ -234,9 +272,20 @@ async function executar(
 
     case "getAvaliacao": {
       const { cpf, cdCurso } = argumento as { cpf: string; cdCurso: number };
-      return prisma.avaliacaoAluno.findUnique({
+      const avaliacao = await prisma.avaliacaoAluno.findUnique({
         where: { cpf_cdCurso: { cpf, cdCurso } },
       });
+
+      if (!avaliacao) return null;
+
+      return {
+        ...avaliacao,
+        respostas: await respostasPorLinha(prisma, {
+          formulario: "avaliacao",
+          cpf,
+          cdCurso,
+        }),
+      };
     }
 
     // AvaliacaoAluno.cpf é FK para Usuario e AvaliacaoAluno.cdCurso é FK

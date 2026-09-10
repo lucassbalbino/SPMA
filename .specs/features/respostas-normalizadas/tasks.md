@@ -482,7 +482,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T19: Helpers de leitura e2e remontam respostas por linha
+### T19: Helpers de leitura e2e remontam respostas por linha ✅
 
 **What**: as funções de leitura usadas pelas fixtures (`getPreCurso`, `getPosCurso`, `getAvaliacao`) passam a montar o campo `respostas` a partir das linhas, em vez de devolver a coluna JSON.
 **Where**: `scripts/e2e-fixture.ts`
@@ -497,11 +497,11 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] `getPreCurso`, `getPosCurso` e `getAvaliacao` montam `respostas` por `lerRespostas`, sem ler a coluna JSON
-- [ ] Executada **antes** da T15 de propósito: com o espelho ainda ligado, linhas e coluna concordam, então a troca é comportamentalmente neutra e a suíte segue verde
-- [ ] Nenhuma asserção de teste existente alterada - em especial as de `pre-cursos-encerrar.spec.ts` (`expect(respostas).not.toHaveProperty(...)`), que provam o descarte de condicional órfã lendo este campo
-- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
-- [ ] Test count: 244 e2e, todos passando
+- [x] `getPreCurso`, `getPosCurso` e `getAvaliacao` montam `respostas` por `lerRespostas`, sem ler a coluna JSON
+- [x] Registro sem nenhuma linha devolve `respostas: null`, não `{}` - é o que a coluna devolvia, e o que os specs de criação afirmam (`expect(persistido?.respostas).toBeNull()`)
+- [x] Executada **antes** da T15 de propósito: com o espelho ainda ligado, linhas e coluna concordam, então a troca é comportamentalmente neutra e a suíte segue verde
+- [x] Nenhuma asserção de teste existente alterada - em especial as de `pre-cursos-encerrar.spec.ts` (`expect(respostas).not.toHaveProperty(...)`), que provam o descarte de condicional órfã lendo este campo
+- [x] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` (580 unit, 49 integration) + os 9 specs que leem `respostas` por estes helpers (`pre-cursos{,-id,-encerrar}`, `pos-cursos{,-id,-encerrar}`, `avaliacoes{,-id,-encerrar}`): 82/82, servidor fresco do Playwright
 
 **Tests**: none
 **Gate**: alvo
