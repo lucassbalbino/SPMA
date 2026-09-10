@@ -86,7 +86,7 @@ T14 → T15 → T16 → T17 → T18
 
 ## Task Breakdown
 
-### T1: Classificador de forma das respostas
+### T1: Classificador de forma das respostas ✅
 
 **What**: função que, dada a chave de uma pergunta e o schema Zod do formulário, diz se o valor é lista, número ou texto, e converte entre valor e linhas.
 **Where**: `src/lib/respostas/forma.ts`
@@ -101,12 +101,12 @@ T14 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] `classificarChave` desembrulha apenas `ZodOptional`/`ZodNullable`/`ZodDefault` e checa `ZodArray` antes de qualquer outro desembrulho (ver a armadilha verificada em `design.md`)
-- [ ] `serializar` devolve um item por linha; `desserializar` reconstrói `string[]`, `number` ou `string`
-- [ ] Teste unitário classifica as 127 chaves reais dos três schemas e afirma **nominalmente** as 13 de lista (7 pré-curso, 3 pós-curso, 3 avaliação) e as 39 numéricas
-- [ ] Teste de round-trip: `desserializar(serializar(v)) === v` para valor escalar, numérico e lista
-- [ ] Gate check passes: `npm run test:unit`
-- [ ] Test count: 505 + novos, nenhum teste apagado
+- [x] `classificarChave` desembrulha apenas `ZodOptional`/`ZodNullable`/`ZodDefault` e checa `ZodArray` antes de qualquer outro desembrulho (ver a armadilha verificada em `design.md`)
+- [x] `serializar` devolve um item por linha; `desserializar` reconstrói `string[]`, `number` ou `string`
+- [x] Teste unitário classifica as 127 chaves reais dos três schemas e afirma **nominalmente** as 13 de lista (7 pré-curso, 3 pós-curso, 3 avaliação) e as 39 numéricas
+- [x] Teste de round-trip: `desserializar(serializar(v)) === v` para valor escalar, numérico e lista
+- [x] Gate check passes: `npm run test:unit`
+- [x] Test count: 505 + novos, nenhum teste apagado (580 unit, 0 apagados)
 
 **Tests**: unit
 **Gate**: quick

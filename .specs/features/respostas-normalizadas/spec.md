@@ -135,7 +135,7 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
 | RESP-01 | P1: Resposta como entidade | Design | Pending |
-| RESP-02 | P1: Resposta como entidade | Design | Pending |
+| RESP-02 | P1: Resposta como entidade | Execute | Done (T1) |
 | RESP-03 | P1: Resposta como entidade | Design | Pending |
 | RESP-04 | P1: Resposta como entidade | Design | Pending |
 | RESP-05 | P1: Resposta como entidade | Design | Pending |
@@ -147,7 +147,7 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 | RESP-11 | P1: Sem regressão | Design | Pending |
 | RESP-12 | P1: Sem regressão | Design | Pending |
 | RESP-13 | P1: Migração | Design | Pending |
-| RESP-14 | P1: Migração | Design | Pending |
+| RESP-14 | P1: Migração | Execute | Em progresso (T1) |
 | RESP-15 | P1: Migração | Design | Pending |
 | RESP-16 | P1: Migração | Design | Pending |
 | RESP-17 | P1: Agregação | Design | Pending |
