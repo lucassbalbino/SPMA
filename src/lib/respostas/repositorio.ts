@@ -123,78 +123,6 @@ async function inserirLinhas(
 }
 
 // ─────────────────────────────────────────────────────────────
-// ESPELHO TRANSITÓRIO DA COLUNA JSON
-//
-// Enquanto `Respostas Json?` existir, toda escrita de linha também
-// atualiza a coluna: as rotas e as telas ainda leem o JSON, e as duas
-// representações precisam ficar em sincronia até a última delas migrar.
-// A T15 (`refactor(respostas): parar de espelhar a coluna JSON`) remove
-// estas três funções e a chamada delas; a T16 dropa a coluna.
-// ─────────────────────────────────────────────────────────────
-
-async function lerJsonEspelhado(
-  tx: ClienteRespostas,
-  alvo: AlvoRespostas,
-): Promise<Respostas> {
-  const registro =
-    alvo.formulario === "preCurso"
-      ? await tx.preCurso.findUnique({
-          where: { cdCurso: alvo.cdCurso },
-          select: { respostas: true },
-        })
-      : alvo.formulario === "posCurso"
-        ? await tx.posCurso.findUnique({
-            where: { cdCurso: alvo.cdCurso },
-            select: { respostas: true },
-          })
-        : await tx.avaliacaoAluno.findUnique({
-            where: { cpf_cdCurso: { cpf: alvo.cpf, cdCurso: alvo.cdCurso } },
-            select: { respostas: true },
-          });
-
-  return (registro?.respostas as Respostas | null) ?? {};
-}
-
-async function gravarJsonEspelhado(
-  tx: ClienteRespostas,
-  alvo: AlvoRespostas,
-  respostas: Respostas,
-): Promise<void> {
-  // O tipo do domínio é `Record<string, unknown>`; o Prisma exige o tipo
-  // dele para coluna JSON. Mesma conversão que as rotas já fazem hoje.
-  const json = respostas as Prisma.InputJsonValue;
-
-  if (alvo.formulario === "preCurso") {
-    await tx.preCurso.update({
-      where: { cdCurso: alvo.cdCurso },
-      data: { respostas: json },
-    });
-    return;
-  }
-
-  if (alvo.formulario === "posCurso") {
-    await tx.posCurso.update({
-      where: { cdCurso: alvo.cdCurso },
-      data: { respostas: json },
-    });
-    return;
-  }
-
-  await tx.avaliacaoAluno.update({
-    where: { cpf_cdCurso: { cpf: alvo.cpf, cdCurso: alvo.cdCurso } },
-    data: { respostas: json },
-  });
-}
-
-async function espelharJson(
-  tx: ClienteRespostas,
-  alvo: AlvoRespostas,
-  aplicar: (atual: Respostas) => Respostas,
-): Promise<void> {
-  await gravarJsonEspelhado(tx, alvo, aplicar(await lerJsonEspelhado(tx, alvo)));
-}
-
-// ─────────────────────────────────────────────────────────────
 // API do repositório
 // ─────────────────────────────────────────────────────────────
 
@@ -258,7 +186,6 @@ export async function gravarRespostas(
 
   await apagarLinhas(tx, alvo, chaves);
   await inserirLinhas(tx, alvo, linhas);
-  await espelharJson(tx, alvo, (atual) => ({ ...atual, ...patch }));
 }
 
 /**
@@ -273,9 +200,4 @@ export async function apagarRespostas(
   if (chaves.length === 0) return;
 
   await apagarLinhas(tx, alvo, chaves);
-  await espelharJson(tx, alvo, (atual) => {
-    const restante = { ...atual };
-    for (const chave of chaves) delete restante[chave];
-    return restante;
-  });
 }

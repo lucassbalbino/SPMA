@@ -269,36 +269,6 @@ describe("repositório de respostas (integration)", () => {
     ).toEqual({});
   });
 
-  // Espelho transitório da coluna JSON (removido na T15): enquanto as rotas
-  // e as telas leem o JSON, ele precisa refletir as linhas.
-  it("mantém a coluna JSON em sincronia com as linhas", async () => {
-    await gravarRespostas(prisma, { formulario: "preCurso", cdCurso: cdCursoA }, {
-      identifMunicipio: "Manaus",
-      publicoPerfil: ["Jovens", "Idosos"],
-    });
-
-    const depoisDeGravar = await prisma.preCurso.findUnique({
-      where: { cdCurso: cdCursoA },
-      select: { respostas: true },
-    });
-
-    expect(depoisDeGravar?.respostas).toEqual({
-      identifMunicipio: "Manaus",
-      publicoPerfil: ["Jovens", "Idosos"],
-    });
-
-    await apagarRespostas(prisma, { formulario: "preCurso", cdCurso: cdCursoA }, [
-      "publicoPerfil",
-    ]);
-
-    const depoisDeApagar = await prisma.preCurso.findUnique({
-      where: { cdCurso: cdCursoA },
-      select: { respostas: true },
-    });
-
-    expect(depoisDeApagar?.respostas).toEqual({ identifMunicipio: "Manaus" });
-  });
-
   it("grava e lê respostas do pós-curso", async () => {
     await gravarRespostas(prisma, { formulario: "posCurso", cdCurso: cdCursoA }, {
       posParticNumInscritos: 30,

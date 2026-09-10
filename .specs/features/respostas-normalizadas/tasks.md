@@ -510,7 +510,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T15: Remover o espelho do JSON do repositório
+### T15: Remover o espelho do JSON do repositório ✅
 
 **What**: o repositório para de escrever na coluna `Respostas`; as linhas passam a ser a única fonte.
 **Where**: `src/lib/respostas/repositorio.ts`
@@ -525,10 +525,10 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Nenhuma escrita na coluna `Respostas` resta no código (`grep -rn "respostas:" src/app src/lib` só encontra o objeto em memória)
-- [ ] Comentário transitório da T3 removido junto
-- [ ] Teste de integração do repositório continua verde sem afrouxar asserção
-- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
+- [x] Nenhuma escrita na coluna `Respostas` resta no código (`grep -rn "respostas:" src/app src/lib` só encontra o objeto em memória)
+- [x] Comentário transitório da T3 removido junto
+- [x] Teste de integração do repositório continua verde sem afrouxar asserção. Um teste foi APOSENTADO, não afrouxado: `"mantém a coluna JSON em sincronia com as linhas"` afirmava exatamente o espelho que esta tarefa remove, e o comentário dele (escrito na T3) já previa a remoção aqui. Integração vai de 49 para 48
+- [x] Gate check passes (Alvo): 580 unit, 48 integration, e 85 e2e nos 11 specs de formulário e de leitura de respostas
 
 **Tests**: integration
 **Gate**: alvo
