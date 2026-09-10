@@ -12,6 +12,7 @@ import {
 import { validarCompletudeParte1 } from "@/lib/avaliacao/completude";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { gravarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ cpf: string; cdCurso: string }> };
 
@@ -109,9 +110,11 @@ async function gravarRespostasAvaliacao(request: Request, { params }: Contexto) 
     );
   }
 
-  // AVAL-07: merge raso em memória - só as chaves enviadas são alteradas.
-  const respostasAtuais =
-    (avaliacaoExistente.respostas as Record<string, unknown> | null) ?? {};
+  const alvo = { formulario: "avaliacao" as const, cpf, cdCurso };
+
+  // AVAL-07: merge raso - só as chaves enviadas são alteradas (RESP-01,
+  // RESP-03).
+  const respostasAtuais = await lerRespostas(prisma, alvo);
   const respostasMescladas = { ...respostasAtuais, ...entrada.data };
 
   // AVAL-08: parte1Completa é recalculado a cada gravação que toca a Parte 1
@@ -136,9 +139,14 @@ async function gravarRespostasAvaliacao(request: Request, { params }: Contexto) 
     );
   }
 
-  const avaliacao = await prisma.avaliacaoAluno.update({
-    where: { cpf_cdCurso: { cpf, cdCurso } },
-    data: { respostas: respostasMescladas, parte1Completa: parte1CompletaResultante },
+  // O gate acima roda ANTES da transação: quando ele reprova, nenhuma linha
+  // é gravada, nem as chaves de Parte 1 que vieram no mesmo PATCH (RESP-10).
+  const avaliacao = await prisma.$transaction(async (tx) => {
+    await gravarRespostas(tx, alvo, entrada.data);
+    return tx.avaliacaoAluno.update({
+      where: { cpf_cdCurso: { cpf, cdCurso } },
+      data: { parte1Completa: parte1CompletaResultante },
+    });
   });
 
   return NextResponse.json({ avaliacao });

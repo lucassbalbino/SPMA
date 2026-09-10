@@ -402,7 +402,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T12: PATCH da Avaliação lê e grava por linhas
+### T12: PATCH da Avaliação lê e grava por linhas ✅
 
 **What**: mesma troca da T6, na rota da avaliação - incluindo o gate de Parte 1, que passa a ser avaliado sobre o objeto remontado.
 **Where**: `src/app/api/avaliacoes/[cpf]/[cdCurso]/route.ts`
@@ -417,11 +417,11 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Chave de Parte 2 com Parte 1 incompleta continua devolvendo 400 e **não grava nenhuma linha do patch**, nem as chaves de Parte 1 enviadas junto (RESP-10)
-- [ ] `parte1Completa` continua recalculado sobre o estado resultante, na mesma transação
-- [ ] Merge raso, 409 de encerrado e 400 de Zod inalterados
-- [ ] e2e de `avaliacoes-id` passa sem alterar asserção, incluindo o caso de preservação de resposta condicional já salva
-- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
+- [x] Chave de Parte 2 com Parte 1 incompleta continua devolvendo 400 e **não grava nenhuma linha do patch**, nem as chaves de Parte 1 enviadas junto (RESP-10) - o gate roda antes de `$transaction`, então não há gravação a reverter
+- [x] `parte1Completa` continua recalculado sobre o estado resultante, na mesma transação
+- [x] Merge raso, 409 de encerrado e 400 de Zod inalterados
+- [x] e2e de `avaliacoes-id` passa sem alterar asserção, incluindo o caso de preservação de resposta condicional já salva
+- [x] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` (580 unit, 49 integration) + `npm run test:e2e -- e2e/avaliacoes-id.spec.ts` (15/15, servidor fresco do Playwright)
 
 **Tests**: e2e
 **Gate**: alvo
