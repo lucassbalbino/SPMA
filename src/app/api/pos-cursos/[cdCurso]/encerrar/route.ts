@@ -8,6 +8,7 @@ import { validarCompletudePosCurso } from "@/lib/pos-curso/completude";
 import { normalizarCondicionaisPosCurso } from "@/lib/pos-curso/condicionais";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { apagarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ cdCurso: string }> };
 
@@ -51,13 +52,16 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
     return NextResponse.json({ erro: "Pós-curso já está encerrado" }, { status: 409 });
   }
 
+  const alvo = { formulario: "posCurso" as const, cdCurso };
+  const respostasAtuais = await lerRespostas(prisma, alvo);
+
   // Q12 preenchida com Q11="Não" (o Gestor respondeu "Sim", detalhou e
   // depois mudou de ideia) é descartada AQUI, no momento em que o
   // formulário vira registro final e imutável - durante o preenchimento o
   // valor fica preservado. Sem isso, o registro encerrado guardaria uma
   // contradição interna, exatamente o que o AD-037 barra nas perguntas de
   // seleção múltipla.
-  const respostas = normalizarCondicionaisPosCurso(posCurso.respostas);
+  const respostas = normalizarCondicionaisPosCurso(respostasAtuais);
   const { completo, pendentes } = validarCompletudePosCurso(respostas);
 
   if (!completo) {
@@ -67,9 +71,18 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
     );
   }
 
-  const atualizado = await prisma.posCurso.update({
-    where: { cdCurso },
-    data: { status: "ENCERRADO", dataEncerramento: new Date(), respostas },
+  // RESP-08: as órfãs somem como linhas, na mesma transação que grava
+  // ENCERRADO.
+  const orfas = Object.keys(respostasAtuais).filter((chave) => !(chave in respostas));
+
+  const atualizado = await prisma.$transaction(async (tx) => {
+    if (orfas.length > 0) {
+      await apagarRespostas(tx, alvo, orfas);
+    }
+    return tx.posCurso.update({
+      where: { cdCurso },
+      data: { status: "ENCERRADO", dataEncerramento: new Date() },
+    });
   });
 
   return NextResponse.json({ posCurso: atualizado });

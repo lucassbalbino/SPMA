@@ -350,7 +350,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T10: Encerramento do Pós-Curso apaga órfãs por linha
+### T10: Encerramento do Pós-Curso apaga órfãs por linha ✅
 
 **What**: mesma troca da T7, na rota de encerramento do pós-curso.
 **Where**: `src/app/api/pos-cursos/[cdCurso]/encerrar/route.ts`
@@ -365,9 +365,9 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Linhas órfãs removidas na transação do encerramento (RESP-08)
-- [ ] e2e de `pos-cursos-encerrar` passa sem alterar asserção
-- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
+- [x] Linhas órfãs removidas na transação do encerramento (RESP-08)
+- [x] e2e de `pos-cursos-encerrar` passa sem alterar asserção
+- [x] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` (580 unit, 49 integration) + `npm run test:e2e -- e2e/pos-cursos-encerrar.spec.ts` (5/5, servidor fresco do Playwright)
 
 **Tests**: e2e
 **Gate**: alvo
