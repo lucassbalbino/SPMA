@@ -269,7 +269,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T7: Encerramento do Pré-Curso apaga órfãs por linha
+### T7: Encerramento do Pré-Curso apaga órfãs por linha ✅
 
 **What**: a rota de encerramento passa a ler pelo repositório e a traduzir o descarte de condicional órfã em remoção de linhas, na mesma transação do `status=ENCERRADO`.
 **Where**: `src/app/api/pre-cursos/[id]/encerrar/route.ts`
@@ -284,11 +284,11 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Linhas das condicionais órfãs removidas na mesma transação que grava `ENCERRADO` (RESP-08, AD-038)
-- [ ] Completude avaliada sobre o objeto remontado, com o mesmo veredito de antes (RESP-07)
-- [ ] Encerramento continua irreversível
-- [ ] e2e de `pre-cursos-encerrar` passa sem alterar asserção
-- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
+- [x] Linhas das condicionais órfãs removidas na mesma transação que grava `ENCERRADO` (RESP-08, AD-038)
+- [x] Completude avaliada sobre o objeto remontado, com o mesmo veredito de antes (RESP-07)
+- [x] Encerramento continua irreversível
+- [x] e2e de `pre-cursos-encerrar` passa sem alterar asserção
+- [x] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` (580 unit, 49 integration) + `npm run test:e2e -- e2e/pre-cursos-encerrar.spec.ts` (5/5, servidor fresco do Playwright)
 
 **Tests**: e2e
 **Gate**: alvo

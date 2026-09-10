@@ -9,6 +9,7 @@ import { validarCompletudePreCurso } from "@/lib/pre-curso/completude";
 import { normalizarCondicionaisPreCurso } from "@/lib/pre-curso/condicionais";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { apagarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ id: string }> };
 
@@ -49,6 +50,9 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
     return NextResponse.json({ erro: "Pré-curso já está encerrado" }, { status: 409 });
   }
 
+  const alvo = { formulario: "preCurso" as const, cdCurso };
+  const respostasAtuais = await lerRespostas(prisma, alvo);
+
   // Respostas de perguntas condicionais que a resposta-mãe tornou
   // inaplicáveis (ex.: Q25="Não, apenas equipamentos básicos" com Q25.1
   // ainda preenchida de uma escolha anterior) são descartadas AQUI, no
@@ -57,7 +61,7 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
   // entre as alternativas. Sem isso, o registro encerrado guardaria uma
   // contradição interna, exatamente o que o AD-037 barra nas perguntas de
   // seleção múltipla.
-  const respostas = normalizarCondicionaisPreCurso(preCurso.respostas);
+  const respostas = normalizarCondicionaisPreCurso(respostasAtuais);
   const { completo, pendentes } = validarCompletudePreCurso(respostas);
 
   if (!completo) {
@@ -67,9 +71,18 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
     );
   }
 
-  const atualizado = await prisma.preCurso.update({
-    where: { cdCurso },
-    data: { status: "ENCERRADO", dataEncerramento: new Date(), respostas },
+  // RESP-08/AD-038: as órfãs somem como linhas, na mesma transação que grava
+  // ENCERRADO.
+  const orfas = Object.keys(respostasAtuais).filter((chave) => !(chave in respostas));
+
+  const atualizado = await prisma.$transaction(async (tx) => {
+    if (orfas.length > 0) {
+      await apagarRespostas(tx, alvo, orfas);
+    }
+    return tx.preCurso.update({
+      where: { cdCurso },
+      data: { status: "ENCERRADO", dataEncerramento: new Date() },
+    });
   });
 
   return NextResponse.json({ preCurso: atualizado });
