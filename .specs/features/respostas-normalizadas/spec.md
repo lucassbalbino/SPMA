@@ -138,8 +138,8 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 | RESP-02 | P1: Resposta como entidade | Execute | Done (T1) |
 | RESP-03 | P1: Resposta como entidade | Design | Pending |
 | RESP-04 | P1: Resposta como entidade | Design | Pending |
-| RESP-05 | P1: Resposta como entidade | Design | Pending |
-| RESP-06 | P1: Resposta como entidade | Design | Pending |
+| RESP-05 | P1: Resposta como entidade | Execute | Done (T2) |
+| RESP-06 | P1: Resposta como entidade | Execute | Done (T2) |
 | RESP-07 | P1: Sem regressão | Design | Pending |
 | RESP-08 | P1: Sem regressão | Design | Pending |
 | RESP-09 | P1: Sem regressão | Design | Pending |
@@ -151,7 +151,7 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 | RESP-15 | P1: Migração | Design | Pending |
 | RESP-16 | P1: Migração | Design | Pending |
 | RESP-17 | P1: Agregação | Design | Pending |
-| RESP-18 | P1: Agregação | Design | Pending |
+| RESP-18 | P1: Agregação | Execute | Em progresso (T2) |
 | RESP-19 | Edge case | Design | Pending |
 | RESP-20 | Edge case | Design | Pending |
 | RESP-21 | Edge case | Design | Pending |

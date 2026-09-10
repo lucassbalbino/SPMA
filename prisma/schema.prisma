@@ -175,6 +175,7 @@ model PreCurso {
 
   posCurso       PosCurso?
   avaliacoes     AvaliacaoAluno[]
+  linhasResposta RespostaPreCurso[]
 
   @@index([cdOfertante])
   @@index([cdVerba])
@@ -199,6 +200,8 @@ model PosCurso {
   criador              Usuario    @relation("GoPosCursos", fields: [criadoPor], references: [cpf])
   dataUltimaAtualizacao DateTime  @updatedAt @map("Data_Ultima_Atualizacao")
   dataEncerramento     DateTime?  @map("Data_Encerramento")
+
+  linhasResposta       RespostaPosCurso[]
 
   @@map("TB_Pos_Curso")
 }
@@ -228,9 +231,66 @@ model AvaliacaoAluno {
   dataCriacao       DateTime      @default(now()) @map("Data_Criacao")
   dataEncerramento  DateTime?     @map("Data_Encerramento")
 
+  linhasResposta    RespostaAvaliacao[]
+
   @@id([cpf, cdCurso])
   @@index([cdCurso])
   @@map("TB_Avaliacao_Aluno")
+}
+
+// ─────────────────────────────────────────────────────────────
+// RESPOSTAS NORMALIZADAS  (RESP-05, RESP-06, RESP-18)
+// Uma linha por resposta, três tabelas de forma idêntica — uma por
+// formulário, cada uma com FK real para o seu pai. A coluna `Respostas`
+// dos três modelos ainda existe e é dropada ao fim da migração.
+//
+// `Chave` é a chave do schema Zod (AD-004), que já é a fonte de verdade
+// da forma. `Ordem` é a posição dentro de uma seleção múltipla; 0 para
+// valor escalar. `Valor` guarda o texto que o Zod já valida hoje — o tipo
+// real é reconstruído na leitura por `src/lib/respostas/forma.ts`.
+// ─────────────────────────────────────────────────────────────
+
+model RespostaPreCurso {
+  id       Int      @id @default(autoincrement()) @map("ID_Resposta")
+  cdCurso  Int      @map("CD_Curso")
+  preCurso PreCurso @relation(fields: [cdCurso], references: [cdCurso], onDelete: Cascade)
+
+  chave    String   @map("Chave") @db.VarChar(100)
+  ordem    Int      @default(0) @map("Ordem")
+  valor    String   @map("Valor") @db.Text
+
+  @@unique([cdCurso, chave, ordem])
+  @@index([chave])
+  @@map("TB_Resposta_Pre_Curso")
+}
+
+model RespostaPosCurso {
+  id       Int      @id @default(autoincrement()) @map("ID_Resposta")
+  cdCurso  Int      @map("CD_Curso")
+  posCurso PosCurso @relation(fields: [cdCurso], references: [cdCurso], onDelete: Cascade)
+
+  chave    String   @map("Chave") @db.VarChar(100)
+  ordem    Int      @default(0) @map("Ordem")
+  valor    String   @map("Valor") @db.Text
+
+  @@unique([cdCurso, chave, ordem])
+  @@index([chave])
+  @@map("TB_Resposta_Pos_Curso")
+}
+
+model RespostaAvaliacao {
+  id        Int            @id @default(autoincrement()) @map("ID_Resposta")
+  cpf       String         @map("CPF") @db.VarChar(11)
+  cdCurso   Int            @map("CD_Curso")
+  avaliacao AvaliacaoAluno @relation(fields: [cpf, cdCurso], references: [cpf, cdCurso], onDelete: Cascade)
+
+  chave     String         @map("Chave") @db.VarChar(100)
+  ordem     Int            @default(0) @map("Ordem")
+  valor     String         @map("Valor") @db.Text
+
+  @@unique([cpf, cdCurso, chave, ordem])
+  @@index([chave])
+  @@map("TB_Resposta_Avaliacao")
 }
 
 // ─────────────────────────────────────────────────────────────

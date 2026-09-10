@@ -115,7 +115,7 @@ T14 → T15 → T16 → T17 → T18
 
 ---
 
-### T2: Três tabelas de resposta no schema Prisma
+### T2: Três tabelas de resposta no schema Prisma ✅
 
 **What**: modelos `RespostaPreCurso`, `RespostaPosCurso` e `RespostaAvaliacao`, com FK e `ON DELETE CASCADE` para os pais, índice único e índice por chave; a coluna `Respostas` continua existindo.
 **Where**: `prisma/schema.prisma`
@@ -130,11 +130,11 @@ T14 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Os três modelos existem conforme `design.md` (Data Models), incluindo `@@unique` e `@@index([chave])`
-- [ ] `RespostaAvaliacao` referencia a chave composta `[cpf, cdCurso]` do pai
-- [ ] Migration de criação gerada por `npx prisma migrate dev` e commitada junto
-- [ ] Nenhuma coluna existente alterada ou removida nesta tarefa
-- [ ] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Os três modelos existem conforme `design.md` (Data Models), incluindo `@@unique` e `@@index([chave])`
+- [x] `RespostaAvaliacao` referencia a chave composta `[cpf, cdCurso]` do pai
+- [x] Migration de criação gerada por `npx prisma migrate dev` e commitada junto (`20260910082855_criar_tabelas_resposta`)
+- [x] Nenhuma coluna existente alterada ou removida nesta tarefa (só a relação inversa `linhasResposta` nos três pais, exigida pelo Prisma)
+- [x] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` (580 unit, 27 integration, 244 e2e)
 
 **Tests**: none
 **Gate**: build
