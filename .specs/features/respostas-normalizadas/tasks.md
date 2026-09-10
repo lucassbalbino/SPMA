@@ -175,7 +175,7 @@ T14 → T15 → T16 → T17 → T18
 
 ---
 
-### T4: Migration de backfill do JSON para linhas
+### T4: Migration de backfill do JSON para linhas ✅
 
 **What**: migration SQL que explode o `Respostas` de cada registro dos três formulários em linhas, antes de a coluna ser removida.
 **Where**: `prisma/migrations/<timestamp>_backfill_respostas/migration.sql`
@@ -190,13 +190,13 @@ T14 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] Uma linha por chave escalar e uma por opção de lista, com `ordem` preservando a posição (RESP-13)
-- [ ] Chave presente no JSON e ausente do schema Zod atual vira linha do mesmo jeito (RESP-14)
-- [ ] Registro com `Respostas` nulo não gera linha e não quebra a migration (RESP-16)
-- [ ] `status`, `dataEncerramento` e demais colunas dos três formulários intactos (RESP-15)
-- [ ] É migration SQL, executada por `prisma migrate deploy`, **não** um script manual - o `start:prod` roda migrations sozinho e um passo humano aqui significaria perda de dado (ver Risks em `design.md`)
-- [ ] Teste de integração semeia os três formulários com JSON (escalar, numérico, lista, chave fora do schema, e um registro nulo), roda a migration e afirma que o objeto remontado é igual ao JSON original
-- [ ] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Uma linha por chave escalar e uma por opção de lista, com `ordem` preservando a posição (RESP-13)
+- [x] Chave presente no JSON e ausente do schema Zod atual vira linha do mesmo jeito (RESP-14)
+- [x] Registro com `Respostas` nulo não gera linha e não quebra a migration (RESP-16)
+- [x] `status`, `dataEncerramento` e demais colunas dos três formulários intactos (RESP-15)
+- [x] É migration SQL, executada por `prisma migrate deploy`, **não** um script manual - o `start:prod` roda migrations sozinho e um passo humano aqui significaria perda de dado (ver Risks em `design.md`)
+- [x] Teste de integração semeia os três formulários com JSON (escalar, numérico, lista, chave fora do schema, e um registro nulo), roda a migration e afirma que o objeto remontado é igual ao JSON original
+- [x] Gate check passes: `npm run test:unit && npm run test:integration && npm run test:e2e` (580 unit, 49 integration, 244 e2e)
 
 **Tests**: integration
 **Gate**: full
