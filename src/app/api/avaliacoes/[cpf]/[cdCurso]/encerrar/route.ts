@@ -8,6 +8,7 @@ import { validarCompletudeAvaliacao } from "@/lib/avaliacao/completude";
 import { normalizarCondicionaisAvaliacao } from "@/lib/avaliacao/condicionais";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { apagarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ cpf: string; cdCurso: string }> };
 
@@ -60,7 +61,9 @@ async function encerrarAvaliacao(request: Request, { params }: Contexto) {
   // (Q22 alterada de "Sim" para "Não" numa gravação posterior preserva o
   // que já estava salvo), para o aluno poder corrigir Q22 sem perder o que
   // respondeu; o descarte só acontece quando ele confirma o encerramento.
-  const respostas = normalizarCondicionaisAvaliacao(avaliacao.respostas);
+  const alvo = { formulario: "avaliacao" as const, cpf, cdCurso };
+  const respostasAtuais = await lerRespostas(prisma, alvo);
+  const respostas = normalizarCondicionaisAvaliacao(respostasAtuais);
 
   // AVAL-12/13: gate "Concluiu o curso?" - une pendências de Parte 1 e Parte 2.
   const { completo, pendentes } = validarCompletudeAvaliacao(respostas);
@@ -72,9 +75,19 @@ async function encerrarAvaliacao(request: Request, { params }: Contexto) {
     );
   }
 
-  const atualizada = await prisma.avaliacaoAluno.update({
-    where: { cpf_cdCurso: { cpf, cdCurso } },
-    data: { status: "ENCERRADO", dataEncerramento: new Date(), respostas },
+  // RESP-08: as órfãs somem como linhas - incluindo as 22 chaves de "apenas
+  // para quem concluiu" quando Q22="Não" - na mesma transação que grava
+  // ENCERRADO.
+  const orfas = Object.keys(respostasAtuais).filter((chave) => !(chave in respostas));
+
+  const atualizada = await prisma.$transaction(async (tx) => {
+    if (orfas.length > 0) {
+      await apagarRespostas(tx, alvo, orfas);
+    }
+    return tx.avaliacaoAluno.update({
+      where: { cpf_cdCurso: { cpf, cdCurso } },
+      data: { status: "ENCERRADO", dataEncerramento: new Date() },
+    });
   });
 
   return NextResponse.json({ avaliacao: atualizada });

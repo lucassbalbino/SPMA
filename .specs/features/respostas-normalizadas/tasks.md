@@ -430,7 +430,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T13: Encerramento da Avaliação apaga órfãs por linha
+### T13: Encerramento da Avaliação apaga órfãs por linha ✅
 
 **What**: mesma troca da T7, na rota de encerramento da avaliação.
 **Where**: `src/app/api/avaliacoes/[cpf]/[cdCurso]/encerrar/route.ts`
@@ -445,9 +445,9 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] As 22 chaves condicionais a "concluiu o curso" somem como linhas quando não se aplicam (RESP-08)
-- [ ] e2e de `avaliacoes-encerrar` passa sem alterar asserção
-- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
+- [x] As 22 chaves condicionais a "concluiu o curso" somem como linhas quando não se aplicam (RESP-08)
+- [x] e2e de `avaliacoes-encerrar` passa sem alterar asserção
+- [x] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` (580 unit, 49 integration) + `npm run test:e2e -- e2e/avaliacoes-encerrar.spec.ts` (8/8, servidor fresco do Playwright)
 
 **Tests**: e2e
 **Gate**: alvo
