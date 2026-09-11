@@ -1,33 +1,35 @@
 # Dados Pessoais Separados Specification
 
-**Escopo:** Large (schema físico com migração de dados, borda de persistência, rota, tela e três camadas de teste; atravessa a feature `avaliacao-aluno`, já DONE e validada).
+**Escopo:** Complex (mudança de produto + schema físico com migração de dados + gate de navegação; o questionário do curso encolhe de 19 para 12 perguntas na Parte 1, e as 7 restantes passam a ser coletadas no primeiro acesso. Atravessa `avaliacao-aluno` e `auth-e-usuarios`, ambas DONE e validadas).
 
-**Fonte funcional:** pedido do usuário nesta sessão, registrado em `context.md`. Não vem do documento do cliente.
+**Fonte funcional:** dois pedidos do usuário nesta sessão, registrados em `context.md`.
 
-**Decisões que esta feature herda:** AD-041 (respostas normalizadas em linha), AD-004 (Zod como autoridade de forma), AD-023 (gate Parte 1 → Parte 2), AD-022 (mesmo aluno em vários cursos ao longo do tempo).
+**Decisões que esta feature herda:** AD-041 (respostas normalizadas em linha), AD-004 (Zod como autoridade de forma), AD-023 (gate Parte 1 → Parte 2), AD-022 (mesmo aluno em vários cursos), REQ-AU-02 (gate de primeiro acesso).
 
 ## Problem Statement
 
-Os dados pessoais do aluno — a seção DADOS PESSOAIS do questionário — vivem hoje misturados às respostas do questionário do curso, nas mesmas linhas da mesma tabela `TB_Resposta_Avaliacao`, distinguíveis só pelo prefixo da chave. Não existe fronteira física entre "o que a pessoa é" e "o que a pessoa respondeu sobre o curso". Isso impede tratar o dado pessoal de forma própria — política de acesso, retenção ou anonimização diferente — e torna qualquer consulta sobre pessoas dependente de conhecer, de cor, quais prefixos de chave são pessoais. O usuário quer os dois separados na base.
+As 7 perguntas de dados pessoais do Aluno — estado, município, gênero, faixa etária, escolaridade, cor/raça/etnia e condição PCD — vivem hoje dentro do questionário de avaliação de um curso, misturadas na mesma tabela e respondidas de novo a cada curso. São atributos da pessoa, não do curso: um Aluno é a mesma pessoa em qualquer curso que faça. O usuário quer duas coisas, e elas são a mesma coisa vista de dois lados: que esses dados fiquem **separados na base**, e que sejam coletados **uma vez, logo após o Aluno criar a senha**, de forma obrigatória antes de usar qualquer parte da plataforma.
 
 ## Goals
 
-- [ ] Dado pessoal do aluno vive numa tabela própria, com fronteira física, não por convenção de nome de chave.
-- [ ] O questionário do curso continua em `TB_Resposta_Avaliacao`, sem nenhuma mudança.
-- [ ] Zero regressão: completude, gate da Parte 2, encerramento, autorização e contrato HTTP idênticos.
-- [ ] Os dados pessoais já gravados migram sem perda.
-- [ ] Qual chave é pessoal passa a ser declarado num único lugar do código.
+- [ ] O Aluno responde as 7 perguntas uma vez, no primeiro acesso, e não as vê mais em nenhum curso.
+- [ ] Enquanto não responder, nenhuma outra tela da plataforma abre para ele.
+- [ ] O dado pessoal vive em tabela própria, com uma linha por Aluno — não por matrícula.
+- [ ] O questionário do curso perde essas 7 perguntas e mantém as outras 12 da Parte 1 intactas.
+- [ ] O Aluno pode alterar esses dados depois, pelo perfil.
+- [ ] As respostas pessoais já gravadas são descartadas e recoletadas, sem apagar conta nem avaliação de curso.
+- [ ] Nenhum perfil além do Aluno é afetado.
 
 ## Out of Scope
 
 | Item | Motivo |
 | --- | --- |
-| Cadastro único de aluno reaproveitado entre cursos | Decisão D2 em `context.md`: destruiria a fidelidade histórica de avaliações antigas. Fica como evolução possível, não como parte desta feature. |
-| Política de acesso, retenção ou anonimização do dado pessoal | Esta feature cria a fronteira que torna isso possível; não implementa nenhuma política. |
-| Colunas tipadas para os campos pessoais | Decisão D3: mantém a forma de linha da AD-041 para não voltar a exigir migration a cada ajuste de questionário. |
-| Mover `nome`/`e-mail` de `TB_Usuario` | Já estão fora do questionário; nada a separar. |
-| Mudar perguntas, opções ou regras de completude | Esta feature move dado de lugar. |
-| Pré-Curso e Pós-Curso | Não têm dado pessoal de aluno — são preenchidos pelo Gestor sobre o curso. |
+| Q1 (nome) e Q2 (CPF) | Já vivem em `TB_Usuario`, fora do questionário — não há o que separar. |
+| Situação profissional (Q10–Q13) e experiência (Q14–Q16) | Decisão do usuário: só as 9 primeiras entram. Ficam no questionário do curso. |
+| Foto histórica dos dados pessoais por curso | Consequência aceita: ver Assumptions. Uma avaliação antiga passa a exibir o dado atual do Aluno. |
+| Apagar contas de Aluno ou avaliações existentes | O usuário autorizou ("pode excluir e reiniciar a table alunos"), mas o mesmo efeito se obtém descartando só as 7 respostas pessoais: todo Aluno cai no gate e responde de novo, sem perder conta nem avaliação de curso. Apagar Alunos numa migration rodaria em todo ambiente, inclusive produção. Limpeza de dados de demonstração em dev, se desejada, é script à parte. |
+| Gate para Gestores e Visualizadores | Decisão do usuário: só o Aluno. |
+| Política de acesso, retenção ou anonimização | A fronteira torna isso possível; nenhuma política é implementada. |
 
 ---
 
@@ -35,80 +37,116 @@ Os dados pessoais do aluno — a seção DADOS PESSOAIS do questionário — viv
 
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --- | --- | --- | --- |
-| O que conta como "dado pessoal" | As 7 chaves da seção DADOS PESSOAIS do cliente, Q3–Q9 (`avalPessoal*`) | Fronteira desenhada pelo próprio cliente no questionário, não inferida pelo agente. Q1/Q2 (nome, CPF) já vivem em `TB_Usuario`; Q10–Q16 (situação profissional e experiência) ficam no questionário | **y** (decidido pelo usuário: "apenas as 9 primeiras entram") |
-| Cardinalidade da tabela nova | Continua `(CPF, curso)` — separação física, não semântica | Preserva a foto do momento; cadastro único por CPF faria avaliação de 2023 exibir dado de hoje | n (decisão do agente, D2 — reversível, mas com custo de histórico) |
-| Q1 (nome) e Q2 (CPF) | Permanecem em `TB_Usuario`, fora desta feature | Já estão fora do questionário — não há o que separar. Consolidá-los junto seria outro movimento, e maior: `TB_Usuario.cpf` é PK referenciada por várias tabelas | y |
-| Forma da tabela nova | `(CPF, curso, Chave, Ordem, Valor)`, igual à AD-041 | Reusa `forma.ts` e o repositório; Zod segue autoridade de forma; sem migration por ajuste de questionário | y (coerência com AD-041) |
-| Contrato de domínio e HTTP | `lerRespostas` devolve UM objeto com as duas metades; API inalterada | Mesmo princípio que conteve o raio na AD-041 — a separação vive na borda de persistência | y |
-| Gate `parte1Completa` | Avaliado sobre as duas fontes unidas | O conceito de Parte 1 não muda; só metade dele passa a ser lida de outra tabela | y |
-| Chave pessoal ausente do schema atual | Migra e é lida como qualquer outra chave órfã | Mesma regra da RESP-14; descartar seria perda silenciosa | y |
+| O que conta como "dado pessoal" | As 7 chaves da seção DADOS PESSOAIS do cliente, Q3–Q9 (`avalPessoal*`) | Fronteira desenhada pelo próprio cliente no questionário | **y** ("apenas as 9 primeiras entram") |
+| Quem responde | Só o perfil `AL` | O questionário é o "FORMULÁRIO DO ALUNO"; obrigar um Gestor a declarar raça e deficiência para abrir a plataforma não é o pedido | **y** ("Só o Aluno") |
+| Onde aparece | Na tela principal (`/painel`), logo após o login | Palavras do usuário: "aparecem após o login, na tela principal" | **y** |
+| Destino das 7 na avaliação do curso | Somem; a avaliação não as pergunta nem as exibe | **y** ("segue a primeira opção") |
+| Cardinalidade | **Uma linha por Aluno**, chave só o CPF | Forçado pelo pedido: a coleta acontece antes de existir qualquer curso | y (consequência, não escolha) |
+| Fidelidade histórica | Aceita a perda: avaliação antiga passa a exibir o dado atual | Faixa etária e escolaridade mudam. A alternativa (foto no encerramento) foi oferecida e não escolhida | **y** (escolha explícita da opção sem foto) |
+| Aluno que já tem senha hoje | Também é barrado até responder | Senão o gate só valeria para contas novas e o dado nunca ficaria completo | y (decisão do agente, baixo risco) |
+| Dados pessoais já respondidos | **Descartados**; todo Aluno responde de novo no próximo login | O usuário autorizou reiniciar os Alunos. Descartar só as respostas pessoais resolve de uma vez o problema de qual conjunto vence quando o Aluno respondeu em dois cursos, sem apagar conta nem avaliação | **y** ("os alunos já existentes pode excluir e reiniciar") |
+| Edição posterior | Pelo perfil, a qualquer momento, só pelo próprio Aluno | **y** ("posteriormente poderão ser alterados através do perfil") |
 
-**Open questions:** none — o escopo foi decidido pelo usuário; a cardinalidade foi decidida pelo agente e registrada acima com o custo.
+**Open questions:** none — as decisões em aberto estão acima com o custo de cada uma.
 
 ---
 
 ## User Stories
 
-### P1: Dado pessoal com fronteira física ⭐ MVP
+### P1: Coleta obrigatória no primeiro acesso ⭐ MVP
 
-**User Story**: Como responsável pelo dado do programa, quero o dado pessoal do aluno numa tabela própria, para que ele possa ser tratado de forma distinta do que o aluno respondeu sobre o curso.
+**User Story**: Como responsável pelo programa, quero que o Aluno informe seus dados pessoais assim que criar a senha, para que nenhum Aluno use a plataforma sem esse cadastro completo.
 
-**Why P1**: É o pedido central. Sem isso não há feature.
+**Why P1**: É metade do pedido. Sem o bloqueio, o dado continua opcional na prática.
 
 **Acceptance Criteria**:
 
-1. WHEN um `PATCH` grava uma chave de dado pessoal THEN o sistema SHALL persistir a resposta em `TB_Dado_Pessoal_Aluno` e SHALL não criar linha em `TB_Resposta_Avaliacao` para essa chave. (PESSOAL-01)
-2. WHEN um `PATCH` grava uma chave do questionário do curso THEN o sistema SHALL persistir em `TB_Resposta_Avaliacao`, sem tocar na tabela de dado pessoal. (PESSOAL-02)
-3. WHEN um mesmo `PATCH` mistura chave pessoal e chave de curso THEN o sistema SHALL gravar cada uma na sua tabela, na mesma transação. (PESSOAL-03)
-4. The system SHALL impedir, por constraint física, duas linhas para o mesmo par (aluno, curso, chave, posição) na tabela de dado pessoal. (PESSOAL-04)
-5. WHEN o registro de avaliação é removido THEN o sistema SHALL remover as linhas de dado pessoal vinculadas, sem deixar órfãs. (PESSOAL-05)
-6. The system SHALL declarar num único lugar do código quais chaves são pessoais, e SHALL derivar dele tanto a gravação quanto a leitura. (PESSOAL-06)
+1. WHEN um Aluno conclui a criação de senha e chega à tela principal THEN o sistema SHALL exibir as 7 perguntas de dados pessoais. (PESSOAL-01)
+2. WHILE um Aluno não tiver as 7 respostas gravadas, the system SHALL impedir o acesso a qualquer outra tela protegida, redirecionando para a tela principal. (PESSOAL-02)
+3. WHEN o Aluno grava as 7 respostas THEN o sistema SHALL liberar a navegação e SHALL não exibir o questionário de novo. (PESSOAL-03)
+4. IF o usuário autenticado não é Aluno THEN o sistema SHALL não exigir nem exibir o questionário, e SHALL não alterar a navegação dele. (PESSOAL-04)
+5. IF o envio das respostas é incompleto ou inválido THEN o sistema SHALL responder HTTP 400 e SHALL não persistir nenhuma linha. (PESSOAL-05)
+6. WHILE um Aluno cadastrado antes desta feature não tiver respondido, the system SHALL aplicar o mesmo bloqueio. (PESSOAL-06)
 
-**Independent Test**: gravar por `PATCH` um bloco com chaves dos dois tipos, consultar as duas tabelas direto no banco e conferir que cada chave caiu na sua, sem duplicata.
+**Independent Test**: logar como Aluno recém-criado, tentar abrir uma tela protegida e conferir o redirecionamento; responder as 7 e conferir que a navegação abre.
 
 ---
 
-### P1: Nenhuma regra de negócio existente regride ⭐ MVP
+### P1: Dado pessoal do Aluno, uma vez só ⭐ MVP
 
-**User Story**: Como mantenedor, quero completude, gate da Parte 2, encerramento e autorização se comportando exatamente como antes, para que separar o dado não vire mudança de produto disfarçada.
+**User Story**: Como responsável pelo dado, quero o dado pessoal do Aluno numa tabela própria, com um registro por pessoa, para que ele deixe de ser resposta de questionário de curso.
 
-**Why P1**: A feature atravessa `avaliacao-aluno`, já DONE e validada por Verifier.
+**Why P1**: É a outra metade do pedido.
 
 **Acceptance Criteria**:
 
-1. WHEN a completude da Parte 1 é avaliada THEN o sistema SHALL produzir o mesmo veredito e a mesma lista de pendências que produzia com tudo numa tabela só. (PESSOAL-07)
-2. IF um Aluno grava uma chave de Parte 2 com a Parte 1 incompleta no estado resultante THEN o sistema SHALL responder HTTP 400 e SHALL não persistir nenhuma linha, em nenhuma das duas tabelas. (PESSOAL-08)
-3. WHILE a avaliação está com `status=ENCERRADO`, the system SHALL recusar qualquer gravação com HTTP 409, sem alterar linha em nenhuma das duas tabelas. (PESSOAL-09)
-4. WHEN a avaliação é encerrada THEN o sistema SHALL remover as linhas das condicionais órfãs nas duas tabelas, na mesma transação que grava `ENCERRADO`. (PESSOAL-10)
-5. The system SHALL manter inalterado o contrato HTTP: `respostas` continua um único objeto com as duas metades, e `null` quando não há nenhuma resposta. (PESSOAL-11)
-6. The system SHALL manter inalteradas as guardas de autorização da avaliação — só o próprio Aluno grava, e o escopo de leitura por Ofertante não muda. (PESSOAL-12)
+1. The system SHALL persistir o dado pessoal em `TB_Dado_Pessoal_Aluno`, com uma linha por (Aluno, pergunta, posição). (PESSOAL-07)
+2. The system SHALL impedir, por constraint física, duas linhas para o mesmo par (Aluno, pergunta, posição). (PESSOAL-08)
+3. WHEN um Aluno é removido THEN o sistema SHALL remover os dados pessoais dele, sem deixar órfãos. (PESSOAL-09)
+4. The system SHALL declarar num único lugar do código quais chaves são pessoais, e SHALL derivar dele a gravação, a leitura e o gate. (PESSOAL-10)
 
-**Independent Test**: a suíte existente de `avaliacao-aluno` (`test:unit`, `test:integration`, `test:e2e`) passa sem alteração de asserção.
+**Independent Test**: gravar os dados pelo fluxo de primeiro acesso e conferir uma linha por pergunta na tabela nova, nenhuma em `TB_Resposta_Avaliacao`.
 
 ---
 
-### P1: Migração dos dados já gravados ⭐ MVP
+### P1: O questionário do curso encolhe ⭐ MVP
 
-**User Story**: Como responsável pelo dado, quero os dados pessoais já respondidos na estrutura nova, para que a separação não custe o histórico.
+**User Story**: Como Aluno, quero não responder de novo meus dados pessoais a cada curso, para que a avaliação trate só do curso.
 
-**Why P1**: Criar a tabela sem mover o que existe deixa o dado antigo do lado errado da fronteira.
+**Why P1**: Sem isso, a separação seria só física e o Aluno continuaria redigitando.
 
 **Acceptance Criteria**:
 
-1. WHEN a migração roda THEN o sistema SHALL mover para `TB_Dado_Pessoal_Aluno` todas as linhas de `TB_Resposta_Avaliacao` cuja chave é pessoal, preservando `Ordem` e `Valor`. (PESSOAL-13)
-2. WHEN a migração termina THEN o sistema SHALL ter deixado em `TB_Resposta_Avaliacao` exatamente as linhas de chave não-pessoal, e nenhuma linha pessoal. (PESSOAL-14)
-3. WHEN a migração roda sobre uma avaliação sem nenhuma resposta pessoal THEN o sistema SHALL não criar linha e SHALL concluir sem erro. (PESSOAL-15)
-4. WHEN a migração termina THEN o sistema SHALL ter preservado `status`, `parte1Completa`, `dataEncerramento` e as demais colunas de `TB_Avaliacao_Aluno` inalteradas. (PESSOAL-16)
+1. WHEN o formulário de avaliação de um curso é exibido THEN o sistema SHALL não apresentar nenhuma das 7 perguntas de dados pessoais. (PESSOAL-11)
+2. WHEN a completude da Parte 1 é avaliada THEN o sistema SHALL considerar apenas as 12 perguntas restantes, e SHALL produzir o mesmo veredito que produziria com elas. (PESSOAL-12)
+3. IF um `PATCH` de avaliação envia uma chave de dado pessoal THEN o sistema SHALL responder HTTP 400 e SHALL não persistir nenhuma linha. (PESSOAL-13)
+4. The system SHALL manter inalteradas as guardas de autorização da avaliação e o gate Parte 1 → Parte 2 nas 12 perguntas que sobram. (PESSOAL-14)
+5. The system SHALL manter inalterado o restante do contrato HTTP da avaliação. (PESSOAL-15)
 
-**Independent Test**: semear uma avaliação com respostas dos dois tipos, rodar a migração real lida do disco e conferir a contagem e o conteúdo das duas tabelas.
+**Independent Test**: abrir o formulário de avaliação e conferir que as 7 perguntas não existem na tela; enviar uma delas por `PATCH` e receber 400.
+
+---
+
+### P1: Edição posterior pelo perfil ⭐ MVP
+
+**User Story**: Como Aluno, quero poder corrigir meus dados pessoais depois, pelo perfil, para que um erro de digitação ou uma mudança de vida não fique preso para sempre.
+
+**Why P1**: Pedido explícito do usuário. Sem isso, o dado coletado no primeiro acesso seria imutável — e escolaridade e município mudam.
+
+**Acceptance Criteria**:
+
+1. WHEN um Aluno abre o perfil THEN o sistema SHALL exibir as 7 respostas atuais dele, editáveis. (PESSOAL-16)
+2. WHEN o Aluno grava uma alteração válida THEN o sistema SHALL substituir as respostas alteradas e SHALL deixar as demais inalteradas. (PESSOAL-17)
+3. IF a alteração deixa alguma das 7 vazia ou inválida THEN o sistema SHALL responder HTTP 400 e SHALL não persistir nada, mantendo o Aluno com o cadastro completo. (PESSOAL-18)
+4. The system SHALL permitir que cada Aluno edite apenas os próprios dados, recusando com 403 qualquer tentativa sobre outro CPF. (PESSOAL-19)
+5. IF o usuário não é Aluno THEN o sistema SHALL não oferecer essa área de perfil. (PESSOAL-20)
+
+**Independent Test**: responder no primeiro acesso, abrir o perfil, alterar uma resposta e conferir a mudança persistida; tentar editar o CPF de outro Aluno e receber 403.
+
+---
+
+### P1: Descarte das respostas pessoais já gravadas ⭐ MVP
+
+**User Story**: Como responsável pelo dado, quero as respostas pessoais antigas descartadas e recoletadas, para que não exista dado pessoal do lado errado da fronteira.
+
+**Why P1**: Sem isso, sobra dado pessoal em `TB_Resposta_Avaliacao` e a separação é só parcial.
+
+**Acceptance Criteria**:
+
+1. WHEN a migração roda THEN o sistema SHALL remover de `TB_Resposta_Avaliacao` todas as linhas cuja chave é pessoal. (PESSOAL-21)
+2. WHEN a migração termina THEN o sistema SHALL ter deixado intactas todas as linhas de chave não-pessoal. (PESSOAL-22)
+3. WHEN a migração termina THEN o sistema SHALL ter preservado as contas de Aluno, as avaliações e as colunas `status`, `parte1Completa` e `dataEncerramento` inalteradas. (PESSOAL-23)
+4. WHEN a migração roda sobre um banco sem nenhuma resposta pessoal THEN o sistema SHALL concluir sem erro. (PESSOAL-24)
+
+**Independent Test**: semear avaliações com respostas dos dois tipos, rodar a migração real lida do disco e conferir que só as não-pessoais restaram, com as avaliações e contas intactas.
 
 ---
 
 ### Edge cases
 
-- IF uma chave pessoal é regravada com menos opções que antes THEN o sistema SHALL remover as linhas das opções que saíram, na tabela de dado pessoal. (PESSOAL-17)
-- IF uma chave pessoal está gravada mas ausente do schema Zod atual THEN o sistema SHALL migrá-la e lê-la como órfã, sem descartar o valor. (PESSOAL-18)
-- IF a gravação falha no meio de um `PATCH` que toca as duas tabelas THEN o sistema SHALL não deixar nenhuma das duas alterada. (PESSOAL-19)
+- IF uma pergunta pessoal de múltipla escolha é regravada com menos opções THEN o sistema SHALL remover as linhas das opções que saíram. (PESSOAL-25)
+- IF a gravação falha no meio THEN o sistema SHALL não deixar nenhuma linha gravada. (PESSOAL-26)
+- IF um Aluno já respondeu e acessa a tela principal THEN o sistema SHALL exibir a tela principal normal, sem o questionário. (PESSOAL-27)
 
 ---
 
@@ -116,34 +154,44 @@ Os dados pessoais do aluno — a seção DADOS PESSOAIS do questionário — viv
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| PESSOAL-01 | P1: Fronteira física | Specify | Pending |
-| PESSOAL-02 | P1: Fronteira física | Specify | Pending |
-| PESSOAL-03 | P1: Fronteira física | Specify | Pending |
-| PESSOAL-04 | P1: Fronteira física | Specify | Pending |
-| PESSOAL-05 | P1: Fronteira física | Specify | Pending |
-| PESSOAL-06 | P1: Fronteira física | Specify | Pending |
-| PESSOAL-07 | P1: Sem regressão | Specify | Pending |
-| PESSOAL-08 | P1: Sem regressão | Specify | Pending |
-| PESSOAL-09 | P1: Sem regressão | Specify | Pending |
-| PESSOAL-10 | P1: Sem regressão | Specify | Pending |
-| PESSOAL-11 | P1: Sem regressão | Specify | Pending |
-| PESSOAL-12 | P1: Sem regressão | Specify | Pending |
-| PESSOAL-13 | P1: Migração | Specify | Pending |
-| PESSOAL-14 | P1: Migração | Specify | Pending |
-| PESSOAL-15 | P1: Migração | Specify | Pending |
-| PESSOAL-16 | P1: Migração | Specify | Pending |
-| PESSOAL-17 | Edge case | Specify | Pending |
-| PESSOAL-18 | Edge case | Specify | Pending |
-| PESSOAL-19 | Edge case | Specify | Pending |
+| PESSOAL-01 | P1: Coleta no 1º acesso | Specify | Pending |
+| PESSOAL-02 | P1: Coleta no 1º acesso | Specify | Pending |
+| PESSOAL-03 | P1: Coleta no 1º acesso | Specify | Pending |
+| PESSOAL-04 | P1: Coleta no 1º acesso | Specify | Pending |
+| PESSOAL-05 | P1: Coleta no 1º acesso | Specify | Pending |
+| PESSOAL-06 | P1: Coleta no 1º acesso | Specify | Pending |
+| PESSOAL-07 | P1: Uma vez só | Specify | Pending |
+| PESSOAL-08 | P1: Uma vez só | Specify | Pending |
+| PESSOAL-09 | P1: Uma vez só | Specify | Pending |
+| PESSOAL-10 | P1: Uma vez só | Specify | Pending |
+| PESSOAL-11 | P1: Questionário encolhe | Specify | Pending |
+| PESSOAL-12 | P1: Questionário encolhe | Specify | Pending |
+| PESSOAL-13 | P1: Questionário encolhe | Specify | Pending |
+| PESSOAL-14 | P1: Questionário encolhe | Specify | Pending |
+| PESSOAL-15 | P1: Questionário encolhe | Specify | Pending |
+| PESSOAL-16 | P1: Edição pelo perfil | Specify | Pending |
+| PESSOAL-17 | P1: Edição pelo perfil | Specify | Pending |
+| PESSOAL-18 | P1: Edição pelo perfil | Specify | Pending |
+| PESSOAL-19 | P1: Edição pelo perfil | Specify | Pending |
+| PESSOAL-20 | P1: Edição pelo perfil | Specify | Pending |
+| PESSOAL-21 | P1: Descarte do antigo | Specify | Pending |
+| PESSOAL-22 | P1: Descarte do antigo | Specify | Pending |
+| PESSOAL-23 | P1: Descarte do antigo | Specify | Pending |
+| PESSOAL-24 | P1: Descarte do antigo | Specify | Pending |
+| PESSOAL-25 | Edge case | Specify | Pending |
+| PESSOAL-26 | Edge case | Specify | Pending |
+| PESSOAL-27 | Edge case | Specify | Pending |
 
-**Coverage:** 19 total, 19 a mapear em tasks no Design, 0 unmapped.
+**Coverage:** 27 total, 27 a mapear em tasks no Design, 0 unmapped.
 
 ---
 
 ## Success Criteria
 
+- [ ] Um Aluno novo não abre nenhuma tela da plataforma sem responder as 7 perguntas.
+- [ ] Nenhum perfil além do Aluno muda de comportamento.
+- [ ] O formulário de avaliação não contém nenhuma das 7 perguntas.
 - [ ] Nenhuma linha de chave pessoal permanece em `TB_Resposta_Avaliacao`.
-- [ ] A suíte existente de `avaliacao-aluno` passa sem enfraquecer nenhuma asserção.
-- [ ] A lista de chaves pessoais existe num único lugar, e gravação e leitura derivam dela.
-- [ ] A migração move o dado já gravado sem perda, com `Ordem` preservada.
+- [ ] O Aluno consegue alterar os próprios dados pelo perfil, e só os próprios.
+- [ ] Nenhuma conta de Aluno nem avaliação de curso foi apagada pela migração.
 - [ ] Gate completo verde: `lint && build && typecheck && test:unit && test:integration && test:e2e`.

@@ -1,5 +1,29 @@
 # Dados Pessoais Separados Tasks
 
+> # ⛔ DESATUALIZADO — NÃO EXECUTAR
+>
+> Este arquivo descreve o plano ANTERIOR, de quando a feature era só uma
+> separação de persistência. Ele **contradiz o `spec.md` atual** em pontos que
+> mudam o modelo de dados, e os validadores determinísticos NÃO pegam isso —
+> `validate_tasks.py` passa neste arquivo mesmo assim.
+>
+> O que mudou depois que isto foi escrito (dois pedidos novos do usuário):
+>
+> | Aqui diz | Hoje é |
+> | --- | --- |
+> | Chave `(CPF, curso)` | **Só o CPF** — a coleta acontece antes de existir qualquer curso |
+> | As 7 perguntas continuam no questionário do curso | **Saem** — a Parte 1 cai de 19 para 12 |
+> | "Nenhuma rota muda, nenhum componente React muda" | Tela nova no `/painel`, tela de perfil, gate de navegação, rota de gravação |
+> | "Nenhuma asserção de teste existente muda" | Mudam — 3 specs e2e preenchem essas perguntas hoje |
+> | Backfill move as linhas | **Descarte**: as respostas pessoais antigas são removidas e recoletadas |
+> | 6 tarefas em 3 fases | A reescrever a partir dos 27 requisitos do `spec.md` |
+>
+> **Refaça este arquivo a partir do `spec.md` e do `context.md` antes de
+> executar qualquer coisa.**
+
+---
+
+
 ## Execution Protocol (MANDATORY -- do not skip)
 
 Implement these tasks with the `tlc-spec-driven` skill: **activate it by name and follow its Execute flow and Critical Rules.** Do not search for skill files by filesystem path. The skill is the source of truth for the full flow (per-task cycle, sub-agent delegation, adequacy review, Verifier, discrimination sensor).

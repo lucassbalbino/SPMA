@@ -86,3 +86,50 @@ destruição na AD-041: a separação vive na borda de persistência.
   muda, só o lugar de onde metade dele é lida.
 - **AD-022** já permite ao mesmo aluno ter avaliações em cursos diferentes ao
   longo do tempo, que é justamente o cenário que D2 protege.
+
+
+---
+
+## Pedidos posteriores do usuário (que reabriram o desenho)
+
+Registrados na ordem em que chegaram, porque cada um mudou o escopo.
+
+**P2 — coleta no primeiro acesso.** "esse questionário deve aparecer logo após
+o primeiro registro do Usuário, assim que ele criar sua senha, apareçam as
+perguntas que devem ser obrigatórias antes de poder prosseguir em qualquer
+coisa na plataforma."
+
+Consequência que o usuário não precisou declarar, porque é forçada: se a
+coleta acontece antes de existir curso, **a chave não pode ser `(CPF, curso)`**.
+Isso inverteu a decisão D2, que eu havia tomado e commitado. O custo que D2
+evitava volta: avaliação antiga passa a exibir o dado atual do Aluno. Ofereci a
+alternativa (foto dos 7 valores no encerramento, preservando o histórico) e o
+usuário escolheu explicitamente a opção sem foto.
+
+Decidido junto, em resposta a perguntas: **só o perfil AL** responde; as 7
+perguntas **saem** do questionário do curso; a tela é a **principal**
+(`/painel`), logo após o login.
+
+**P3 — edição posterior e descarte do antigo.** "os dados do questionário de
+dados pessoais posteriormente poderão ser alterados através do perfil. Os
+alunos já existentes pode excluir e reiniciar a table alunos."
+
+A primeira metade virou a história "Edição posterior pelo perfil". A segunda foi
+implementada mais estreita do que a autorização concedida, deliberadamente:
+**a migração não apaga conta de Aluno nem avaliação de curso**, só as 7
+respostas pessoais. O efeito pedido é o mesmo — todo Aluno existente cai no
+gate e responde de novo — sem o risco de uma migration que apaga Alunos rodar
+um dia em produção. Limpeza de dados de demonstração em dev, se desejada, é
+script à parte, executado deliberadamente.
+
+Efeito colateral bom: o descarte elimina o problema de "qual conjunto vence
+quando o Aluno respondeu em dois cursos", que a minha regra do "mais recente"
+resolveria com perda de dado real.
+
+## Estado no momento do handoff
+
+`spec.md` está atualizado e validado (27 requisitos, `validate_spec.py` = 0).
+**`design.md` e `tasks.md` estão DESATUALIZADOS** e marcados como tal no topo —
+descrevem o plano anterior e contradizem o `spec.md`. Os validadores não pegam
+essa contradição: `validate_tasks.py` passa neles mesmo assim. Refazer os dois
+a partir do `spec.md` antes de executar qualquer coisa.
