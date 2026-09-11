@@ -51,20 +51,15 @@ const CPFS = [
 ];
 
 // Os 2 primeiros campos de Parte 1 (usados na gravação parcial inicial).
+// As 7 perguntas de dados pessoais saíram deste formulário (PESSOAL-11), então
+// a Parte 1 começa em Q10.
 const PARTE_1_INICIO = {
-  avalPessoalEstado: "SP",
-  avalPessoalMunicipio: "Ubatuba",
-};
-
-// As 17 chaves restantes de Parte 1 (completam as 19 no total).
-const PARTE_1_RESTANTE = {
-  avalPessoalGenero: "Feminino",
-  avalPessoalFaixaEtaria: "26 a 35 anos",
-  avalPessoalEscolaridade: "Ensino médio completo",
-  avalPessoalRacaEtnia: "Pardo",
-  avalPessoalCondicaoPcd: "Não sou uma Pessoa com Deficiência.",
   avalProfissCondicaoTrabalho: "Desempregado",
   avalProfissAtuaTurismo: "Sim",
+};
+
+// As 10 chaves restantes de Parte 1 (completam as 12 no total).
+const PARTE_1_RESTANTE = {
   avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
   avalProfissFaixaRenda: "Até 01 salário mínimo",
   avalExperienciaTrabalhoPrevio: "Não",
@@ -161,7 +156,7 @@ test("AVAL-07: Aluno grava um bloco parcial de Parte 1 -> 200, parte1Completa pe
   await cliente.dispose();
 });
 
-test("AVAL-08: Aluno completa as 19 chaves de Parte 1 -> 200, parte1Completa=true", async () => {
+test("AVAL-08: Aluno completa as 12 chaves de Parte 1 -> 200, parte1Completa=true", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CPF_AL_PROGRESSIVO);
 
   const cliente = await novoCliente();
@@ -263,7 +258,7 @@ test("AVAL-10: mesmo misturando 1 chave de Parte 1 no PATCH, nada é persistido 
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/avaliacoes/${CPF_AL_GATE_FECHADO}/${cdCurso}`, {
-    data: { avalPessoalEstado: "SP", avalParticipConcluiuCurso: "Sim" },
+    data: { avalProfissCondicaoTrabalho: "Desempregado", avalParticipConcluiuCurso: "Sim" },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -315,6 +310,42 @@ test("AVAL-09: outro Aluno (CPF diferente) não pode gravar", async () => {
   });
 
   expect(res.status()).toBe(403);
+
+  await cliente.dispose();
+});
+
+test("PESSOAL-13: PATCH com uma chave de dado pessoal -> 400, nada persistido", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AL_ACESSO);
+  const antes = getAvaliacao(CPF_AL_ACESSO, cdCurso);
+
+  const cliente = await novoCliente();
+  const res = await cliente.patch(`/api/avaliacoes/${CPF_AL_ACESSO}/${cdCurso}`, {
+    data: { avalPessoalMunicipio: "Ubatuba" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  const depois = getAvaliacao(CPF_AL_ACESSO, cdCurso);
+  expect(depois?.respostas).toEqual(antes?.respostas);
+
+  await cliente.dispose();
+});
+
+test("PESSOAL-13: chave de dado pessoal misturada com chave válida -> 400, nem a válida é persistida", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AL_ACESSO);
+  const antes = getAvaliacao(CPF_AL_ACESSO, cdCurso);
+
+  const cliente = await novoCliente();
+  const res = await cliente.patch(`/api/avaliacoes/${CPF_AL_ACESSO}/${cdCurso}`, {
+    data: { avalPessoalGenero: "Feminino", avalMotivFormaConhecimento: "pela comunidade" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+
+  const depois = getAvaliacao(CPF_AL_ACESSO, cdCurso);
+  expect(depois?.respostas).toEqual(antes?.respostas);
+  expect(depois?.respostas?.avalMotivFormaConhecimento).toBeUndefined();
 
   await cliente.dispose();
 });

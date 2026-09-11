@@ -225,7 +225,7 @@ T10 → T11
 
 ---
 
-### T5: Formulário e rota da avaliação param de aceitar dado pessoal
+### T5: Formulário e rota da avaliação param de aceitar dado pessoal ✅
 
 **What**: `AvaliacaoForm.tsx` perde o bloco "Dados Pessoais" e os imports órfãos; a rota `PATCH` rejeita com 400 qualquer chave de `CHAVES_DADOS_PESSOAIS` no corpo.
 **Where**: `src/app/(protegido)/avaliacoes/[cpf]/[cdCurso]/AvaliacaoForm.tsx`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/route.ts`, `e2e/avaliacoes-formulario.spec.ts`, `e2e/avaliacoes-id.spec.ts`, `e2e/avaliacoes-encerrar.spec.ts`
@@ -240,11 +240,11 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `BLOCOS_PARTE_1` não tem mais o bloco "Dados Pessoais"; os 6 imports de opção que só ele usava saem do arquivo
-- [ ] Tela de avaliação não renderiza nenhuma das 7 perguntas (PESSOAL-11)
-- [ ] `PATCH` com uma chave de `CHAVES_DADOS_PESSOAIS` no corpo devolve 400 e não persiste nenhuma linha (PESSOAL-13) — testado tanto isolado quanto misturado com chaves válidas no mesmo corpo (nenhuma delas é persistida)
-- [ ] `e2e/avaliacoes-formulario.spec.ts`, `e2e/avaliacoes-id.spec.ts`, `e2e/avaliacoes-encerrar.spec.ts` param de preencher/afirmar as 7 chaves como parte do fluxo de avaliação; os `data-testid` de bloco reindexados (`bloco-parte1-2` vira `bloco-parte1-1`, etc.) são corrigidos nos specs que os usam — cada ajuste comentado no diff como consequência da mudança de escopo, não afrouxamento
-- [ ] Gate check passes (Full): `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] `BLOCOS_PARTE_1` não tem mais o bloco "Dados Pessoais"; os 6 imports de opção que só ele usava saem do arquivo
+- [x] Tela de avaliação não renderiza nenhuma das 7 perguntas (PESSOAL-11)
+- [x] `PATCH` com uma chave de `CHAVES_DADOS_PESSOAIS` no corpo devolve 400 e não persiste nenhuma linha (PESSOAL-13) — testado tanto isolado quanto misturado com chaves válidas no mesmo corpo (nenhuma delas é persistida)
+- [x] `e2e/avaliacoes-formulario.spec.ts`, `e2e/avaliacoes-id.spec.ts`, `e2e/avaliacoes-encerrar.spec.ts` param de preencher/afirmar as 7 chaves como parte do fluxo de avaliação; os `data-testid` de bloco reindexados (`bloco-parte1-2` vira `bloco-parte1-1`, etc.) são corrigidos nos specs que os usam — cada ajuste comentado no diff como consequência da mudança de escopo, não afrouxamento
+- [x] Gate check passes (Full): `npm run test:unit && npm run test:integration && npm run test:e2e`
 
 **Tests**: e2e
 **Gate**: full

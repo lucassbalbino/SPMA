@@ -41,27 +41,21 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   OPCOES_AMPLIACAO_CONHECIMENTO,
   OPCOES_ATIVIDADE_TURISMO,
-  OPCOES_CONDICAO_PCD,
   OPCOES_CONDICAO_TRABALHO,
-  OPCOES_ESCOLARIDADE,
   OPCOES_EXPECTATIVA_RENDA,
-  OPCOES_FAIXA_ETARIA,
   OPCOES_FAIXA_RENDA,
   OPCOES_FORMA_CONHECIMENTO,
-  OPCOES_GENERO,
   OPCOES_MELHORIA_PADRAO_VIDA,
   OPCOES_MOTIVACOES_POS,
   OPCOES_MOTIVOS_PARTICIPACAO,
   OPCOES_MOTIVO_NAO_CONCLUSAO,
   OPCOES_PERCENTUAL_FREQUENCIA,
-  OPCOES_RACA_ETNIA,
   OPCOES_RETOMADA_ESTUDOS,
   OPCOES_SIM_NAO,
   OPCOES_SIM_PARCIAL_NAO,
   OPCOES_SIM_TALVEZ_NAO,
   OPCOES_SITUACAO_TRABALHO,
   OPCOES_TIPO_CURSO_ANTERIOR,
-  OPCOES_UF,
   type RespostasAvaliacao,
   type RespostasAvaliacaoParcial,
 } from "@/lib/validation/schemas/avaliacao.schema";
@@ -106,44 +100,11 @@ const ESCALA_AVALIACAO_OPCOES = [
 // visíveis porém não editáveis.
 const somenteConcluinte = new Set<string>(CHAVES_SOMENTE_CONCLUINTE);
 
+// As 7 perguntas de dados pessoais (Q3-Q9) saíram deste formulário
+// (PESSOAL-11): são atributo do Aluno, coletado uma vez fora do curso. Com
+// isso os `data-testid` dos blocos, gerados por posição no array, deslocam um
+// índice - "Situação Profissional" passa a ser `bloco-parte1-1`.
 const BLOCOS_PARTE_1: BlocoDef[] = [
-  {
-    titulo: "Dados Pessoais",
-    campos: [
-      {
-        chave: "avalPessoalEstado",
-        rotulo: "3. Estado de residência",
-        tipo: "select",
-        opcoes: OPCOES_UF,
-      },
-      { chave: "avalPessoalMunicipio", rotulo: "4. Município e Estado", tipo: "texto" },
-      { chave: "avalPessoalGenero", rotulo: "5. Gênero", tipo: "radio", opcoes: OPCOES_GENERO },
-      {
-        chave: "avalPessoalFaixaEtaria",
-        rotulo: "6. Faixa etária",
-        tipo: "radio",
-        opcoes: OPCOES_FAIXA_ETARIA,
-      },
-      {
-        chave: "avalPessoalEscolaridade",
-        rotulo: "7. Qual o seu nível de escolaridade",
-        tipo: "select",
-        opcoes: OPCOES_ESCOLARIDADE,
-      },
-      {
-        chave: "avalPessoalRacaEtnia",
-        rotulo: "8. Qual a sua cor/raça/etnia?",
-        tipo: "radio",
-        opcoes: OPCOES_RACA_ETNIA,
-      },
-      {
-        chave: "avalPessoalCondicaoPcd",
-        rotulo: "9. Você é uma Pessoa com Deficiência (PCD)?",
-        tipo: "radio",
-        opcoes: OPCOES_CONDICAO_PCD,
-      },
-    ],
-  },
   {
     titulo: "Situação Profissional",
     campos: [
@@ -734,7 +695,9 @@ export function AvaliacaoForm({
           </div>
         )}
 
-        <h2 className="text-sm font-semibold">Parte 1 — Dados Pessoais e Motivação</h2>
+        <h2 className="text-sm font-semibold">
+          Parte 1 — Situação Profissional e Motivação
+        </h2>
         <Accordion>
           {BLOCOS_PARTE_1.map((bloco, indice) => (
             <AccordionItem key={bloco.titulo} value={bloco.titulo}>

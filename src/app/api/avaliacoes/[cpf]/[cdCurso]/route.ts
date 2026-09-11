@@ -9,6 +9,7 @@ import {
   CHAVES_PARTE_1,
   respostasAvaliacaoParcialSchema,
 } from "@/lib/validation/schemas/avaliacao.schema";
+import { CHAVES_DADOS_PESSOAIS } from "@/lib/validation/schemas/dados-pessoais.schema";
 import { validarCompletudeParte1 } from "@/lib/avaliacao/completude";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
@@ -111,6 +112,21 @@ async function gravarRespostasAvaliacao(request: Request, { params }: Contexto) 
   }
 
   const corpo = await request.json().catch(() => null);
+
+  // PESSOAL-13: as 7 perguntas de dados pessoais não pertencem mais a este
+  // formulário. A checagem é EXPLÍCITA, no mesmo estilo de `temChaveDeParte2`
+  // logo abaixo, porque `z.object()` descarta chave desconhecida em silêncio:
+  // sem ela o PATCH devolveria 200 e ignoraria o campo, em vez de 400.
+  // Roda antes do `safeParse` e antes da transação, então nenhuma linha é
+  // gravada - nem as chaves válidas que vieram no mesmo corpo.
+  const chavesPessoaisEnviadas = Object.keys(corpo ?? {}).filter((chave) =>
+    (CHAVES_DADOS_PESSOAIS as readonly string[]).includes(chave),
+  );
+
+  if (chavesPessoaisEnviadas.length > 0) {
+    return NextResponse.json({ erro: "Dados inválidos" }, { status: 400 });
+  }
+
   const entrada = respostasAvaliacaoParcialSchema.safeParse(corpo);
 
   if (!entrada.success) {

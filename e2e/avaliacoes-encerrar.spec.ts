@@ -38,15 +38,9 @@ async function logarComCsrf(cpf: string): Promise<{ idSessao: string; idCsrf: st
   return { idSessao, idCsrf };
 }
 
-// As 19 chaves de Parte 1 completas.
+// As 12 chaves de Parte 1 completas. As 7 de dados pessoais saíram deste
+// formulário (PESSOAL-11) e não entram mais na completude da Parte 1.
 const PARTE_1_COMPLETA = {
-  avalPessoalEstado: "SP",
-  avalPessoalMunicipio: "Ubatuba - SP",
-  avalPessoalGenero: "Feminino",
-  avalPessoalFaixaEtaria: "26 a 35 anos",
-  avalPessoalEscolaridade: "Ensino médio completo",
-  avalPessoalRacaEtnia: "Pardo",
-  avalPessoalCondicaoPcd: "Não sou uma Pessoa com Deficiência.",
   avalProfissCondicaoTrabalho: "Desempregado",
   avalProfissAtuaTurismo: "Sim",
   avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
@@ -198,7 +192,7 @@ test("AVAL-16: Concluiu='Sim' com 1 das 22 chaves faltando -> 400, pendentes lis
 
 test("AVAL-16: Parte 1 incompleta -> 400, pendentes lista as chaves de Parte 1 faltantes, status permanece EM_ANDAMENTO", async () => {
   const cdCurso = criarCursoFixture();
-  const { avalPessoalMunicipio: _omitido, ...parte1Incompleta } = PARTE_1_COMPLETA;
+  const { avalProfissFaixaRenda: _omitido, ...parte1Incompleta } = PARTE_1_COMPLETA;
   criarAvaliacao({
     cpf: CPF_AL,
     cdCurso,
@@ -214,7 +208,7 @@ test("AVAL-16: Parte 1 incompleta -> 400, pendentes lista as chaves de Parte 1 f
 
   expect(res.status()).toBe(400);
   const corpo = await res.json();
-  expect(corpo.pendentes).toContain("avalPessoalMunicipio");
+  expect(corpo.pendentes).toContain("avalProfissFaixaRenda");
   expect(corpo.pendentes).toContain("avalParticipConcluiuCurso");
 
   const persistida = getAvaliacao(CPF_AL, cdCurso);
@@ -333,7 +327,7 @@ test("Concluiu='Sim'->'Não': o PATCH preserva as respostas de concluinte, o enc
   expect(respostas).not.toHaveProperty("avalOportunSituacaoTrabalho");
   // Q23 (frequência) e a Parte 1 continuam: não são "apenas para quem concluiu"
   expect(respostas?.avalParticipPercentualFrequencia).toBeDefined();
-  expect(respostas?.avalPessoalMunicipio).toBeDefined();
+  expect(respostas?.avalProfissFaixaRenda).toBeDefined();
 
   await cliente.dispose();
 });

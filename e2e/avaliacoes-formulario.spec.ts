@@ -59,11 +59,11 @@ async function login(page: Page, cpf: string) {
   expect(res.ok()).toBe(true);
 }
 
-// 5 blocos em Parte 1, seguidos pelos blocos de Parte 2 no mesmo fluxo de
+// 4 blocos em Parte 1, seguidos pelos blocos de Parte 2 no mesmo fluxo de
 // `data-slot="accordion-item"` (dois Accordion na página, renderizados em
 // sequência) - escopar por índice absoluto evita colisão de rótulos de
 // opção repetidos entre blocos num `getByRole` sem escopo.
-const TOTAL_BLOCOS_PARTE_1 = 5;
+const TOTAL_BLOCOS_PARTE_1 = 4;
 
 function blocoParte1(page: Page, indice: number): Locator {
   return page.locator('[data-slot="accordion-item"]').nth(indice - 1);
@@ -122,21 +122,10 @@ async function encerrar(page: Page) {
 }
 
 async function preencherParte1(page: Page) {
-  // Dados Pessoais (Q3-Q9)
+  // Situação Profissional (Q10-Q13) - primeiro bloco desde que as 7 perguntas
+  // de dados pessoais saíram deste formulário (PESSOAL-11).
   const b1 = blocoParte1(page, 1);
   await abrirBloco(b1, "bloco-parte1-1");
-  await selecionar(page, "campo-avalPessoalEstado-select", "SP");
-  await page.getByTestId("campo-avalPessoalMunicipio").fill("Ubatuba");
-  await marcarOpcao(page, "avalPessoalGenero", 0); // Feminino
-  await marcarOpcao(page, "avalPessoalFaixaEtaria", 2); // 26 a 35 anos
-  await selecionar(page, "campo-avalPessoalEscolaridade-select", "Ensino médio completo");
-  await marcarOpcao(page, "avalPessoalRacaEtnia", 2); // Pardo
-  await marcarOpcao(page, "avalPessoalCondicaoPcd", 0); // Não sou uma PCD
-  await abrirBloco(b1, "bloco-parte1-1");
-
-  // Situação Profissional (Q10-Q13)
-  const b2 = blocoParte1(page, 2);
-  await abrirBloco(b2, "bloco-parte1-2");
   await selecionar(page, "campo-avalProfissCondicaoTrabalho-select", "Desempregado");
   await marcarOpcao(page, "avalProfissAtuaTurismo", 0); // Sim
   await selecionar(
@@ -145,11 +134,11 @@ async function preencherParte1(page: Page) {
     "Alojamento (meios de hospedagem)",
   );
   await selecionar(page, "campo-avalProfissFaixaRenda-select", "Até 01 salário mínimo");
-  await abrirBloco(b2, "bloco-parte1-2");
+  await abrirBloco(b1, "bloco-parte1-1");
 
   // Experiência (Q14-Q16)
-  const b3 = blocoParte1(page, 3);
-  await abrirBloco(b3, "bloco-parte1-3");
+  const b2 = blocoParte1(page, 2);
+  await abrirBloco(b2, "bloco-parte1-2");
   await marcarOpcao(page, "avalExperienciaTrabalhoPrevio", 1); // Não
   await marcarOpcao(page, "avalExperienciaCursoAnterior", 0); // Sim
   await selecionar(
@@ -157,22 +146,22 @@ async function preencherParte1(page: Page) {
     "campo-avalExperienciaTipoCursoAnterior-select",
     "Atualização profissional",
   );
-  await abrirBloco(b3, "bloco-parte1-3");
+  await abrirBloco(b2, "bloco-parte1-2");
 
   // Motivação (Q17-Q18)
-  const b4 = blocoParte1(page, 4);
-  await abrirBloco(b4, "bloco-parte1-4");
+  const b3 = blocoParte1(page, 3);
+  await abrirBloco(b3, "bloco-parte1-3");
   await marcarOpcao(page, "avalMotivMotivosParticipacao", 0); // Conseguir um emprego
   await marcarOpcao(page, "avalMotivFormaConhecimento", 1); // pelas Redes Sociais
-  await abrirBloco(b4, "bloco-parte1-4");
+  await abrirBloco(b3, "bloco-parte1-3");
 
   // Expectativas (Q19-Q21)
-  const b5 = blocoParte1(page, 5);
-  await abrirBloco(b5, "bloco-parte1-5");
+  const b4 = blocoParte1(page, 4);
+  await abrirBloco(b4, "bloco-parte1-4");
   await marcarOpcao(page, "avalExpectAtendimento", 0); // Sim
   await marcarOpcao(page, "avalExpectEmprego", 1); // Talvez
   await marcarOpcao(page, "avalExpectRenda", 2); // Média
-  await abrirBloco(b5, "bloco-parte1-5");
+  await abrirBloco(b4, "bloco-parte1-4");
 }
 
 async function preencherParte2Concluiu(page: Page) {
@@ -242,6 +231,33 @@ async function preencherParte2Concluiu(page: Page) {
   await abrirBloco(b8, "bloco-parte2-8");
 }
 
+// PESSOAL-11: as 7 perguntas de dados pessoais não existem mais nesta tela -
+// nem escondidas nem desabilitadas, simplesmente não são renderizadas.
+test("PESSOAL-11: a tela de avaliação não renderiza nenhuma das 7 perguntas de dados pessoais", async ({
+  page,
+}) => {
+  const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
+
+  await login(page, CPF_AL_A);
+  await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
+
+  await expect(page.getByTestId("bloco-parte1-1")).toBeVisible();
+
+  for (const chave of [
+    "avalPessoalEstado",
+    "avalPessoalMunicipio",
+    "avalPessoalGenero",
+    "avalPessoalFaixaEtaria",
+    "avalPessoalEscolaridade",
+    "avalPessoalRacaEtnia",
+    "avalPessoalCondicaoPcd",
+  ]) {
+    await expect(page.locator(`[data-testid^="campo-${chave}"]`)).toHaveCount(0);
+  }
+
+  await expect(page.getByText("Dados Pessoais")).toHaveCount(0);
+});
+
 test("Aluno salva um bloco parcial de Parte 1 e o dado persiste após reload", async ({ page }) => {
   const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
 
@@ -250,14 +266,14 @@ test("Aluno salva um bloco parcial de Parte 1 e o dado persiste após reload", a
 
   const b1 = blocoParte1(page, 1);
   await abrirBloco(b1, "bloco-parte1-1");
-  await page.getByTestId("campo-avalPessoalMunicipio").fill("Ubatuba");
+  await marcarOpcao(page, "avalProfissAtuaTurismo", 0); // Sim
   const resposta = await salvarRascunho(page);
   expect(resposta.ok()).toBe(true);
   await expect(page.getByTestId("erro-avaliacao")).toHaveCount(0);
 
   await page.reload();
   await abrirBloco(blocoParte1(page, 1), "bloco-parte1-1");
-  await expect(page.getByTestId("campo-avalPessoalMunicipio")).toHaveValue("Ubatuba");
+  await expect(page.getByTestId("campo-avalProfissAtuaTurismo-opcao-0")).toBeChecked();
 });
 
 test("antes da Parte 1 completa, os controles de Parte 2 aparecem desabilitados com o aviso do gate", async ({
@@ -353,7 +369,7 @@ test("Parte 1 completa + Parte 2 completa (Concluiu='Sim') encerra de forma irre
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 
   await abrirBloco(blocoParte1(page, 1), "bloco-parte1-1");
-  await expect(page.getByTestId("campo-avalPessoalMunicipio")).toBeDisabled();
+  await expect(page.getByTestId("campo-avalProfissCondicaoTrabalho-select")).toBeDisabled();
 });
 
 test("avaliação encerrada é somente leitura, sem botões de ação", async ({ page }) => {
