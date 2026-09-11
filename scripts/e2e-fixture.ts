@@ -35,6 +35,7 @@ const CAMPOS_USUARIO = {
   cdOfertante: true,
   senhaHash: true,
   primeiraVez: true,
+  dadosPessoaisCompletos: true,
   tentativasFalhas: true,
   bloqueadoAte: true,
   criadoPor: true,
@@ -48,6 +49,7 @@ type UsuarioFixture = {
   senha?: string | null;
   primeiraVez?: boolean;
   cdOfertante?: number | null;
+  dadosPessoaisCompletos?: boolean;
 };
 
 /**
@@ -85,6 +87,12 @@ async function executar(
         senhaHash,
         primeiraVez: dados.primeiraVez ?? senhaHash === null,
         cdOfertante: dados.cdOfertante ?? null,
+        // Default true: a imensa maioria dos fixtures de AL neste conjunto de
+        // specs não é sobre a feature de dados pessoais e não deve cair no
+        // gate novo (requireDadosPessoaisCompletos) sem pedir. Só os specs
+        // que testam esse gate passam `dadosPessoaisCompletos: false`
+        // explicitamente.
+        dadosPessoaisCompletos: dados.dadosPessoaisCompletos ?? true,
         // Zeradas sempre, para que cada spec comece de um estado previsível.
         tentativasFalhas: 0,
         bloqueadoAte: null,
@@ -114,6 +122,13 @@ async function executar(
 
     case "getSessao":
       return prisma.sessao.findUnique({ where: { id: argumento as string } });
+
+    // Lê o dado pessoal do Aluno pelo repositório (mesma regra de
+    // `respostasPorLinha`) - `TB_Dado_Pessoal_Aluno`, chaveada só por CPF.
+    case "getDadosPessoais": {
+      const cpf = argumento as string;
+      return respostasPorLinha(prisma, { formulario: "dadosPessoais", cpf });
+    }
 
     case "criarOfertante": {
       const dados = argumento as { nome: string; uf: string };

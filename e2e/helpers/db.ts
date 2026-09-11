@@ -19,6 +19,7 @@ export type UsuarioFixture = {
   senha?: string | null;
   primeiraVez?: boolean;
   cdOfertante?: number | null;
+  dadosPessoaisCompletos?: boolean;
 };
 
 export type UsuarioPersistido = {
@@ -29,6 +30,7 @@ export type UsuarioPersistido = {
   cdOfertante: number | null;
   senhaHash: string | null;
   primeiraVez: boolean;
+  dadosPessoaisCompletos: boolean;
   tentativasFalhas: number;
   bloqueadoAte: string | null;
   criadoPor: string | null;
@@ -78,6 +80,11 @@ export function deleteUsuarios(cpfs: string[]): void {
 
 export function getSessao(id: string): SessaoPersistida | null {
   return executar<SessaoPersistida | null>("getSessao", id);
+}
+
+/** Dado pessoal do Aluno persistido em `TB_Dado_Pessoal_Aluno` (PESSOAL-07), lido pelo repositório - `null` sem nenhuma resposta. */
+export function getDadosPessoais(cpf: string): Record<string, unknown> | null {
+  return executar<Record<string, unknown> | null>("getDadosPessoais", cpf);
 }
 
 export function criarOfertante(dados: {
