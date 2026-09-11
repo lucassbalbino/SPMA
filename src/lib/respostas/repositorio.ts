@@ -12,6 +12,7 @@
 // Reason: mesma informação, menos superfície e tipagem exata por formulário.
 import { Prisma } from "../../generated/prisma/client";
 import { respostasAvaliacaoSchema } from "../validation/schemas/avaliacao.schema";
+import { respostasDadosPessoaisSchema } from "../validation/schemas/dados-pessoais.schema";
 import { respostasPosCursoSchema } from "../validation/schemas/pos-curso.schema";
 import { respostasPreCursoSchema } from "../validation/schemas/pre-curso.schema";
 import { classificarChave, desserializar, serializar } from "./forma";
@@ -22,7 +23,10 @@ export type ClienteRespostas = Prisma.TransactionClient;
 export type AlvoRespostas =
   | { formulario: "preCurso"; cdCurso: number }
   | { formulario: "posCurso"; cdCurso: number }
-  | { formulario: "avaliacao"; cpf: string; cdCurso: number };
+  | { formulario: "avaliacao"; cpf: string; cdCurso: number }
+  // Dado pessoal do Aluno (PESSOAL-07): a chave-pai é o CPF sozinho, sem
+  // curso - a coleta acontece antes de existir qualquer matrícula.
+  | { formulario: "dadosPessoais"; cpf: string };
 
 export type Respostas = Record<string, unknown>;
 
@@ -48,12 +52,17 @@ const SCHEMAS = {
   preCurso: respostasPreCursoSchema,
   posCurso: respostasPosCursoSchema,
   avaliacao: respostasAvaliacaoSchema,
+  dadosPessoais: respostasDadosPessoaisSchema,
 } as const;
 
 type LinhaResposta = { chave: string; ordem: number; valor: string };
 
 /** Filtro das linhas de um único registro de formulário. */
 function filtroDoPai(alvo: AlvoRespostas) {
+  if (alvo.formulario === "dadosPessoais") {
+    return { cpf: alvo.cpf };
+  }
+
   return alvo.formulario === "avaliacao"
     ? { cpf: alvo.cpf, cdCurso: alvo.cdCurso }
     : { cdCurso: alvo.cdCurso };
@@ -75,6 +84,13 @@ async function buscarLinhas(
   if (alvo.formulario === "posCurso") {
     return tx.respostaPosCurso.findMany({
       where: { cdCurso: alvo.cdCurso },
+      orderBy: [...orderBy],
+    });
+  }
+
+  if (alvo.formulario === "dadosPessoais") {
+    return tx.dadoPessoalAluno.findMany({
+      where: { cpf: alvo.cpf },
       orderBy: [...orderBy],
     });
   }
@@ -106,6 +122,13 @@ async function apagarLinhas(
     return;
   }
 
+  if (alvo.formulario === "dadosPessoais") {
+    await tx.dadoPessoalAluno.deleteMany({
+      where: { cpf: alvo.cpf, chave: { in: chaves } },
+    });
+    return;
+  }
+
   await tx.respostaAvaliacao.deleteMany({
     where: { cpf: alvo.cpf, cdCurso: alvo.cdCurso, chave: { in: chaves } },
   });
@@ -131,6 +154,13 @@ async function inserirLinhas(
   if (alvo.formulario === "posCurso") {
     await tx.respostaPosCurso.createMany({
       data: dados as Prisma.RespostaPosCursoCreateManyInput[],
+    });
+    return;
+  }
+
+  if (alvo.formulario === "dadosPessoais") {
+    await tx.dadoPessoalAluno.createMany({
+      data: dados as Prisma.DadoPessoalAlunoCreateManyInput[],
     });
     return;
   }

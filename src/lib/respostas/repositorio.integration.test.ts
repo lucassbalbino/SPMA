@@ -14,6 +14,9 @@ import {
 
 const CPF_GO = "40364947096";
 const CPF_ALUNO = "70172121048";
+// Aluno usado só no teste de CASCATA do dado pessoal, que precisa apagar a
+// conta - CPF_ALUNO é compartilhado pelos demais testes do arquivo.
+const CPF_ALUNO_DESCARTAVEL = "83641290740";
 
 let cdOfertante: number;
 let cdCursoA: number;
@@ -22,7 +25,9 @@ let cdCursoB: number;
 describe("repositório de respostas (integration)", () => {
   beforeAll(async () => {
     await prisma.avaliacaoAluno.deleteMany({ where: { cpf: CPF_ALUNO } });
-    await prisma.usuario.deleteMany({ where: { cpf: { in: [CPF_GO, CPF_ALUNO] } } });
+    await prisma.usuario.deleteMany({
+      where: { cpf: { in: [CPF_GO, CPF_ALUNO, CPF_ALUNO_DESCARTAVEL] } },
+    });
 
     const ofertante = await prisma.ofertante.create({
       data: { nome: "Ofertante Respostas Teste", uf: "SP" },
@@ -70,6 +75,9 @@ describe("repositório de respostas (integration)", () => {
     });
     await prisma.respostaPosCurso.deleteMany({ where: { cdCurso: cdCursoA } });
     await prisma.respostaAvaliacao.deleteMany({ where: { cpf: CPF_ALUNO } });
+    await prisma.dadoPessoalAluno.deleteMany({
+      where: { cpf: { in: [CPF_ALUNO, CPF_ALUNO_DESCARTAVEL] } },
+    });
   });
 
   afterAll(async () => {
@@ -77,7 +85,9 @@ describe("repositório de respostas (integration)", () => {
     await prisma.posCurso.deleteMany({ where: { cdCurso: cdCursoA } });
     await prisma.preCurso.deleteMany({ where: { cdOfertante } });
     await prisma.verba.deleteMany({ where: { cdOfertante } });
-    await prisma.usuario.deleteMany({ where: { cpf: { in: [CPF_GO, CPF_ALUNO] } } });
+    await prisma.usuario.deleteMany({
+      where: { cpf: { in: [CPF_GO, CPF_ALUNO, CPF_ALUNO_DESCARTAVEL] } },
+    });
     await prisma.ofertante.deleteMany({ where: { cdOfertante } });
     await prisma.$disconnect();
   });
@@ -383,6 +393,136 @@ describe("repositório de respostas (integration)", () => {
 
     expect(linhas).toHaveLength(2);
     expect(linhas.every((linha) => linha.cpf === CPF_ALUNO)).toBe(true);
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Dado pessoal do Aluno (PESSOAL-07, PESSOAL-09, PESSOAL-26)
+  // ─────────────────────────────────────────────────────────────
+
+  it("devolve {} para Aluno sem nenhum dado pessoal gravado", async () => {
+    expect(
+      await lerRespostas(prisma, { formulario: "dadosPessoais", cpf: CPF_ALUNO }),
+    ).toEqual({});
+  });
+
+  // PESSOAL-07: uma linha por (Aluno, pergunta, posição), na tabela nova - e
+  // NENHUMA em `TB_Resposta_Avaliacao`, que é a fronteira que a feature move.
+  it("grava uma linha por pergunta pessoal, chaveada só pelo CPF", async () => {
+    await gravarRespostas(prisma, { formulario: "dadosPessoais", cpf: CPF_ALUNO }, {
+      avalPessoalEstado: "AM",
+      avalPessoalMunicipio: "Manaus, AM",
+      avalPessoalGenero: "Feminino",
+    });
+
+    const linhas = await prisma.dadoPessoalAluno.findMany({
+      where: { cpf: CPF_ALUNO },
+      orderBy: { chave: "asc" },
+      select: { cpf: true, chave: true, ordem: true, valor: true },
+    });
+
+    expect(linhas).toEqual([
+      { cpf: CPF_ALUNO, chave: "avalPessoalEstado", ordem: 0, valor: "AM" },
+      { cpf: CPF_ALUNO, chave: "avalPessoalGenero", ordem: 0, valor: "Feminino" },
+      { cpf: CPF_ALUNO, chave: "avalPessoalMunicipio", ordem: 0, valor: "Manaus, AM" },
+    ]);
+
+    expect(
+      await lerRespostas(prisma, { formulario: "dadosPessoais", cpf: CPF_ALUNO }),
+    ).toEqual({
+      avalPessoalEstado: "AM",
+      avalPessoalMunicipio: "Manaus, AM",
+      avalPessoalGenero: "Feminino",
+    });
+
+    // Nada foi parar no questionário do curso.
+    expect(
+      await prisma.respostaAvaliacao.count({ where: { cpf: CPF_ALUNO } }),
+    ).toBe(0);
+  });
+
+  it("regrava uma chave pessoal com valor novo sem duplicar linha", async () => {
+    const alvo = { formulario: "dadosPessoais" as const, cpf: CPF_ALUNO };
+
+    await gravarRespostas(prisma, alvo, { avalPessoalMunicipio: "Manaus, AM" });
+    await gravarRespostas(prisma, alvo, { avalPessoalMunicipio: "Belém, PA" });
+
+    const linhas = await prisma.dadoPessoalAluno.findMany({
+      where: { cpf: CPF_ALUNO, chave: "avalPessoalMunicipio" },
+      select: { ordem: true, valor: true },
+    });
+
+    expect(linhas).toEqual([{ ordem: 0, valor: "Belém, PA" }]);
+  });
+
+  // PESSOAL-07: uma linha por ALUNO - o dado de um não aparece no do outro.
+  it("isola o dado pessoal de Alunos diferentes", async () => {
+    await prisma.usuario.create({
+      data: { cpf: CPF_ALUNO_DESCARTAVEL, nome: "Aluno Dado Pessoal", tipo: "AL" },
+    });
+
+    await gravarRespostas(prisma, { formulario: "dadosPessoais", cpf: CPF_ALUNO }, {
+      avalPessoalMunicipio: "Manaus, AM",
+    });
+    await gravarRespostas(
+      prisma,
+      { formulario: "dadosPessoais", cpf: CPF_ALUNO_DESCARTAVEL },
+      { avalPessoalMunicipio: "Belém, PA" },
+    );
+
+    expect(
+      await lerRespostas(prisma, { formulario: "dadosPessoais", cpf: CPF_ALUNO }),
+    ).toEqual({ avalPessoalMunicipio: "Manaus, AM" });
+    expect(
+      await lerRespostas(prisma, {
+        formulario: "dadosPessoais",
+        cpf: CPF_ALUNO_DESCARTAVEL,
+      }),
+    ).toEqual({ avalPessoalMunicipio: "Belém, PA" });
+
+    await prisma.usuario.delete({ where: { cpf: CPF_ALUNO_DESCARTAVEL } });
+  });
+
+  // PESSOAL-26: falha no meio da gravação não deixa nenhuma linha.
+  it("não deixa nenhum dado pessoal quando a transação é revertida", async () => {
+    const alvo = { formulario: "dadosPessoais" as const, cpf: CPF_ALUNO };
+
+    await expect(
+      prisma.$transaction(async (tx) => {
+        await gravarRespostas(tx, alvo, {
+          avalPessoalEstado: "AM",
+          avalPessoalMunicipio: "Manaus, AM",
+          avalPessoalGenero: "Feminino",
+        });
+        throw new Error("falha no meio da gravação");
+      }, ISOLAMENTO_RESPOSTAS),
+    ).rejects.toThrow("falha no meio da gravação");
+
+    expect(await prisma.dadoPessoalAluno.count({ where: { cpf: CPF_ALUNO } })).toBe(0);
+    expect(await lerRespostas(prisma, alvo)).toEqual({});
+  });
+
+  // PESSOAL-09: remover o Aluno remove o dado pessoal dele, sem órfão - FK
+  // com ON DELETE CASCADE, sem uma linha de código na aplicação.
+  it("remove o dado pessoal quando o Aluno é removido", async () => {
+    await prisma.usuario.create({
+      data: { cpf: CPF_ALUNO_DESCARTAVEL, nome: "Aluno Descartável", tipo: "AL" },
+    });
+
+    await gravarRespostas(
+      prisma,
+      { formulario: "dadosPessoais", cpf: CPF_ALUNO_DESCARTAVEL },
+      { avalPessoalGenero: "Masculino", avalPessoalRacaEtnia: "Pardo" },
+    );
+
+    expect(
+      await prisma.dadoPessoalAluno.count({ where: { cpf: CPF_ALUNO_DESCARTAVEL } }),
+    ).toBe(2);
+
+    await prisma.usuario.delete({ where: { cpf: CPF_ALUNO_DESCARTAVEL } });
+
+    expect(
+      await prisma.dadoPessoalAluno.count({ where: { cpf: CPF_ALUNO_DESCARTAVEL } }),
+    ).toBe(0);
   });
 
   // RESP-06: FK com ON DELETE CASCADE, sem uma linha de código na aplicação.

@@ -167,7 +167,7 @@ T10 → T11
 
 ---
 
-### T3: Repositório ganha o formulário `dadosPessoais`
+### T3: Repositório ganha o formulário `dadosPessoais` ✅
 
 **What**: `AlvoRespostas` ganha a variante `{ formulario: "dadosPessoais"; cpf: string }`; as 4 funções privadas de `repositorio.ts` ganham o branch correspondente.
 **Where**: `src/lib/respostas/repositorio.ts`
@@ -182,11 +182,11 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `gravarRespostas(tx, { formulario: "dadosPessoais", cpf }, patch)` grava só em `TB_Dado_Pessoal_Aluno`, filtrado por `cpf` (sem `cdCurso`)
-- [ ] `lerRespostas` devolve `{}` quando não há nenhuma linha, e o objeto completo quando há
-- [ ] Regravação de uma chave com valor novo substitui a antiga, sem duplicar linha (mesmo teste de idempotência que as outras 3 variantes já têm)
-- [ ] Teste de rollback: erro dentro da transação não deixa nenhuma linha gravada em `TB_Dado_Pessoal_Aluno` (PESSOAL-26)
-- [ ] Gate check passes (Full): `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] `gravarRespostas(tx, { formulario: "dadosPessoais", cpf }, patch)` grava só em `TB_Dado_Pessoal_Aluno`, filtrado por `cpf` (sem `cdCurso`)
+- [x] `lerRespostas` devolve `{}` quando não há nenhuma linha, e o objeto completo quando há
+- [x] Regravação de uma chave com valor novo substitui a antiga, sem duplicar linha (mesmo teste de idempotência que as outras 3 variantes já têm)
+- [x] Teste de rollback: erro dentro da transação não deixa nenhuma linha gravada em `TB_Dado_Pessoal_Aluno` (PESSOAL-26)
+- [x] Gate check passes (Full): `npm run test:unit && npm run test:integration && npm run test:e2e`
 
 **Tests**: integration
 **Gate**: full
