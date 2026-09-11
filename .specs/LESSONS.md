@@ -198,6 +198,36 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: CURSO-09 (e2e/pre-cursos-novo.spec.ts:125-131) (e2e)
 - last seen: 2026-09-09T23:52:24Z
 
+### L-032 - Never let a test fixture re-implement the production rule it is meant to check; assert the observed output instead.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: respostas-normalizadas
+- evidence: M5 - src/lib/respostas/repositorio.ts:179 (validation.md, Lacuna 2) (tests)
+- last seen: 2026-09-11T08:48:56Z
+
+### L-033 - Seed every value shape a requirement admits, not only the simplest one; a fixture with one shape hides the lossy path.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: respostas-normalizadas
+- evidence: RESP-14 - src/lib/respostas/forma.ts:56 (validation.md, Lacuna 1) (tests)
+- last seen: 2026-09-11T08:48:56Z
+
+### L-034 - Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: respostas-normalizadas
+- evidence: RESP-21 - src/lib/respostas/repositorio.integration.test.ts:240 (validation.md, Lacuna 3) (tests)
+- last seen: 2026-09-11T08:49:03Z
+
+### L-035 - An untouched-file argument does not cover behaviour that moved into changed callers; cite a test that exercises the criterion.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `traceability` · harmful: 0
+- features: respostas-normalizadas
+- evidence: RESP-12 - spec.md:148 (validation.md, RESP-12) (traceability)
+- last seen: 2026-09-11T08:49:04Z
+
+### L-036 - Assert an index is a candidate for the query (possible_keys), not that the optimiser picked it (key); small test tables make key flaky.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `database` · harmful: 0
+- features: respostas-normalizadas
+- evidence: tasks.md T17 SPEC_DEVIATION - agregacao.integration.test.ts:163 (database)
+- last seen: 2026-09-11T08:49:04Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

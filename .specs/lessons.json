@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 32,
+  "next_id": 37,
   "lessons": [
     {
       "id": "L-001",
@@ -564,6 +564,96 @@
       ],
       "created": "2026-09-09T23:52:24Z",
       "last_seen": "2026-09-09T23:52:24Z"
+    },
+    {
+      "id": "L-032",
+      "key": "surviving_mutant::never let a test fixture re implement the production rule it is meant to check assert the observed output instead",
+      "text": "Never let a test fixture re-implement the production rule it is meant to check; assert the observed output instead.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "respostas-normalizadas"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M5 - src/lib/respostas/repositorio.ts:179 (validation.md, Lacuna 2) (tests)"
+      ],
+      "created": "2026-09-11T08:48:56Z",
+      "last_seen": "2026-09-11T08:48:56Z"
+    },
+    {
+      "id": "L-033",
+      "key": "ac_gap::seed every value shape a requirement admits not only the simplest one a fixture with one shape hides the lossy path",
+      "text": "Seed every value shape a requirement admits, not only the simplest one; a fixture with one shape hides the lossy path.",
+      "signal": "ac_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "respostas-normalizadas"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "RESP-14 - src/lib/respostas/forma.ts:56 (validation.md, Lacuna 1) (tests)"
+      ],
+      "created": "2026-09-11T08:48:56Z",
+      "last_seen": "2026-09-11T08:48:56Z"
+    },
+    {
+      "id": "L-034",
+      "key": "ac_gap::assert every conjunct of a multi part criterion proving the action succeeded leaves the resulting state half unverified",
+      "text": "Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.",
+      "signal": "ac_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "respostas-normalizadas"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "RESP-21 - src/lib/respostas/repositorio.integration.test.ts:240 (validation.md, Lacuna 3) (tests)"
+      ],
+      "created": "2026-09-11T08:49:03Z",
+      "last_seen": "2026-09-11T08:49:03Z"
+    },
+    {
+      "id": "L-035",
+      "key": "spec_precision_gap::an untouched file argument does not cover behaviour that moved into changed callers cite a test that exercises the criterion",
+      "text": "An untouched-file argument does not cover behaviour that moved into changed callers; cite a test that exercises the criterion.",
+      "signal": "spec_precision_gap",
+      "scope": "traceability",
+      "status": "candidate",
+      "features": [
+        "respostas-normalizadas"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "RESP-12 - spec.md:148 (validation.md, RESP-12) (traceability)"
+      ],
+      "created": "2026-09-11T08:49:04Z",
+      "last_seen": "2026-09-11T08:49:04Z"
+    },
+    {
+      "id": "L-036",
+      "key": "spec_deviation::assert an index is a candidate for the query possible keys not that the optimiser picked it key small test tables make key flaky",
+      "text": "Assert an index is a candidate for the query (possible_keys), not that the optimiser picked it (key); small test tables make key flaky.",
+      "signal": "spec_deviation",
+      "scope": "database",
+      "status": "candidate",
+      "features": [
+        "respostas-normalizadas"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tasks.md T17 SPEC_DEVIATION - agregacao.integration.test.ts:163 (database)"
+      ],
+      "created": "2026-09-11T08:49:04Z",
+      "last_seen": "2026-09-11T08:49:04Z"
     }
   ]
 }
