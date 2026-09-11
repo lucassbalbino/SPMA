@@ -574,7 +574,7 @@ existia.
 
 ---
 
-### T17: Prova de agregação por pergunta
+### T17: Prova de agregação por pergunta ✅
 
 **What**: teste de integração que agrega respostas por pergunta e valor, provando que a consulta não usa função de JSON e passa pelo índice.
 **Where**: `src/lib/respostas/agregacao.integration.test.ts`
@@ -589,10 +589,17 @@ existia.
 
 **Done when**:
 
-- [ ] Semeia respostas de vários alunos do mesmo curso e afirma a contagem correta por opção (RESP-17)
-- [ ] Afirma que o plano de execução da consulta usa o índice de `chave` (RESP-18)
-- [ ] Nenhuma função de JSON no `WHERE` nem no `GROUP BY`
-- [ ] Gate check passes (Alvo): `npm run test:unit && npm run test:integration` + os arquivos e2e desta tarefa
+- [x] Semeia respostas de 4 alunos do mesmo curso e afirma a contagem correta por opção (RESP-17) — escalar (Sim 3 / Não 1), seleção múltipla (uma linha por opção, 5 seleções de 4 alunos) e escopo por curso sem vazamento entre cursos
+- [x] Afirma que o plano de execução da consulta usa o índice de `chave` (RESP-18), nas três tabelas
+- [x] Nenhuma função de JSON no `WHERE` nem no `GROUP BY` — mais: um teste afirma via `information_schema` que não sobrou nenhuma coluna JSON nos três formulários para uma consulta poder recair nelas
+- [x] Gate check passes (Alvo): `npm run test:unit` (580) `&& npm run test:integration` (56, +7). Sem arquivo e2e nesta tarefa.
+
+**SPEC_DEVIATION**: a asserção da RESP-18 é sobre `possible_keys`, não sobre `key`.
+Com a tabela de teste pequena o otimizador do MySQL pode preferir varredura completa, e o
+que a RESP-18 exige ("manter um índice que cubra a busca por chave") é que o índice exista
+e sirva à consulta. Reason: asserção em `key` seria flaky por heurística de cardinalidade;
+a discriminação foi verificada — coluna sem índice devolve `possible_keys` NULL, então
+derrubar o índice quebra o teste.
 
 **Tests**: integration
 **Gate**: alvo

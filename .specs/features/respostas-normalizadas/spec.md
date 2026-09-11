@@ -150,8 +150,8 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 | RESP-14 | P1: Migração | Execute | Done (T4) |
 | RESP-15 | P1: Migração | Execute | Done (T16) |
 | RESP-16 | P1: Migração | Execute | Done (T4) |
-| RESP-17 | P1: Agregação | Design | Pending |
-| RESP-18 | P1: Agregação | Execute | Em progresso (T2) |
+| RESP-17 | P1: Agregação | Execute | Done (T17) |
+| RESP-18 | P1: Agregação | Execute | Done (T17) |
 | RESP-19 | Edge case | Execute | Done (T3) |
 | RESP-20 | Edge case | Design | Pending |
 | RESP-21 | Edge case | Execute | Done (T3) |
