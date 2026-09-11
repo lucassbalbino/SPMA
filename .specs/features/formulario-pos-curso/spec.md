@@ -2,7 +2,7 @@
 
 **Escopo:** Complex (mesma natureza de ambiguidade do `formulario-pre-curso` — o documento fonte descreve os 26 itens de dado só por bloco/categoria, sem lista nominal; ver Assunções).
 **Dependências:** `auth-e-usuarios` (sessão, cascata, escopo), `seguranca-transversal` (CSRF, erro genérico, `podeAcessarOfertante`), `formulario-pre-curso` (`TB_Pos_Curso.CD_Curso` é ao mesmo tempo PK e FK 1:1 para `TB_Pre_Curso.CD_Curso` — não existe Pós-Curso sem um Pré-Curso já criado).
-**Fonte de decisões:** STATE.md AD-004, AD-008, AD-012, AD-013, AD-018, AD-025, AD-033, AD-034.
+**Fonte de decisões:** STATE.md AD-004, AD-008, AD-012, AD-013, AD-018, AD-025, AD-033, ~~AD-034~~ AD-041 (as respostas deixaram de ser um campo `Json?` e passaram a uma linha por resposta em `TB_Resposta_Pos_Curso`; nenhum requisito desta feature mudou).
 **Fonte funcional:** `docs/SPMA_Especificacao_Cliente_v2.md` seção 5 (Formulário de Pós-Curso), seção 3.6 (`TB_Pos_Curso`), seção 7 (segurança), seção 8 (RN-01 a RN-03, RN-08).
 
 ---

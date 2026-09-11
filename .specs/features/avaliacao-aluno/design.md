@@ -83,7 +83,7 @@ graph TD
 
 | System | Integration Method |
 |---|---|
-| `TB_Avaliacao_Aluno` (model `AvaliacaoAluno`) | Já existe no schema (`cpf`+`cdCurso` PK composta, `status`, `parte1Completa`, `respostas Json?`, `dataCriacao`, `dataEncerramento`). Nenhuma migration nesta feature. |
+| `TB_Avaliacao_Aluno` (model `AvaliacaoAluno`) | Já existe no schema (`cpf`+`cdCurso` PK composta, `status`, `parte1Completa`, ~~`respostas Json?`~~, `dataCriacao`, `dataEncerramento`). Nenhuma migration nesta feature. **Desatualizado desde 2026-09-11 (AD-041):** a coluna `respostas` foi dropada; as respostas vivem em `TB_Resposta_Avaliacao`, uma linha por resposta (chave-pai composta `cpf`+`cdCurso`). O domínio continua vendo `{ chave: valor }`, então nada nesta feature mudou de comportamento. |
 | `TB_Usuario` (model `Usuario`, `tipo=AL`) | Consultada na criação da matrícula (`findUnique({ where: { cpf } })`) para confirmar existência e `tipo=AL` (AVAL-02, edge case 404). Nenhuma alteração no model. |
 | `TB_Pre_Curso` (model `PreCurso`) | Consultada em toda rota via `include: { curso: true }` (nome da relação no schema) para obter `cdOfertante` (autorização de matrícula/leitura). Nenhuma alteração no model. |
 

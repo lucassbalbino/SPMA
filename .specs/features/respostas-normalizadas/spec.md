@@ -12,12 +12,12 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 
 ## Goals
 
-- [ ] Cada resposta de cada pergunta vira uma linha própria, nos três formulários.
-- [ ] O campo `respostas Json?` deixa de existir em `TB_Pre_Curso`, `TB_Pos_Curso` e `TB_Avaliacao_Aluno`.
-- [ ] Zero regressão de comportamento: completude, gates condicionais, encerramento irreversível, merge raso do PATCH, autorização e escopo continuam idênticos.
-- [ ] As respostas já gravadas migram sem perda.
-- [ ] Agregação por pergunta é uma consulta SQL direta, com índice, sem parsear JSON.
-- [ ] AD-034 rescindido por uma AD nova em `.specs/STATE.md`.
+- [x] Cada resposta de cada pergunta vira uma linha própria, nos três formulários.
+- [x] O campo `respostas Json?` deixa de existir em `TB_Pre_Curso`, `TB_Pos_Curso` e `TB_Avaliacao_Aluno`.
+- [x] Zero regressão de comportamento: completude, gates condicionais, encerramento irreversível, merge raso do PATCH, autorização e escopo continuam idênticos.
+- [x] As respostas já gravadas migram sem perda.
+- [x] Agregação por pergunta é uma consulta SQL direta, com índice, sem parsear JSON.
+- [x] AD-034 rescindido por uma AD nova em `.specs/STATE.md`.
 
 ## Out of Scope
 
@@ -134,18 +134,18 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| RESP-01 | P1: Resposta como entidade | Execute | Em progresso (T3, T6, T9, T12) |
+| RESP-01 | P1: Resposta como entidade | Execute | Done (T3, T6, T9, T12) |
 | RESP-02 | P1: Resposta como entidade | Execute | Done (T1) |
-| RESP-03 | P1: Resposta como entidade | Execute | Em progresso (T3, T6, T9, T12) |
+| RESP-03 | P1: Resposta como entidade | Execute | Done (T3, T6, T9, T12) |
 | RESP-04 | P1: Resposta como entidade | Execute | Done (T3) |
 | RESP-05 | P1: Resposta como entidade | Execute | Done (T2) |
 | RESP-06 | P1: Resposta como entidade | Execute | Done (T2) |
-| RESP-07 | P1: Sem regressão | Execute | Em progresso (T7, T8, T11, T13, T14) |
+| RESP-07 | P1: Sem regressão | Execute | Done (T7, T8, T11, T13, T14) |
 | RESP-08 | P1: Sem regressão | Execute | Done (T3, T7, T10, T13) |
 | RESP-09 | P1: Sem regressão | Execute | Done (T6, T9, T12) |
 | RESP-10 | P1: Sem regressão | Execute | Done (T12) |
 | RESP-11 | P1: Sem regressão | Execute | Done (T6, T9, T12) |
-| RESP-12 | P1: Sem regressão | Design | Pending |
+| RESP-12 | P1: Sem regressão | Execute | Done (por invariância: `src/lib/auth/guards.ts` intocada em toda a feature, `git log 6b28ae6..HEAD -- src/lib/auth/guards.ts` vazio; os e2e de 401/403 dos três formulários passam sem alteração de asserção) |
 | RESP-13 | P1: Migração | Execute | Done (T4) |
 | RESP-14 | P1: Migração | Execute | Done (T4) |
 | RESP-15 | P1: Migração | Execute | Done (T16) |
@@ -153,7 +153,7 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 | RESP-17 | P1: Agregação | Execute | Done (T17) |
 | RESP-18 | P1: Agregação | Execute | Done (T17) |
 | RESP-19 | Edge case | Execute | Done (T3) |
-| RESP-20 | Edge case | Design | Pending |
+| RESP-20 | Edge case | Execute | Done (`e2e/pre-cursos-id.spec.ts:137`, lacuna achada na revisão de rastreabilidade da T18 e fechada antes do Verifier) |
 | RESP-21 | Edge case | Execute | Done (T3) |
 
 **Coverage:** 21 total, 21 a mapear em tasks no Design, 0 unmapped.
@@ -162,7 +162,7 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 
 ## Success Criteria
 
-- [ ] Os três formulários gravam e leem respostas linha a linha; `respostas Json?` não existe mais no schema.
+- [x] Os três formulários gravam e leem respostas linha a linha; `respostas Json?` não existe mais no schema.
 - [ ] A suíte completa das três features passa sem enfraquecer nenhuma asserção existente.
 - [ ] Uma consulta de agregação por pergunta roda sem função de JSON e usa índice.
 - [ ] O backfill reconstrói, para cada registro semeado, um objeto idêntico ao JSON original.

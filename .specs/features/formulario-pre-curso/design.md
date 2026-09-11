@@ -56,7 +56,7 @@ graph TD
 
 | System | Integration Method |
 |---|---|
-| `TB_Pre_Curso` (model `PreCurso`) | Já existe no schema (`cdCurso`, `cdOfertante`, `cdVerba`, `vlCursoAlocado`, `status`, `respostas Json?`, `criadoPor`, `dataEncerramento`). Nenhuma migration nesta feature. |
+| `TB_Pre_Curso` (model `PreCurso`) | Já existe no schema (`cdCurso`, `cdOfertante`, `cdVerba`, `vlCursoAlocado`, `status`, ~~`respostas Json?`~~, `criadoPor`, `dataEncerramento`). Nenhuma migration nesta feature. **Desatualizado desde 2026-09-11 (AD-041):** a coluna `respostas` foi dropada; as respostas vivem em `TB_Resposta_Pre_Curso`, uma linha por resposta. O domínio continua vendo `{ chave: valor }`, então nada nesta feature mudou de comportamento. |
 | `TB_Verba` (model `Verba`) | Consultada via `validarAlocacao`/`calcularSaldoVerba`, sem alteração. |
 | shadcn/ui (AD-006) | Adicionar `radio-group`, `checkbox`, `select`, `textarea`, `accordion` via `npx shadcn add` — os 5 tipos de controle que os 56 campos exigem e que ainda não existem em `src/components/ui/`. |
 

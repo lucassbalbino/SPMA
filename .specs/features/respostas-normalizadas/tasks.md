@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/respostas-normalizadas/design.md`
-**Status**: Draft
+**Status**: Done (19/19 tarefas commitadas + 1 lacuna de rastreabilidade fechada). **Verifier independente ainda não rodou** — a feature não está fechada até `validation.md` existir com veredito PASS.
 
 ---
 
@@ -608,7 +608,7 @@ derrubar o índice quebra o teste.
 
 ---
 
-### T18: Registrar AD-041 e retificar as specs afetadas
+### T18: Registrar AD-041 e retificar as specs afetadas ✅
 
 **What**: a AD nova que rescinde o AD-034, com o trade-off registrado, e o Handoff atualizado.
 **Where**: `.specs/STATE.md`
@@ -623,11 +623,33 @@ derrubar o índice quebra o teste.
 
 **Done when**:
 
-- [ ] AD-041 declara a normalização, cita as três tabelas e registra o custo aceito (perda da imunidade a troca de questionário, `.specs/STATE.md:47`)
-- [ ] AD-034 marcado como superado por AD-041
-- [ ] As linhas de assumption dos três `spec.md` afetados (`formulario-pre-curso`, `formulario-pos-curso`, `avaliacao-aluno`) deixam de afirmar armazenamento em JSON
-- [ ] Handoff atualizado com o estado desta feature
-- [ ] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] AD-041 declara a normalização, cita as três tabelas e registra o custo aceito (perda da imunidade a troca de questionário, `.specs/STATE.md:47`) — com a nuance de que o desenho `(Chave, Ordem, Valor)` preserva parte dessa imunidade, já que `Chave` é dado e não coluna
+- [x] AD-034 marcado como superado por AD-041 (mantido na íntegra: o raciocínio segue válido, mudou o custo)
+- [x] As linhas de assumption dos três `spec.md` afetados (`formulario-pre-curso`, `formulario-pos-curso`, `avaliacao-aluno`) deixam de afirmar armazenamento em JSON
+- [x] Handoff atualizado com o estado desta feature — inclusive as duas armadilhas de falso-verde do Playwright que custaram caro aqui
+- [x] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit` (580) `&& npm run test:integration` (56) `&& npm run test:e2e` (244/244)
+
+**Nota de execução do gate (flake, não regressão):** a primeira rodada da suíte completa
+parou em 243/244 — `pre-cursos-formulario.spec.ts:304`, um clique de radio que não
+registrou (`toBeChecked` recebeu `unchecked`). É a classe de intermitência já documentada
+em `playwright.config.ts` e no handoff de `formulario-pre-curso`. Descartado como flake com
+três evidências, não por conveniência: (1) o arquivo passa 6/6 isolado; (2) a T18 não toca
+em nenhuma linha de código, só `.md`; (3) o mesmo spec passou na suíte completa da T16 com
+este mesmo código. A rodada de confirmação deu 244/244 com `E2E=0`. Nenhum teste foi
+alterado, pulado ou afrouxado.
+
+**Armadilha de shell registrada de novo:** o comando encadeado devolveu exit 0 mesmo com o
+Playwright falhando — o código era do invólucro. Só apareceu porque cada etapa gravou o
+próprio `$?`. Terceira ocorrência desta classe nesta feature: **conferir
+`test-results/.last-run.json`**, nunca o exit code de um encadeamento ou pipe.
+
+**Lacuna achada na própria revisão de rastreabilidade desta tarefa:** a RESP-20 (seleção
+múltipla com lista vazia → 400, sem persistir linha) estava `Pending` e só tinha cobertura
+de schema (unit), nenhuma no nível da rota. Sob a AD-041 isso importa mais do que importava
+antes: o merge por chave APAGA as linhas da chave antes de inserir, então uma lista vazia
+que escapasse do Zod apagaria a resposta já gravada sem colocar nada no lugar. Fechada
+antes do Verifier, em `e2e/pre-cursos-id.spec.ts:137`, com commit próprio — não foi
+carimbada como Done nem deixada para o Verifier achar.
 
 **Tests**: none
 **Gate**: build

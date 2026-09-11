@@ -2,14 +2,14 @@
 
 **Escopo:** Complex (dupla condicionalidade inédita na base — gate Parte 1 → Parte 2, AD-023 — mais o gate interno "Concluiu o curso?" que libera/bloqueia 22 das 25 chaves da Parte 2; chave composta CPF+CD_Curso; regra RN-12 de "uma avaliação em andamento por vez" cruzando todos os cursos do aluno; dados demográficos sensíveis).
 **Dependências:** `auth-e-usuarios` (sessão, cascata GO→AL, escopo), `seguranca-transversal` (CSRF, erro genérico, `podeAcessarOfertante`), `cadastro-ofertante-verba` (Ofertante/Verba), `formulario-pre-curso` (`TB_Avaliacao_Aluno.CD_Curso` é FK para `TB_Pre_Curso.CD_Curso` — não existe avaliação sem um Pré-Curso já criado).
-**Fonte de decisões:** STATE.md AD-004, AD-008, AD-009, AD-012, AD-013, AD-018, AD-020, AD-022, AD-023, AD-025, AD-033, AD-034.
+**Fonte de decisões:** STATE.md AD-004, AD-008, AD-009, AD-012, AD-013, AD-018, AD-020, AD-022, AD-023, AD-025, AD-033, ~~AD-034~~ AD-041 (as respostas deixaram de ser um campo `Json?` e passaram a uma linha por resposta em `TB_Resposta_Avaliacao`; nenhum requisito desta feature mudou).
 **Fonte funcional:** `docs/SPMA_Especificacao_Cliente_v2.md` seção 6 (Formulário de Avaliação do Aluno), seção 3.7 (`TB_Avaliacao_Aluno`), seção 7 (segurança), seção 8 (RN-06, RN-07, RN-09, RN-12, RN-13, RN-14).
 
 ---
 
 ## Problem Statement
 
-O quarto e último formulário do sistema — a Avaliação do Aluno — ainda não tem rota nem UI, embora o model `AvaliacaoAluno` já exista no schema (chave composta CPF+CD_Curso, flag `parte1Completa`, `respostas Json?`). O aluno precisa se inscrever num curso (vínculo criado pelo Gestor Ofertante, mesmo padrão de toda criação de recurso-filho já estabelecido nesta base), preencher os dados pessoais/motivação (Parte 1) antes de a Parte 2 (avaliação do curso, liberada só após a conclusão) abrir, e encerrar de forma irreversível quando terminar. Sem isso, o ciclo de coleta de dados do sistema fica incompleto e o dashboard futuro (AD-024) não tem esse terceiro e último ponto de entrada.
+O quarto e último formulário do sistema — a Avaliação do Aluno — ainda não tem rota nem UI, embora o model `AvaliacaoAluno` já exista no schema (chave composta CPF+CD_Curso, flag `parte1Completa`, e — à época desta spec — `respostas Json?`, hoje uma linha por resposta em `TB_Resposta_Avaliacao`, AD-041). O aluno precisa se inscrever num curso (vínculo criado pelo Gestor Ofertante, mesmo padrão de toda criação de recurso-filho já estabelecido nesta base), preencher os dados pessoais/motivação (Parte 1) antes de a Parte 2 (avaliação do curso, liberada só após a conclusão) abrir, e encerrar de forma irreversível quando terminar. Sem isso, o ciclo de coleta de dados do sistema fica incompleto e o dashboard futuro (AD-024) não tem esse terceiro e último ponto de entrada.
 
 ## Goals
 

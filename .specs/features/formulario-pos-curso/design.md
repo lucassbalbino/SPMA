@@ -71,7 +71,7 @@ graph TD
 
 | System | Integration Method |
 |---|---|
-| `TB_Pos_Curso` (model `PosCurso`) | Já existe no schema (`cdCurso` PK+FK, `status`, `respostas Json?`, `criadoPor`, `dataEncerramento`). Nenhuma migration nesta feature. |
+| `TB_Pos_Curso` (model `PosCurso`) | Já existe no schema (`cdCurso` PK+FK, `status`, ~~`respostas Json?`~~, `criadoPor`, `dataEncerramento`). Nenhuma migration nesta feature. **Desatualizado desde 2026-09-11 (AD-041):** a coluna `respostas` foi dropada; as respostas vivem em `TB_Resposta_Pos_Curso`, uma linha por resposta. O domínio continua vendo `{ chave: valor }`, então nada nesta feature mudou de comportamento. |
 | `TB_Pre_Curso` (model `PreCurso`) | Consultada em toda rota para obter `cdOfertante` (autorização) e para a tela `/pos-cursos/novo` listar os elegíveis (`posCurso: null`, usando o back-relation já existente no schema). Nenhuma alteração no model. |
 
 ---
