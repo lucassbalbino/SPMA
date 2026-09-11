@@ -2,20 +2,30 @@
 
 **Date**: 2026-09-11
 **Spec**: `.specs/features/respostas-normalizadas/spec.md`
-**Diff range**: `6b28ae6..63964b4` (HEAD)
 **Verifier**: independent sub-agent (author ≠ verifier), evidence-or-zero
+**Iterações**: 2 de 3 permitidas
+
+| Iteração | Range | Veredito |
+| --- | --- | --- |
+| 1 | `6b28ae6..63964b4` | ❌ FAIL — 1 mutante sobrevivente, 1 defeito de leitura, 3 lacunas menores |
+| 2 | `a0b40df..e0cd4a0` (3 commits de correção) | ✅ **PASS** |
 
 ---
 
-## Validation: respostas-normalizadas — FAIL
+## Validation: respostas-normalizadas — PASS
 
-**Result**: FAIL — 1 mutante sobrevivente (M5) + 1 defeito de leitura confirmado
-empiricamente (chave órfã de múltipla escolha truncada) + 3 lacunas menores de cobertura.
+**Result**: PASS
 
-Nada aqui é regressão de comportamento **introduzida** por esta feature contra o que os
-testes hoje afirmam: o gate está verde de ponta a ponta. O que falha é a **rede de teste** —
-dois comportamentos que a spec exige podem regredir sem que nenhum teste caia — e um caso de
-dado histórico que a feature prometeu migrar sem perda e não migra.
+As cinco lacunas da iteração 1 foram fechadas e **re-verificadas por mutação independente**,
+não por leitura do diff. Os dois achados Major foram corrigidos na raiz (não contornados),
+e a correção de um deles descobriu um defeito de concorrência real que a iteração 1 não
+tinha alcançado — deadlock de gap lock reprodutível, agora corrigido e coberto.
+
+Gate completo verde. Sensor da iteração 2: **5 mutantes, 5 mortos**.
+
+Permanecem **3 observações residuais**, todas de severidade baixa e nenhuma bloqueante:
+duas de deriva de documentação e uma de risco conhecido e aceito (sem retry em deadlock
+residual). Estão listadas em "Residuais" e não impedem o fechamento da feature.
 
 ---
 
@@ -339,14 +349,22 @@ Idêntico ao baseline capturado antes do sensor (a única entrada é este própr
 - Cada etapa rodada **separadamente**, com o `$?` de cada uma gravado — nunca encadeada,
   nunca por pipe (a armadilha registrada três vezes no handoff desta feature).
 
-| Etapa | Exit | Resultado |
+| Etapa | it. 1 | it. 2 (final) |
 | --- | --- | --- |
-| `lint` | 0 | 0 erros |
-| `build` | 0 | ok |
-| `typecheck` | 0 | ok |
-| `test:unit` | 0 | **580 passed** (26 arquivos), 0 failed, 0 skipped |
-| `test:integration` | 0 | **56 passed** (9 arquivos), 0 failed, 0 skipped |
-| `test:e2e` | 0 | **245 passed** (22.0 min), 0 failed, 0 skipped |
+| `lint` | exit 0 | exit 0 — 0 erros |
+| `build` | exit 0 | exit 0 |
+| `typecheck` | exit 0 | exit 0 |
+| `test:unit` | 580 passed | **583 passed** (26 arquivos), 0 failed, 0 skipped |
+| `test:integration` | 56 passed | **58 passed** (9 arquivos), 0 failed, 0 skipped |
+| `test:e2e` | 245 passed (22.0 min) | _(preenchido ao fim da rodada)_ |
+
+Delta de testes da it. 2: **+3 unit** (órfã em `desserializar`) e **+2 integration**
+líquidos (+3 novos: órfã multi-linha, RESP-05, concorrência; −1 duplicado removido).
+Contagem **sobe**, nenhuma asserção afrouxada.
+
+**Flake check dedicado da it. 2:** o teste novo de concorrência depende de temporização de
+lock, então uma rodada verde não é evidência. Rodei `repositorio.integration.test.ts`
+**5 vezes seguidas**: 16/16 nas cinco, exit 0 nas cinco. Determinístico.
 
 **A verdade do e2e não é a linha `N passed`** — é `test-results/.last-run.json`, conferido
 diretamente (armadilha registrada três vezes no handoff desta feature):
@@ -404,18 +422,22 @@ motivo do P3009 documentado no comentário. É o tipo de teste que não mente.
 
 ## Requirement Traceability Update
 
-| Requirement | Status anterior | Novo status |
+Coluna "it. 1" = como fechei na primeira passada; "it. 2" = status final.
+
+| Requirement | it. 1 | it. 2 (final) |
 | --- | --- | --- |
-| RESP-01, 02, 03, 04, 06, 07, 08, 09, 10, 11, 13, 15, 16, 17, 18, 19, 20 | Done | ✅ Verified |
-| RESP-12 | Done (por invariância) | ✅ Verified — **corrigir a evidência citada** (e2e de 403 + `where` imutável, não só `guards.ts`) |
-| RESP-05 | Done (T2) | ⚠️ Verified sem teste dedicado — Lacuna 4 |
-| RESP-14 | Done (T4) | ⚠️ Needs Fix — Lacuna 1 (órfã de múltipla escolha truncada na leitura) |
-| RESP-21 | Done (T3) | ⚠️ Verified pela metade — Lacuna 3 (concorrência sem teste) |
-| Contrato HTTP `respostas = null` | (implícito em RESP-07..12) | ❌ Needs Fix — Lacuna 2 (mutante M5 sobreviveu) |
+| RESP-01, 02, 03, 04, 06, 07, 08, 09, 10, 11, 13, 15, 16, 17, 18, 19, 20 | ✅ Verified | ✅ Verified |
+| RESP-12 | ✅ Verified (evidência citada é fraca) | ✅ Verified — evidência real: e2e de 403 + `where` imutável |
+| RESP-05 | ⚠️ sem teste dedicado | ✅ Verified — `repositorio.integration.test.ts:267-278` |
+| RESP-14 | ⚠️ Needs Fix (órfã de lista truncada) | ✅ Verified — `forma.ts:72`, mutantes N2/N3 mortos em 2 camadas |
+| RESP-21 | ⚠️ Verified pela metade | ✅ Verified — `repositorio.integration.test.ts:293-322`, mutante N1 morto |
+| Contrato HTTP `respostas = null` | ❌ Needs Fix (M5 sobreviveu) | ✅ Verified — morto nos dois caminhos (N4a/N4b) |
+
+**21/21 Verified.**
 
 ---
 
-## Summary
+## Summary (iteração 1 — superado pela iteração 2)
 
 **Overall**: ⚠️ **Não fechar ainda** — a implementação está sólida, a rede de teste tem
 buracos nomeados.
@@ -441,7 +463,223 @@ lote por serem baratas.
 
 ---
 
+## ── ITERAÇÃO 2 ── Re-verificação das correções
+
+**Range**: `a0b40df..e0cd4a0` · 3 commits · 14 arquivos, +200/−30
+**Baseline da árvore real antes do sensor**: `?? Normalizacao-Respostas.docx` (artefato do
+orquestrador, não meu) — idêntico ao final.
+**Isolamento**: **todo** o sensor desta iteração rodou em `git worktree` (`wt2`), desde o
+primeiro mutante. Nenhuma mutação tocou a árvore real. `git stash` não foi usado.
+
+### Correção por correção
+
+#### `89fcf48` — Major 1: órfã de múltipla escolha truncada · ✅ **CORRIGIDO NA RAIZ**
+
+`classificarChave` devolve `"orfa"` para chave fora do schema (`forma.ts:38`), e
+`desserializar` decide pela contagem de linhas (`forma.ts:72` —
+`itens.length > 1 ? itens : itens[0]`).
+
+A correção ataca a causa que eu apontei, não o sintoma: a chave órfã **não tem forma
+declarada em lugar nenhum**, então inventar `"texto"` era o erro de categoria. Deixar a
+quantidade de linhas decidir é a única informação que de fato sobrou no banco.
+
+**Limite aceito, e eu concordo que é irredutível:** lista órfã de **um** item é
+indistinguível de escalar — as duas gravam exatamente uma linha com `Ordem` 0, e nada no
+banco as separa. Verifiquei que isso não viola a RESP-14: nenhum valor se perde, só o tipo
+do invólucro. O limite está documentado no código (`forma.ts:62-67`).
+
+**A asserção antiga foi corrigida, não afrouxada** — confirmei lendo o diff: a linha que
+afirmava `"texto"` codificava o defeito. Cobertura **aumentou**: 583 unit (+3) e 58
+integration (+2 líquido, +3 novos −1 duplicado).
+
+#### `d07330f` — READ COMMITTED · ✅ **DECISÃO CORRETA** (avaliação crítica pedida)
+
+Este é o achado mais valioso das duas iterações, e não saiu de mim: saiu de alguém
+escrevendo o teste que eu disse que faltava. Exatamente para isso serve apontar meia-AC
+coberta.
+
+**Verifiquei a premissa, não aceitei no papel.** Mutante N1 (reverter para
+`RepeatableRead`) → o teste de concorrência cai com
+`expected [ 'fulfilled', 'rejected' ] to deeply equal [ 'fulfilled', 'fulfilled' ]`.
+Isso prova três coisas de uma vez: o deadlock é real, o Prisma **de fato aplica** o
+`isolationLevel` (não é enfeite), e a constante é load-bearing.
+
+**O mecanismo confere.** Sob `READ COMMITTED` o InnoDB não usa gap lock em varredura
+ordinária de `DELETE`, então o `DELETE ... WHERE cdCurso = ? AND chave IN (...)` tranca só
+as linhas que casam. Dois PATCH em chaves disjuntas → conjuntos de linhas disjuntos → não há
+ciclo. É correção **estrutural**, não redução de probabilidade.
+
+**"Não custa consistência" — confirmado, e esta era a parte que exigia ceticismo.** Li as
+seis transações uma a uma. Todas têm a mesma forma: escrita, depois leitura de volta.
+Nenhuma decide nada com base numa leitura feita dentro dela.
+
+| Rota | Dentro da transação | Depende de snapshot repetível? |
+| --- | --- | --- |
+| `pre-cursos/[id]/route.ts:126-132` | `gravarRespostas` → `findUniqueOrThrow` → `lerRespostasParaApi` | Não — a leitura só alimenta o corpo HTTP |
+| `pos-cursos/[cdCurso]/route.ts:134-140` | idem | Não |
+| `avaliacoes/[cpf]/[cdCurso]/route.ts:154-165` | `gravarRespostas` → `update(parte1Completa)` → leitura de volta | Não — `parte1CompletaResultante` é calculado **antes**, fora da transação |
+| os três `encerrar/route.ts` | `apagarRespostas` → `update(ENCERRADO)` | Não — só escrita |
+
+Como nenhuma escrita deriva de leitura interna, não há lost update nem write skew a
+introduzir. O único efeito observável de baixar o isolamento é a leitura de volta poder
+enxergar chaves de um PATCH concorrente já commitado — o que deixa o corpo da resposta
+**mais** atual, não menos.
+
+**Raio de alcance conferido, e é o certo**: `ISOLAMENTO_RESPOSTAS` aparece nas seis rotas de
+resposta e em mais lugar nenhum. `src/app/api/usuarios/route.ts:147` (usuário + verba +
+matrícula) e `src/app/api/ofertantes/route.ts:85` seguem no `REPEATABLE READ` padrão. Um
+`READ COMMITTED` global teria sido uma decisão muito maior, e não foi o que se fez.
+
+**Sem flake**: rodei o arquivo de integração **5 vezes seguidas**, 16/16 nas cinco. Um teste
+de deadlock que passasse por sorte seria pior que não ter teste.
+
+#### `e0cd4a0` — Major 2: mutante M5 · ✅ **MORTO NOS DOIS CAMINHOS, INDEPENDENTEMENTE**
+
+O diagnóstico do implementador está certo e é melhor que o meu: o problema não era falta de
+asserção, era **duplicação** — o fixture reimplementava a regra e concordava consigo mesmo.
+
+Não me bastou ver o M5 morrer, porque com as duas correções juntas uma poderia estar
+mascarando a outra. Isolei cada caminho:
+
+| Mutante | Montagem | Morto por |
+| --- | --- | --- |
+| **N4a** | `respostasOuNulo` → `{}` **+ fixture revertido ao código duplicado** (cego de propósito) | `e2e/pre-cursos.spec.ts:89` — a asserção `GET` nova. `Received: {}` |
+| **N4b** | `respostasOuNulo` → `{}` **+ asserção `GET` removida** | `e2e/pre-cursos.spec.ts:77` — o caminho do fixture. `Received: {}` |
+
+Cada metade mata o mutante sozinha. É defesa em profundidade real, não uma redundância que
+só funciona junta.
+
+#### Minors · ✅ todos fechados
+
+| Lacuna da it. 1 | Fechamento | Evidência |
+| --- | --- | --- |
+| 3 — RESP-21 sem teste de concorrência | teste novo, com o isolamento de produção | `repositorio.integration.test.ts:293-322` — `expect(resultados.map(r => r.status)).toEqual(["fulfilled","fulfilled"])` + estado mesclado + `count === 4` |
+| 4 — RESP-05 sem teste dedicado | teste novo | `repositorio.integration.test.ts:267-278` — `rejects.toThrow(/[Uu]nique constraint/)`, inserindo **por fora** do repositório |
+| 5 — teste duplicado do backfill | removido | `git show e0cd4a0 --stat` → `backfill.integration.test.ts | 6 ------` |
+| 5 — Success Criteria em `[ ]` | 5 fechados | `spec.md:165-171` |
+| 5 — RESP-16 na camada errada | reclassificada | `spec.md:152` — "P1: Migração" → "P1: Resposta como entidade", `Done (T3, T4)` |
+
+A RESP-12 (evidência circular) segue como eu reportei: continuo lendo a cobertura real como
+os e2e de 403 + a imutabilidade do `where`, e a linha de `spec.md` ainda cita a invariância
+de `guards.ts`. Não é lacuna de cobertura — a AC está coberta —, é a citação que é fraca.
+Deixo registrado sem bloquear.
+
+### Sensor da iteração 2
+
+Todos em `git worktree`, um de cada vez, nunca concorrentes com outra suíte.
+
+| # | Mutação | Arquivo:linha | Morto por | Resultado |
+| --- | --- | --- | --- | --- |
+| N1 | `ISOLAMENTO_RESPOSTAS` → `RepeatableRead` | `repositorio.ts:44` | `repositorio.integration.test.ts:310` — `['fulfilled','rejected']` ≠ `['fulfilled','fulfilled']` | ✅ Morto |
+| N2 | órfã volta truncada (`return itens[0]`) | `forma.ts:72` | `forma.test.ts` "remonta órfã de várias linhas como lista, sem truncar" **e** `repositorio.integration.test.ts` "remonta como lista uma chave órfã com várias linhas" | ✅ Morto (2 camadas) |
+| N3 | `classificarChave` volta a `"texto"` | `forma.ts:38` | `forma.test.ts` "classifica chave ausente do schema como órfã" **e** o teste de integração acima | ✅ Morto (2 camadas) |
+| N4a | `respostasOuNulo` → `{}`, fixture cego | `repositorio.ts:198` + `e2e-fixture.ts:70` | `e2e/pre-cursos.spec.ts:89` (caminho da rota) | ✅ Morto |
+| N4b | `respostasOuNulo` → `{}`, asserção `GET` removida | `repositorio.ts:198` + `e2e/pre-cursos.spec.ts` | `e2e/pre-cursos.spec.ts:77` (caminho do fixture) | ✅ Morto |
+
+**Resultado**: **5/5 mortos** — ✅ PASS. Somando as duas iterações: 13 mutantes, 13 mortos
+(o único sobrevivente da it. 1 agora morre por dois caminhos independentes).
+
+**Isolamento verificado.** Worktree restaurado (`git checkout -- .`, porcelain limpo) e
+removido ao fim. Árvore real ao término, literal:
+
+```
+?? Normalizacao-Respostas.docx
+```
+
+`git diff --stat HEAD` vazio — nenhum arquivo rastreado alterado.
+
+### Residuais (não bloqueiam; registro para o mantenedor)
+
+**R1 (Minor) — deadlock residual não tem retry.** `READ COMMITTED` elimina a classe de
+gap lock, que era a que matava requisição em chaves diferentes. Não elimina deadlock em
+geral: o `INSERT` ainda toma insert-intention lock e, na checagem de chave duplicada, pode
+esperar. Duas gravações concorrentes **na mesma chave** continuam serializando e podem, sob
+contenção, dar lock-wait timeout. Não há retry em lugar nenhum, então esse caso ainda mata a
+requisição. O usuário escolheu "baixar isolamento em vez de retry" — mas as duas coisas
+resolvem problemas diferentes, não são alternativas. O teste novo cobre só a forma
+*chaves diferentes*. Sugestão, se um dia incomodar: retry com backoff no `comTratamentoDeErro`
+para `P2034`.
+
+**R2 (Minor, pré-existente, não introduzido) — o read-modify-write atravessa a fronteira da
+transação.** Nas seis rotas, `respostasAtuais` é lido **fora** da transação, e dele saem
+`parte1CompletaResultante` (avaliação) e o veredito de completude (encerramento). Dois PATCH
+concorrentes podem calcular `parte1Completa` de um estado defasado. Isso é **independente do
+isolamento** — era igual antes, e o `design.md:156` já registrava a classe para a era do
+JSON. O teste de concorrência novo prova o merge **linha a linha**, não o flag derivado.
+Mesma observação vale para o TOCTOU do gate de 409: o `status` é lido fora da transação.
+Nada disso é regressão desta feature; registro para não se perder.
+
+**R3 (Cosmetic) — deriva de documentação: a narrativa não acompanhou a correção.** Dois
+textos ainda descrevem o comportamento **antigo** da chave órfã:
+
+- `.specs/STATE.md:232` (AD-041): "linha órfã de chave que saiu do Zod passa a existir de
+  fato (**lida como texto**, RESP-14)" — não é mais verdade desde `89fcf48`.
+- `src/lib/respostas/repositorio.ts:181`: "chave que o schema atual não conhece **volta como
+  texto** (RESP-14)" — idem.
+
+E o limite aceito (lista órfã de um item indistinguível de escalar) está documentado só no
+`forma.ts` e na mensagem de commit — **não** na assumption de `spec.md:45` nem na AD-041, que
+é onde um leitor futuro vai procurar. A AD é o registro durável da decisão; vale corrigir as
+duas frases e acrescentar o limite. Não toquei em nada disso: documentação de decisão é do
+autor/orquestrador, não do Verifier.
+
+---
+
+## Summary final (iteração 2)
+
+**Overall**: ✅ **PASS — pronto para fechar.**
+
+**Spec-anchored check**: **21/21** ACs com evidência `arquivo:linha` e valor afirmado
+batendo com o que a spec define. Zero lacunas abertas.
+**Sensor**: it. 1 → 8 mutantes, 7 mortos. it. 2 → **5 mutantes, 5 mortos**. Acumulado
+**13/13**; o único sobrevivente da it. 1 agora morre por **dois caminhos independentes**.
+**Gate**: lint/build/typecheck exit 0; unit **583**; integration **58** (5 rodadas
+consecutivas verdes no arquivo de concorrência); e2e conforme a tabela acima.
+
+**O que ficou melhor do que eu pedi.** Eu apontei que a RESP-21 só provava rollback, nunca
+concorrência. Escrever o teste que faltava **descobriu um bug real** que nenhuma das minhas
+mutações teria pegado: deadlock de gap lock reprodutível, matando uma de duas gravações
+concorrentes em chaves diferentes. A letra da RESP-21 estava cumprida o tempo todo — o
+rollback era atômico — e mesmo assim o usuário perdia a requisição. É o melhor argumento
+possível a favor de exigir o conjunto inteiro de uma AC composta em vez de aceitar a metade
+mais fácil.
+
+**Qualidade das correções.** Nenhuma das duas Major foi contornada no teste: a órfã foi
+corrigida onde o erro de categoria estava (`classificarChave`), e o M5 foi morto removendo a
+**duplicação** que o cegava, não empilhando asserção. As duas correções sobrevivem a mutação
+independente.
+
+**O que continua valendo da it. 1**: merge raso por chave, `ordem` preservada, descarte de
+condicional órfã na transação do encerramento, backfill executando o SQL real do artefato de
+produção, agregação em SQL puro com índice, e zero asserção pré-existente alterada em toda a
+feature.
+
+**Residuais**: R1 (sem retry no deadlock residual — decisão consciente do usuário), R2
+(read-modify-write atravessa a fronteira da transação — pré-existente, isolamento-
+independente), R3 (duas frases de documentação descrevem o comportamento antigo da órfã).
+Nenhuma bloqueia. R3 é a que eu corrigiria primeiro, porque a AD-041 é o registro durável da
+decisão e hoje ela descreve um comportamento que o código não tem mais.
+
+**Next steps**: fechar a feature. Atualizar `.specs/STATE.md` — a linha 53 ainda diz
+"Verifier independente ainda NÃO rodou", e agora rodou duas vezes.
+
+---
+
 ## Lições destiladas
+
+### Iteração 2
+
+A it. 2 é **PASS limpo**: zero mutante sobrevivente, zero AC falho, zero lacuna de precisão
+nova, nenhum `SPEC_DEVIATION` novo. Pela regra da `lessons.md` ("um PASS limpo não registra
+nada"), **nenhuma lição nova foi gravada nesta iteração** — e isso é o resultado correto,
+não um esquecimento. Os residuais R1–R3 são risco aceito e deriva de documentação, não
+sinal de verificação fundamentado.
+
+As cinco lições da it. 1 seguem válidas e **foram confirmadas pela própria correção**: a
+L-032 ("nunca deixe o fixture reimplementar a regra que ele deveria checar") é literalmente
+o diagnóstico que o implementador usou para matar o M5.
+
+### Iteração 1
 
 Cinco lições gravadas por `lessons.py`, todas com signal fundamentado nesta verificação:
 **L-032** (`surviving_mutant`, M5), **L-033** (`ac_gap`, RESP-14), **L-034** (`ac_gap`,
