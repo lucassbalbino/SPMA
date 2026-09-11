@@ -129,6 +129,34 @@ test("REQ-PC-06: valor de infraestrutura fora de 0-5 é rejeitado com 400, nada 
   await cliente.dispose();
 });
 
+// RESP-20: seleção múltipla com lista vazia é barrada pelo `.min(1)` do Zod,
+// antes de chegar ao repositório. Importa especificamente sob a AD-041: o
+// merge por chave apaga as linhas da chave ANTES de inserir as novas, então
+// uma lista vazia que escapasse da validação apagaria a resposta já gravada
+// sem colocar nada no lugar. O teste prova que a chave sobrevive intacta.
+test("RESP-20: seleção múltipla com lista vazia é rejeitada com 400, resposta anterior intacta", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+
+  const cliente = await novoCliente();
+  const gravou = await cliente.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
+    data: { publicoPerfil: ["Mulheres", "Jovens"] },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect(gravou.status()).toBe(200);
+
+  const res = await cliente.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
+    data: { publicoPerfil: [] },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+
+  const depois = getPreCurso(cdCursoEmAndamento);
+  expect(depois?.respostas?.publicoPerfil).toEqual(["Mulheres", "Jovens"]);
+
+  await cliente.dispose();
+});
+
 test("edge case (Planejamento): término anterior ao início é rejeitado com 400, nada persistido", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
   const antes = getPreCurso(cdCursoEmAndamento);
