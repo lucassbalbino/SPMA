@@ -9,12 +9,29 @@ export default defineConfig({
   // fail on the CJS/ESM mismatch).
   testIgnore: "**/helpers/**",
   globalSetup: "./e2e/global-setup.ts",
-  // Specs share one real `spma_test` database with mutable state (login
-  // attempt counters, created users, sessions) - serial execution avoids
-  // cross-spec interference. Revisit if the suite grows slow enough to
-  // need per-test data isolation instead.
+  // Paralelismo por ARQUIVO, nunca dentro do arquivo.
+  //
+  // `fullyParallel: false` mantém os testes de um mesmo spec em série, que é
+  // a ordem de que eles dependem: vários constroem estado num teste e o
+  // inspecionam no seguinte (encerrar depois de preencher, 409 depois de
+  // encerrar). Só os ARQUIVOS correm em paralelo, e cada um já traz os
+  // próprios dados.
+  //
+  // O que tornou isto seguro (auditado, não presumido):
+  //   1. O reset do banco roda UMA vez, em `globalSetup` - nenhum spec
+  //      trunca nada no meio da suíte.
+  //   2. Os 145 CPFs dos specs são distintos por arquivo. As duas exceções
+  //      restantes são inofensivas: um CPF com dígito inválido (nunca
+  //      persistido) e um CPF "inexistente" que nenhum spec cria.
+  //   3. O limite de login por IP tem faixa por worker
+  //      (`e2e/helpers/http.ts`), então falhas de um arquivo não bloqueiam o
+  //      login de outro.
+  //
+  // Ao acrescentar spec novo: use CPFs que mais nenhum arquivo use, e nunca
+  // apague dado por critério amplo (`deleteMany` sem filtro de CPF/Ofertante
+  // do próprio arquivo) - é isso que quebraria o vizinho.
   fullyParallel: false,
-  workers: 1,
+  workers: process.env.CI ? 2 : 4,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: "html",

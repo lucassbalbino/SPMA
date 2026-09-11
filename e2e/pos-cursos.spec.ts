@@ -19,10 +19,10 @@ import {
 
 const SENHA = "SenhaValida123";
 
-const CPF_GT = "52161005120";
-const CPF_GO = "52171005246";
-const CPF_GO_2 = "52181005362";
-const CPF_AL = "52191005489";
+const CPF_GT = "73914620048";
+const CPF_GO = "73914621010";
+const CPF_GO_2 = "73914622091";
+const CPF_AL = "73914623063";
 const CPF_AM = "51103004107";
 
 const CPFS = [CPF_GT, CPF_GO, CPF_GO_2, CPF_AL, CPF_AM];
