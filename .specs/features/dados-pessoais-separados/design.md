@@ -8,8 +8,8 @@
 ## A ideia central
 
 A fronteira é **física no banco e invisível acima dele**. Uma tabela nova,
-`TB_Dado_Pessoal_Aluno`, recebe as 14 chaves pessoais; `TB_Resposta_Avaliacao`
-fica com o questionário do curso. Acima da borda de persistência, nada muda:
+`TB_Dado_Pessoal_Aluno`, recebe as 7 chaves da seção DADOS PESSOAIS do
+questionário (Q3–Q9); `TB_Resposta_Avaliacao` fica com todo o resto. Acima da borda de persistência, nada muda:
 `lerRespostas` continua devolvendo UM objeto `{ chave: valor }` com as duas
 metades unidas, e `gravarRespostas` continua aceitando UM patch e decide
 sozinho onde cada chave mora.
@@ -36,12 +36,21 @@ Esse `satisfies` é o que impede a lista de apodrecer: renomear ou remover uma
 chave do schema quebra a compilação aqui, em vez de silenciosamente deixar de
 particionar. A mesma proteção que `CHAVES_PARTE_1` já tem.
 
-As 14 chaves: os 7 `avalPessoal*` (perfil) e os 7 `avalProfiss*` /
-`avalExperiencia*` (socioeconômico). As 5 de motivação e expectativa **não**
-entram — são sobre este curso (D1 em `context.md`).
+As 7 chaves são exatamente os `avalPessoal*` — Q3 a Q9 do questionário, a
+seção que o cliente chamou de DADOS PESSOAIS: estado, município, gênero, faixa
+etária, escolaridade, cor/raça/etnia e condição PCD.
+
+**A lista é explícita, não derivada do prefixo.** Casar por `startsWith
+("avalPessoal")` seria mais curto e frágil: amarraria a fronteira de
+persistência a uma convenção de nome, e uma chave nova batizada com o prefixo
+mudaria de tabela sem ninguém decidir. A lista obriga a decisão a ser
+explícita; o `satisfies` garante que ela não referencie chave inexistente.
+
+Situação profissional e experiência (Q10–Q16) e motivação/expectativa
+(Q17–Q21) **não** entram (D1 em `context.md`).
 
 **Relação com `CHAVES_PARTE_1`:** as duas listas se cruzam mas não coincidem —
-`CHAVES_PESSOAIS` é subconjunto próprio de `CHAVES_PARTE_1` (14 de 19). São
+`CHAVES_PESSOAIS` é subconjunto próprio de `CHAVES_PARTE_1` (7 de 19). São
 conceitos diferentes e devem permanecer listas diferentes: `CHAVES_PARTE_1`
 define um **gate de preenchimento** (AD-023), `CHAVES_PESSOAIS` define **onde o
 dado mora**. Derivar uma da outra acoplaria decisões que mudam por razões

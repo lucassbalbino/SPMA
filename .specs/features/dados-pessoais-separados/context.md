@@ -8,9 +8,13 @@
 
 Ofereci duas perguntas antes de desenhar — escopo (o que conta como dado
 pessoal) e cardinalidade (um registro por aluno ou por aluno+curso). O usuário
-**recusou a pergunta e repetiu o pedido**, o que é decisão dele: seguir com o
-julgamento do agente. As duas escolhas abaixo são minhas, declaradas para
-poderem ser revertidas barato.
+recusou a pergunta e repetiu o pedido, então desenhei com o meu julgamento e
+declarei as duas escolhas para poderem ser revertidas barato.
+
+**O escopo foi depois decidido pelo usuário**, ao ver a lista de perguntas com
+o texto real: "apenas as 9 primeiras entram" — a seção DADOS PESSOAIS do
+questionário. Isso reduziu D1 de 14 chaves para 7, e o recorte dele é melhor
+que o meu (ver D1). A cardinalidade (D2) segue sendo decisão do agente.
 
 ## O achado que motiva o recorte
 
@@ -19,9 +23,9 @@ homogêneo**. Lendo uma a uma, há três naturezas distintas:
 
 | Grupo | Chaves | De quem é o dado |
 | --- | --- | --- |
-| Perfil | `avalPessoalEstado`, `avalPessoalMunicipio`, `avalPessoalGenero`, `avalPessoalFaixaEtaria`, `avalPessoalEscolaridade`, `avalPessoalRacaEtnia`, `avalPessoalCondicaoPcd` | do **aluno** |
-| Socioeconômico | `avalProfissCondicaoTrabalho`, `avalProfissAtuaTurismo`, `avalProfissAtividadeEspecifica`, `avalProfissFaixaRenda`, `avalExperienciaTrabalhoPrevio`, `avalExperienciaCursoAnterior`, `avalExperienciaTipoCursoAnterior` | do aluno, **no momento daquele curso** |
-| Motivação e expectativa | `avalMotivMotivosParticipacao`, `avalMotivFormaConhecimento`, `avalExpectAtendimento`, `avalExpectEmprego`, `avalExpectRenda` | deste **curso** |
+| Perfil — **seção DADOS PESSOAIS (Q3–Q9)** | `avalPessoalEstado`, `avalPessoalMunicipio`, `avalPessoalGenero`, `avalPessoalFaixaEtaria`, `avalPessoalEscolaridade`, `avalPessoalRacaEtnia`, `avalPessoalCondicaoPcd` | do **aluno** — **ESTAS ENTRAM** |
+| Socioeconômico — seções SITUAÇÃO PROFISSIONAL e EXPERIÊNCIA (Q10–Q16) | `avalProfissCondicaoTrabalho`, `avalProfissAtuaTurismo`, `avalProfissAtividadeEspecifica`, `avalProfissFaixaRenda`, `avalExperienciaTrabalhoPrevio`, `avalExperienciaCursoAnterior`, `avalExperienciaTipoCursoAnterior` | do aluno, no momento daquele curso — ficam no questionário (decisão do usuário) |
+| Motivação e expectativa — seções 5 e 6 (Q17–Q21) | `avalMotivMotivosParticipacao`, `avalMotivFormaConhecimento`, `avalExpectAtendimento`, `avalExpectEmprego`, `avalExpectRenda` | deste **curso** — ficam |
 
 Tratar "Parte 1" como sinônimo de "dados pessoais" seria cômodo, mas erra: o
 terceiro grupo pergunta por que o aluno se inscreveu NESTE curso e o que espera
@@ -34,11 +38,21 @@ resposta de questionário.
 
 ## Decisões do agente
 
-**D1 — Escopo: as 14 chaves de Perfil + Socioeconômico.**
-Motivação e expectativa (5 chaves) permanecem no questionário do curso, porque
-são sobre o curso. As 14 restantes descrevem a pessoa e, sob a LGPD, têm o
-mesmo tratamento de dado pessoal sensível (raça/etnia, condição PCD, faixa de
-renda) — segregá-las é o que dá sentido prático ao pedido.
+**D1 — Escopo: as 7 chaves da seção DADOS PESSOAIS do cliente (Q3–Q9).**
+
+DECIDIDO PELO USUÁRIO ("apenas as 9 primeiras entram"), substituindo a minha
+proposta inicial de 14 chaves. As 9 primeiras são a seção **DADOS PESSOAIS**
+do `docs/Questionario_do_Aluno_1.md`; Q1 (nome) e Q2 (CPF) já vivem em
+`TB_Usuario` e não são resposta de questionário, então o que muda de lugar são
+as 7 de Q3 a Q9 — que coincidem exatamente com o prefixo `avalPessoal*`.
+
+Eu havia proposto incluir também Situação Profissional (Q10–Q13) e Experiência
+(Q14–Q16), por serem atributos da pessoa e dado sensível sob a LGPD (renda
+sobretudo). O usuário optou pela letra das seções do cliente, e o recorte dele
+é mais defensável que o meu: a fronteira passa a ser a que o próprio cliente
+desenhou no questionário, não uma inferência do agente sobre o que conta como
+dado pessoal. Condição de trabalho, renda e experiência prévia permanecem no
+questionário do curso.
 
 **D2 — Cardinalidade: continua `(CPF, curso)`.**
 A separação é FÍSICA, não semântica. A alternativa — um cadastro único por CPF,

@@ -73,7 +73,7 @@ T4 → T5 → T6
 
 ### T1: Declarar a fronteira numa única lista
 
-**What**: `CHAVES_PESSOAIS` com as 14 chaves de perfil e socioeconômico, mais o predicado puro que o repositório vai usar.
+**What**: `CHAVES_PESSOAIS` com as 7 chaves da seção DADOS PESSOAIS (Q3–Q9), mais o predicado puro que o repositório vai usar.
 **Where**: `src/lib/validation/schemas/avaliacao.schema.ts`, `src/lib/respostas/pessoais.ts`
 **Depends on**: -
 **Reuses**: padrão de `CHAVES_PARTE_1` (`as const satisfies readonly (keyof RespostasAvaliacao)[]`)
@@ -86,10 +86,10 @@ T4 → T5 → T6
 
 **Done when**:
 
-- [ ] `CHAVES_PESSOAIS` lista as 14 chaves, com `satisfies` que quebra a compilação se alguma sumir do schema
+- [ ] `CHAVES_PESSOAIS` lista as 7 chaves `avalPessoal*`, com `satisfies` que quebra a compilação se alguma sumir do schema
 - [ ] `ehChavePessoal` e `particionar` são funções puras, sem acesso a banco
-- [ ] Teste afirma que as 5 chaves de motivação/expectativa NÃO são pessoais, e que as 14 são
-- [ ] Teste afirma que `CHAVES_PESSOAIS` é subconjunto próprio de `CHAVES_PARTE_1` (14 de 19) - se alguém mesclar as duas listas, cai
+- [ ] Teste afirma que as 7 são pessoais e que as 12 restantes da Parte 1 NÃO são — nomeando Q10–Q16 (renda, condição de trabalho, experiência) e Q17–Q21 (motivação, expectativa) uma a uma, não por amostra
+- [ ] Teste afirma que `CHAVES_PESSOAIS` é subconjunto próprio de `CHAVES_PARTE_1` (7 de 19) - se alguém mesclar as duas listas, cai
 - [ ] Gate check passes (Quick): `npm run test:unit`
 
 **Tests**: unit

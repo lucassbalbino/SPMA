@@ -8,7 +8,7 @@
 
 ## Problem Statement
 
-Os dados pessoais do aluno — perfil demográfico e situação socioeconômica — vivem hoje misturados às respostas do questionário do curso, nas mesmas linhas da mesma tabela `TB_Resposta_Avaliacao`, distinguíveis só pelo prefixo da chave. Não existe fronteira física entre "o que a pessoa é" e "o que a pessoa respondeu sobre o curso". Isso impede tratar o dado pessoal de forma própria — política de acesso, retenção ou anonimização diferente — e torna qualquer consulta sobre pessoas dependente de conhecer, de cor, quais prefixos de chave são pessoais. O usuário quer os dois separados na base.
+Os dados pessoais do aluno — a seção DADOS PESSOAIS do questionário — vivem hoje misturados às respostas do questionário do curso, nas mesmas linhas da mesma tabela `TB_Resposta_Avaliacao`, distinguíveis só pelo prefixo da chave. Não existe fronteira física entre "o que a pessoa é" e "o que a pessoa respondeu sobre o curso". Isso impede tratar o dado pessoal de forma própria — política de acesso, retenção ou anonimização diferente — e torna qualquer consulta sobre pessoas dependente de conhecer, de cor, quais prefixos de chave são pessoais. O usuário quer os dois separados na base.
 
 ## Goals
 
@@ -35,14 +35,15 @@ Os dados pessoais do aluno — perfil demográfico e situação socioeconômica 
 
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --- | --- | --- | --- |
-| O que conta como "dado pessoal" | As 14 chaves de Perfil (`avalPessoal*`) + Socioeconômico (`avalProfiss*`, `avalExperiencia*`) | Descrevem a pessoa; as 5 de motivação/expectativa são sobre ESTE curso e ficam no questionário | n (decisão do agente, D1 — clarificação oferecida e dispensada pelo usuário) |
+| O que conta como "dado pessoal" | As 7 chaves da seção DADOS PESSOAIS do cliente, Q3–Q9 (`avalPessoal*`) | Fronteira desenhada pelo próprio cliente no questionário, não inferida pelo agente. Q1/Q2 (nome, CPF) já vivem em `TB_Usuario`; Q10–Q16 (situação profissional e experiência) ficam no questionário | **y** (decidido pelo usuário: "apenas as 9 primeiras entram") |
 | Cardinalidade da tabela nova | Continua `(CPF, curso)` — separação física, não semântica | Preserva a foto do momento; cadastro único por CPF faria avaliação de 2023 exibir dado de hoje | n (decisão do agente, D2 — reversível, mas com custo de histórico) |
+| Q1 (nome) e Q2 (CPF) | Permanecem em `TB_Usuario`, fora desta feature | Já estão fora do questionário — não há o que separar. Consolidá-los junto seria outro movimento, e maior: `TB_Usuario.cpf` é PK referenciada por várias tabelas | y |
 | Forma da tabela nova | `(CPF, curso, Chave, Ordem, Valor)`, igual à AD-041 | Reusa `forma.ts` e o repositório; Zod segue autoridade de forma; sem migration por ajuste de questionário | y (coerência com AD-041) |
 | Contrato de domínio e HTTP | `lerRespostas` devolve UM objeto com as duas metades; API inalterada | Mesmo princípio que conteve o raio na AD-041 — a separação vive na borda de persistência | y |
 | Gate `parte1Completa` | Avaliado sobre as duas fontes unidas | O conceito de Parte 1 não muda; só metade dele passa a ser lida de outra tabela | y |
 | Chave pessoal ausente do schema atual | Migra e é lida como qualquer outra chave órfã | Mesma regra da RESP-14; descartar seria perda silenciosa | y |
 
-**Open questions:** none — as duas em aberto foram decididas pelo agente e registradas acima com o custo de cada uma.
+**Open questions:** none — o escopo foi decidido pelo usuário; a cardinalidade foi decidida pelo agente e registrada acima com o custo.
 
 ---
 
