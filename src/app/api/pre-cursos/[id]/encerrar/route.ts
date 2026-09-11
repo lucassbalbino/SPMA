@@ -13,6 +13,7 @@ import {
   apagarRespostas,
   lerRespostas,
   respostasOuNulo,
+  ISOLAMENTO_RESPOSTAS,
 } from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ id: string }> };
@@ -87,7 +88,7 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
       where: { cdCurso },
       data: { status: "ENCERRADO", dataEncerramento: new Date() },
     });
-  });
+  }, ISOLAMENTO_RESPOSTAS);
 
   return NextResponse.json({
     preCurso: { ...atualizado, respostas: respostasOuNulo(respostas) },

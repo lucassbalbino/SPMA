@@ -26,6 +26,24 @@ export type AlvoRespostas =
 
 export type Respostas = Record<string, unknown>;
 
+/**
+ * Isolamento das transações que gravam respostas.
+ *
+ * MEDIDO: sob o REPEATABLE READ padrão do MySQL, duas gravações concorrentes
+ * no mesmo registro — em chaves DIFERENTES — batem em deadlock de forma
+ * reprodutível (3 de 3 rodadas, uma das duas sempre morre). A causa é o
+ * `DELETE ... WHERE cdCurso = ? AND chave IN (...)` do merge raso, que tranca
+ * a lacuna do índice único. Com READ COMMITTED as duas passam, também 3 de 3.
+ *
+ * Baixar o isolamento aqui não custa consistência: as rotas já calculam o
+ * merge com um `lerRespostas` que roda FORA da transação, e o que fica dentro
+ * dela é só o delete seguido de insert. Nada aqui depende de snapshot
+ * repetível.
+ */
+export const ISOLAMENTO_RESPOSTAS = {
+  isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+} as const;
+
 const SCHEMAS = {
   preCurso: respostasPreCursoSchema,
   posCurso: respostasPosCursoSchema,

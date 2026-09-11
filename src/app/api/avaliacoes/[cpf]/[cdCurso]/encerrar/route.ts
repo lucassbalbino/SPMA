@@ -12,6 +12,7 @@ import {
   apagarRespostas,
   lerRespostas,
   respostasOuNulo,
+  ISOLAMENTO_RESPOSTAS,
 } from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ cpf: string; cdCurso: string }> };
@@ -92,7 +93,7 @@ async function encerrarAvaliacao(request: Request, { params }: Contexto) {
       where: { cpf_cdCurso: { cpf, cdCurso } },
       data: { status: "ENCERRADO", dataEncerramento: new Date() },
     });
-  });
+  }, ISOLAMENTO_RESPOSTAS);
 
   return NextResponse.json({
     avaliacao: { ...atualizada, respostas: respostasOuNulo(respostas) },

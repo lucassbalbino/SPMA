@@ -15,6 +15,7 @@ import {
   gravarRespostas,
   lerRespostas,
   lerRespostasParaApi,
+  ISOLAMENTO_RESPOSTAS,
 } from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ id: string }> };
@@ -128,7 +129,7 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
       preCurso: await tx.preCurso.findUniqueOrThrow({ where: { cdCurso } }),
       respostas: await lerRespostasParaApi(tx, alvo),
     };
-  });
+  }, ISOLAMENTO_RESPOSTAS);
 
   return NextResponse.json({ preCurso: { ...preCurso, respostas } });
 }

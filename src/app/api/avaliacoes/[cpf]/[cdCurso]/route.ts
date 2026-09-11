@@ -16,6 +16,7 @@ import {
   gravarRespostas,
   lerRespostas,
   lerRespostasParaApi,
+  ISOLAMENTO_RESPOSTAS,
 } from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ cpf: string; cdCurso: string }> };
@@ -161,7 +162,7 @@ async function gravarRespostasAvaliacao(request: Request, { params }: Contexto) 
       // antes da gravação: o cliente vê o que ficou persistido de fato.
       respostas: await lerRespostasParaApi(tx, alvo),
     };
-  });
+  }, ISOLAMENTO_RESPOSTAS);
 
   return NextResponse.json({ avaliacao: { ...avaliacao, respostas } });
 }

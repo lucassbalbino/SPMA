@@ -5,7 +5,12 @@
 // retorno da função.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/prisma";
-import { apagarRespostas, gravarRespostas, lerRespostas } from "./repositorio";
+import {
+  apagarRespostas,
+  gravarRespostas,
+  lerRespostas,
+  ISOLAMENTO_RESPOSTAS,
+} from "./repositorio";
 
 const CPF_GO = "40364947096";
 const CPF_ALUNO = "70172121048";
@@ -234,6 +239,88 @@ describe("repositório de respostas (integration)", () => {
     expect(
       await lerRespostas(prisma, { formulario: "preCurso", cdCurso: cdCursoA }),
     ).toEqual({ chaveDeQuestionarioAntigo: "x" });
+  });
+
+  // RESP-14: chave órfã que era SELEÇÃO MÚLTIPLA volta inteira. É o caso que
+  // o Verifier pegou: `posContEstrategiasContinuidade` e
+  // `posContEstrategiasAmpliacao` eram `z.array(...).min(1)` e saíram do
+  // schema na AD-035/036, então uma órfã de várias linhas existe de verdade.
+  // Classificá-la como texto devolvia só a primeira - perda silenciosa na
+  // leitura, exatamente o que a assumption da spec diz não aceitar.
+  it("remonta como lista uma chave órfã com várias linhas", async () => {
+    await prisma.respostaPreCurso.createMany({
+      data: [
+        { cdCurso: cdCursoA, chave: "estrategiasDeQuestionarioAntigo", ordem: 0, valor: "Parcerias" },
+        { cdCurso: cdCursoA, chave: "estrategiasDeQuestionarioAntigo", ordem: 1, valor: "Editais" },
+        { cdCurso: cdCursoA, chave: "estrategiasDeQuestionarioAntigo", ordem: 2, valor: "Turmas novas" },
+      ],
+    });
+
+    expect(
+      await lerRespostas(prisma, { formulario: "preCurso", cdCurso: cdCursoA }),
+    ).toEqual({
+      estrategiasDeQuestionarioAntigo: ["Parcerias", "Editais", "Turmas novas"],
+    });
+  });
+
+  // RESP-05: a unicidade é constraint FÍSICA, não disciplina do repositório -
+  // uma segunda linha para o mesmo (registro, chave, ordem) é recusada pelo
+  // banco mesmo inserindo por fora das funções do repositório.
+  it("recusa no banco duas linhas para a mesma chave e ordem", async () => {
+    await prisma.respostaPreCurso.create({
+      data: { cdCurso: cdCursoA, chave: "identifUf", ordem: 0, valor: "SP" },
+    });
+
+    await expect(
+      prisma.respostaPreCurso.create({
+        data: { cdCurso: cdCursoA, chave: "identifUf", ordem: 0, valor: "RJ" },
+      }),
+    ).rejects.toThrow(/[Uu]nique constraint/);
+  });
+
+  // RESP-21: duas gravações CONCORRENTES no mesmo registro, cada uma na sua
+  // transação, em chaves diferentes.
+  //
+  // Roda com `ISOLAMENTO_RESPOSTAS`, o MESMO isolamento das seis rotas que
+  // gravam - se este teste passasse sob um isolamento que a produção não usa,
+  // não provaria nada sobre a produção.
+  //
+  // MEDIDO: sob o REPEATABLE READ padrão, estas duas transações batiam em
+  // deadlock de gap lock e uma morria, de forma reprodutível (3 de 3). Sob
+  // READ COMMITTED passam as duas, também 3 de 3. Trocar `ISOLAMENTO_RESPOSTAS`
+  // de volta para o padrão quebra este teste - é o que o prende à decisão.
+  it("preserva o merge raso sob duas gravações concorrentes", async () => {
+    const alvo = { formulario: "preCurso" as const, cdCurso: cdCursoA };
+
+    const resultados = await Promise.allSettled([
+      prisma.$transaction(
+        (tx) => gravarRespostas(tx, alvo, { identifUf: "SP" }),
+        ISOLAMENTO_RESPOSTAS,
+      ),
+      prisma.$transaction(
+        (tx) =>
+          gravarRespostas(tx, alvo, {
+            publicoPerfil: ["Mulheres", "Jovens", "Idosos"],
+          }),
+        ISOLAMENTO_RESPOSTAS,
+      ),
+    ]);
+
+    // As DUAS vencem: nenhuma requisição do usuário é perdida.
+    expect(resultados.map((r) => r.status)).toEqual(["fulfilled", "fulfilled"]);
+
+    // Merge raso preservado: nenhuma apagou a chave da outra, e a lista veio
+    // inteira - uma lista truncada seria a "gravação parcial visível" que a
+    // RESP-21 proíbe.
+    expect(await lerRespostas(prisma, alvo)).toEqual({
+      identifUf: "SP",
+      publicoPerfil: ["Mulheres", "Jovens", "Idosos"],
+    });
+
+    // E nenhuma linha a mais ficou para trás.
+    expect(
+      await prisma.respostaPreCurso.count({ where: { cdCurso: cdCursoA } }),
+    ).toBe(4);
   });
 
   // RESP-21: nada meio-gravado quando a transação falha.
