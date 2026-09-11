@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/respostas-normalizadas/design.md`
-**Status**: Done (19/19 tarefas commitadas + 1 lacuna de rastreabilidade fechada). **Verifier independente ainda não rodou** — a feature não está fechada até `validation.md` existir com veredito PASS.
+**Status**: **DONE.** 19/19 tarefas commitadas, 1 lacuna de rastreabilidade fechada antes do Verifier (RESP-20) e 3 commits de correção depois dele. `validation.md` = PASS na iteração 2 de 3; `validate_state.py respostas-normalizadas` = exit 0. Sensor de mutação somando as duas iterações: 13 mutantes, 13 mortos.
 
 ---
 
