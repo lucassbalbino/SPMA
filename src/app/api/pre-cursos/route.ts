@@ -8,6 +8,7 @@ import { criarPreCursoSchema } from "@/lib/validation/schemas/pre-curso.schema";
 import { validarAlocacao } from "@/lib/verba/saldo";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { montarRespostas, respostasOuNulo } from "@/lib/respostas/repositorio";
 
 async function criarPreCurso(request: Request) {
   // REQ-SEC-15: mutação autenticada por cookie exige token anti-CSRF válido,
@@ -67,7 +68,9 @@ async function criarPreCurso(request: Request) {
     },
   });
 
-  return NextResponse.json({ preCurso }, { status: 201 });
+  // Pré-curso nasce sem nenhuma linha de resposta - `null`, como a coluna
+  // JSON devolvia.
+  return NextResponse.json({ preCurso: { ...preCurso, respostas: null } }, { status: 201 });
 }
 
 async function listarPreCursos(request: Request) {
@@ -98,10 +101,16 @@ async function listarPreCursos(request: Request) {
       return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
   }
 
-  const preCursos = await prisma.preCurso.findMany({
+  const registros = await prisma.preCurso.findMany({
     where,
     orderBy: { cdCurso: "asc" },
+    include: { linhasResposta: { orderBy: [{ chave: "asc" }, { ordem: "asc" }] } },
   });
+
+  const preCursos = registros.map(({ linhasResposta, ...preCurso }) => ({
+    ...preCurso,
+    respostas: respostasOuNulo(montarRespostas("preCurso", linhasResposta)),
+  }));
 
   return NextResponse.json({ preCursos });
 }

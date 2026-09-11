@@ -127,15 +127,15 @@ async function inserirLinhas(
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Remonta o objeto de respostas a partir das linhas. Registro sem nenhuma
- * linha devolve `{}` (RESP-16). O tipo de cada valor vem da forma do schema
- * Zod; chave que o schema atual não conhece volta como texto (RESP-14).
+ * Remonta o objeto de respostas a partir de linhas já carregadas. Separado de
+ * `lerRespostas` porque as rotas de listagem trazem as linhas junto do
+ * registro-pai (`include: { linhasResposta }`), numa consulta só, em vez de
+ * uma ida ao banco por item da lista.
  */
-export async function lerRespostas(
-  tx: ClienteRespostas,
-  alvo: AlvoRespostas,
-): Promise<Respostas> {
-  const linhas = await buscarLinhas(tx, alvo);
+export function montarRespostas(
+  formulario: AlvoRespostas["formulario"],
+  linhas: LinhaResposta[],
+): Respostas {
   const itensPorChave = new Map<string, string[]>();
 
   for (const linha of linhas) {
@@ -147,7 +147,7 @@ export async function lerRespostas(
     }
   }
 
-  const schema = SCHEMAS[alvo.formulario];
+  const schema = SCHEMAS[formulario];
   const respostas: Respostas = {};
 
   for (const [chave, itens] of itensPorChave) {
@@ -155,6 +155,37 @@ export async function lerRespostas(
   }
 
   return respostas;
+}
+
+/**
+ * Remonta o objeto de respostas a partir das linhas. Registro sem nenhuma
+ * linha devolve `{}` (RESP-16). O tipo de cada valor vem da forma do schema
+ * Zod; chave que o schema atual não conhece volta como texto (RESP-14).
+ */
+export async function lerRespostas(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+): Promise<Respostas> {
+  return montarRespostas(alvo.formulario, await buscarLinhas(tx, alvo));
+}
+
+/**
+ * Forma do campo `respostas` no corpo das respostas HTTP: registro sem
+ * nenhuma linha aparece como `null`, que é exatamente o que a coluna JSON
+ * devolvia antes de ser dropada. É o que mantém o contrato da API idêntico
+ * ao de antes da normalização (RESP-07 a RESP-12) - as três features que
+ * dependem dele não mudaram nenhuma asserção.
+ */
+export function respostasOuNulo(respostas: Respostas): Respostas | null {
+  return Object.keys(respostas).length === 0 ? null : respostas;
+}
+
+/** Açúcar para o caso mais comum nas rotas: ler do banco já na forma da API. */
+export async function lerRespostasParaApi(
+  tx: ClienteRespostas,
+  alvo: AlvoRespostas,
+): Promise<Respostas | null> {
+  return respostasOuNulo(await lerRespostas(tx, alvo));
 }
 
 /**

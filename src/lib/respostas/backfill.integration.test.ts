@@ -7,7 +7,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { lerRespostas } from "./repositorio";
 
@@ -61,8 +60,76 @@ function sqlDaMigration(): string[] {
     .filter((comando) => comando.length > 0);
 }
 
+const TABELAS_COM_JSON = ["TB_Pre_Curso", "TB_Pos_Curso", "TB_Avaliacao_Aluno"] as const;
+
+/** Tabelas que TINHAM a coluna quando o teste começou - ver `restaurarColunaJson`. */
+const tinhamColunaAoIniciar = new Set<string>();
+
+async function colunaExiste(tabela: string): Promise<boolean> {
+  const linhas = await prisma.$queryRawUnsafe<{ n: bigint }[]>(
+    `SELECT COUNT(*) AS n FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = 'Respostas'`,
+    tabela,
+  );
+
+  return Number(linhas[0]?.n ?? 0) > 0;
+}
+
+/**
+ * Recria a coluna `Respostas` que a migration `remover_coluna_respostas`
+ * dropou. Sem isso não há como montar o estado PRÉ-migração, e sem esse
+ * estado não há o que a migration de backfill converta - o teste perderia
+ * justamente a evidência de RESP-13/14/16.
+ */
+async function recriarColunaJson(): Promise<void> {
+  tinhamColunaAoIniciar.clear();
+
+  for (const tabela of TABELAS_COM_JSON) {
+    if (await colunaExiste(tabela)) {
+      tinhamColunaAoIniciar.add(tabela);
+      continue;
+    }
+    await prisma.$executeRawUnsafe(`ALTER TABLE \`${tabela}\` ADD COLUMN \`Respostas\` JSON NULL`);
+  }
+}
+
+/**
+ * Devolve o schema ao estado exato que este teste encontrou - nunca a um
+ * estado "que deveria ser".
+ *
+ * Isto já quebrou uma vez: uma versão anterior dropava a coluna sempre, e
+ * quando o teste rodava num banco onde `remover_coluna_respostas` ainda NÃO
+ * tinha sido aplicada, o `migrate deploy` seguinte tentava dropar uma coluna
+ * que já não existia, falhava, e o banco ficava travado em P3009.
+ */
+async function restaurarColunaJson(): Promise<void> {
+  for (const tabela of TABELAS_COM_JSON) {
+    if (tinhamColunaAoIniciar.has(tabela)) continue;
+
+    await prisma
+      .$executeRawUnsafe(`ALTER TABLE \`${tabela}\` DROP COLUMN \`Respostas\``)
+      .catch(() => undefined);
+  }
+}
+
+/** Grava o JSON por SQL cru: a coluna não existe mais no client do Prisma. */
+async function semearJson(
+  tabela: (typeof TABELAS_COM_JSON)[number],
+  onde: string,
+  valores: unknown[],
+  json: unknown,
+): Promise<void> {
+  await prisma.$executeRawUnsafe(
+    `UPDATE \`${tabela}\` SET \`Respostas\` = ? WHERE ${onde}`,
+    JSON.stringify(json),
+    ...valores,
+  );
+}
+
 describe("migration de backfill das respostas (integration)", () => {
   beforeAll(async () => {
+    await recriarColunaJson();
+
     await prisma.avaliacaoAluno.deleteMany({ where: { cpf: CPF_ALUNO } });
     await prisma.usuario.deleteMany({ where: { cpf: { in: [CPF_GO, CPF_ALUNO] } } });
 
@@ -88,12 +155,12 @@ describe("migration de backfill das respostas (integration)", () => {
         cdVerba: verba.cdVerba,
         vlCursoAlocado: 1000,
         criadoPor: CPF_GO,
-        respostas: JSON_PRE_CURSO,
       },
     });
     cdCursoComRespostas = comRespostas.cdCurso;
 
     // RESP-16: registro com `Respostas` nulo não pode gerar linha nem quebrar.
+    // Este fica sem `semearJson`, então a coluna segue nula.
     const semRespostas = await prisma.preCurso.create({
       data: {
         cdOfertante,
@@ -102,27 +169,26 @@ describe("migration de backfill das respostas (integration)", () => {
         criadoPor: CPF_GO,
         status: "ENCERRADO",
         dataEncerramento: new Date("2026-01-15T12:00:00Z"),
-        respostas: Prisma.DbNull,
       },
     });
     cdCursoSemRespostas = semRespostas.cdCurso;
 
     await prisma.posCurso.create({
-      data: {
-        cdCurso: cdCursoComRespostas,
-        criadoPor: CPF_GO,
-        respostas: JSON_POS_CURSO,
-      },
+      data: { cdCurso: cdCursoComRespostas, criadoPor: CPF_GO },
     });
 
     await prisma.avaliacaoAluno.create({
-      data: {
-        cpf: CPF_ALUNO,
-        cdCurso: cdCursoComRespostas,
-        parte1Completa: true,
-        respostas: JSON_AVALIACAO,
-      },
+      data: { cpf: CPF_ALUNO, cdCurso: cdCursoComRespostas, parte1Completa: true },
     });
+
+    await semearJson("TB_Pre_Curso", "`CD_Curso` = ?", [cdCursoComRespostas], JSON_PRE_CURSO);
+    await semearJson("TB_Pos_Curso", "`CD_Curso` = ?", [cdCursoComRespostas], JSON_POS_CURSO);
+    await semearJson(
+      "TB_Avaliacao_Aluno",
+      "`CPF` = ? AND `CD_Curso` = ?",
+      [CPF_ALUNO, cdCursoComRespostas],
+      JSON_AVALIACAO,
+    );
 
     // Estado de partida: as tabelas novas ainda não têm nenhuma linha destes
     // registros - é o que a migration precisa produzir.
@@ -144,6 +210,7 @@ describe("migration de backfill das respostas (integration)", () => {
     await prisma.verba.deleteMany({ where: { cdOfertante } });
     await prisma.usuario.deleteMany({ where: { cpf: { in: [CPF_GO, CPF_ALUNO] } } });
     await prisma.ofertante.deleteMany({ where: { cdOfertante } });
+    await restaurarColunaJson();
     await prisma.$disconnect();
   });
 
@@ -233,19 +300,23 @@ describe("migration de backfill das respostas (integration)", () => {
     expect(preCursoComRespostas?.status).toBe("EM_ANDAMENTO");
     expect(preCursoComRespostas?.dataEncerramento).toBeNull();
     expect(preCursoComRespostas?.criadoPor).toBe(CPF_GO);
-    expect(preCursoComRespostas?.respostas).toEqual(JSON_PRE_CURSO);
 
     expect(preCursoSemRespostas?.status).toBe("ENCERRADO");
     expect(preCursoSemRespostas?.dataEncerramento).toEqual(
       new Date("2026-01-15T12:00:00Z"),
     );
-    expect(preCursoSemRespostas?.respostas).toBeNull();
 
     expect(posCurso?.status).toBe("EM_ANDAMENTO");
-    expect(posCurso?.respostas).toEqual(JSON_POS_CURSO);
+    expect(posCurso?.criadoPor).toBe(CPF_GO);
 
     expect(avaliacao?.status).toBe("EM_ANDAMENTO");
     expect(avaliacao?.parte1Completa).toBe(true);
-    expect(avaliacao?.respostas).toEqual(JSON_AVALIACAO);
+  });
+
+  // RESP-16: o registro que tinha `Respostas` nulo não gerou nenhuma linha.
+  it("registro sem respostas não gera linha", async () => {
+    expect(
+      await prisma.respostaPreCurso.count({ where: { cdCurso: cdCursoSemRespostas } }),
+    ).toBe(0);
   });
 });

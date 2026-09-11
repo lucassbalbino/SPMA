@@ -164,10 +164,6 @@ model PreCurso {
 
   status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
 
-  // Respostas do questionário de pré-curso (P1..P32 + condicionais + Likert).
-  // Armazenadas como JSON validado por Zod na aplicação. Ver nota no fim.
-  respostas      Json?            @map("Respostas")
-
   dataCriacao       DateTime      @default(now()) @map("Data_Criacao")
   criadoPor         String        @map("Criado_Por") @db.VarChar(11)
   criador           Usuario       @relation("GoCursos", fields: [criadoPor], references: [cpf])
@@ -191,9 +187,6 @@ model PosCurso {
   preCurso       PreCurso         @relation(fields: [cdCurso], references: [cdCurso], onDelete: Cascade)
 
   status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
-
-  // Respostas PG1..PG25 + condicional. JSON validado por Zod.
-  respostas      Json?            @map("Respostas")
 
   dataCriacao          DateTime   @default(now()) @map("Data_Criacao")
   criadoPor            String     @map("Criado_Por") @db.VarChar(11)
@@ -225,9 +218,6 @@ model AvaliacaoAluno {
   // Gate da Parte 2 (AD-023): dados pessoais/motivação completos.
   parte1Completa Boolean          @default(false) @map("Parte1_Completa")
 
-  // Respostas PA1..PA36 + condicionais + Likert. JSON validado por Zod.
-  respostas      Json?            @map("Respostas")
-
   dataCriacao       DateTime      @default(now()) @map("Data_Criacao")
   dataEncerramento  DateTime?     @map("Data_Encerramento")
 
@@ -241,8 +231,9 @@ model AvaliacaoAluno {
 // ─────────────────────────────────────────────────────────────
 // RESPOSTAS NORMALIZADAS  (RESP-05, RESP-06, RESP-18)
 // Uma linha por resposta, três tabelas de forma idêntica — uma por
-// formulário, cada uma com FK real para o seu pai. A coluna `Respostas`
-// dos três modelos ainda existe e é dropada ao fim da migração.
+// formulário, cada uma com FK real para o seu pai. Estas tabelas são a
+// ÚNICA fonte das respostas: a coluna `Respostas` dos três modelos foi
+// dropada pela migração `20260910222847_remover_coluna_respostas`.
 //
 // `Chave` é a chave do schema Zod (AD-004), que já é a fonte de verdade
 // da forma. `Ordem` é a posição dentro de uma seleção múltipla; 0 para
@@ -296,21 +287,25 @@ model RespostaAvaliacao {
 // ─────────────────────────────────────────────────────────────
 // NOTA — Estratégia de armazenamento das respostas dos questionários
 // ─────────────────────────────────────────────────────────────
-// Os três questionários somam ~125 campos, muitos condicionais e de
-// seleção múltipla. Duas abordagens foram consideradas:
+// Histórico, porque a decisão mudou uma vez e o motivo importa.
 //
-//   (A) Uma coluna por pergunta  → ~125 colunas, esquema rígido,
-//       migration a cada ajuste de questionário.
-//   (B) Um campo JSON por formulário, com a FORMA validada por Zod na
-//       aplicação (schema por formulário, compartilhado cliente/servidor,
-//       AD-004) → esquema físico enxuto, flexível a ajustes de perguntas,
-//       validação forte na borda.
+// Até 2026-09, os três questionários (127 chaves) viviam num campo
+// `Respostas Json?` por formulário, com a FORMA validada por Zod na
+// aplicação (AD-034). Isso deixou o esquema físico enxuto e absorveu a
+// troca inteira dos três questionários (AD-035/036/037) sem uma única
+// migration. O custo aceito na época: agregar por pergunta exigiria
+// parsear JSON, e a decisão de normalizar ficou adiada "para quando a
+// feature de dashboard existir".
 //
-// Adotada: (B). O JSON guarda { "P9": "Sim", "P9_Qual": "...", ... } e o
-// Zod é a autoridade de forma/obrigatoriedade/condicionais (REQ-SEC-17).
-// Consultas analíticas do dashboard (feature adiada, AD-024) podem, se
-// necessário, materializar campos-chave em colunas/tabelas derivadas na
-// época — decisão deixada para a feature de dashboard.
+// Desde AD-041, a decisão é outra: uma linha por resposta em
+// `TB_Resposta_Pre_Curso`, `TB_Resposta_Pos_Curso` e
+// `TB_Resposta_Avaliacao`. Cada linha guarda a chave da pergunta (a mesma
+// do schema Zod), o valor como texto, e a posição — seleção múltipla vira
+// N linhas. A aplicação remonta o objeto `{ chave: valor }` na leitura
+// (`src/lib/respostas/repositorio.ts`), então completude, condicionais e
+// os formulários continuam vendo o mesmo objeto de sempre.
 //
-// Esta é uma decisão de modelagem que o agente deve confirmar/registrar
-// como AD no Design da primeira feature de formulário, não antes.
+// O Zod segue sendo a autoridade de forma/obrigatoriedade/condicionais
+// (AD-004, REQ-SEC-17) — o que mudou foi só onde o dado repousa. O custo
+// desta vez: reescrever o texto de uma opção passa a exigir tocar nos
+// dados, não só no schema.

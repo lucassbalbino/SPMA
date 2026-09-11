@@ -12,7 +12,11 @@ import {
 import { validarCompletudeParte1 } from "@/lib/avaliacao/completude";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import { gravarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
+import {
+  gravarRespostas,
+  lerRespostas,
+  lerRespostasParaApi,
+} from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ cpf: string; cdCurso: string }> };
 
@@ -54,9 +58,14 @@ async function consultarAvaliacao(_request: Request, { params }: Contexto) {
   }
 
   const { curso, ...dados } = avaliacao;
+  const respostas = await lerRespostasParaApi(prisma, {
+    formulario: "avaliacao",
+    cpf,
+    cdCurso,
+  });
 
   return NextResponse.json({
-    avaliacao: { ...dados, cdOfertante: curso.cdOfertante },
+    avaliacao: { ...dados, cdOfertante: curso.cdOfertante, respostas },
   });
 }
 
@@ -141,15 +150,20 @@ async function gravarRespostasAvaliacao(request: Request, { params }: Contexto) 
 
   // O gate acima roda ANTES da transação: quando ele reprova, nenhuma linha
   // é gravada, nem as chaves de Parte 1 que vieram no mesmo PATCH (RESP-10).
-  const avaliacao = await prisma.$transaction(async (tx) => {
+  const { avaliacao, respostas } = await prisma.$transaction(async (tx) => {
     await gravarRespostas(tx, alvo, entrada.data);
-    return tx.avaliacaoAluno.update({
-      where: { cpf_cdCurso: { cpf, cdCurso } },
-      data: { parte1Completa: parte1CompletaResultante },
-    });
+    return {
+      avaliacao: await tx.avaliacaoAluno.update({
+        where: { cpf_cdCurso: { cpf, cdCurso } },
+        data: { parte1Completa: parte1CompletaResultante },
+      }),
+      // Estado MESCLADO relido do banco, não `respostasMescladas` calculado
+      // antes da gravação: o cliente vê o que ficou persistido de fato.
+      respostas: await lerRespostasParaApi(tx, alvo),
+    };
   });
 
-  return NextResponse.json({ avaliacao });
+  return NextResponse.json({ avaliacao: { ...avaliacao, respostas } });
 }
 
 export const GET = comTratamentoDeErro(consultarAvaliacao);

@@ -8,7 +8,11 @@ import { validarCompletudeAvaliacao } from "@/lib/avaliacao/completude";
 import { normalizarCondicionaisAvaliacao } from "@/lib/avaliacao/condicionais";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import { apagarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
+import {
+  apagarRespostas,
+  lerRespostas,
+  respostasOuNulo,
+} from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ cpf: string; cdCurso: string }> };
 
@@ -90,7 +94,9 @@ async function encerrarAvaliacao(request: Request, { params }: Contexto) {
     });
   });
 
-  return NextResponse.json({ avaliacao: atualizada });
+  return NextResponse.json({
+    avaliacao: { ...atualizada, respostas: respostasOuNulo(respostas) },
+  });
 }
 
 export const POST = comTratamentoDeErro(encerrarAvaliacao);

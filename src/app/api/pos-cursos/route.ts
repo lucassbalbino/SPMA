@@ -7,6 +7,7 @@ import { podeGerenciarPosCurso } from "@/lib/auth/guards";
 import { criarPosCursoSchema } from "@/lib/validation/schemas/pos-curso.schema";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { montarRespostas, respostasOuNulo } from "@/lib/respostas/repositorio";
 
 async function criarPosCurso(request: Request) {
   // REQ-SEC-15: mutação autenticada por cookie exige token anti-CSRF válido,
@@ -61,7 +62,9 @@ async function criarPosCurso(request: Request) {
     },
   });
 
-  return NextResponse.json({ posCurso }, { status: 201 });
+  // Pós-curso nasce sem nenhuma linha de resposta - `null`, como a coluna
+  // JSON devolvia.
+  return NextResponse.json({ posCurso: { ...posCurso, respostas: null } }, { status: 201 });
 }
 
 async function listarPosCursos(request: Request) {
@@ -100,13 +103,17 @@ async function listarPosCursos(request: Request) {
   const posCursos = await prisma.posCurso.findMany({
     where,
     orderBy: { cdCurso: "asc" },
-    include: { preCurso: { select: { cdOfertante: true } } },
+    include: {
+      preCurso: { select: { cdOfertante: true } },
+      linhasResposta: { orderBy: [{ chave: "asc" }, { ordem: "asc" }] },
+    },
   });
 
   return NextResponse.json({
-    posCursos: posCursos.map(({ preCurso, ...posCurso }) => ({
+    posCursos: posCursos.map(({ preCurso, linhasResposta, ...posCurso }) => ({
       ...posCurso,
       cdOfertante: preCurso.cdOfertante,
+      respostas: respostasOuNulo(montarRespostas("posCurso", linhasResposta)),
     })),
   });
 }

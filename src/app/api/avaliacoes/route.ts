@@ -7,6 +7,7 @@ import { podeMatricularAluno } from "@/lib/auth/guards";
 import { matricularAlunoSchema } from "@/lib/validation/schemas/avaliacao.schema";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { montarRespostas, respostasOuNulo } from "@/lib/respostas/repositorio";
 
 async function matricularAluno(request: Request) {
   // REQ-SEC-15: mesma ordem RH→CSRF→Sessão→Guard das demais rotas mutantes.
@@ -86,7 +87,9 @@ async function matricularAluno(request: Request) {
     data: { cpf, cdCurso },
   });
 
-  return NextResponse.json({ avaliacao }, { status: 201 });
+  // Avaliação nasce sem nenhuma linha de resposta - `null`, como a coluna
+  // JSON devolvia.
+  return NextResponse.json({ avaliacao: { ...avaliacao, respostas: null } }, { status: 201 });
 }
 
 async function listarAvaliacoes(request: Request) {
@@ -121,13 +124,17 @@ async function listarAvaliacoes(request: Request) {
   const avaliacoes = await prisma.avaliacaoAluno.findMany({
     where,
     orderBy: [{ cdCurso: "asc" }, { cpf: "asc" }],
-    include: { curso: { select: { cdOfertante: true } } },
+    include: {
+      curso: { select: { cdOfertante: true } },
+      linhasResposta: { orderBy: [{ chave: "asc" }, { ordem: "asc" }] },
+    },
   });
 
   return NextResponse.json({
-    avaliacoes: avaliacoes.map(({ curso, ...avaliacao }) => ({
+    avaliacoes: avaliacoes.map(({ curso, linhasResposta, ...avaliacao }) => ({
       ...avaliacao,
       cdOfertante: curso.cdOfertante,
+      respostas: respostasOuNulo(montarRespostas("avaliacao", linhasResposta)),
     })),
   });
 }

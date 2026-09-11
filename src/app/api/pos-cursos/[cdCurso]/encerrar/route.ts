@@ -8,7 +8,11 @@ import { validarCompletudePosCurso } from "@/lib/pos-curso/completude";
 import { normalizarCondicionaisPosCurso } from "@/lib/pos-curso/condicionais";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import { apagarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
+import {
+  apagarRespostas,
+  lerRespostas,
+  respostasOuNulo,
+} from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ cdCurso: string }> };
 
@@ -85,7 +89,9 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
     });
   });
 
-  return NextResponse.json({ posCurso: atualizado });
+  return NextResponse.json({
+    posCurso: { ...atualizado, respostas: respostasOuNulo(respostas) },
+  });
 }
 
 export const POST = comTratamentoDeErro(encerrarPosCurso);

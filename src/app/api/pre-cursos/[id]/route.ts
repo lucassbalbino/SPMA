@@ -11,7 +11,11 @@ import {
 } from "@/lib/validation/schemas/pre-curso.schema";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import { gravarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
+import {
+  gravarRespostas,
+  lerRespostas,
+  lerRespostasParaApi,
+} from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ id: string }> };
 
@@ -43,7 +47,12 @@ async function consultarPreCurso(_request: Request, { params }: Contexto) {
     return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
   }
 
-  return NextResponse.json({ preCurso });
+  const respostas = await lerRespostasParaApi(prisma, {
+    formulario: "preCurso",
+    cdCurso,
+  });
+
+  return NextResponse.json({ preCurso: { ...preCurso, respostas } });
 }
 
 async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
@@ -110,12 +119,18 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
     );
   }
 
-  const preCurso = await prisma.$transaction(async (tx) => {
+  // O corpo devolve o estado MESCLADO relido do banco, não `respostasMescladas`
+  // calculado antes da gravação: é o que garante que o cliente veja o que
+  // ficou persistido de fato.
+  const { preCurso, respostas } = await prisma.$transaction(async (tx) => {
     await gravarRespostas(tx, alvo, entrada.data);
-    return tx.preCurso.findUniqueOrThrow({ where: { cdCurso } });
+    return {
+      preCurso: await tx.preCurso.findUniqueOrThrow({ where: { cdCurso } }),
+      respostas: await lerRespostasParaApi(tx, alvo),
+    };
   });
 
-  return NextResponse.json({ preCurso });
+  return NextResponse.json({ preCurso: { ...preCurso, respostas } });
 }
 
 export const GET = comTratamentoDeErro(consultarPreCurso);

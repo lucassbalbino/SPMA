@@ -1,10 +1,9 @@
 // Testes de integração do repositório de respostas, contra o banco real
 // `spma_test`. Cobrem RESP-01, RESP-03, RESP-04, RESP-16, RESP-19 e RESP-21.
 //
-// A prova é sempre o estado persistido - linhas na tabela nova e coluna JSON
-// espelhada -, nunca só o retorno da função.
+// A prova é sempre o estado persistido - as linhas na tabela -, nunca só o
+// retorno da função.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { apagarRespostas, gravarRespostas, lerRespostas } from "./repositorio";
 
@@ -66,18 +65,6 @@ describe("repositório de respostas (integration)", () => {
     });
     await prisma.respostaPosCurso.deleteMany({ where: { cdCurso: cdCursoA } });
     await prisma.respostaAvaliacao.deleteMany({ where: { cpf: CPF_ALUNO } });
-    await prisma.preCurso.updateMany({
-      where: { cdOfertante },
-      data: { respostas: Prisma.DbNull },
-    });
-    await prisma.posCurso.update({
-      where: { cdCurso: cdCursoA },
-      data: { respostas: Prisma.DbNull },
-    });
-    await prisma.avaliacaoAluno.update({
-      where: { cpf_cdCurso: { cpf: CPF_ALUNO, cdCurso: cdCursoA } },
-      data: { respostas: Prisma.DbNull },
-    });
   });
 
   afterAll(async () => {

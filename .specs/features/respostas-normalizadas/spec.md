@@ -148,7 +148,7 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 | RESP-12 | P1: Sem regressão | Design | Pending |
 | RESP-13 | P1: Migração | Execute | Done (T4) |
 | RESP-14 | P1: Migração | Execute | Done (T4) |
-| RESP-15 | P1: Migração | Execute | Em progresso (T4) |
+| RESP-15 | P1: Migração | Execute | Done (T16) |
 | RESP-16 | P1: Migração | Execute | Done (T4) |
 | RESP-17 | P1: Agregação | Design | Pending |
 | RESP-18 | P1: Agregação | Execute | Em progresso (T2) |

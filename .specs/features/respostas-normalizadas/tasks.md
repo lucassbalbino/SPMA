@@ -537,7 +537,7 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 ---
 
-### T16: Dropar a coluna `Respostas` dos três modelos
+### T16: Dropar a coluna `Respostas` dos três modelos ✅
 
 **What**: remoção do campo `respostas Json?` dos três modelos Prisma, com a migration correspondente.
 **Where**: `prisma/schema.prisma`
@@ -552,10 +552,20 @@ T14 → T19 → T15 → T16 → T17 → T18
 
 **Done when**:
 
-- [ ] `respostas Json?` não existe mais em `PreCurso`, `PosCurso` nem `AvaliacaoAluno`
-- [ ] Migration de drop gerada e commitada, **posterior** à de backfill na ordem de execução
-- [ ] Demais colunas dos três modelos intactas (RESP-15)
-- [ ] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] `respostas Json?` não existe mais em `PreCurso`, `PosCurso` nem `AvaliacaoAluno`
+- [x] Migration de drop gerada e commitada, **posterior** à de backfill na ordem de execução (`20260910082855_criar_tabelas_resposta` → `20260910091216_backfill_respostas` → `20260910222847_remover_coluna_respostas`)
+- [x] Demais colunas dos três modelos intactas (RESP-15)
+- [x] Gate check passes: `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+
+**SCOPE_DEVIATION**: a tarefa previa só schema + migration. Dropar a coluna quebrou o
+contrato HTTP: as rotas devolviam `respostas` porque era campo do registro Prisma, e
+passaram a devolver `undefined` — 13 specs e2e vermelhas. O conserto entrou nesta mesma
+tarefa (as rotas remontam `respostas` das linhas, via `lerRespostasParaApi` /
+`montarRespostas` + `respostasOuNulo`), porque um drop que deixa a API quebrada não é uma
+tarefa concluída. Nenhuma asserção de teste foi alterada, que é o que a RESP-07..12 exige.
+Reason: a T13/T14 converteram rotas e telas para LER por linha, mas o corpo da resposta
+HTTP ainda vinha do registro Prisma — a dependência da coluna era invisível enquanto ela
+existia.
 
 **Tests**: none
 **Gate**: build

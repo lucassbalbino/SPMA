@@ -11,7 +11,11 @@ import {
 } from "@/lib/validation/schemas/pos-curso.schema";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import { gravarRespostas, lerRespostas } from "@/lib/respostas/repositorio";
+import {
+  gravarRespostas,
+  lerRespostas,
+  lerRespostasParaApi,
+} from "@/lib/respostas/repositorio";
 
 type Contexto = { params: Promise<{ cdCurso: string }> };
 
@@ -47,8 +51,14 @@ async function consultarPosCurso(_request: Request, { params }: Contexto) {
   }
 
   const { preCurso, ...dados } = posCurso;
+  const respostas = await lerRespostasParaApi(prisma, {
+    formulario: "posCurso",
+    cdCurso,
+  });
 
-  return NextResponse.json({ posCurso: { ...dados, cdOfertante: preCurso.cdOfertante } });
+  return NextResponse.json({
+    posCurso: { ...dados, cdOfertante: preCurso.cdOfertante, respostas },
+  });
 }
 
 async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
@@ -117,12 +127,18 @@ async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
     );
   }
 
-  const posCurso = await prisma.$transaction(async (tx) => {
+  // O corpo devolve o estado MESCLADO relido do banco, não `respostasMescladas`
+  // calculado antes da gravação: é o que garante que o cliente veja o que
+  // ficou persistido de fato.
+  const { posCurso, respostas } = await prisma.$transaction(async (tx) => {
     await gravarRespostas(tx, alvo, entrada.data);
-    return tx.posCurso.findUniqueOrThrow({ where: { cdCurso } });
+    return {
+      posCurso: await tx.posCurso.findUniqueOrThrow({ where: { cdCurso } }),
+      respostas: await lerRespostasParaApi(tx, alvo),
+    };
   });
 
-  return NextResponse.json({ posCurso });
+  return NextResponse.json({ posCurso: { ...posCurso, respostas } });
 }
 
 export const GET = comTratamentoDeErro(consultarPosCurso);
