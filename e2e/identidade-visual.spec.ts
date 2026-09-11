@@ -331,13 +331,15 @@ test.describe("menu de navegação por perfil", () => {
     ]);
   });
 
-  test("UI-02: AL vê exatamente 2 itens, com o rótulo próprio da avaliação", async ({
+  // PESSOAL-*: "Meus dados" passou a existir para o Aluno (edição dos dados
+  // pessoais pelo perfil) - o total de itens subiu de 2 para 3.
+  test("UI-02: AL vê exatamente 3 itens, com o rótulo próprio da avaliação", async ({
     page,
   }) => {
     await logar(page, CPF_NAV_AL, SENHA);
     await page.goto("/painel");
 
-    await expect(linksDoMenu(page)).toHaveText(["Painel", "Minha avaliação"]);
+    await expect(linksDoMenu(page)).toHaveText(["Painel", "Minha avaliação", "Meus dados"]);
   });
 
   test("UI-02: AL não vê Pré-cursos nem Pós-cursos", async ({ page }) => {

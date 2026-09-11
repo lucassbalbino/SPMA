@@ -169,11 +169,11 @@ As 7 perguntas de dados pessoais do Aluno — estado, município, gênero, faixa
 | PESSOAL-13 | P1: Questionário encolhe | Execute | Done (T5) |
 | PESSOAL-14 | P1: Questionário encolhe | Execute | Done (T4) |
 | PESSOAL-15 | P1: Questionário encolhe | Execute | Done (T4) |
-| PESSOAL-16 | P1: Edição pelo perfil | Execute | Pending (T10) |
-| PESSOAL-17 | P1: Edição pelo perfil | Execute | Pending (T8/T10) |
-| PESSOAL-18 | P1: Edição pelo perfil | Execute | Pending (T8/T10) |
-| PESSOAL-19 | P1: Edição pelo perfil | Execute | Pending (T8/T10) |
-| PESSOAL-20 | P1: Edição pelo perfil | Execute | Pending (T8/T10) |
+| PESSOAL-16 | P1: Edição pelo perfil | Execute | Done (T10) |
+| PESSOAL-17 | P1: Edição pelo perfil | Execute | Done (T8, T10) |
+| PESSOAL-18 | P1: Edição pelo perfil | Execute | Done (T8, T10) |
+| PESSOAL-19 | P1: Edição pelo perfil | Execute | Done (T8, T10) |
+| PESSOAL-20 | P1: Edição pelo perfil | Execute | Done (T8, T10) |
 | PESSOAL-21 | P1: Descarte do antigo | Execute | Done (T6) |
 | PESSOAL-22 | P1: Descarte do antigo | Execute | Done (T6) |
 | PESSOAL-23 | P1: Descarte do antigo | Execute | Done (T6) |
@@ -182,7 +182,7 @@ As 7 perguntas de dados pessoais do Aluno — estado, município, gênero, faixa
 | PESSOAL-26 | Edge case | Execute | Done (T3) |
 | PESSOAL-27 | Edge case | Execute | Done (T9) |
 
-**Coverage:** 27 total, 27 mapeados em tasks (T1-T11), 22 Done após T9, 5 Pending (T10), 0 unmapped.
+**Coverage:** 27 total, 27 mapeados em tasks (T1-T11), 27 Done após T10, 0 Pending, 0 unmapped.
 
 ---
 

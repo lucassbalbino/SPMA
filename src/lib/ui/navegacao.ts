@@ -30,6 +30,7 @@ const POS_CURSOS: ItemNavegacao = { rotulo: "Pós-cursos", href: "/pos-cursos" }
 const AVALIACOES: ItemNavegacao = { rotulo: "Avaliações", href: "/avaliacoes" };
 // Mesma rota, nome diferente: para o Aluno ela nunca lista mais que a própria.
 const MINHA_AVALIACAO: ItemNavegacao = { rotulo: "Minha avaliação", href: "/avaliacoes" };
+const MEUS_DADOS: ItemNavegacao = { rotulo: "Meus dados", href: "/meus-dados" };
 
 const CURSOS = [PRE_CURSOS, POS_CURSOS, AVALIACOES];
 // AD-040: quem pode criar curso (AM e GO, `podeGerenciarPreCurso`) ganha o
@@ -61,7 +62,7 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
     { rotulo: "Meus cursos", itens: CURSOS_COM_CRIACAO },
   ],
   [TipoUsuario.VO]: [{ rotulo: "Meus cursos", itens: CURSOS }],
-  [TipoUsuario.AL]: [{ rotulo: "Minha avaliação", itens: [MINHA_AVALIACAO] }],
+  [TipoUsuario.AL]: [{ rotulo: "Minha avaliação", itens: [MINHA_AVALIACAO, MEUS_DADOS] }],
 };
 
 /** Itens do cabeçalho: "Painel" + os itens de todos os módulos do perfil. */

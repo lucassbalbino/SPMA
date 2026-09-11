@@ -29,7 +29,9 @@ const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
     "/avaliacoes",
   ],
   VO: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
-  AL: ["/painel", "/avaliacoes"],
+  // PESSOAL-16: "/meus-dados" (edição do dado pessoal pelo perfil) some para
+  // todo perfil que não seja AL.
+  AL: ["/painel", "/avaliacoes", "/meus-dados"],
 };
 
 // Rótulos de módulo do painel de hoje (src/app/(protegido)/painel/page.tsx:10).
@@ -56,6 +58,7 @@ const ROTAS_IMPLEMENTADAS = [
   "/avaliacoes",
   "/avaliacoes/novo",
   "/avaliacoes/[cpf]/[cdCurso]",
+  "/meus-dados",
 ];
 
 const TODOS_OS_TIPOS = Object.values(TipoUsuario);
@@ -91,6 +94,14 @@ describe("navegacaoDoPerfil", () => {
     expect(hrefsDe(TipoUsuario.VT)).not.toContain("/pre-cursos/novo");
     expect(hrefsDe(TipoUsuario.VO)).not.toContain("/pre-cursos/novo");
     expect(hrefsDe(TipoUsuario.AL)).not.toContain("/pre-cursos/novo");
+  });
+
+  it("só AL recebe /meus-dados (PESSOAL-16, PESSOAL-20)", () => {
+    expect(hrefsDe(TipoUsuario.AL)).toContain("/meus-dados");
+
+    for (const tipo of TODOS_OS_TIPOS.filter((t) => t !== TipoUsuario.AL)) {
+      expect(hrefsDe(tipo)).not.toContain("/meus-dados");
+    }
   });
 
   it("o item de /avaliacoes se chama 'Minha avaliação' para AL", () => {

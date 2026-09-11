@@ -87,6 +87,14 @@ export function getDadosPessoais(cpf: string): Record<string, unknown> | null {
   return executar<Record<string, unknown> | null>("getDadosPessoais", cpf);
 }
 
+/** Semeia o dado pessoal de um Aluno de fixture direto pelo repositório - atalho para os e2e de edição pelo perfil (T10) que não precisam da tela de coleta obrigatória (T9) para chegar num Aluno já completo. */
+export function criarDadosPessoais(
+  cpf: string,
+  respostas: Record<string, unknown>,
+): Record<string, unknown> | null {
+  return executar<Record<string, unknown> | null>("criarDadosPessoais", { cpf, respostas });
+}
+
 export function criarOfertante(dados: {
   nome: string;
   uf: string;

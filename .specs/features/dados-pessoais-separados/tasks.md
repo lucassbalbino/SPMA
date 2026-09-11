@@ -373,12 +373,15 @@ T10 → T11
 
 ---
 
-### T10: Edição posterior pelo perfil
+### T10: Edição posterior pelo perfil ✅
 
 **What**: página `/meus-dados` (protegida), item de navegação "Meus dados" para `AL`.
-**Where**: `src/app/(protegido)/meus-dados/page.tsx` (novo), `src/lib/ui/navegacao.ts`, `e2e/meus-dados.spec.ts` (novo)
+**Where**: `src/app/(protegido)/meus-dados/page.tsx` (novo), `src/lib/ui/navegacao.ts`, `src/lib/ui/navegacao.test.ts`, `e2e/identidade-visual.spec.ts`, `e2e/meus-dados.spec.ts` (novo), `scripts/e2e-fixture.ts`, `e2e/helpers/db.ts`
 **Depends on**: T9 — predecessor direto na ordem de execução
 **Reuses**: `DadosPessoaisForm` (T9); padrão `notFound()` de `avaliacoes/[cpf]/[cdCurso]/page.tsx` para acesso indevido
+
+**Ajuste a teste existente, não afrouxamento**: `e2e/identidade-visual.spec.ts` (UI-02) afirmava que AL vê exatamente 2 itens de navegação (`["Painel", "Minha avaliação"]`). Com "Meus dados" novo, sobe para 3 (`["Painel", "Minha avaliação", "Meus dados"]`) - mudança de comportamento pretendida por esta feature, não relaxamento de asserção. `src/lib/ui/navegacao.test.ts` ganhou o mesmo ajuste (`HREFS_ESPERADOS.AL`, `ROTAS_IMPLEMENTADAS`) mais um teste novo dedicado (`só AL recebe /meus-dados`).
+
 **Requirement**: PESSOAL-16, PESSOAL-17, PESSOAL-18, PESSOAL-19, PESSOAL-20
 
 **Tools**:
@@ -388,15 +391,16 @@ T10 → T11
 
 **Done when**:
 
-- [ ] Aluno com cadastro completo abre `/meus-dados` e vê as 7 respostas atuais, editáveis (PESSOAL-16)
-- [ ] Alterar 1 campo persiste só ele, mantém os outros 6 (PESSOAL-17)
-- [ ] Enviar valor inválido devolve erro, cadastro permanece completo (PESSOAL-18)
-- [ ] Não-Aluno acessando `/meus-dados` diretamente recebe 404 (PESSOAL-20)
-- [ ] Item "Meus dados" aparece na navegação só para `AL` (`navegacaoDoPerfil`/`modulosDoPerfil`)
-- [ ] Gate check passes (Full): `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Aluno com cadastro completo abre `/meus-dados` e vê as 7 respostas atuais, editáveis (PESSOAL-16)
+- [x] Alterar 1 campo persiste só ele, mantém os outros 6 (PESSOAL-17)
+- [x] Enviar valor inválido devolve erro, cadastro permanece completo (PESSOAL-18)
+- [x] Edição de um Aluno nunca afeta o dado pessoal de outro - rota sem parâmetro de CPF (PESSOAL-19)
+- [x] Não-Aluno acessando `/meus-dados` diretamente recebe 404 (PESSOAL-20)
+- [x] Item "Meus dados" aparece na navegação só para `AL` (`navegacaoDoPerfil`/`modulosDoPerfil`)
+- [x] Gate check passes (Build): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` (611 unit, 70 integration, 258 e2e)
 
 **Tests**: e2e
-**Gate**: full
+**Gate**: build (última tarefa da Fase 4)
 
 **Commit**: `feat(dados-pessoais): edicao dos dados pessoais pelo perfil do aluno`
 

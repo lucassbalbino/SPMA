@@ -130,6 +130,20 @@ async function executar(
       return respostasPorLinha(prisma, { formulario: "dadosPessoais", cpf });
     }
 
+    // Semeia o dado pessoal de um Aluno de fixture direto pelo repositório -
+    // atalho para os e2e de edição pelo perfil (T10) que não precisam
+    // exercitar a tela de coleta obrigatória (T9) para chegar num Aluno já
+    // completo. Não seta `Usuario.dadosPessoaisCompletos` - quem chama
+    // decide isso via `upsertUsuario`, para os dois ficarem explícitos.
+    case "criarDadosPessoais": {
+      const { cpf, respostas } = argumento as {
+        cpf: string;
+        respostas: Record<string, unknown>;
+      };
+      await gravarRespostas(prisma, { formulario: "dadosPessoais", cpf }, respostas);
+      return respostasPorLinha(prisma, { formulario: "dadosPessoais", cpf });
+    }
+
     case "criarOfertante": {
       const dados = argumento as { nome: string; uf: string };
       return prisma.ofertante.create({ data: dados });
