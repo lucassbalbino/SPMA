@@ -282,7 +282,7 @@ T10 → T11
 
 ---
 
-### T7: Guard de navegação `requireDadosPessoaisCompletos`
+### T7: Guard de navegação `requireDadosPessoaisCompletos` ✅
 
 **What**: guard síncrono no padrão de `requirePrimeiroAcessoConcluido`, encadeado no layout protegido.
 **Where**: `src/lib/auth/guards.ts`, `src/app/(protegido)/layout.tsx`
@@ -297,12 +297,12 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `requireDadosPessoaisCompletos({ tipo: "AL", dadosPessoaisCompletos: false })` chama `redirect("/dados-pessoais")`
-- [ ] `requireDadosPessoaisCompletos({ tipo: "AL", dadosPessoaisCompletos: true })` não redireciona
-- [ ] `requireDadosPessoaisCompletos({ tipo: <qualquer não-AL>, dadosPessoaisCompletos: false })` não redireciona (PESSOAL-04)
-- [ ] Encadeado em `(protegido)/layout.tsx` depois de `requireOfertanteVinculado`
-- [ ] SPEC_DEVIATION documentado no design.md (item 7) referenciado num comentário no próprio guard, mesmo padrão do comentário já existente em `requirePrimeiroAcessoConcluido`
-- [ ] Gate check passes (Quick): `npm run test:unit`
+- [x] `requireDadosPessoaisCompletos({ tipo: "AL", dadosPessoaisCompletos: false })` chama `redirect("/dados-pessoais")`
+- [x] `requireDadosPessoaisCompletos({ tipo: "AL", dadosPessoaisCompletos: true })` não redireciona
+- [x] `requireDadosPessoaisCompletos({ tipo: <qualquer não-AL>, dadosPessoaisCompletos: false })` não redireciona (PESSOAL-04)
+- [x] Encadeado em `(protegido)/layout.tsx` depois de `requireOfertanteVinculado`
+- [x] SPEC_DEVIATION documentado no design.md (item 7) referenciado num comentário no próprio guard, mesmo padrão do comentário já existente em `requirePrimeiroAcessoConcluido`
+- [x] Gate check passes (Quick): `npm run test:unit` (610 unit, todos verdes)
 
 **Tests**: unit
 **Gate**: quick

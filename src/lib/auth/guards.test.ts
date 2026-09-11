@@ -12,6 +12,7 @@ import {
   podeGerenciarPreCurso,
   podeGerenciarVerba,
   podeMatricularAluno,
+  requireDadosPessoaisCompletos,
   requireOfertanteVinculado,
   requirePrimeiroAcessoConcluido,
   requireSession,
@@ -102,6 +103,36 @@ describe("requireOfertanteVinculado", () => {
 
     expect(redirect).not.toHaveBeenCalled();
   });
+});
+
+describe("requireDadosPessoaisCompletos", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("redireciona para /dados-pessoais quando o Aluno não completou o cadastro", () => {
+    expect(() =>
+      requireDadosPessoaisCompletos({ tipo: "AL", dadosPessoaisCompletos: false }),
+    ).toThrow("NEXT_REDIRECT:/dados-pessoais");
+    expect(redirect).toHaveBeenCalledWith("/dados-pessoais");
+  });
+
+  it("não redireciona quando o Aluno já completou o cadastro", () => {
+    requireDadosPessoaisCompletos({ tipo: "AL", dadosPessoaisCompletos: true });
+
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  // PESSOAL-04: nenhum outro perfil é afetado, mesmo com a flag false (que é
+  // o estado padrão para todo mundo, já que só Aluno grava essa flag).
+  it.each(["AM", "GT", "VT", "GO", "VO"] as const)(
+    "não redireciona perfil %s, mesmo com dadosPessoaisCompletos false",
+    (tipo) => {
+      requireDadosPessoaisCompletos({ tipo, dadosPessoaisCompletos: false });
+
+      expect(redirect).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("podeAcessarOfertante", () => {

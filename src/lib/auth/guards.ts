@@ -46,6 +46,29 @@ export function requireOfertanteVinculado(usuario: {
 }
 
 /**
+ * Enquanto o Aluno não responder as 7 perguntas de dado pessoal, nenhum
+ * outro módulo abre (PESSOAL-02, PESSOAL-06). Vale só para AL: é o único
+ * perfil afetado por esta feature (PESSOAL-04).
+ *
+ * SPEC_DEVIATION: spec.md (PESSOAL-02) descreve o redirect como indo "para a
+ * tela principal" (`/painel`). `/painel` vive dentro de `(protegido)`, e este
+ * guard roda no layout desse mesmo grupo - redirecionar para `/painel`
+ * disparava o próprio guard de novo, em loop, pela mesma razão documentada em
+ * `requirePrimeiroAcessoConcluido`/`requireOfertanteVinculado` acima (Server
+ * Components não expõem o pathname da requisição ao layout). Mesma solução já
+ * usada para `/primeiro-acesso` e `/cadastro-ofertante`: rota própria,
+ * `/dados-pessoais`, em `src/app/(onboarding)/`. Ver design.md item 7.
+ */
+export function requireDadosPessoaisCompletos(usuario: {
+  tipo: TipoUsuario;
+  dadosPessoaisCompletos: boolean;
+}): void {
+  if (usuario.tipo === "AL" && !usuario.dadosPessoaisCompletos) {
+    redirect("/dados-pessoais");
+  }
+}
+
+/**
  * Guarda de LEITURA por escopo de Ofertante (REQ-SEC-14, REQ-OV-05/07,
  * AD-012), consumida por `cadastro-ofertante-verba` em toda rota de consulta
  * de Ofertante/Verba. Função pura, mesmo estilo de `podeCriar` em

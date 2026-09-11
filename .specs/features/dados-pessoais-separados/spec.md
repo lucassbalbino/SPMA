@@ -154,35 +154,35 @@ As 7 perguntas de dados pessoais do Aluno — estado, município, gênero, faixa
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| PESSOAL-01 | P1: Coleta no 1º acesso | Specify | Pending |
-| PESSOAL-02 | P1: Coleta no 1º acesso | Specify | Pending |
-| PESSOAL-03 | P1: Coleta no 1º acesso | Specify | Pending |
-| PESSOAL-04 | P1: Coleta no 1º acesso | Specify | Pending |
-| PESSOAL-05 | P1: Coleta no 1º acesso | Specify | Pending |
-| PESSOAL-06 | P1: Coleta no 1º acesso | Specify | Pending |
-| PESSOAL-07 | P1: Uma vez só | Specify | Pending |
-| PESSOAL-08 | P1: Uma vez só | Specify | Pending |
-| PESSOAL-09 | P1: Uma vez só | Specify | Pending |
-| PESSOAL-10 | P1: Uma vez só | Specify | Pending |
-| PESSOAL-11 | P1: Questionário encolhe | Specify | Pending |
-| PESSOAL-12 | P1: Questionário encolhe | Specify | Pending |
-| PESSOAL-13 | P1: Questionário encolhe | Specify | Pending |
-| PESSOAL-14 | P1: Questionário encolhe | Specify | Pending |
-| PESSOAL-15 | P1: Questionário encolhe | Specify | Pending |
-| PESSOAL-16 | P1: Edição pelo perfil | Specify | Pending |
-| PESSOAL-17 | P1: Edição pelo perfil | Specify | Pending |
-| PESSOAL-18 | P1: Edição pelo perfil | Specify | Pending |
-| PESSOAL-19 | P1: Edição pelo perfil | Specify | Pending |
-| PESSOAL-20 | P1: Edição pelo perfil | Specify | Pending |
-| PESSOAL-21 | P1: Descarte do antigo | Specify | Pending |
-| PESSOAL-22 | P1: Descarte do antigo | Specify | Pending |
-| PESSOAL-23 | P1: Descarte do antigo | Specify | Pending |
-| PESSOAL-24 | P1: Descarte do antigo | Specify | Pending |
-| PESSOAL-25 | Edge case | Specify | Pending |
-| PESSOAL-26 | Edge case | Specify | Pending |
-| PESSOAL-27 | Edge case | Specify | Pending |
+| PESSOAL-01 | P1: Coleta no 1º acesso | Execute | Pending (T8/T9) |
+| PESSOAL-02 | P1: Coleta no 1º acesso | Execute | Done (T7) |
+| PESSOAL-03 | P1: Coleta no 1º acesso | Execute | Pending (T8/T9) |
+| PESSOAL-04 | P1: Coleta no 1º acesso | Execute | Done (T7) |
+| PESSOAL-05 | P1: Coleta no 1º acesso | Execute | Pending (T8/T9) |
+| PESSOAL-06 | P1: Coleta no 1º acesso | Execute | Done (T2, T7) |
+| PESSOAL-07 | P1: Uma vez só | Execute | Done (T2, T3) |
+| PESSOAL-08 | P1: Uma vez só | Execute | Done (T2) |
+| PESSOAL-09 | P1: Uma vez só | Execute | Done (T2) |
+| PESSOAL-10 | P1: Uma vez só | Execute | Done (T1) |
+| PESSOAL-11 | P1: Questionário encolhe | Execute | Done (T4, T5) |
+| PESSOAL-12 | P1: Questionário encolhe | Execute | Done (T4) |
+| PESSOAL-13 | P1: Questionário encolhe | Execute | Done (T5) |
+| PESSOAL-14 | P1: Questionário encolhe | Execute | Done (T4) |
+| PESSOAL-15 | P1: Questionário encolhe | Execute | Done (T4) |
+| PESSOAL-16 | P1: Edição pelo perfil | Execute | Pending (T10) |
+| PESSOAL-17 | P1: Edição pelo perfil | Execute | Pending (T8/T10) |
+| PESSOAL-18 | P1: Edição pelo perfil | Execute | Pending (T8/T10) |
+| PESSOAL-19 | P1: Edição pelo perfil | Execute | Pending (T8/T10) |
+| PESSOAL-20 | P1: Edição pelo perfil | Execute | Pending (T8/T10) |
+| PESSOAL-21 | P1: Descarte do antigo | Execute | Done (T6) |
+| PESSOAL-22 | P1: Descarte do antigo | Execute | Done (T6) |
+| PESSOAL-23 | P1: Descarte do antigo | Execute | Done (T6) |
+| PESSOAL-24 | P1: Descarte do antigo | Execute | Done (T6) |
+| PESSOAL-25 | Edge case | Execute | Done (T3, por reuso — ver design.md) |
+| PESSOAL-26 | Edge case | Execute | Done (T3) |
+| PESSOAL-27 | Edge case | Execute | Pending (T9) |
 
-**Coverage:** 27 total, 27 a mapear em tasks no Design, 0 unmapped.
+**Coverage:** 27 total, 27 mapeados em tasks (T1-T11), 17 Done após T7, 10 Pending (T8-T10), 0 unmapped.
 
 ---
 
