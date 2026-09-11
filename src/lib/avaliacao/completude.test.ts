@@ -1,22 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { CHAVES_DADOS_PESSOAIS } from "../validation/schemas/dados-pessoais.schema";
 import {
   validarCompletudeAvaliacao,
   validarCompletudeParte1,
   validarCompletudeParte2,
 } from "./completude";
 
-// Parte 1 completa (17 sempre-obrigatórias + os 2 condicionais satisfeitos).
+// Parte 1 completa (10 sempre-obrigatórias + os 2 condicionais satisfeitos).
+// As 7 perguntas de dados pessoais (Q3-Q9) NÃO entram mais: saíram do
+// questionário do curso (PESSOAL-11/12) e são validadas em
+// `src/lib/dados-pessoais/completude.test.ts`.
 // Valores transcritos literalmente de `docs/Questionario_do_Aluno_1.md`, sem
 // importar as constantes de opções do schema: o teste tem de quebrar se
 // alguém renomear uma opção só no código de produção.
 const PARTE_1_COMPLETA = {
-  avalPessoalEstado: "SP",
-  avalPessoalMunicipio: "Ubatuba - SP",
-  avalPessoalGenero: "Feminino",
-  avalPessoalFaixaEtaria: "26 a 35 anos",
-  avalPessoalEscolaridade: "Ensino médio completo",
-  avalPessoalRacaEtnia: "Pardo",
-  avalPessoalCondicaoPcd: "Não sou uma Pessoa com Deficiência.",
   avalProfissCondicaoTrabalho: "Desempregado",
   avalProfissAtuaTurismo: "Sim",
   avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
@@ -61,7 +58,7 @@ const PARTE_2_COMPLETA_CONCLUIU = {
 };
 
 describe("validarCompletudeParte1", () => {
-  it("as 17 chaves sempre-obrigatórias + os 2 condicionais satisfeitos -> completo=true, pendentes=[]", () => {
+  it("as 10 chaves sempre-obrigatórias + os 2 condicionais satisfeitos -> completo=true, pendentes=[]", () => {
     expect(validarCompletudeParte1(PARTE_1_COMPLETA)).toEqual({
       completo: true,
       pendentes: [],
@@ -96,14 +93,16 @@ describe("validarCompletudeParte1", () => {
     expect(resultado.pendentes).not.toContain("avalProfissAtividadeEspecifica");
   });
 
-  it("avalPessoalCondicaoPcd é seleção de tipo de deficiência, não Sim/Não (Q9)", () => {
-    const resultado = validarCompletudeParte1({
-      ...PARTE_1_COMPLETA,
-      avalPessoalCondicaoPcd: "Não",
-    });
+  // PESSOAL-12: o veredito da Parte 1 sai das 12 perguntas que sobraram, e
+  // nenhuma das 7 pessoais é cobrada - nem quando nenhuma delas foi enviada.
+  it("não cobra nenhuma das 7 perguntas de dados pessoais", () => {
+    const resultado = validarCompletudeParte1(PARTE_1_COMPLETA);
 
-    expect(resultado.completo).toBe(false);
-    expect(resultado.pendentes).toContain("avalPessoalCondicaoPcd");
+    expect(resultado).toEqual({ completo: true, pendentes: [] });
+    expect(Object.keys(PARTE_1_COMPLETA)).toHaveLength(12);
+    for (const chave of CHAVES_DADOS_PESSOAIS) {
+      expect(resultado.pendentes).not.toContain(chave);
+    }
   });
 
   it("avalMotivMotivosParticipacao aceita até 3 motivos e rejeita 4 (Q17)", () => {
@@ -131,11 +130,11 @@ describe("validarCompletudeParte1", () => {
   });
 
   it("campo sempre-obrigatório ausente (não condicional) aparece em pendentes", () => {
-    const { avalPessoalMunicipio: _omitido, ...semCampo } = PARTE_1_COMPLETA;
+    const { avalProfissFaixaRenda: _omitido, ...semCampo } = PARTE_1_COMPLETA;
     const resultado = validarCompletudeParte1(semCampo);
 
     expect(resultado.completo).toBe(false);
-    expect(resultado.pendentes).toContain("avalPessoalMunicipio");
+    expect(resultado.pendentes).toContain("avalProfissFaixaRenda");
   });
 
   it("pendência condicional aparece mesmo com a maioria dos outros campos sempre-obrigatórios também ausentes", () => {
@@ -275,18 +274,18 @@ describe("validarCompletudeParte2", () => {
 
 describe("validarCompletudeAvaliacao", () => {
   it("une pendências de Parte 1 e Parte 2 (uma pendência de cada)", () => {
-    const { avalPessoalMunicipio: _omitido, ...parte1SemMunicipio } =
+    const { avalProfissFaixaRenda: _omitido, ...parte1SemRenda } =
       PARTE_1_COMPLETA;
     const { avalGeralNota: _omitidoNota, ...parte2SemNota } =
       PARTE_2_COMPLETA_CONCLUIU;
 
     const resultado = validarCompletudeAvaliacao({
-      ...parte1SemMunicipio,
+      ...parte1SemRenda,
       ...parte2SemNota,
     });
 
     expect(resultado.completo).toBe(false);
-    expect(resultado.pendentes).toContain("avalPessoalMunicipio");
+    expect(resultado.pendentes).toContain("avalProfissFaixaRenda");
     expect(resultado.pendentes).toContain("avalGeralNota");
   });
 

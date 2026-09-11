@@ -18,16 +18,14 @@ import {
   pendenciasCondicionaisParte2,
 } from "./condicionais";
 
-// As 17 chaves de Parte 1 sempre-obrigatórias (as 19 chaves da Parte 1 menos
+// As 10 chaves de Parte 1 sempre-obrigatórias (as 12 chaves da Parte 1 menos
 // os 2 condicionais, checados à parte pelas regras de `condicionais.ts`).
+//
+// As 7 perguntas de dados pessoais (Q3-Q9) saíram da Parte 1: são atributo do
+// Aluno, coletado uma vez fora do questionário do curso (PESSOAL-11,
+// PESSOAL-12). O veredito da Parte 1 passa a ser produzido só pelas 12 que
+// sobraram.
 const parte1SchemaBase = respostasAvaliacaoSchema.pick({
-  avalPessoalEstado: true,
-  avalPessoalMunicipio: true,
-  avalPessoalGenero: true,
-  avalPessoalFaixaEtaria: true,
-  avalPessoalEscolaridade: true,
-  avalPessoalRacaEtnia: true,
-  avalPessoalCondicaoPcd: true,
   avalProfissCondicaoTrabalho: true,
   avalProfissAtuaTurismo: true,
   avalProfissFaixaRenda: true,

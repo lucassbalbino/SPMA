@@ -1,8 +1,5 @@
 import { z } from "zod";
 import { normalizarCPF, validarCPF } from "../cpf";
-import { OPCOES_UF } from "./pre-curso.schema";
-
-export { OPCOES_UF };
 
 // Matrícula do Aluno num curso (AVAL-01).
 export const matricularAlunoSchema = z.object({
@@ -22,47 +19,14 @@ export type MatricularAlunoInput = z.infer<typeof matricularAlunoSchema>;
 // para a UI montar Select/RadioGroup/checkboxes sem duplicar a lista (AD-004:
 // schema único, cliente e servidor). Q1 (nome) e Q2 (CPF) não são chaves
 // deste JSON: vêm do cadastro do Usuário e da chave primária da avaliação.
+// Q3 a Q9 também não: são dado pessoal do Aluno (PESSOAL-11).
 
 export const OPCOES_SIM_NAO = ["Sim", "Não"] as const;
 
-// Q5 - gênero.
-export const OPCOES_GENERO = ["Feminino", "Masculino", "Prefiro não informar"] as const;
-
-// Q6 - faixa etária.
-export const OPCOES_FAIXA_ETARIA = [
-  "Até 18 anos",
-  "19 a 25 anos",
-  "26 a 35 anos",
-  "36 a 50 anos",
-  "Acima de 50 anos",
-] as const;
-
-// Q7 - nível de escolaridade.
-export const OPCOES_ESCOLARIDADE = [
-  "Sem escolaridade",
-  "Ensino fundamental incompleto",
-  "Ensino fundamental completo",
-  "Ensino médio incompleto",
-  "Ensino médio completo",
-  "Ensino técnico",
-  "Ensino superior incompleto",
-  "Ensino superior completo",
-  "Pós-graduação incompleta",
-  "Pós-graduação completa",
-] as const;
-
-// Q8 - cor/raça/etnia.
-export const OPCOES_RACA_ETNIA = ["Branco", "Negro", "Pardo", "Amarelo", "Indígena"] as const;
-
-// Q9 - condição de PCD. Note que NÃO é Sim/Não: o questionário fonte pede o
-// tipo da deficiência na mesma pergunta.
-export const OPCOES_CONDICAO_PCD = [
-  "Não sou uma Pessoa com Deficiência.",
-  "Sim, tenho deficiência física (paralisias, amputações, ausência de membros, lesões nervosas ou musculares, etc.)",
-  "Sim, tenho deficiência auditiva.",
-  "Sim, tenho deficiência visual.",
-  "Sim, tenho deficiência intelectual/mental.",
-] as const;
+// As opções de Q5 a Q9 (gênero, faixa etária, escolaridade, cor/raça/etnia e
+// condição de PCD) saíram daqui: são dado pessoal do Aluno e vivem em
+// `dados-pessoais.schema.ts`, coletadas uma vez só, fora do questionário do
+// curso (PESSOAL-11).
 
 // Q10 - condição atual de trabalho.
 export const OPCOES_CONDICAO_TRABALHO = [
@@ -227,7 +191,7 @@ export const OPCOES_MELHORIA_PADRAO_VIDA = [
 // segue crescente, e é a UI que apresenta na ordem do papel.
 export const escalaAvaliacaoCurso = z.number().int().min(1).max(5);
 
-// ---- Forma das 45 chaves do questionário (19 na Parte 1, 26 na Parte 2) ----
+// ---- Forma das 38 chaves do questionário (12 na Parte 1, 26 na Parte 2) ----
 //
 // Diferente do Pré-Curso/Pós-Curso, TODAS as chaves ficam `.optional()`
 // aqui: a maior parte da Parte 2 só é exigida quando
@@ -236,15 +200,6 @@ export const escalaAvaliacaoCurso = z.number().int().min(1).max(5);
 // (Parte 1 sempre; Parte 2 condicional ao gate) é 100% responsabilidade de
 // `src/lib/avaliacao/completude.ts` - ver design.md Approach Exploration §2.
 export const respostasAvaliacaoSchema = z.object({
-  // Parte 1 - Dados Pessoais (Q3-Q9; Q1 nome e Q2 CPF vêm do Usuário)
-  avalPessoalEstado: z.enum(OPCOES_UF).optional(),
-  avalPessoalMunicipio: z.string().min(1).optional(),
-  avalPessoalGenero: z.enum(OPCOES_GENERO).optional(),
-  avalPessoalFaixaEtaria: z.enum(OPCOES_FAIXA_ETARIA).optional(),
-  avalPessoalEscolaridade: z.enum(OPCOES_ESCOLARIDADE).optional(),
-  avalPessoalRacaEtnia: z.enum(OPCOES_RACA_ETNIA).optional(),
-  avalPessoalCondicaoPcd: z.enum(OPCOES_CONDICAO_PCD).optional(),
-
   // Parte 1 - Situação Profissional (Q10-Q13)
   avalProfissCondicaoTrabalho: z.enum(OPCOES_CONDICAO_TRABALHO).optional(),
   avalProfissAtuaTurismo: z.enum(OPCOES_SIM_NAO).optional(),
@@ -323,16 +278,10 @@ export const respostasAvaliacaoParcialSchema = respostasAvaliacaoSchema;
 
 export type RespostasAvaliacaoParcial = z.infer<typeof respostasAvaliacaoParcialSchema>;
 
-// As 19 chaves da Parte 1 (AD-023/RN-13) - usado pela rota de PATCH para
+// As 12 chaves da Parte 1 (AD-023/RN-13). As 7 de dados pessoais saíram
+// para `dados-pessoais.schema.ts` (PESSOAL-11) - usado pela rota de PATCH para
 // classificar cada chave recebida como Parte 1 ou Parte 2 (AVAL-10).
 export const CHAVES_PARTE_1 = [
-  "avalPessoalEstado",
-  "avalPessoalMunicipio",
-  "avalPessoalGenero",
-  "avalPessoalFaixaEtaria",
-  "avalPessoalEscolaridade",
-  "avalPessoalRacaEtnia",
-  "avalPessoalCondicaoPcd",
   "avalProfissCondicaoTrabalho",
   "avalProfissAtuaTurismo",
   "avalProfissAtividadeEspecifica",

@@ -195,7 +195,7 @@ T10 → T11
 
 ---
 
-### T4: Avaliação perde as 7 chaves pessoais do schema e da completude
+### T4: Avaliação perde as 7 chaves pessoais do schema e da completude ✅
 
 **What**: remove os 7 campos `avalPessoal*` e as 5 constantes de opção migradas de `avaliacao.schema.ts`; `CHAVES_PARTE_1` cai para as 12 restantes; `parte1SchemaBase` em `completude.ts` perde os 7 picks.
 **Where**: `src/lib/validation/schemas/avaliacao.schema.ts`, `src/lib/avaliacao/completude.ts`
@@ -210,13 +210,13 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `respostasAvaliacaoSchema` não tem mais nenhum campo `avalPessoal*`
-- [ ] `CHAVES_PARTE_1` lista exatamente as 12 chaves restantes (Situação Profissional, Experiência, Motivação, Expectativas)
-- [ ] `OPCOES_UF` deixa de ser importada/reexportada por `avaliacao.schema.ts` (não é mais usada ali)
-- [ ] `parte1SchemaBase.pick({...})` sem os 7 campos pessoais; as 2 condicionais (`avalProfissAtividadeEspecifica`, `avalExperienciaTipoCursoAnterior`) continuam fora do pick, tratadas por `condicionais.ts` como hoje
-- [ ] `validarCompletudeParte1` com as 12 chaves preenchidas e válidas devolve `completo: true`, sem exigir nenhuma das 7 antigas (PESSOAL-12)
-- [ ] Testes existentes de `avaliacao.schema.test.ts` e `completude.test.ts` que referenciavam as 7 chaves são ajustados para as 12 restantes — marcado explicitamente no commit como ajuste a comportamento que mudou de propósito, não afrouxamento (ver design.md, "O que muda e por quê os testes existentes mudam")
-- [ ] Gate check passes (Quick): `npm run test:unit`
+- [x] `respostasAvaliacaoSchema` não tem mais nenhum campo `avalPessoal*`
+- [x] `CHAVES_PARTE_1` lista exatamente as 12 chaves restantes (Situação Profissional, Experiência, Motivação, Expectativas)
+- [x] `OPCOES_UF` deixa de ser importada/reexportada por `avaliacao.schema.ts` (não é mais usada ali)
+- [x] `parte1SchemaBase.pick({...})` sem os 7 campos pessoais; as 2 condicionais (`avalProfissAtividadeEspecifica`, `avalExperienciaTipoCursoAnterior`) continuam fora do pick, tratadas por `condicionais.ts` como hoje
+- [x] `validarCompletudeParte1` com as 12 chaves preenchidas e válidas devolve `completo: true`, sem exigir nenhuma das 7 antigas (PESSOAL-12)
+- [x] Testes existentes de `avaliacao.schema.test.ts` e `completude.test.ts` que referenciavam as 7 chaves são ajustados para as 12 restantes — marcado explicitamente no commit como ajuste a comportamento que mudou de propósito, não afrouxamento (ver design.md, "O que muda e por quê os testes existentes mudam")
+- [x] Gate check passes (Quick): `npm run test:unit`
 
 **Tests**: unit
 **Gate**: quick

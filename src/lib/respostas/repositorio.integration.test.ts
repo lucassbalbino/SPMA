@@ -375,7 +375,7 @@ describe("repositório de respostas (integration)", () => {
     await gravarRespostas(
       prisma,
       { formulario: "avaliacao", cpf: CPF_ALUNO, cdCurso: cdCursoA },
-      { avalGeralNota: 9, avalPessoalGenero: "Feminino" },
+      { avalGeralNota: 9, avalExpectAtendimento: "Sim" },
     );
 
     expect(
@@ -384,7 +384,7 @@ describe("repositório de respostas (integration)", () => {
         cpf: CPF_ALUNO,
         cdCurso: cdCursoA,
       }),
-    ).toEqual({ avalGeralNota: 9, avalPessoalGenero: "Feminino" });
+    ).toEqual({ avalGeralNota: 9, avalExpectAtendimento: "Sim" });
 
     const linhas = await prisma.respostaAvaliacao.findMany({
       where: { cpf: CPF_ALUNO, cdCurso: cdCursoA },

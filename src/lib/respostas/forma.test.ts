@@ -102,7 +102,9 @@ const QUESTIONARIOS = [
     schema: respostasAvaliacaoSchema,
     listas: LISTAS_AVALIACAO,
     numericas: NUMERICAS_AVALIACAO,
-    totalChaves: 45,
+    // 38 = as 45 originais menos as 7 de dados pessoais, que saíram do
+    // questionário do curso para `dados-pessoais.schema.ts` (PESSOAL-11).
+    totalChaves: 38,
   },
 ] as const;
 
@@ -156,17 +158,18 @@ describe("classificarChave", () => {
     });
   }
 
-  it("classifica 13 listas e 39 numéricas nas 127 chaves dos três questionários", () => {
+  it("classifica 13 listas e 39 numéricas nas 120 chaves dos três questionários", () => {
     const formas = QUESTIONARIOS.flatMap((questionario) =>
       Object.keys(questionario.schema.shape).map((chave) =>
         classificarChave(questionario.schema, chave),
       ),
     );
 
-    expect(formas).toHaveLength(127);
+    expect(formas).toHaveLength(120);
     expect(formas.filter((forma) => forma === "lista")).toHaveLength(13);
     expect(formas.filter((forma) => forma === "numero")).toHaveLength(39);
-    expect(formas.filter((forma) => forma === "texto")).toHaveLength(75);
+    // 68 = 75 menos as 7 chaves de dados pessoais, todas escalares.
+    expect(formas.filter((forma) => forma === "texto")).toHaveLength(68);
   });
 
   it("lista opcional continua sendo lista (ZodArray.unwrap devolve o elemento)", () => {

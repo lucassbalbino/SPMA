@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CHAVES_DADOS_PESSOAIS } from "./dados-pessoais.schema";
 import {
   CHAVES_PARTE_1,
   matricularAlunoSchema,
@@ -11,15 +12,6 @@ import {
 // campo individual (spread + override). Valores transcritos literalmente do
 // papel, sem importar as constantes de opções do schema.
 const RESPOSTA_VALIDA = {
-  // Parte 1 - Dados Pessoais (Q3-Q9)
-  avalPessoalEstado: "SP",
-  avalPessoalMunicipio: "Ubatuba - SP",
-  avalPessoalGenero: "Feminino",
-  avalPessoalFaixaEtaria: "26 a 35 anos",
-  avalPessoalEscolaridade: "Ensino médio completo",
-  avalPessoalRacaEtnia: "Pardo",
-  avalPessoalCondicaoPcd: "Não sou uma Pessoa com Deficiência.",
-
   // Parte 1 - Situação Profissional (Q10-Q13)
   avalProfissCondicaoTrabalho: "Desempregado",
   avalProfissAtuaTurismo: "Sim",
@@ -125,8 +117,17 @@ describe("respostasAvaliacaoSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("tem exatamente 45 chaves (questionário fonte: 19 na Parte 1, 26 na Parte 2)", () => {
-    expect(Object.keys(respostasAvaliacaoSchema.shape)).toHaveLength(45);
+  it("tem exatamente 38 chaves (questionário fonte: 12 na Parte 1, 26 na Parte 2)", () => {
+    expect(Object.keys(respostasAvaliacaoSchema.shape)).toHaveLength(38);
+  });
+
+  // PESSOAL-11: as 7 perguntas de dados pessoais não pertencem mais a este
+  // formulário - vivem em `dados-pessoais.schema.ts`, chaveadas só pelo CPF.
+  it("não tem nenhuma das 7 chaves de dados pessoais", () => {
+    const chaves = Object.keys(respostasAvaliacaoSchema.shape);
+    for (const chave of CHAVES_DADOS_PESSOAIS) {
+      expect(chaves).not.toContain(chave);
+    }
   });
 
   it("aceita objeto vazio (todas as chaves são opcionais na FORMA)", () => {
@@ -135,15 +136,15 @@ describe("respostasAvaliacaoSchema", () => {
 
   it("aceita um subconjunto de 1 campo válido", () => {
     const result = respostasAvaliacaoSchema.safeParse({
-      avalPessoalMunicipio: "Ubatuba",
+      avalProfissFaixaRenda: "Até 01 salário mínimo",
     });
     expect(result.success).toBe(true);
   });
 
-  it("avalPessoalGenero rejeita valor fora do enum", () => {
+  it("avalProfissCondicaoTrabalho rejeita valor fora do enum", () => {
     const result = respostasAvaliacaoSchema.safeParse({
       ...RESPOSTA_VALIDA,
-      avalPessoalGenero: "Inventado",
+      avalProfissCondicaoTrabalho: "Inventado",
     });
     expect(result.success).toBe(false);
   });
@@ -154,20 +155,6 @@ describe("respostasAvaliacaoSchema", () => {
       avalOportunSituacaoTrabalho: "Inventado",
     });
     expect(result.success).toBe(false);
-  });
-
-  it("avalPessoalCondicaoPcd é o tipo da deficiência, não Sim/Não (Q9)", () => {
-    const foraDoEnum = respostasAvaliacaoSchema.safeParse({
-      ...RESPOSTA_VALIDA,
-      avalPessoalCondicaoPcd: "Sim",
-    });
-    expect(foraDoEnum.success).toBe(false);
-
-    const valido = respostasAvaliacaoSchema.safeParse({
-      ...RESPOSTA_VALIDA,
-      avalPessoalCondicaoPcd: "Sim, tenho deficiência auditiva.",
-    });
-    expect(valido.success).toBe(true);
   });
 
   it("avalProfissAtividadeEspecifica é seleção fechada, não texto livre (Q12)", () => {
@@ -326,8 +313,15 @@ describe("respostasAvaliacaoSchema", () => {
 });
 
 describe("CHAVES_PARTE_1", () => {
-  it("tem exatamente 19 entradas (Parte 1 do questionário fonte, Q3-Q21)", () => {
-    expect(CHAVES_PARTE_1).toHaveLength(19);
+  it("tem exatamente 12 entradas (Parte 1 do questionário fonte, Q10-Q21)", () => {
+    expect(CHAVES_PARTE_1).toHaveLength(12);
+  });
+
+  // PESSOAL-11/12: nenhuma chave pessoal sobrou no gate da Parte 1.
+  it("não contém nenhuma das 7 chaves de dados pessoais", () => {
+    for (const chave of CHAVES_DADOS_PESSOAIS) {
+      expect(CHAVES_PARTE_1 as readonly string[]).not.toContain(chave);
+    }
   });
 
   it("cada entrada corresponde a uma chave real de respostasAvaliacaoSchema", () => {

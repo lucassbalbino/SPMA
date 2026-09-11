@@ -50,7 +50,7 @@ describe("normalizarCondicionaisAvaliacao", () => {
       avalParticipConcluiuCurso: "Não",
       avalParticipMotivoNaoConclusao: ["Horário inapropriado das aulas"],
       avalParticipPercentualFrequencia: "26% a 50%",
-      avalPessoalEstado: "SP",
+      avalExpectAtendimento: "Sim",
     };
     for (const chave of CHAVES_SOMENTE_CONCLUINTE) {
       respostas[chave] = chave === "avalGeralNota" ? 10 : "resposta de concluinte";
@@ -60,7 +60,7 @@ describe("normalizarCondicionaisAvaliacao", () => {
       avalParticipConcluiuCurso: "Não",
       avalParticipMotivoNaoConclusao: ["Horário inapropriado das aulas"],
       avalParticipPercentualFrequencia: "26% a 50%",
-      avalPessoalEstado: "SP",
+      avalExpectAtendimento: "Sim",
     });
   });
 
