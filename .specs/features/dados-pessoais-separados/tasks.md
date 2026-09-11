@@ -344,7 +344,7 @@ T10 → T11
 
 ---
 
-### T9: Tela obrigatória `/dados-pessoais` e liberação da navegação
+### T9: Tela obrigatória `/dados-pessoais` e liberação da navegação ✅
 
 **What**: `DadosPessoaisForm` (componente compartilhado) + página `/dados-pessoais` em `(onboarding)`.
 **Where**: `src/components/dados-pessoais/DadosPessoaisForm.tsx` (novo), `src/app/(onboarding)/dados-pessoais/page.tsx` (novo), `e2e/dados-pessoais.spec.ts` (novo)
@@ -359,15 +359,15 @@ T10 → T11
 
 **Done when**:
 
-- [ ] Aluno recém-criado (senha definida, sem dados pessoais) tentando abrir qualquer tela protegida é redirecionado para `/dados-pessoais` (PESSOAL-02, PESSOAL-06)
-- [ ] `/dados-pessoais` exibe as 7 perguntas (PESSOAL-01)
-- [ ] Envio incompleto mostra erro, permanece em `/dados-pessoais` (PESSOAL-05)
-- [ ] Envio completo libera a navegação; acessar `/painel` depois não volta a mostrar o questionário (PESSOAL-03, PESSOAL-27)
-- [ ] Um não-Aluno com sessão válida nunca é redirecionado para `/dados-pessoais` (PESSOAL-04)
-- [ ] Gate check passes (Full): `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Aluno recém-criado (senha definida, sem dados pessoais) tentando abrir qualquer tela protegida é redirecionado para `/dados-pessoais` (PESSOAL-02, PESSOAL-06)
+- [x] `/dados-pessoais` exibe as 7 perguntas (PESSOAL-01)
+- [x] Envio incompleto mostra erro, permanece em `/dados-pessoais` (PESSOAL-05)
+- [x] Envio completo libera a navegação; acessar `/painel` depois não volta a mostrar o questionário (PESSOAL-03, PESSOAL-27)
+- [x] Um não-Aluno com sessão válida nunca é redirecionado para `/dados-pessoais` (PESSOAL-04)
+- [x] Gate check passes (Build): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` (610 unit, 70 integration, 253 e2e)
 
 **Tests**: e2e
-**Gate**: full
+**Gate**: build (última tarefa da Fase 3)
 
 **Commit**: `feat(dados-pessoais): tela obrigatoria de coleta no primeiro acesso`
 

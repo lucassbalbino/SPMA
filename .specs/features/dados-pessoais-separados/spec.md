@@ -154,11 +154,11 @@ As 7 perguntas de dados pessoais do Aluno — estado, município, gênero, faixa
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| PESSOAL-01 | P1: Coleta no 1º acesso | Execute | Pending (T8/T9) |
+| PESSOAL-01 | P1: Coleta no 1º acesso | Execute | Done (T8, T9) |
 | PESSOAL-02 | P1: Coleta no 1º acesso | Execute | Done (T7) |
-| PESSOAL-03 | P1: Coleta no 1º acesso | Execute | Pending (T8/T9) |
-| PESSOAL-04 | P1: Coleta no 1º acesso | Execute | Done (T7) |
-| PESSOAL-05 | P1: Coleta no 1º acesso | Execute | Pending (T8/T9) |
+| PESSOAL-03 | P1: Coleta no 1º acesso | Execute | Done (T8, T9) |
+| PESSOAL-04 | P1: Coleta no 1º acesso | Execute | Done (T7, T9) |
+| PESSOAL-05 | P1: Coleta no 1º acesso | Execute | Done (T8, T9) |
 | PESSOAL-06 | P1: Coleta no 1º acesso | Execute | Done (T2, T7) |
 | PESSOAL-07 | P1: Uma vez só | Execute | Done (T2, T3) |
 | PESSOAL-08 | P1: Uma vez só | Execute | Done (T2) |
@@ -180,9 +180,9 @@ As 7 perguntas de dados pessoais do Aluno — estado, município, gênero, faixa
 | PESSOAL-24 | P1: Descarte do antigo | Execute | Done (T6) |
 | PESSOAL-25 | Edge case | Execute | Done (T3, por reuso — ver design.md) |
 | PESSOAL-26 | Edge case | Execute | Done (T3) |
-| PESSOAL-27 | Edge case | Execute | Pending (T9) |
+| PESSOAL-27 | Edge case | Execute | Done (T9) |
 
-**Coverage:** 27 total, 27 mapeados em tasks (T1-T11), 17 Done após T7, 10 Pending (T8-T10), 0 unmapped.
+**Coverage:** 27 total, 27 mapeados em tasks (T1-T11), 22 Done após T9, 5 Pending (T10), 0 unmapped.
 
 ---
 
