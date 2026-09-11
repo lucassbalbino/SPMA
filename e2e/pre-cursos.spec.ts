@@ -77,6 +77,17 @@ test("GO cria pré-curso com valor dentro do saldo -> 201, EM_ANDAMENTO, respost
   expect(persistido?.respostas).toBeNull();
   expect(persistido?.criadoPor).toBe(CPF_GO);
 
+  // O GET tem de devolver `null` igual ao POST. Afirmação separada de
+  // propósito: o POST devolve `respostas: null` literal, enquanto o GET passa
+  // por `respostasOuNulo` sobre as linhas. Sem esta linha, trocar essa função
+  // por uma que devolvesse `{}` não quebrava teste nenhum - foi o mutante que
+  // sobreviveu a 83 specs no sensor do Verifier.
+  const consulta = await cliente.get(`/api/pre-cursos/${corpo.preCurso.cdCurso}`, {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect(consulta.status()).toBe(200);
+  expect((await consulta.json()).preCurso.respostas).toBeNull();
+
   await cliente.dispose();
 });
 

@@ -149,7 +149,7 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 | RESP-13 | P1: Migração | Execute | Done (T4) |
 | RESP-14 | P1: Migração | Execute | Done (T4) |
 | RESP-15 | P1: Migração | Execute | Done (T16) |
-| RESP-16 | P1: Migração | Execute | Done (T4) |
+| RESP-16 | P1: Resposta como entidade | Execute | Done (T3, T4) |
 | RESP-17 | P1: Agregação | Execute | Done (T17) |
 | RESP-18 | P1: Agregação | Execute | Done (T17) |
 | RESP-19 | Edge case | Execute | Done (T3) |
@@ -163,8 +163,8 @@ As respostas dos três questionários vivem num único campo `respostas Json?` p
 ## Success Criteria
 
 - [x] Os três formulários gravam e leem respostas linha a linha; `respostas Json?` não existe mais no schema.
-- [ ] A suíte completa das três features passa sem enfraquecer nenhuma asserção existente.
-- [ ] Uma consulta de agregação por pergunta roda sem função de JSON e usa índice.
-- [ ] O backfill reconstrói, para cada registro semeado, um objeto idêntico ao JSON original.
-- [ ] AD nova em `.specs/STATE.md` rescinde AD-034 e os três `spec.md` afetados deixam de afirmar o contrário.
-- [ ] Gate completo verde: `lint && build && typecheck && test:unit && test:integration && test:e2e`.
+- [x] A suíte completa das três features passa sem enfraquecer nenhuma asserção existente.
+- [x] Uma consulta de agregação por pergunta roda sem função de JSON e usa índice.
+- [x] O backfill reconstrói, para cada registro semeado, um objeto idêntico ao JSON original.
+- [x] AD nova em `.specs/STATE.md` rescinde AD-034 e os três `spec.md` afetados deixam de afirmar o contrário.
+- [x] Gate completo verde: `lint && build && typecheck && test:unit && test:integration && test:e2e`.

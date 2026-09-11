@@ -313,10 +313,4 @@ describe("migration de backfill das respostas (integration)", () => {
     expect(avaliacao?.parte1Completa).toBe(true);
   });
 
-  // RESP-16: o registro que tinha `Respostas` nulo não gerou nenhuma linha.
-  it("registro sem respostas não gera linha", async () => {
-    expect(
-      await prisma.respostaPreCurso.count({ where: { cdCurso: cdCursoSemRespostas } }),
-    ).toBe(0);
-  });
 });

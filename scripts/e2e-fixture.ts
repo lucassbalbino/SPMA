@@ -17,6 +17,7 @@ import { hashPassword } from "../src/lib/auth/password";
 import {
   gravarRespostas,
   lerRespostas,
+  respostasOuNulo,
   type AlvoRespostas,
 } from "../src/lib/respostas/repositorio";
 import type { TipoUsuario } from "../src/generated/prisma/enums";
@@ -55,14 +56,18 @@ type UsuarioFixture = {
  *
  * Registro sem nenhuma linha devolve `null`, e não `{}`: é exatamente o que a
  * coluna devolvia, e é o que os specs de criação afirmam ("respostas nulas").
+ *
+ * A regra vem de `respostasOuNulo`, a MESMA função que as rotas usam - o
+ * fixture observa a produção, nunca reimplementa. Uma cópia da regra aqui
+ * fazia o fixture concordar consigo mesmo enquanto a produção regredia: foi
+ * exatamente assim que um mutante trocando `null` por `{}` sobreviveu a 83
+ * testes e2e no sensor do Verifier.
  */
 async function respostasPorLinha(
   prisma: PrismaClient,
   alvo: AlvoRespostas,
 ): Promise<Record<string, unknown> | null> {
-  const respostas = await lerRespostas(prisma, alvo);
-
-  return Object.keys(respostas).length === 0 ? null : respostas;
+  return respostasOuNulo(await lerRespostas(prisma, alvo));
 }
 
 async function executar(
