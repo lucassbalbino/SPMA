@@ -182,10 +182,16 @@ describe("classificarChave", () => {
   });
 
   // RESP-14: chave migrada de um questionário antigo não existe mais no
-  // schema; ela precisa continuar legível, como texto.
-  it("classifica chave ausente do schema como texto", () => {
+  // schema, então não há forma declarada em lugar nenhum - ela é `"orfa"`, e
+  // quem remonta decide pela quantidade de linhas.
+  //
+  // Esta asserção dizia `"texto"` até o Verifier mostrar o que isso custava:
+  // órfã de seleção múltipla voltava truncada no primeiro item. Não é um
+  // teste afrouxado, é o contrato corrigido - a cobertura AUMENTA logo abaixo,
+  // em `desserializar`.
+  it("classifica chave ausente do schema como órfã", () => {
     expect(classificarChave(respostasPreCursoSchema, "chaveDeQuestionarioAntigo")).toBe(
-      "texto",
+      "orfa",
     );
   });
 });
@@ -233,5 +239,31 @@ describe("serializar / desserializar", () => {
     const valor = ["Jovens"];
 
     expect(desserializar(serializar(valor), "lista")).toEqual(valor);
+  });
+
+  // RESP-14: chave órfã não tem schema que diga a forma, então a quantidade
+  // de linhas decide. Mais de uma linha só pode ter vindo de uma lista.
+  //
+  // O caso é real, não hipotético: `posContEstrategiasContinuidade` e
+  // `posContEstrategiasAmpliacao` eram `z.array(...).min(1)` e saíram do
+  // schema na troca dos questionários (AD-035/036). Antes desta correção, uma
+  // órfã dessas voltava como "Parcerias" - as outras opções sumiam na leitura.
+  it("remonta órfã de várias linhas como lista, sem truncar", () => {
+    expect(desserializar(["Parcerias", "Editais", "Turmas novas"], "orfa")).toEqual([
+      "Parcerias",
+      "Editais",
+      "Turmas novas",
+    ]);
+  });
+
+  it("remonta órfã de uma linha só como escalar", () => {
+    expect(desserializar(["Sim"], "orfa")).toBe("Sim");
+  });
+
+  // LIMITE ACEITO e documentado: lista órfã de um item só é indistinguível de
+  // escalar - as duas gravam exatamente uma linha com `Ordem` 0. Nenhum valor
+  // se perde, que é o que a RESP-14 exige; só o invólucro.
+  it("não distingue lista órfã de um item só de um escalar", () => {
+    expect(desserializar(serializar(["Jovens"]), "orfa")).toBe("Jovens");
   });
 });

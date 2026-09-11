@@ -15,19 +15,27 @@
 // qualquer outra.
 import { z } from "zod";
 
-export type FormaResposta = "lista" | "numero" | "texto";
+export type FormaResposta = "lista" | "numero" | "texto" | "orfa";
 
 /**
  * Diz se o valor de `chave` é lista, número ou texto, olhando o schema Zod
- * do formulário. Chave ausente do schema atual (resquício de troca de
- * questionário, RESP-14) é tratada como texto - o valor nunca se perde.
+ * do formulário.
+ *
+ * Chave ausente do schema atual (resquício de troca de questionário,
+ * RESP-14) não tem forma declarada em lugar nenhum - o schema que a
+ * descrevia não existe mais. Ela volta como `"orfa"`, e quem remonta decide
+ * pela quantidade de linhas. Classificá-la como `"texto"` truncava uma
+ * seleção múltipla órfã no primeiro item: `posContEstrategiasContinuidade` e
+ * `posContEstrategiasAmpliacao` eram `z.array(...).min(1)` e saíram do schema
+ * na troca dos questionários (AD-035/036), então o caso é real, não
+ * hipotético.
  */
 export function classificarChave(
   schema: z.ZodObject<z.ZodRawShape>,
   chave: string,
 ): FormaResposta {
   const campo = schema.shape[chave];
-  if (!campo) return "texto";
+  if (!campo) return "orfa";
 
   let atual: unknown = campo;
   while (
@@ -49,9 +57,18 @@ export function serializar(valor: unknown): string[] {
   return [String(valor)];
 }
 
-/** Remonta o valor original a partir das linhas, na ordem em que vieram. */
+/**
+ * Remonta o valor original a partir das linhas, na ordem em que vieram.
+ *
+ * Para chave órfã não há schema que diga a forma, então a própria quantidade
+ * de linhas decide: mais de uma só pode ter vindo de uma lista. LIMITE
+ * ACEITO: lista órfã de um único item volta como escalar - as duas gravam
+ * exatamente uma linha com `Ordem` 0, e nada no banco as distingue. Nenhum
+ * valor se perde, que é o que a RESP-14 exige.
+ */
 export function desserializar(itens: string[], forma: FormaResposta): unknown {
   if (forma === "lista") return itens;
   if (forma === "numero") return Number(itens[0]);
+  if (forma === "orfa") return itens.length > 1 ? itens : itens[0];
   return itens[0];
 }
