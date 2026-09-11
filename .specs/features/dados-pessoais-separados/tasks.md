@@ -110,7 +110,7 @@ T10 → T11
 
 ## Task Breakdown
 
-### T1: Declarar a fronteira e a completude dos dados pessoais
+### T1: Declarar a fronteira e a completude dos dados pessoais ✅
 
 **What**: `respostasDadosPessoaisSchema` + `CHAVES_DADOS_PESSOAIS` (com `satisfies`) num arquivo novo, mais `validarCompletudeDadosPessoais`.
 **Where**: `src/lib/validation/schemas/dados-pessoais.schema.ts` (novo), `src/lib/dados-pessoais/completude.ts` (novo)
@@ -125,12 +125,12 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `respostasDadosPessoaisSchema` tem os 7 campos `avalPessoal*` (mesmos nomes de hoje), cada um `.optional()`, com as 5 constantes de opção migradas de `avaliacao.schema.ts` (`OPCOES_GENERO`, `OPCOES_FAIXA_ETARIA`, `OPCOES_ESCOLARIDADE`, `OPCOES_RACA_ETNIA`, `OPCOES_CONDICAO_PCD`) e `OPCOES_UF` importada de `pre-curso.schema.ts`
-- [ ] `CHAVES_DADOS_PESSOAIS` lista as 7 chaves, com `satisfies` que quebra a compilação se alguma sumir do schema
-- [ ] `validarCompletudeDadosPessoais(respostas)` devolve `{ completo: false, pendentes: [...] }` quando falta 1+ campo, e `{ completo: true, pendentes: [] }` com os 7 presentes e válidos
-- [ ] Teste afirma cada um dos 7 campos individualmente como pendência quando ausente (não por amostra)
-- [ ] Teste afirma que `avalPessoalCondicaoPcd` valida contra `OPCOES_CONDICAO_PCD` (tipo da deficiência, não Sim/Não — mesma regra que `avaliacao.schema.test.ts`/`completude.test.ts` já provam hoje, preservada no lugar novo)
-- [ ] Gate check passes (Quick): `npm run test:unit`
+- [x] `respostasDadosPessoaisSchema` tem os 7 campos `avalPessoal*` (mesmos nomes de hoje), cada um `.optional()`, com as 5 constantes de opção migradas de `avaliacao.schema.ts` (`OPCOES_GENERO`, `OPCOES_FAIXA_ETARIA`, `OPCOES_ESCOLARIDADE`, `OPCOES_RACA_ETNIA`, `OPCOES_CONDICAO_PCD`) e `OPCOES_UF` importada de `pre-curso.schema.ts`
+- [x] `CHAVES_DADOS_PESSOAIS` lista as 7 chaves, com `satisfies` que quebra a compilação se alguma sumir do schema
+- [x] `validarCompletudeDadosPessoais(respostas)` devolve `{ completo: false, pendentes: [...] }` quando falta 1+ campo, e `{ completo: true, pendentes: [] }` com os 7 presentes e válidos
+- [x] Teste afirma cada um dos 7 campos individualmente como pendência quando ausente (não por amostra)
+- [x] Teste afirma que `avalPessoalCondicaoPcd` valida contra `OPCOES_CONDICAO_PCD` (tipo da deficiência, não Sim/Não — mesma regra que `avaliacao.schema.test.ts`/`completude.test.ts` já provam hoje, preservada no lugar novo)
+- [x] Gate check passes (Quick): `npm run test:unit`
 
 **Tests**: unit
 **Gate**: quick
