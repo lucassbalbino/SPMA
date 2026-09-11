@@ -139,7 +139,7 @@ T10 → T11
 
 ---
 
-### T2: Tabela de dado pessoal e flag de completude no Usuario
+### T2: Tabela de dado pessoal e flag de completude no Usuario ✅
 
 **What**: model `DadoPessoalAluno`, campo `Usuario.dadosPessoaisCompletos`, migration que cria os dois.
 **Where**: `prisma/schema.prisma`, `prisma/migrations/`
@@ -154,11 +154,11 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `DadoPessoalAluno` com `@@unique([cpf, chave, ordem])` e `@@index([chave])` (PESSOAL-08)
-- [ ] FK `cpf -> Usuario.cpf` com `onDelete: Cascade` (PESSOAL-09)
-- [ ] `Usuario.dadosPessoaisCompletos Boolean @default(false)`
-- [ ] Migration gerada via `prisma migrate dev`; confirmado que `ADD COLUMN ... DEFAULT false` aplica a todo `Usuario` já existente, sem `UPDATE` manual (PESSOAL-06)
-- [ ] Gate check passes (Build): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] `DadoPessoalAluno` com `@@unique([cpf, chave, ordem])` e `@@index([chave])` (PESSOAL-08)
+- [x] FK `cpf -> Usuario.cpf` com `onDelete: Cascade` (PESSOAL-09)
+- [x] `Usuario.dadosPessoaisCompletos Boolean @default(false)`
+- [x] Migration gerada via `prisma migrate dev`; confirmado que `ADD COLUMN ... DEFAULT false` aplica a todo `Usuario` já existente, sem `UPDATE` manual (PESSOAL-06)
+- [x] Gate check passes (Build): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
 
 **Tests**: none
 **Gate**: build

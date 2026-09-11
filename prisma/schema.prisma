@@ -53,6 +53,13 @@ model Usuario {
   senhaHash    String?     @map("Senha_Hash") @db.VarChar(255) // null até cadastrar no 1º acesso
   primeiraVez  Boolean     @default(true) @map("Primeira_Vez")
 
+  // Gate de dados pessoais do Aluno (PESSOAL-02, PESSOAL-06). Mesmo padrão de
+  // `primeiraVez`: flag persistida, não recomputada a cada navegação. O
+  // `@default(false)` vale tanto para o Aluno novo quanto, ao adicionar a
+  // coluna, para todo Aluno que já existia — é o que faz o gate valer também
+  // para conta anterior a esta feature, sem `UPDATE` manual.
+  dadosPessoaisCompletos Boolean @default(false) @map("Dados_Pessoais_Completos")
+
   // Rate limiting de login (AD-028) — contadores por conta
   tentativasFalhas    Int       @default(0) @map("Tentativas_Falhas")
   bloqueadoAte        DateTime? @map("Bloqueado_Ate")
@@ -65,6 +72,7 @@ model Usuario {
 
   // Relações de domínio
   avaliacoes       AvaliacaoAluno[] @relation("AlunoAvaliacoes")
+  dadosPessoais    DadoPessoalAluno[]
   cursosCriados    PreCurso[]       @relation("GoCursos")
   posCursosCriados PosCurso[]       @relation("GoPosCursos")
   sessoes          Sessao[]
@@ -282,6 +290,32 @@ model RespostaAvaliacao {
   @@unique([cpf, cdCurso, chave, ordem])
   @@index([chave])
   @@map("TB_Resposta_Avaliacao")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DADO PESSOAL DO ALUNO  (PESSOAL-07, PESSOAL-08, PESSOAL-09)
+// Mesma forma `(pai, Chave, Ordem, Valor)` das três tabelas acima, só
+// que a chave-pai é o CPF sozinho: as 7 perguntas da seção DADOS
+// PESSOAIS (Q3-Q9) são atributo da pessoa, não da matrícula. Uma linha
+// por (Aluno, pergunta, posição) — o Aluno é a mesma pessoa em qualquer
+// curso que faça.
+//
+// `onDelete: Cascade` satisfaz PESSOAL-09 por constraint física, sem
+// lógica de aplicação: removeu o Aluno, os dados pessoais dele vão junto.
+// ─────────────────────────────────────────────────────────────
+
+model DadoPessoalAluno {
+  id      Int     @id @default(autoincrement()) @map("ID_Dado")
+  cpf     String  @map("CPF") @db.VarChar(11)
+  usuario Usuario @relation(fields: [cpf], references: [cpf], onDelete: Cascade)
+
+  chave   String  @map("Chave") @db.VarChar(100)
+  ordem   Int     @default(0) @map("Ordem")
+  valor   String  @map("Valor") @db.Text
+
+  @@unique([cpf, chave, ordem])
+  @@index([chave])
+  @@map("TB_Dado_Pessoal_Aluno")
 }
 
 // ─────────────────────────────────────────────────────────────

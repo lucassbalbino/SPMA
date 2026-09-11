@@ -17,6 +17,11 @@ const DOMAIN_TABLES = [
   "TB_Resposta_Avaliacao",
   "TB_Resposta_Pos_Curso",
   "TB_Resposta_Pre_Curso",
+  // Mesma razão, para o dado pessoal do Aluno: o pai é `TB_Usuario`, que é
+  // truncado logo abaixo sem disparar o CASCADE. Sem truncar esta aqui, a
+  // rodada seguinte reencontra a linha órfã do mesmo CPF e bate na unicidade
+  // de (CPF, Chave, Ordem).
+  "TB_Dado_Pessoal_Aluno",
   "TB_Avaliacao_Aluno",
   "TB_Pos_Curso",
   "TB_Pre_Curso",
