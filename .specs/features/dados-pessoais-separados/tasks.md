@@ -253,7 +253,7 @@ T10 → T11
 
 ---
 
-### T6: Migration descarta as respostas pessoais já gravadas
+### T6: Migration descarta as respostas pessoais já gravadas ✅
 
 **What**: `DELETE FROM TB_Resposta_Avaliacao WHERE Chave IN (as 7 chaves)`.
 **Where**: `prisma/migrations/`, `src/lib/respostas/dados-pessoais-migracao.integration.test.ts` (novo)
@@ -268,12 +268,12 @@ T10 → T11
 
 **Done when**:
 
-- [ ] Migration remove só as linhas das 7 chaves listadas literalmente (PESSOAL-21)
-- [ ] Linhas de chave não-pessoal ficam intactas (PESSOAL-22)
-- [ ] Contas de Aluno, `AvaliacaoAluno` e as colunas `status`/`parte1Completa`/`dataEncerramento` inalteradas (PESSOAL-23)
-- [ ] Rodar a migration sobre avaliação sem nenhuma resposta pessoal não gera erro (PESSOAL-24)
-- [ ] O teste lê o SQL real do disco e restaura o estado que encontrou, como `src/lib/respostas/backfill.integration.test.ts`
-- [ ] Gate check passes (Build): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Migration remove só as linhas das 7 chaves listadas literalmente (PESSOAL-21)
+- [x] Linhas de chave não-pessoal ficam intactas (PESSOAL-22)
+- [x] Contas de Aluno, `AvaliacaoAluno` e as colunas `status`/`parte1Completa`/`dataEncerramento` inalteradas (PESSOAL-23)
+- [x] Rodar a migration sobre avaliação sem nenhuma resposta pessoal não gera erro (PESSOAL-24)
+- [x] O teste lê o SQL real do disco e restaura o estado que encontrou, como `src/lib/respostas/backfill.integration.test.ts`
+- [x] Gate check passes (Build): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
 
 **Tests**: integration
 **Gate**: build
