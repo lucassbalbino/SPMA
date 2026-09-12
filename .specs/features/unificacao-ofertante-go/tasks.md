@@ -640,7 +640,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T23: Anotar `cadastro-ofertante-verba/spec.md` como superada
+### T23: Anotar `cadastro-ofertante-verba/spec.md` como superada ✅
 
 **What**: Anotação (não reescrita, mesmo padrão da AD-042 sobre `avaliacao-aluno/spec.md`): REQ-OV-01..07 marcados como superados por `unificacao-ofertante-go`/AD-043; REQ-OV-08..12 (Verba/saldo/teto) marcados como ainda válidos, só com a FK de tipo alterado.
 **Where**: `.specs/features/cadastro-ofertante-verba/spec.md`
@@ -653,8 +653,8 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] REQ-OV-01..07 marcados com nota de superação apontando para `unificacao-ofertante-go`
-- [ ] REQ-OV-08..12 permanecem sem marca de superação, com uma nota de que a FK mudou de tipo
+- [x] REQ-OV-01..07 marcados com nota de superação apontando para `unificacao-ofertante-go`
+- [x] REQ-OV-08..12 permanecem sem marca de superação, com uma nota de que a FK mudou de tipo
 
 **Tests**: none
 **Gate**: quick

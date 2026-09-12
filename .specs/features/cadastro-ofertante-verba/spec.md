@@ -6,55 +6,81 @@
 
 Fecha o cadastro e a gestão de Ofertantes e das verbas a eles vinculadas. O auto-cadastro do Gestor Ofertante (GO) no primeiro acesso já está implementado (`auth-e-usuarios`, AD-014 terceira forma) — esta feature cobre as duas formas que faltam (pré-cadastro administrativo, cadastro pelo Gestor Turismo), a edição e consulta escopada de Ofertante, e todo o CRUD de Verba, incluindo o cálculo de saldo e a validação de teto (RN-10/AD-016). A criação de cursos em si (`TB_Pre_Curso`) é escopo da feature futura `formulario-pre-curso`; esta feature entrega a validação de teto como função reutilizável, testada contra o model `PreCurso` já existente no schema.
 
+> **Superado parcialmente por AD-043 (`unificacao-ofertante-go`, 2026-09).**
+> `model Ofertante` deixou de existir — o GO É o Ofertante, identificado por
+> CNPJ, com os dados organizacionais gravados direto em `Usuario`. O Grupo 1
+> (REQ-OV-01..03, cadastro/edição de Ofertante como registro separado) e o
+> Grupo 2 (REQ-OV-04, validação de vínculo a um `cdOfertante` numérico) e o
+> Grupo 3 (REQ-OV-05..07, consulta/listagem/escopo de Ofertante como
+> entidade própria) estão **superados** — as rotas `/api/ofertantes*` que os
+> implementavam não existem mais; o equivalente de cada um está descrito na
+> anotação de cada requisito abaixo. O Grupo 4 (Verba, REQ-OV-08..10) e o
+> Grupo 5 (Saldo/teto, REQ-OV-11/12) **continuam válidos sem alteração de
+> regra** — só o tipo da FK `cdOfertante` mudou (de `Int` para
+> `String @db.VarChar(14)`, apontando para `Usuario.documento` em vez de
+> `Ofertante.cdOfertante`).
+
 ---
 
 ## Requisitos (EARS)
 
 ### Grupo 1 — Cadastro e edição de Ofertante
 
-**REQ-OV-01 — Pré-cadastro administrativo e por Gestor Turismo.**
+**REQ-OV-01 — Pré-cadastro administrativo e por Gestor Turismo.** ⚠️ **Superado por AD-043.**
 Quando um AM ou GT cadastra um Ofertante, o sistema deve exigir nome e UF, aceitar responsável/email/telefone/município como opcionais, e não deve exigir vínculo prévio a nenhum usuário GO.
+> Equivalente atual: `POST /api/usuarios` com `tipo: "GO"` grava os mesmos campos direto no `Usuario` (T11/T15 de `unificacao-ofertante-go`) - "cadastrar um Ofertante" e "criar o próprio GO" são a mesma operação agora.
 
-**REQ-OV-02 — Edição de Ofertante.**
+**REQ-OV-02 — Edição de Ofertante.** ⚠️ **Superado por AD-043.**
 Onde um AM, GT, ou o GO vinculado a um Ofertante edita os dados desse Ofertante, o sistema deve validar os mesmos campos de REQ-OV-01 e persistir a alteração.
+> Equivalente atual: `PATCH /api/usuarios/[documento]/organizacao` (T12).
 
-**REQ-OV-03 — Edição fora de escopo negada.**
+**REQ-OV-03 — Edição fora de escopo negada.** ⚠️ **Superado por AD-043.**
 Onde um GO tenta editar um Ofertante ao qual não está vinculado, o sistema deve rejeitar com HTTP 403.
+> Equivalente atual: mesma regra, aplicada por `podeEditarOfertante` (T6) na rota acima - um GO só edita o próprio `documento`, nunca o de outro GO.
 
 ### Grupo 2 — Vínculo de usuário a Ofertante
 
-**REQ-OV-04 — Validação do vínculo na criação/edição de usuário.**
+**REQ-OV-04 — Validação do vínculo na criação/edição de usuário.** ⚠️ **Superado por AD-043.**
 Quando um AM ou GT cria ou atualiza um usuário do tipo GO ou VO informando um `cdOfertante`, o sistema deve validar que o Ofertante existe e rejeitar com erro claro (não um erro genérico de restrição de banco) quando não existir.
+> Equivalente atual: `cdOfertante` passa a ser o CNPJ de um `Usuario` com `tipo: "GO"` - a checagem virou `prisma.usuario.findUnique({where:{documento, tipo:"GO"}})` em `POST /api/usuarios` (T11) e `POST /api/verbas` (T14), mesma mensagem de erro.
 
 ### Grupo 3 — Consulta e escopo de Ofertante
 
-**REQ-OV-05 — Consulta de Ofertante escopada.**
+**REQ-OV-05 — Consulta de Ofertante escopada.** ⚠️ **Superado por AD-043.**
 Onde um usuário consulta um Ofertante específico, o sistema deve retornar os dados apenas se o Ofertante estiver dentro do escopo do usuário: AM/GT/VT consultam qualquer um; GO/VO somente o próprio.
+> Equivalente atual: `GET /api/usuarios/[documento]/organizacao` (T12), mesma regra via `podeAcessarOfertante`.
 
-**REQ-OV-06 — Listagem de Ofertantes escopada.**
+**REQ-OV-06 — Listagem de Ofertantes escopada.** ⚠️ **Superado por AD-043.**
 Onde AM/GT/VT listam Ofertantes, o sistema deve retornar todos; onde GO/VO consultam a listagem, o sistema deve retornar apenas o próprio.
+> Equivalente atual: não é mais uma rota JSON - `prisma.usuario.findMany({where:{tipo:"GO"}})` direto na tela `usuarios/novo` (T15), usada só para vincular um VO a um GO existente (AM/GT sempre veem todos; a tela nunca é aberta por GO/VO, que não gerem esse vínculo).
 
-**REQ-OV-07 — Reforço de escopo no servidor.**
+**REQ-OV-07 — Reforço de escopo no servidor.** ⚠️ **Superado por AD-043** (na letra - a regra de fundo continua ativa.)
 Onde uma requisição de leitura ou escrita de Ofertante ou Verba chega ao backend, o sistema deve reavaliar `podeAcessarOfertante` a cada request, retornando 403 quando fora de escopo, independentemente do que a interface exibe. (Fecha CA-SEC-14, deixado como fundação por `seguranca-transversal`.)
+> `podeAcessarOfertante`/`podeEditarOfertante` continuam existindo e sendo chamadas a cada request (T6) - o que mudou foi só o que "Ofertante" significa (um GO, não mais uma tabela à parte). A garantia de fundo (reavaliação no servidor, nunca só na UI) nunca deixou de valer.
 
 ### Grupo 4 — Verba
 
 **REQ-OV-08 — Criação de Verba.**
 Quando um AM ou GT cria uma Verba, o sistema deve vinculá-la a exatamente um Ofertante existente (nunca mais de um), exigir um valor total (`vlVerba`) positivo, e rejeitar a criação se o Ofertante informado não existir.
+> **Válido sem alteração de regra** (AD-043): `cdOfertante` passou de `Int` (FK para `Ofertante`) para `String @db.VarChar(14)` (FK para `Usuario.documento`, tipo GO) - `POST /api/verbas` (T14) checa a mesma existência, agora contra `Usuario`.
 
 **REQ-OV-09 — Edição do valor total da Verba.**
 Onde um AM ou GT edita o valor total de uma Verba, o sistema deve rejeitar a alteração se o novo valor total for menor que a soma já alocada aos cursos dessa Verba (REQ-OV-11).
+> **Válido sem alteração de regra** (AD-043) - `validarNovoValorTotal` não mudou, só o tipo da FK que ela consulta.
 
 **REQ-OV-10 — Consulta e listagem de Verba escopada.**
 Onde um usuário consulta Verbas de um Ofertante, o sistema deve aplicar o mesmo escopo de REQ-OV-05/06.
+> **Válido sem alteração de regra** (AD-043) - o escopo de GO/VO passou a ser resolvido por `resolverEscopoOfertante` (T6) em vez de ler `usuario.cdOfertante` direto (o do próprio GO é sempre `null` agora), mas o resultado observável é o mesmo.
 
 ### Grupo 5 — Saldo e teto da Verba (RN-10, AD-015, AD-016)
 
 **REQ-OV-11 — Cálculo de saldo disponível.**
 Onde o saldo disponível de uma Verba é consultado, o sistema deve calculá-lo como o valor total da Verba menos a soma dos valores (`vlCursoAlocado`) já alocados aos cursos vinculados a essa Verba. Não há limite de quantidade de cursos que uma Verba pode custear (AD-015: relação 1 Verba para N Cursos) - o único teto é o de **valor** (REQ-OV-12), nunca um teto de quantidade de projetos.
+> **Válido sem alteração de regra** (AD-043) - `calcularSaldoVerba` não mudou.
 
 **REQ-OV-12 — Validação de teto de valor na alocação a um curso.**
 Quando um valor é proposto para alocação a um curso a partir de uma Verba, o sistema deve rejeitar a alocação se o valor exceder o saldo disponível (REQ-OV-11), permitindo que a alocação iguale o saldo disponível a zero (AD-016 - uso de até 100% do valor total). Este teto é exclusivamente financeiro: uma Verba pode custear quantos cursos couberem dentro do seu valor total, sem limite de quantidade.
+> **Válido sem alteração de regra** (AD-043) - `validarAlocacao` não mudou, só o tipo da FK `PreCurso.cdOfertante` que a cadeia de dados atravessa.
 
 ---
 
