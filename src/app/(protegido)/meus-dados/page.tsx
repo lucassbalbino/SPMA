@@ -5,8 +5,9 @@
 // `avaliacoes/[cpf]/[cdCurso]/page.tsx`: esconder o item do menu (AD-039) não
 // é autorização, o backend da própria tela reforça (PESSOAL-20).
 //
-// A rota nunca recebe CPF - opera sempre sobre `usuario.cpf` da sessão, então
-// não existe parâmetro para um Aluno apontar o CPF de outro (PESSOAL-19).
+// A rota nunca recebe CPF - opera sempre sobre `usuario.documento` da sessão
+// (sempre CPF para um Aluno), então não existe parâmetro para um Aluno
+// apontar o CPF de outro (PESSOAL-19).
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
@@ -23,7 +24,7 @@ export default async function MeusDadosPage() {
 
   const respostasIniciais = (await lerRespostas(prisma, {
     formulario: "dadosPessoais",
-    cpf: usuario.cpf,
+    cpf: usuario.documento,
   })) as Partial<RespostasDadosPessoais>;
 
   return (

@@ -43,7 +43,7 @@ async function primeiroAcesso(request: Request) {
   }
 
   const usuario = await prisma.usuario.update({
-    where: { cpf: sessao.usuario.cpf },
+    where: { documento: sessao.usuario.documento },
     data: {
       senhaHash: await hashPassword(entrada.data.senha),
       primeiraVez: false,
@@ -52,7 +52,7 @@ async function primeiroAcesso(request: Request) {
 
   return NextResponse.json({
     usuario: {
-      cpf: usuario.cpf,
+      documento: usuario.documento,
       nome: usuario.nome,
       tipo: usuario.tipo,
       primeiraVez: usuario.primeiraVez,

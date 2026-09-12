@@ -33,7 +33,7 @@ test.afterAll(() => {
 test("após o logout o cookie anterior não autentica mais uma rota protegida", async () => {
   const clienteLogin = await novoCliente();
   const login = await clienteLogin.post("/api/auth/login", {
-    data: { cpf: CPF_LOGOUT, senha: SENHA },
+    data: { documento: CPF_LOGOUT, senha: SENHA },
   });
   const idSessao = idSessaoDaResposta(login);
   const idCsrf = idCsrfDaResposta(login);
@@ -109,7 +109,7 @@ test("logout sem sessão ativa é tratado com 401, sem erro 500", async () => {
 test("CA-SEC-15: logout sem token CSRF válido é rejeitado com 403, sessão permanece ativa", async () => {
   const clienteLogin = await novoCliente();
   const login = await clienteLogin.post("/api/auth/login", {
-    data: { cpf: CPF_LOGOUT_CSRF, senha: SENHA },
+    data: { documento: CPF_LOGOUT_CSRF, senha: SENHA },
   });
   const idSessao = idSessaoDaResposta(login);
   expect(idSessao).not.toBeNull();
@@ -130,7 +130,7 @@ test("CA-SEC-15: logout sem token CSRF válido é rejeitado com 403, sessão per
 test("REQ-SEC-15: logout com CSRF válido remove spma_sessao e spma_csrf (ambos expirados no passado)", async () => {
   const clienteLogin = await novoCliente();
   const login = await clienteLogin.post("/api/auth/login", {
-    data: { cpf: CPF_LOGOUT_CSRF, senha: SENHA },
+    data: { documento: CPF_LOGOUT_CSRF, senha: SENHA },
   });
   const idSessao = idSessaoDaResposta(login);
   const idCsrf = idCsrfDaResposta(login);

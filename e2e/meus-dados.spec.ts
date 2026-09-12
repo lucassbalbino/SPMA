@@ -69,7 +69,7 @@ test.afterAll(() => {
 });
 
 async function login(page: Page, cpf: string) {
-  const res = await page.request.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+  const res = await page.request.post("/api/auth/login", { data: { documento: cpf, senha: SENHA } });
   expect(res.ok()).toBe(true);
 }
 

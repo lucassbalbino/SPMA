@@ -10,7 +10,7 @@ const CPF_AL = "40100020003";
 const CPFS = [CPF_GT, CPF_AL];
 
 async function logar(page: Page, cpf: string) {
-  const res = await page.request.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+  const res = await page.request.post("/api/auth/login", { data: { documento: cpf, senha: SENHA } });
   expect(res.ok()).toBe(true);
 }
 

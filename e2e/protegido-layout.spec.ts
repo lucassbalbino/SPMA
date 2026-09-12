@@ -40,7 +40,7 @@ test("primeiraVez=true redireciona para /primeiro-acesso mesmo acessando outra r
   page,
 }) => {
   const login = await page.request.post("/api/auth/login", {
-    data: { cpf: CPF_PRIMEIRA_VEZ, senha: "qualquer" },
+    data: { documento: CPF_PRIMEIRA_VEZ, senha: "qualquer" },
   });
   expect(login.ok()).toBe(true);
 
@@ -52,7 +52,7 @@ test("primeiraVez=false mas GO sem cdOfertante redireciona para /cadastro-oferta
   page,
 }) => {
   const login = await page.request.post("/api/auth/login", {
-    data: { cpf: CPF_GO_SEM_OFERTANTE, senha: SENHA },
+    data: { documento: CPF_GO_SEM_OFERTANTE, senha: SENHA },
   });
   expect(login.ok()).toBe(true);
 

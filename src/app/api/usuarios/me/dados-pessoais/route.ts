@@ -55,7 +55,7 @@ async function gravarDadosPessoais(request: Request) {
     );
   }
 
-  const alvo = { formulario: "dadosPessoais" as const, cpf: sessao.usuario.cpf };
+  const alvo = { formulario: "dadosPessoais" as const, cpf: sessao.usuario.documento };
 
   const atuais = await lerRespostas(prisma, alvo);
   const mescladas = { ...atuais, ...entrada.data };
@@ -76,7 +76,7 @@ async function gravarDadosPessoais(request: Request) {
   const { respostas } = await prisma.$transaction(async (tx) => {
     await gravarRespostas(tx, alvo, entrada.data);
     await tx.usuario.update({
-      where: { cpf: sessao.usuario.cpf },
+      where: { documento: sessao.usuario.documento },
       data: { dadosPessoaisCompletos: true },
     });
 

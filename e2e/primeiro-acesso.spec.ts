@@ -36,7 +36,7 @@ const CPFS = [
 async function abrirSessaoDePrimeiroAcesso(cpf: string): Promise<string> {
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { cpf, senha: "irrelevante" },
+    data: { documento: cpf, senha: "irrelevante" },
   });
   const idSessao = idSessaoDaResposta(res);
   await cliente.dispose();
@@ -58,7 +58,7 @@ async function abrirSessaoDePrimeiroAcessoComCsrf(
 ): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { cpf, senha: "irrelevante" },
+    data: { documento: cpf, senha: "irrelevante" },
   });
   const idSessao = idSessaoDaResposta(res);
   const idCsrf = idCsrfDaResposta(res);
@@ -109,7 +109,7 @@ test("CA-AU-02: define a senha, desativa primeiraVez e passa a autenticar com el
   // e a conta deixou de ser tratada como 1º acesso.
   const clienteLogin = await novoCliente();
   const login = await clienteLogin.post("/api/auth/login", {
-    data: { cpf: CPF_DEFINE_SENHA, senha: NOVA_SENHA },
+    data: { documento: CPF_DEFINE_SENHA, senha: NOVA_SENHA },
   });
   expect(login.status()).toBe(200);
   expect((await login.json()).primeiroAcesso).toBe(false);

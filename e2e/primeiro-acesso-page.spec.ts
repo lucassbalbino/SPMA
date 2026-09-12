@@ -22,7 +22,7 @@ test("CA-AU-02: usuário em 1º acesso define a senha pela UI e é liberado para
   page,
 }) => {
   const login = await page.request.post("/api/auth/login", {
-    data: { cpf: CPF_PRIMEIRO_ACESSO, senha: "irrelevante" },
+    data: { documento: CPF_PRIMEIRO_ACESSO, senha: "irrelevante" },
   });
   expect(login.ok()).toBe(true);
 

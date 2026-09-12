@@ -9,7 +9,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { deleteUsuarios, upsertUsuario } from "./helpers/db";
 
 async function logar(page: Page, cpf: string, senha: string) {
-  const res = await page.request.post("/api/auth/login", { data: { cpf, senha } });
+  const res = await page.request.post("/api/auth/login", { data: { documento: cpf, senha } });
   expect(res.ok()).toBe(true);
 }
 

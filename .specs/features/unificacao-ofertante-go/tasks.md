@@ -489,10 +489,10 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T17: Sessão residual - `primeiro-acesso`, `meus-dados`, `dados-pessoais`
+### T17: Sessão residual - `primeiro-acesso`, `meus-dados`, `dados-pessoais` ✅
 
 **What**: Três arquivos de produção leem `sessao.usuario.cpf` diretamente e quebraram com a renomeação de T4 (achado do batch worker de T6-T10, ver nota em Execution Plan) - nenhum precisa de comportamento novo, só trocar `.cpf` por `.documento` no ponto de leitura: `src/app/api/auth/primeiro-acesso/route.ts` (`where:{cpf: sessao.usuario.cpf}` e o `cpf: usuario.cpf` do corpo de resposta), `src/app/(protegido)/meus-dados/page.tsx` (`cpf: usuario.cpf` passado ao componente de formulário), `src/app/api/usuarios/me/dados-pessoais/route.ts` (duas ocorrências de `cpf: sessao.usuario.cpf`, uma no alvo do repositório de respostas e outra num `where`). Nenhum destes três é sobre GO/Ofertante - são só vítimas colaterais do campo `Usuario.cpf` ter sido renomeado para um usuário de QUALQUER tipo, não só GO.
-**Where**: `src/app/api/auth/primeiro-acesso/route.ts`, `src/app/(protegido)/meus-dados/page.tsx`, `src/app/api/usuarios/me/dados-pessoais/route.ts`
+**Where**: `src/app/api/auth/primeiro-acesso/route.ts`, `src/app/(protegido)/meus-dados/page.tsx`, `src/app/api/usuarios/me/dados-pessoais/route.ts`, `e2e/primeiro-acesso.spec.ts`, `e2e/primeiro-acesso-page.spec.ts`, `e2e/meus-dados.spec.ts`, `e2e/dados-pessoais.spec.ts` + achado: `e2e/identidade-visual.spec.ts`, `e2e/csrf.spec.ts`, `e2e/logout.spec.ts`, `e2e/painel.spec.ts`, `e2e/protegido-layout.spec.ts` (corpo de login `{cpf}`->`{documento}`, ver Nota de execução)
 **Depends on**: T16
 **Reuses**: nenhuma lógica nova - troca mecânica de nome de campo
 **Requirement**: UGO-01, UGO-07 (regressão - nenhum destes fluxos é específico de GO, mas todos leem o campo renomeado por T4)
@@ -502,11 +502,13 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] `npx tsc --noEmit` não aponta mais nenhum erro nos três arquivos listados em "Where"
-- [ ] `e2e/primeiro-acesso.spec.ts` e `e2e/primeiro-acesso-page.spec.ts` continuam verdes, sem alteração de cenário
-- [ ] `e2e/meus-dados.spec.ts` continua verde, sem alteração de cenário
-- [ ] `e2e/dados-pessoais.spec.ts` continua verde, sem alteração de cenário
-- [ ] Gate check passa: `npm run test:e2e`
+- [x] `npx tsc --noEmit` não aponta mais nenhum erro nos três arquivos listados em "Where"
+- [x] `e2e/primeiro-acesso.spec.ts` e `e2e/primeiro-acesso-page.spec.ts` continuam verdes, sem alteração de cenário
+- [x] `e2e/meus-dados.spec.ts` continua verde, sem alteração de cenário
+- [x] `e2e/dados-pessoais.spec.ts` continua verde, sem alteração de cenário
+- [x] Gate check passa: `npm run test:e2e` (escopo nos 4 arquivos acima, todos verdes - `test-results/.last-run.json` confirmado `status: passed`)
+
+**Achado bloqueante corrigido, fora do "Where" original (mesma classe de T11/T16)**: `npx tsc --noEmit` no repo inteiro, após o fix dos 3 arquivos de produção, revelou que o corpo de login `{cpf, senha}` (quebrado desde T9, mesmo problema que `e2e/login.spec.ts` tinha em T16) também estava presente em **5 arquivos de e2e sem task própria**: `e2e/identidade-visual.spec.ts`, `e2e/csrf.spec.ts`, `e2e/logout.spec.ts`, `e2e/painel.spec.ts`, `e2e/protegido-layout.spec.ts` - nenhum deles pertence às famílias pre-cursos/pos-cursos/avaliacoes (T20-T22) nem foi listado em nenhuma tarefa. Mesma correção mecânica (`{cpf: X, senha}` -> `{documento: X, senha}`, `{cpf, senha}` -> `{documento: cpf, senha}`) aplicada aos 5, sem tocar nenhum outro campo (`cpf` como corpo de `/api/avaliacoes` ou parâmetro de fixture continua `cpf`, propositalmente). Gate rodado nos 9 arquivos juntos (4 do "Where" + 5 do achado): 51/51 verdes. `npx tsc --noEmit` no repo inteiro, após este commit, só aponta erros dentro do escopo já esperado de T18-T22 (seeds e famílias pre-cursos/pos-cursos/avaliacoes) - nenhum arquivo fora desse conjunto ficou quebrado.
 
 **Tests**: e2e
 **Gate**: full
