@@ -13,7 +13,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/dados-pessoais-separados/design.md`
-**Status**: Draft
+**Status**: 11/11 tarefas implementadas e commitadas. Verifier independente ainda não rodou — feature não fechada até `validation.md` = PASS.
 
 ---
 
@@ -406,7 +406,7 @@ T10 → T11
 
 ---
 
-### T11: Registrar a AD e retificar as specs
+### T11: Registrar a AD e retificar as specs ✅
 
 **What**: AD-042 declarando a separação, o modelo de coleta obrigatória e o custo aceito; retificação de `avaliacao-aluno/spec.md` (Parte 1 agora tem 12 perguntas, não 19); Handoff atualizado.
 **Where**: `.specs/STATE.md`, `.specs/features/avaliacao-aluno/spec.md`
@@ -421,11 +421,11 @@ T10 → T11
 
 **Done when**:
 
-- [ ] AD-042 cita `TB_Dado_Pessoal_Aluno`, a decisão de cardinalidade por CPF (revertendo a decisão original D2 do `context.md`, forçada pelo pedido P2), o descarte em vez de movimento, e o SPEC_DEVIATION de `/dados-pessoais` não ser literalmente `/painel`
-- [ ] `avaliacao-aluno/spec.md` deixa de descrever a Parte 1 como 19 perguntas / citar as 7 chaves pessoais como parte do formulário do curso
-- [ ] Handoff de `.specs/STATE.md` atualizado com o resultado desta feature
-- [ ] `python3 <skill-dir>/scripts/validate_state.py dados-pessoais-separados` ainda não roda aqui (depende do Verifier) — só o gate de build
-- [ ] Gate check passes (Build): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] AD-042 cita `TB_Dado_Pessoal_Aluno`, a decisão de cardinalidade por CPF (revertendo a decisão original D2 do `context.md`, forçada pelo pedido P2), o descarte em vez de movimento, e o SPEC_DEVIATION de `/dados-pessoais` não ser literalmente `/painel`
+- [x] `avaliacao-aluno/spec.md` anotado (retificação no topo + marcações pontuais nos números "19"/"45" e na seção "Parte 1 — Dados Pessoais" do Dicionário de Campos, preservada como histórico) — não reescrito por inteiro
+- [x] Handoff de `.specs/STATE.md` atualizado com o resultado desta feature
+- [x] `python3 <skill-dir>/scripts/validate_state.py dados-pessoais-separados` ainda não roda aqui (depende do Verifier) — só o gate de build
+- [x] Gate check passes (Build): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` (611 unit, 70 integration, 258 e2e)
 
 **Tests**: none
 **Gate**: build

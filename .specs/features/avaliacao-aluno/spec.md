@@ -5,6 +5,19 @@
 **Fonte de decisões:** STATE.md AD-004, AD-008, AD-009, AD-012, AD-013, AD-018, AD-020, AD-022, AD-023, AD-025, AD-033, ~~AD-034~~ AD-041 (as respostas deixaram de ser um campo `Json?` e passaram a uma linha por resposta em `TB_Resposta_Avaliacao`; nenhum requisito desta feature mudou).
 **Fonte funcional:** `docs/SPMA_Especificacao_Cliente_v2.md` seção 6 (Formulário de Avaliação do Aluno), seção 3.7 (`TB_Avaliacao_Aluno`), seção 7 (segurança), seção 8 (RN-06, RN-07, RN-09, RN-12, RN-13, RN-14).
 
+> **Retificado por AD-042 (`dados-pessoais-separados`, 2026-09).** As 7 chaves
+> `avalPessoal*` (Q3–Q9, seção "Parte 1 — Dados Pessoais" abaixo) SAÍRAM deste
+> formulário: passaram a viver em `TB_Dado_Pessoal_Aluno`, chaveada só por
+> CPF, coletadas uma vez no primeiro acesso (`/dados-pessoais`), não mais
+> como parte da Avaliação do Aluno. Onde este documento diz "Parte 1 (19
+> chaves)" e "45 chaves" totais, o estado atual é **Parte 1 com 12 chaves**
+> e **38 chaves** no total (19−7+26). Os requisitos AVAL-\* abaixo continuam
+> válidos para as 12 chaves que restaram em Parte 1; a seção "Parte 1 —
+> Dados Pessoais" do Dicionário de Campos é histórico, preservado como
+> registro do que já existiu aqui — não reflete o schema atual
+> (`src/lib/validation/schemas/dados-pessoais.schema.ts`). Ver
+> `.specs/features/dados-pessoais-separados/spec.md`.
+
 ---
 
 ## Problem Statement
@@ -14,7 +27,7 @@ O quarto e último formulário do sistema — a Avaliação do Aluno — ainda n
 ## Goals
 
 - [ ] GO autenticado matricula um Aluno (CPF já cadastrado) num curso (`cdCurso`) do próprio Ofertante, criando a avaliação com `status=EM_ANDAMENTO`.
-- [ ] O próprio Aluno preenche a Parte 1 (19 chaves) em gravações parciais; o sistema calcula `parte1Completa` a cada gravação.
+- [ ] O próprio Aluno preenche a Parte 1 (19 chaves — **12 desde AD-042**, ver retificação acima) em gravações parciais; o sistema calcula `parte1Completa` a cada gravação.
 - [ ] A Parte 2 (25 chaves) só aceita gravação depois de `parte1Completa=true`; dentro da Parte 2, a resposta a "Concluiu o curso?" decide se as 22 chaves de avaliação de fato são exigidas no encerramento.
 - [ ] O próprio Aluno encerra a avaliação de forma irreversível quando todos os campos aplicáveis estiverem completos.
 - [ ] RN-12 é reforçada: um Aluno nunca tem duas avaliações `EM_ANDAMENTO` simultâneas, mesmo em cursos diferentes.
@@ -58,7 +71,12 @@ O quarto e último formulário do sistema — a Avaliação do Aluno — ainda n
 
 Chaves em camelCase, para uso direto como propriedades do JSON `AvaliacaoAluno.respostas`. **Q1 (nome completo) e Q2 (CPF) não são chaves deste JSON**: vêm de `TB_Usuario.NM_Usuario` e da própria chave primária da avaliação, e a UI os exibe como somente-leitura a partir da sessão.
 
-### Parte 1 — Dados Pessoais (Q3–Q9, 7 itens)
+### Parte 1 — Dados Pessoais (Q3–Q9, 7 itens) — ⚠️ HISTÓRICO, retificado por AD-042
+
+> Estas 7 chaves saíram deste formulário (ver retificação no topo do
+> documento). Seção preservada como registro do que já existiu aqui; a
+> forma atual está em
+> `src/lib/validation/schemas/dados-pessoais.schema.ts`.
 
 | Chave | Q | Rótulo | Tipo |
 |---|---|---|---|
@@ -189,6 +207,9 @@ Enunciado: *"Como você avalia os seguintes aspectos do curso:"*
 
 **Contagem total: 19 + 26 = 45 chaves**, batendo exatamente com os "45 itens de dado" declarados na seção 6 do documento de especificação. O dicionário derivado que este anexo substituiu somava 44 e nunca reconciliava essa diferença de 1: a chave que faltava era `avalOportunSituacaoTrabalhoOutra` (o "Quais?" de Q30).
 
+> **Desde AD-042**: as 7 chaves de "Parte 1 — Dados Pessoais" saíram deste
+> formulário. Contagem atual: 12 (Parte 1) + 26 (Parte 2) = **38 chaves**.
+
 **Gate interno de Q22 (AVAL-12/13):** com `avalParticipConcluiuCurso = "Não"`, exigem-se apenas Q22.1 e Q23. Com `"Sim"`, exigem-se Q23 e as 21 chaves de Q24 a Q37 — Q38 é opcional em qualquer caso.
 
 **Condicionais (4 chaves):** `avalProfissAtividadeEspecifica` (Q12), `avalExperienciaTipoCursoAnterior` (Q16), `avalParticipMotivoNaoConclusao` (Q22.1), `avalOportunSituacaoTrabalhoOutra` (Q30.j).
@@ -271,7 +292,7 @@ Enunciado: *"Como você avalia os seguintes aspectos do curso:"*
 
 **Acceptance Criteria**:
 
-1. WHEN o próprio Aluno aciona o encerramento e a Parte 1 (19 chaves) e a Parte 2 aplicável (regra de AVAL-12/13) estão completas, the system SHALL alterar `status` para `ENCERRADO` e gravar `dataEncerramento=now()`, de forma irreversível. (AVAL-15)
+1. WHEN o próprio Aluno aciona o encerramento e a Parte 1 (19 chaves — **12 desde AD-042**) e a Parte 2 aplicável (regra de AVAL-12/13) estão completas, the system SHALL alterar `status` para `ENCERRADO` e gravar `dataEncerramento=now()`, de forma irreversível. (AVAL-15)
 2. IF o encerramento for acionado com qualquer chave obrigatória pendente (Parte 1 ou a Parte 2 aplicável) THEN the system SHALL rejeitar com HTTP 400 listando as chaves do Dicionário de Campos pendentes, sem alterar `status`. (AVAL-16)
 3. IF `status` já é `ENCERRADO` THEN qualquer nova tentativa de gravação de `respostas` ou de encerramento SHALL ser rejeitada com HTTP 409, preservando os dados atuais inalterados (somente leitura). (AVAL-17)
 4. IF um usuário diferente do próprio Aluno da avaliação tentar encerrar THEN the system SHALL rejeitar com HTTP 403. (AVAL-18)
