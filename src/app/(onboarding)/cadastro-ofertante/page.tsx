@@ -1,9 +1,12 @@
-// /cadastro-ofertante (REQ-AU-09).
+// /cadastro-ofertante (UGO-01, UGO-02, UGO-03, UGO-04).
 //
-// Formulário de auto-cadastro do Ofertante pelo GO sem vínculo, consome
-// POST /api/ofertantes. Alcançável só com sessão válida (guard do layout de
-// `(onboarding)`, compartilhado com /primeiro-acesso); a própria API
-// reconfirma que quem chama é um GO sem `cdOfertante` (AD-033).
+// Formulário de auto-cadastro dos dados organizacionais do próprio GO sem
+// vínculo completo, consome PATCH /api/usuarios/me/organizacao. Alcançável
+// só com sessão válida (guard do layout de `(onboarding)`, compartilhado com
+// /primeiro-acesso); a própria API reconfirma que quem chama é um GO ainda
+// sem nome/uf completos (AD-033). Sem campo de CNPJ - a identidade do GO já
+// é fixa desde a criação (T11), este formulário só completa os 6 campos
+// organizacionais (nome, responsável, email, telefone, uf, município).
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -12,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { ofertanteSchema } from "@/lib/validation/schemas/ofertante.schema";
+import { organizacaoSchema } from "@/lib/validation/schemas/organizacao.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
 
 export default function CadastroOfertantePage() {
@@ -30,7 +33,7 @@ export default function CadastroOfertantePage() {
     event.preventDefault();
     setErro(null);
 
-    const entrada = ofertanteSchema.safeParse({
+    const entrada = organizacaoSchema.safeParse({
       nome,
       responsavel: responsavel || undefined,
       email: email || undefined,
@@ -45,8 +48,8 @@ export default function CadastroOfertantePage() {
 
     setEnviando(true);
     try {
-      const res = await fetch("/api/ofertantes", {
-        method: "POST",
+      const res = await fetch("/api/usuarios/me/organizacao", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json", ...headerCSRF() },
         body: JSON.stringify(entrada.data),
       });
