@@ -277,7 +277,7 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T9: Reescrever `loginSchema` - aceitar CPF ou CNPJ
+### T9: Reescrever `loginSchema` - aceitar CPF ou CNPJ ✅
 
 **What**: `cpf` (renomeado para `documento` no schema, mantendo o nome de campo na API HTTP a decidir em T11/T16 sem quebrar contrato) validado via `validarDocumento` (T2) em vez de `validarCPF` direto.
 **Where**: `src/lib/validation/schemas/login.schema.ts`
@@ -291,10 +291,10 @@ T18 → T19 → T20 → T21 → T22 → T23
 - Skill: NONE
 
 **Done when**:
-- [ ] CPF de 11 dígitos válido -> aceito e normalizado (comportamento inalterado)
-- [ ] CNPJ de 14 dígitos válido -> aceito e normalizado
-- [ ] Documento de tamanho diferente de 11/14 -> rejeitado com a mesma mensagem genérica
-- [ ] Gate check passa: `npm run test:unit`
+- [x] CPF de 11 dígitos válido -> aceito e normalizado (comportamento inalterado)
+- [x] CNPJ de 14 dígitos válido -> aceito e normalizado
+- [x] Documento de tamanho diferente de 11/14 -> rejeitado com a mesma mensagem genérica
+- [x] Gate check passa: `npm run test:unit`
 
 **Tests**: unit
 **Gate**: quick
