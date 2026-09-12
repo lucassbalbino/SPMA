@@ -7,16 +7,19 @@
 // para obter `usuario.tipo` via `requireSession()`; a interatividade do
 // formulário vive em `NovoUsuarioForm` (client component colocado).
 //
-// Quem gere verba (AM/GT) também escolhe aqui o Ofertante do GO/VO criado e,
-// no caso do GO, informa a verba desse Ofertante no mesmo passo - por isso a
-// lista de Ofertantes é carregada aqui e passada pronta ao formulário. Para
-// os demais perfis a lista vem vazia: o Ofertante do usuário criado é sempre
-// o do próprio criador, resolvido no servidor (REQ-AU-08).
+// UGO-14/AD-043: sem `model Ofertante` separado, quem gere verba (AM/GT) já
+// não "escolhe um Ofertante" para o GO que cria - o GO É o Ofertante, e
+// informa os próprios dados organizacionais (CNPJ/nome/UF) no mesmo passo.
+// A lista carregada aqui passa a ser de GOs existentes, usada só para
+// vincular um VO a um deles (`cdOfertante`, T15). Para os demais perfis a
+// lista vem vazia: o Ofertante do usuário criado é sempre o do próprio
+// criador, resolvido no servidor (REQ-AU-08).
 //
 // Todo Aluno nasce matriculado (AVAL-01), então a lista de cursos elegíveis
 // também vem daqui, no mesmo escopo de quem matricula (AVAL-05/06): o AM vê
-// os cursos de qualquer Ofertante, o GO só os do seu.
-import { podeGerenciarVerba, requireSession } from "@/lib/auth/guards";
+// os cursos de qualquer Ofertante, o GO só os do seu (via
+// `resolverEscopoOfertante`, T6 - o GO não tem mais `cdOfertante` próprio).
+import { podeGerenciarVerba, requireSession, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NovoUsuarioForm } from "./NovoUsuarioForm";
@@ -25,25 +28,27 @@ export default async function NovoUsuarioPage() {
   const { usuario } = await requireSession();
 
   const escolheOfertante = podeGerenciarVerba(usuario.tipo);
-  const ofertantes = escolheOfertante
-    ? await prisma.ofertante.findMany({
-        select: { cdOfertante: true, nome: true },
+  const gos = escolheOfertante
+    ? await prisma.usuario.findMany({
+        where: { tipo: "GO" },
+        select: { documento: true, nome: true },
         orderBy: { nome: "asc" },
       })
     : [];
 
   // Mesmo escopo de `podeMatricularAluno`, escrito como filtro que o banco
   // entende - o servidor reavalia o curso escolhido em POST /api/usuarios
-  // (AD-033). AM não tem cdOfertante (AD-012), então vê os cursos de todos.
+  // (AD-033). AM não tem escopo de Ofertante (AD-012), então vê os cursos de
+  // todos.
   const cursos =
     usuario.tipo === "AM"
       ? await prisma.preCurso.findMany({
           orderBy: { cdCurso: "asc" },
           select: { cdCurso: true },
         })
-      : usuario.tipo === "GO" && usuario.cdOfertante !== null
+      : usuario.tipo === "GO"
         ? await prisma.preCurso.findMany({
-            where: { cdOfertante: usuario.cdOfertante },
+            where: { cdOfertante: resolverEscopoOfertante(usuario) ?? "" },
             orderBy: { cdCurso: "asc" },
             select: { cdCurso: true },
           })
@@ -59,7 +64,7 @@ export default async function NovoUsuarioPage() {
           <NovoUsuarioForm
             tipoCriador={usuario.tipo}
             escolheOfertante={escolheOfertante}
-            ofertantes={ofertantes}
+            gos={gos}
             cdCursosDisponiveis={cursos.map((curso) => curso.cdCurso)}
           />
         </CardContent>

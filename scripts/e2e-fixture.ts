@@ -150,10 +150,18 @@ async function executar(
     case "deleteUsuarios": {
       const cpfs = argumento as string[];
       await prisma.sessao.deleteMany({ where: { cpfUsuario: { in: cpfs } } });
-      const { count } = await prisma.usuario.deleteMany({
+      // UGO-14/AD-043: `Usuario.cdOfertante` agora referencia `Usuario.documento`
+      // (VO -> GO, self-FK) - um `deleteMany` só, sem ordem garantida entre as
+      // linhas apagadas, pode tentar remover o GO antes do VO que o referencia.
+      // Remove primeiro quem tem `cdOfertante` preenchido (nunca é o próprio
+      // GO, AD-043) para nunca violar a FK.
+      const { count: countVinculados } = await prisma.usuario.deleteMany({
+        where: { documento: { in: cpfs }, cdOfertante: { not: null } },
+      });
+      const { count: countRestante } = await prisma.usuario.deleteMany({
         where: { documento: { in: cpfs } },
       });
-      return { count };
+      return { count: countVinculados + countRestante };
     }
 
     case "getSessao":

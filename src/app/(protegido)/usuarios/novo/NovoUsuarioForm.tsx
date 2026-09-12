@@ -8,6 +8,11 @@
 // `escolheOfertante` chega pronto do servidor (`podeGerenciarVerba`) em vez
 // de ser recalculado aqui: `guards.ts` é server-only (usa `redirect` e a
 // sessão), então a regra não pode ser importada por um client component.
+//
+// UGO-14/AD-043: o GO É o Ofertante - criar um GO pede os dados
+// organizacionais dele (UF obrigatória, demais opcionais) em vez de
+// selecionar um Ofertante já existente. A lista de GOs (`gos`) serve só para
+// vincular um VO a um deles.
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -20,37 +25,45 @@ import { usuarioSchema } from "@/lib/validation/schemas/usuario.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import type { TipoUsuario } from "@/generated/prisma/enums";
 
-type OpcaoOfertante = { cdOfertante: number; nome: string };
+type OpcaoGo = { documento: string; nome: string | null };
 
 export function NovoUsuarioForm({
   tipoCriador,
   escolheOfertante,
-  ofertantes,
+  gos,
   cdCursosDisponiveis,
 }: {
   tipoCriador: TipoUsuario;
   escolheOfertante: boolean;
-  ofertantes: OpcaoOfertante[];
+  gos: OpcaoGo[];
   cdCursosDisponiveis: number[];
 }) {
   const router = useRouter();
   const tiposPermitidos = TIPOS_PERMITIDOS[tipoCriador];
 
-  const [cpf, setCpf] = useState("");
+  const [documento, setDocumento] = useState("");
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [tipo, setTipo] = useState<TipoUsuario | "">(tiposPermitidos[0] ?? "");
   const [cdOfertante, setCdOfertante] = useState("");
+  const [uf, setUf] = useState("");
+  const [responsavel, setResponsavel] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [municipio, setMunicipio] = useState("");
   const [vlVerba, setVlVerba] = useState("");
   const [dtVerba, setDtVerba] = useState("");
   const [cdCurso, setCdCurso] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  // GO e VO são os únicos perfis vinculados a Ofertante (AD-012); o GO ainda
-  // nasce com a verba desse Ofertante (REQ-OV-08). Quem não gere verba não vê
-  // nenhum dos dois blocos - o escopo vem do próprio criador (REQ-AU-08).
-  const pedeOfertante = escolheOfertante && (tipo === "GO" || tipo === "VO");
+  // VO é o único perfil que se vincula a um GO já existente (AD-012) -
+  // escolhido de uma lista, quando quem cria gerencia verba (AM/GT). O GO
+  // não "escolhe" um Ofertante mais: ele informa os próprios dados
+  // organizacionais (ver `pedeOrganizacional`).
+  const pedeGoParaVo = escolheOfertante && tipo === "VO";
+  // UGO-01/08/09: só faz sentido pedir CNPJ+UF+opcionais quando o próprio
+  // usuário sendo criado é um GO - o documento acima já cobre o CNPJ.
+  const pedeOrganizacional = escolheOfertante && tipo === "GO";
   const pedeVerba = escolheOfertante && tipo === "GO";
   // AVAL-01: todo Aluno nasce matriculado, então o curso é obrigatório para
   // qualquer perfil que crie um AL (hoje AM e GO - REQ-AU-05/06).
@@ -60,7 +73,7 @@ export function NovoUsuarioForm({
     event.preventDefault();
     setErro(null);
 
-    if (pedeVerba && !cdOfertante) {
+    if (pedeGoParaVo && !cdOfertante) {
       setErro("Ofertante é obrigatório");
       return;
     }
@@ -76,12 +89,16 @@ export function NovoUsuarioForm({
     }
 
     const entrada = usuarioSchema.safeParse({
-      cpf,
+      documento,
       nome,
       email: email || undefined,
       tipo: tipo || undefined,
-      cdOfertante: pedeOfertante && cdOfertante ? Number(cdOfertante) : undefined,
+      cdOfertante: pedeGoParaVo && cdOfertante ? cdOfertante : undefined,
       cdCurso: pedeCurso && cdCurso ? Number(cdCurso) : undefined,
+      uf: pedeOrganizacional && uf ? uf : undefined,
+      responsavel: pedeOrganizacional && responsavel ? responsavel : undefined,
+      telefone: pedeOrganizacional && telefone ? telefone : undefined,
+      municipio: pedeOrganizacional && municipio ? municipio : undefined,
       verba: pedeVerba
         ? { vlVerba: vlVerba ? Number(vlVerba) : undefined, dtVerba: dtVerba || undefined }
         : undefined,
@@ -107,10 +124,14 @@ export function NovoUsuarioForm({
 
       router.push("/usuarios/novo");
       router.refresh();
-      setCpf("");
+      setDocumento("");
       setNome("");
       setEmail("");
       setCdOfertante("");
+      setUf("");
+      setResponsavel("");
+      setTelefone("");
+      setMunicipio("");
       setVlVerba("");
       setDtVerba("");
       setCdCurso("");
@@ -131,8 +152,8 @@ export function NovoUsuarioForm({
           <Input
             id="cpf"
             name="cpf"
-            value={cpf}
-            onChange={(event) => setCpf(event.target.value)}
+            value={documento}
+            onChange={(event) => setDocumento(event.target.value)}
             disabled={enviando}
           />
         </Field>
@@ -174,7 +195,7 @@ export function NovoUsuarioForm({
             ))}
           </select>
         </Field>
-        {pedeOfertante && (
+        {pedeGoParaVo && (
           <Field data-invalid={!!erro}>
             <FieldLabel htmlFor="cdOfertante">Ofertante</FieldLabel>
             <select
@@ -182,22 +203,67 @@ export function NovoUsuarioForm({
               name="cdOfertante"
               value={cdOfertante}
               onChange={(event) => setCdOfertante(event.target.value)}
-              disabled={enviando || ofertantes.length === 0}
+              disabled={enviando || gos.length === 0}
               className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none md:text-sm dark:bg-input/30"
             >
               <option value="">Selecione</option>
-              {ofertantes.map((ofertante) => (
-                <option key={ofertante.cdOfertante} value={ofertante.cdOfertante}>
-                  {ofertante.nome}
+              {gos.map((go) => (
+                <option key={go.documento} value={go.documento}>
+                  {go.nome ?? go.documento}
                 </option>
               ))}
             </select>
-            {ofertantes.length === 0 && (
+            {gos.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Nenhum Ofertante cadastrado - cadastre um antes de criar o gestor.
+                Nenhum Ofertante cadastrado - cadastre um antes de criar o vinculado.
               </p>
             )}
           </Field>
+        )}
+        {pedeOrganizacional && (
+          <>
+            <Field data-invalid={!!erro}>
+              <FieldLabel htmlFor="uf">UF</FieldLabel>
+              <Input
+                id="uf"
+                name="uf"
+                maxLength={2}
+                value={uf}
+                onChange={(event) => setUf(event.target.value.toUpperCase())}
+                disabled={enviando}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="responsavel">Responsável</FieldLabel>
+              <Input
+                id="responsavel"
+                name="responsavel"
+                value={responsavel}
+                onChange={(event) => setResponsavel(event.target.value)}
+                disabled={enviando}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="telefone">Telefone</FieldLabel>
+              <Input
+                id="telefone"
+                name="telefone"
+                value={telefone}
+                onChange={(event) => setTelefone(event.target.value)}
+                disabled={enviando}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="municipio">Município</FieldLabel>
+              <Input
+                id="municipio"
+                name="municipio"
+                value={municipio}
+                onChange={(event) => setMunicipio(event.target.value)}
+                disabled={enviando}
+              />
+            </Field>
+          </>
         )}
         {pedeVerba && (
           <>

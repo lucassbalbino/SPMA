@@ -433,7 +433,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T15: `usuarios/novo` - lista GOs em vez de Ofertantes, CNPJ na criação
+### T15: `usuarios/novo` - lista GOs em vez de Ofertantes, CNPJ na criação ✅
 
 **What**: `usuarios/novo/page.tsx` troca `prisma.ofertante.findMany` por `prisma.usuario.findMany({ where: { tipo: "GO" } })` (para AM/GT escolherem o GO ao criar um VO). `NovoUsuarioForm` ganha campo de CNPJ + campos organizacionais quando `tipo` selecionado for GO.
 **Where**: `src/app/(protegido)/usuarios/novo/page.tsx`, `src/app/(protegido)/usuarios/novo/NovoUsuarioForm.tsx`, `e2e/usuarios-novo-page.spec.ts`
@@ -447,10 +447,16 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] GT/AM veem uma lista de GOs (não mais "Ofertantes") ao criar um VO
-- [ ] Criar um GO pela tela pede CNPJ + nome + UF (+ opcionais)
-- [ ] `e2e/usuarios-novo-page.spec.ts` atualizado para os novos rótulos/campos
-- [ ] Gate check passa: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] GT/AM veem uma lista de GOs (não mais "Ofertantes") ao criar um VO
+- [x] Criar um GO pela tela pede CNPJ + nome + UF (+ opcionais)
+- [x] `e2e/usuarios-novo-page.spec.ts` atualizado para os novos rótulos/campos
+- [x] Gate check passa: `npm run test:unit && npm run test:integration && npm run test:e2e` (e2e rodado com escopo em `usuarios-novo-page.spec.ts usuarios.spec.ts`, 23/23 - `test-results/.last-run.json` confirmado `status: passed`; suíte completa fica para o fechamento de T17)
+
+**Nota de execução**: mudança de desenho maior do que o "What" original previa - GO deixou de "escolher um Ofertante" (não existe mais o que escolher); ao ser criado por AM/GT ele informa os próprios dados organizacionais (CNPJ já é o `documento`, mais UF obrigatória e responsavel/telefone/municipio opcionais). O seletor de GOs existentes (`prisma.usuario.findMany({where:{tipo:"GO"}})`) passa a servir só para vincular um VO a um GO (`pedeGoParaVo`), não mais para GO+VO juntos. `page.tsx` também tinha um bug latente (não coberto por nenhuma task): a lista de cursos do GO filtrava por `usuario.cdOfertante`, que desde T4/AD-043 é sempre `null` para GO (o escopo dele é o próprio `documento`) - corrigido para usar `resolverEscopoOfertante` (T6), senão nenhum GO veria curso nenhum ao criar um Aluno.
+
+**Achado bloqueante corrigido (mesma classe do achado de T11)**: `POST /api/usuarios` (`src/app/api/usuarios/route.ts`) validava `uf`/`responsavel`/`telefone`/`municipio` no schema (T8) mas nunca os persistia no `tx.usuario.create` - um GO criado por AM/GT ficava com esses campos sempre `null` mesmo enviando tudo corretamente, e `requireOfertanteVinculado` (T6) o redirecionaria para `/cadastro-ofertante` para sempre. Não pego por nenhum e2e anterior porque `e2e/usuarios.spec.ts` (T11) nunca afirmava `criado?.uf`. Corrigido gravando os 4 campos no create; nenhum teste de T11 quebrou (nenhum afirmava o oposto).
+
+**Achado bloqueante corrigido (helper de fixture)**: `deleteUsuarios` em `scripts/e2e-fixture.ts` fazia um único `deleteMany` - inofensivo enquanto `Usuario.cdOfertante` apontava para uma tabela `Ofertante` à parte, mas agora que é auto-referência (`Usuario.documento`, VO→GO) um `deleteMany` sem ordem garantida pode tentar apagar o GO antes do VO que o referencia na mesma instrução, violando a FK. Corrigido em duas passadas (primeiro quem tem `cdOfertante` preenchido, depois o resto) - helper genérico, beneficia qualquer e2e futuro que crie VO+GO juntos, não só este arquivo.
 
 **Tests**: e2e
 **Gate**: full

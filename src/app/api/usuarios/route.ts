@@ -176,6 +176,14 @@ async function criarUsuario(request: Request) {
         tipo: dados.tipo,
         cdOfertante,
         criadoPor: criador.documento,
+        // UGO-01/08: dados organizacionais só existem para o tipo GO -
+        // `usuarioSchema` já rejeita esses campos para qualquer outro tipo
+        // (CAMPOS_SO_GO), então gravar `?? null` aqui nunca perde dado real
+        // de um perfil que não os enviou.
+        responsavel: dados.responsavel ?? null,
+        telefone: dados.telefone ?? null,
+        uf: dados.uf ?? null,
+        municipio: dados.municipio ?? null,
       },
     });
 
