@@ -35,7 +35,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | Quick | Tarefas só com teste unit (Fases 1 e 3) | `npm run test:unit` |
 | Full | Tarefas com e2e tocando o fluxo que a tarefa mudou (Fase 4 e 6) | `npm run test:unit && npm run test:integration && npm run test:e2e` |
 | Build | Tarefas de schema/fixture/seed (Fases 1, 2, 5) - só compila, não roda test suites ainda | `npm run lint && npm run build && npm run typecheck` |
-| Full-feature (obrigatório na última tarefa, T23) | Fechamento da feature, antes do Verifier | `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` |
+| Full-feature (obrigatório na última tarefa de código, T22) | Fechamento da feature, antes do Verifier | `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` |
 
 ---
 
@@ -43,7 +43,9 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 Fases são ordenadas e rodam em sequência; tarefas dentro de uma fase rodam em ordem.
 
-**Nota sobre "Depends on":** dentro de uma fase a execução é sempre sequencial (um agente, uma tarefa por vez - ver Execution Protocol) - por isso cada tarefa lista como dependência a tarefa imediatamente anterior na ordem de execução, formando uma corrente única T1→T2→...→T23 (mesmo padrão já usado em `respostas-normalizadas/tasks.md`). Isso é mais forte do que a dependência técnica estrita de algumas tarefas (ex.: T3 não usa de fato o resultado de T2), mas nunca mais fraco - "roda depois de" é sempre verdade sob execução sequencial. A razão técnica real de cada dependência está descrita em "What"/"Reuses" de cada tarefa.
+**Nota sobre "Depends on":** dentro de uma fase a execução é sempre sequencial (um agente, uma tarefa por vez - ver Execution Protocol) - por isso cada tarefa lista como dependência a tarefa imediatamente anterior na ordem de execução, formando uma corrente única T1→T2→...→T24 (mesmo padrão já usado em `respostas-normalizadas/tasks.md`). Isso é mais forte do que a dependência técnica estrita de algumas tarefas (ex.: T3 não usa de fato o resultado de T2), mas nunca mais fraco - "roda depois de" é sempre verdade sob execução sequencial. A razão técnica real de cada dependência está descrita em "What"/"Reuses" de cada tarefa.
+
+**Revisão pós-Fase-3 (achado do batch worker de T6-T10):** a rota `POST /api/auth/login` não estava listada em nenhuma tarefa, e uma varredura por `.cpf` em todo `src/app` (não só nas superfícies de Ofertante/Verba) achou 8 arquivos de produção adicionais que a renomeação `Usuario.cpf`→`documento` (T4) quebra silenciosamente, porque leem `sessao.usuario.cpf`/passam `sessao.usuario` inteiro para `podeGerenciarAvaliacao`/`podeAcessarAvaliacao` sem que o texto `.cpf` apareça literalmente (passagem do objeto inteiro, checada pelo TypeScript estruturalmente): `src/app/api/auth/login/route.ts`, `src/app/api/auth/primeiro-acesso/route.ts`, `src/app/(protegido)/meus-dados/page.tsx`, `src/app/api/usuarios/me/dados-pessoais/route.ts`, `src/app/api/pre-cursos/route.ts` (campo `criadoPor`), `src/app/api/pos-cursos/route.ts` (campo `criadoPor`), e toda a família de Avaliação (`src/app/api/avaliacoes/route.ts`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/route.ts`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/encerrar/route.ts`, `src/app/(protegido)/avaliacoes/page.tsx`, `src/app/(protegido)/avaliacoes/[cpf]/[cdCurso]/page.tsx`). Nenhum desses tinha task própria. Corrigido dobrando o escopo de T16 (login) e das três varreduras de e2e (agora T20/T21/T22) - que já iam tocar a mesma família de arquivos de teste - e inserindo uma tarefa nova (T17) para os três que sobravam sem lar. `npx tsc --noEmit` é a fonte de verdade para confirmar que a lista está completa, não a leitura manual - cada tarefa abaixo roda o gate `full` (que inclui `test:e2e`, mas não substitui uma conferência de `tsc --noEmit` limpo antes de declarar a tarefa feita).
 
 ### Phase 1: Fundação - validadores e schema
 
@@ -68,19 +70,19 @@ T5 → T6 → T7 → T8 → T9 → T10
 ### Phase 4: Rotas, páginas e seus e2e existentes
 
 ```
-T10 → T11 → T12 → T13 → T14 → T15 → T16
+T10 → T11 → T12 → T13 → T14 → T15 → T16 → T17
 ```
 
 ### Phase 5: Scripts de seed
 
 ```
-T16 → T17 → T18
+T17 → T18 → T19
 ```
 
 ### Phase 6: Varredura mecânica de e2e + consistência de docs
 
 ```
-T18 → T19 → T20 → T21 → T22 → T23
+T19 → T20 → T21 → T22 → T23 → T24
 ```
 
 ---
@@ -341,6 +343,8 @@ T18 → T19 → T20 → T21 → T22 → T23
 - [ ] Teste "GO não cria verba de carona" (linha ~373) removido ou adaptado (a combinação GO-cria-GO já é bloqueada antes de chegar em `exigeOfertanteEVerba`)
 - [ ] Novo teste: AM/GT cria GO com CNPJ válido + nome + uf -> 201, sem nenhum registro em uma tabela `Ofertante` (ela não existe mais)
 - [ ] Novo teste: `cdOfertante` informado aponta para um documento que existe mas é tipo AL -> 400 "Ofertante informado não existe"
+- [ ] Dentro do próprio arquivo `usuarios/route.ts`: `criadoPor: criador.cpf` -> `criador.documento`, e o corpo da resposta (`cpf: usuario.cpf`) -> `documento: usuario.documento` (contrato HTTP passa a expor `documento`, não `cpf`, coerente com T16/T17 fazendo o mesmo em login/sessão)
+- [ ] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/usuarios/route.ts`
 - [ ] Gate check passa: `npm run test:unit && npm run test:integration && npm run test:e2e`
 
 **Tests**: e2e
@@ -444,10 +448,10 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T16: Login aceita CNPJ - prova e2e
+### T16: Login aceita CNPJ - rota + prova e2e
 
-**What**: Adiciona a `e2e/login.spec.ts` um cenário de login bem-sucedido com um GO de fixture identificado por CNPJ válido, ao lado dos cenários de CPF já existentes.
-**Where**: `e2e/login.spec.ts`
+**What**: `src/app/api/auth/login/route.ts` lê `entrada.data.documento` (não mais `.cpf`, renomeado por T9) e passa esse valor para `prisma.usuario.findUnique({where:{documento}})`, `registrarFalha`, `resetarTentativas`, `criarSessao`/`rotacionarSessao` (esses helpers de `session.ts` continuam recebendo uma string genérica de identidade - nenhuma mudança de assinatura neles, `Sessao.cpfUsuario` não foi renomeado por T4 de propósito). O corpo da resposta troca `cpf: usuario.cpf` por `documento: usuario.documento` (mesma decisão de contrato HTTP de T11) e `cdOfertante: usuario.cdOfertante` continua igual (já é `string` desde T4). Em `e2e/login.spec.ts`, adiciona um cenário de login bem-sucedido com um GO de fixture identificado por CNPJ válido, ao lado dos cenários de CPF já existentes.
+**Where**: `src/app/api/auth/login/route.ts`, `e2e/login.spec.ts`
 **Depends on**: T15
 **Reuses**: fixture `upsertUsuario` (T5), `loginSchema` (T9)
 **Requirement**: UGO-10
@@ -458,7 +462,9 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 **Done when**:
 - [ ] Novo teste: GO com CNPJ válido faz login com sucesso (sessão criada)
-- [ ] Teste existente de CPF continua verde, inalterado
+- [ ] Testes existentes de CPF (AM/GT/VT/AL) continuam verdes, inalterados
+- [ ] Resposta de login expõe `documento` (não `cpf`) no objeto `usuario`
+- [ ] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/auth/login/route.ts`
 - [ ] Gate check passa: `npm run test:e2e`
 
 **Tests**: e2e
@@ -466,11 +472,35 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T17: `prisma/seed.ts` - campo `documento`
+### T17: Sessão residual - `primeiro-acesso`, `meus-dados`, `dados-pessoais`
+
+**What**: Três arquivos de produção leem `sessao.usuario.cpf` diretamente e quebraram com a renomeação de T4 (achado do batch worker de T6-T10, ver nota em Execution Plan) - nenhum precisa de comportamento novo, só trocar `.cpf` por `.documento` no ponto de leitura: `src/app/api/auth/primeiro-acesso/route.ts` (`where:{cpf: sessao.usuario.cpf}` e o `cpf: usuario.cpf` do corpo de resposta), `src/app/(protegido)/meus-dados/page.tsx` (`cpf: usuario.cpf` passado ao componente de formulário), `src/app/api/usuarios/me/dados-pessoais/route.ts` (duas ocorrências de `cpf: sessao.usuario.cpf`, uma no alvo do repositório de respostas e outra num `where`). Nenhum destes três é sobre GO/Ofertante - são só vítimas colaterais do campo `Usuario.cpf` ter sido renomeado para um usuário de QUALQUER tipo, não só GO.
+**Where**: `src/app/api/auth/primeiro-acesso/route.ts`, `src/app/(protegido)/meus-dados/page.tsx`, `src/app/api/usuarios/me/dados-pessoais/route.ts`
+**Depends on**: T16
+**Reuses**: nenhuma lógica nova - troca mecânica de nome de campo
+**Requirement**: UGO-01, UGO-07 (regressão - nenhum destes fluxos é específico de GO, mas todos leem o campo renomeado por T4)
+
+**Tools**:
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+- [ ] `npx tsc --noEmit` não aponta mais nenhum erro nos três arquivos listados em "Where"
+- [ ] `e2e/primeiro-acesso.spec.ts` e `e2e/primeiro-acesso-page.spec.ts` continuam verdes, sem alteração de cenário
+- [ ] `e2e/meus-dados.spec.ts` continua verde, sem alteração de cenário
+- [ ] `e2e/dados-pessoais.spec.ts` continua verde, sem alteração de cenário
+- [ ] Gate check passa: `npm run test:e2e`
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
+### T18: `prisma/seed.ts` - campo `documento`
 
 **What**: `seedAdminMaster` grava `documento` em vez de `cpf` (AM continua CPF de 11 dígitos - só o nome do campo Prisma muda).
 **Where**: `prisma/seed.ts`
-**Depends on**: T16
+**Depends on**: T17
 **Reuses**: lógica existente, sem mudança de comportamento
 
 **Requirement**: UGO-07
@@ -488,11 +518,11 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T18: `scripts/dev-seed-demo.ts` - cenário de demo no formato unificado (Decisão C/AD-043)
+### T19: `scripts/dev-seed-demo.ts` - cenário de demo no formato unificado (Decisão C/AD-043)
 
 **What**: Remove a criação separada de `Ofertante`; o GO de demo (`CPF_GO` -> `CNPJ_GO`, um CNPJ de teste válido) grava nome/uf/responsavel/email/municipio diretamente no próprio `Usuario`; `Verba`/`PreCurso` referenciam `CNPJ_GO` direto. `limpar()` ajustado (sem `prisma.ofertante`). Autorizado pelo usuário nesta sessão: apaga e recria o registro de demo existente.
 **Where**: `scripts/dev-seed-demo.ts`
-**Depends on**: T17
+**Depends on**: T18
 **Reuses**: estrutura existente do script (idempotente, `--limpar`)
 **Requirement**: UGO-01 (migração/Decisão C)
 
@@ -510,11 +540,11 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T19: Varredura - fixtures de `e2e/pre-cursos*.spec.ts`
+### T20: Varredura - `e2e/pre-cursos*.spec.ts` + `criadoPor` de `POST /api/pre-cursos`
 
-**What**: Em cada arquivo da família (`pre-cursos.spec.ts`, `pre-cursos-page.spec.ts`, `pre-cursos-formulario.spec.ts`, `pre-cursos-novo.spec.ts`, `pre-cursos-id.spec.ts`, `pre-cursos-encerrar.spec.ts`): remove a chamada a `criarOfertante`, funde `nome`/`uf` no `upsertUsuario` do GO, troca a variável `cdOfertante`/`cdOfertante2` (hoje `number`) pelo próprio CNPJ do GO de fixture (`string`). Mudança puramente mecânica, sem cobertura nova (pedido do usuário) - nenhum destes specs testa CNPJ em si.
-**Where**: `e2e/pre-cursos*.spec.ts`
-**Depends on**: T18
+**What**: Em cada arquivo da família (`pre-cursos.spec.ts`, `pre-cursos-page.spec.ts`, `pre-cursos-formulario.spec.ts`, `pre-cursos-novo.spec.ts`, `pre-cursos-id.spec.ts`, `pre-cursos-encerrar.spec.ts`): remove a chamada a `criarOfertante`, funde `nome`/`uf` no `upsertUsuario` do GO, troca a variável `cdOfertante`/`cdOfertante2` (hoje `number`) pelo próprio CNPJ do GO de fixture (`string`). Além da varredura de fixture, corrige a própria rota de produção `src/app/api/pre-cursos/route.ts`, que grava `criadoPor: sessao.usuario.cpf` (achado do batch worker de T6-T10) - vira `sessao.usuario.documento`. Mudança mecânica, sem cobertura nova além de confirmar que a família de e2e continua passando (pedido do usuário) - nenhum destes specs testa CNPJ em si.
+**Where**: `e2e/pre-cursos*.spec.ts`, `src/app/api/pre-cursos/route.ts`
+**Depends on**: T19
 **Reuses**: `upsertUsuario` com os novos campos organizacionais (T5)
 **Requirement**: UGO-01, UGO-13 (regressão)
 
@@ -524,6 +554,8 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 **Done when**:
 - [ ] Nenhum arquivo da família chama mais `criarOfertante`/`getOfertante`
+- [ ] `POST /api/pre-cursos` grava `criadoPor` com o `documento` de quem criou (GO ou AM), não mais `.cpf`
+- [ ] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/pre-cursos/route.ts`
 - [ ] Todos os testes da família continuam verdes com a mesma contagem de antes
 - [ ] Gate check passa: `npm run test:e2e -- pre-cursos`
 
@@ -532,12 +564,12 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T20: Varredura - fixtures de `e2e/pos-cursos*.spec.ts`
+### T21: Varredura - `e2e/pos-cursos*.spec.ts` + `criadoPor` de `POST /api/pos-cursos`
 
-**What**: Mesma varredura mecânica de T19, aplicada à família `pos-cursos*.spec.ts` (`pos-cursos.spec.ts`, `-page`, `-formulario`, `-novo`, `-id`, `-encerrar`).
-**Where**: `e2e/pos-cursos*.spec.ts`
-**Depends on**: T19
-**Reuses**: mesmo padrão de T19
+**What**: Mesma varredura mecânica de T20, aplicada à família `pos-cursos*.spec.ts` (`pos-cursos.spec.ts`, `-page`, `-formulario`, `-novo`, `-id`, `-encerrar`) e à mesma correção em `src/app/api/pos-cursos/route.ts` (`criadoPor: sessao.usuario.cpf` -> `.documento`).
+**Where**: `e2e/pos-cursos*.spec.ts`, `src/app/api/pos-cursos/route.ts`
+**Depends on**: T20
+**Reuses**: mesmo padrão de T20
 **Requirement**: UGO-01, UGO-13 (regressão)
 
 **Tools**:
@@ -546,6 +578,8 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 **Done when**:
 - [ ] Nenhum arquivo da família chama mais `criarOfertante`/`getOfertante`
+- [ ] `POST /api/pos-cursos` grava `criadoPor` com o `documento` de quem criou, não mais `.cpf`
+- [ ] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/pos-cursos/route.ts`
 - [ ] Todos os testes da família continuam verdes com a mesma contagem de antes
 - [ ] Gate check passa: `npm run test:e2e -- pos-cursos`
 
@@ -554,12 +588,12 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T21: Varredura - fixtures de `e2e/avaliacoes*.spec.ts`
+### T22: Varredura - `e2e/avaliacoes*.spec.ts` + rotas/páginas de Avaliação
 
-**What**: Mesma varredura mecânica de T19, aplicada à família `avaliacoes*.spec.ts` (`avaliacoes.spec.ts`, `-page`, `-novo`, `-id`, `-encerrar`, `-formulario`).
-**Where**: `e2e/avaliacoes*.spec.ts`
-**Depends on**: T20
-**Reuses**: mesmo padrão de T19
+**What**: Mesma varredura mecânica de T20, aplicada à família `avaliacoes*.spec.ts` (`avaliacoes.spec.ts`, `-page`, `-novo`, `-id`, `-encerrar`, `-formulario`). Além da varredura de fixture, corrige as rotas e páginas de produção que passam `sessao.usuario`/`usuario` inteiro para `podeAcessarAvaliacao`/`podeGerenciarAvaliacao` (essas guardas esperam um campo `cpf`, que `Usuario` não tem mais - achado do batch worker de T6-T10): `src/app/api/avaliacoes/route.ts` (`where = {cpf: usuario.cpf}`), `src/app/api/avaliacoes/[cpf]/[cdCurso]/route.ts`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/encerrar/route.ts`, `src/app/(protegido)/avaliacoes/page.tsx` (`where = {cpf: usuario.cpf}`), `src/app/(protegido)/avaliacoes/[cpf]/[cdCurso]/page.tsx`. Em todos os call sites, a chamada passa a mapear explicitamente `{ cpf: usuario.documento, ...resto }` em vez de passar `usuario`/`sessao.usuario` inteiro (o parâmetro das guardas continua se chamando `cpf` de propósito - é sempre um Aluno, ver design.md - só a fonte do valor muda). Esta é a última tarefa de código da feature: o gate completo (`Full-feature`) precisa fechar 100% verde aqui.
+**Where**: `e2e/avaliacoes*.spec.ts`, `src/app/api/avaliacoes/route.ts`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/route.ts`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/encerrar/route.ts`, `src/app/(protegido)/avaliacoes/page.tsx`, `src/app/(protegido)/avaliacoes/[cpf]/[cdCurso]/page.tsx`
+**Depends on**: T21
+**Reuses**: mesmo padrão de T20; `podeAcessarAvaliacao`/`podeGerenciarAvaliacao` (T6, assinatura inalterada)
 **Requirement**: UGO-01, UGO-13 (regressão)
 
 **Tools**:
@@ -567,7 +601,8 @@ T18 → T19 → T20 → T21 → T22 → T23
 - Skill: NONE
 
 **Done when**:
-- [ ] Nenhum arquivo da família chama mais `criarOfertante`/`getOfertante`
+- [ ] Nenhum arquivo da família e2e chama mais `criarOfertante`/`getOfertante`
+- [ ] `npx tsc --noEmit` limpo em todo o repositório (zero erros - primeira vez desde T4 que isso é exigido)
 - [ ] Todos os testes da família continuam verdes com a mesma contagem de antes
 - [ ] Gate check completo passa (última tarefa de código da feature): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
 
@@ -576,11 +611,11 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T22: Anotar `cadastro-ofertante-verba/spec.md` como superada
+### T23: Anotar `cadastro-ofertante-verba/spec.md` como superada
 
 **What**: Anotação (não reescrita, mesmo padrão da AD-042 sobre `avaliacao-aluno/spec.md`): REQ-OV-01..07 marcados como superados por `unificacao-ofertante-go`/AD-043; REQ-OV-08..12 (Verba/saldo/teto) marcados como ainda válidos, só com a FK de tipo alterado.
 **Where**: `.specs/features/cadastro-ofertante-verba/spec.md`
-**Depends on**: T21
+**Depends on**: T22
 **Reuses**: padrão de anotação já usado em `avaliacao-aluno/spec.md` pela AD-042
 **Requirement**: (consistência de artefato, não um REQ funcional)
 
@@ -597,11 +632,11 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T23: Anotar SPEC_DEVIATION em `docs/SPMA_Especificacao_Cliente_v2.md`
+### T24: Anotar SPEC_DEVIATION em `docs/SPMA_Especificacao_Cliente_v2.md`
 
 **What**: Nota de desvio deliberado (mesmo padrão `SPEC_DEVIATION` já usado no código) nas seções 2.2/2.3/3.3, registrando que o documento do cliente descreve Ofertante como entidade própria e que a unificação com o GO é decisão do usuário desta sessão, não erro de leitura da spec fonte.
 **Where**: `docs/SPMA_Especificacao_Cliente_v2.md`
-**Depends on**: T22
+**Depends on**: T23
 **Reuses**: padrão de nota já usado em outras seções do documento (verificar formato exato antes de escrever)
 **Requirement**: (consistência de artefato, não um REQ funcional)
 
@@ -625,12 +660,12 @@ Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
 Phase 1:  T1 ------→ T2 ------→ T3 ------→ T4
 Phase 2:  T5
 Phase 3:  T6 ------→ T7 ------→ T8 ------→ T9 ------→ T10
-Phase 4:  T11 -----→ T12 -----→ T13 -----→ T14 -----→ T15 -----→ T16
-Phase 5:  T17 -----→ T18
-Phase 6:  T19 -----→ T20 -----→ T21 -----→ T22 -----→ T23
+Phase 4:  T11 -----→ T12 -----→ T13 -----→ T14 -----→ T15 -----→ T16 -----→ T17
+Phase 5:  T18 -----→ T19
+Phase 6:  T20 -----→ T21 -----→ T22 -----→ T23 -----→ T24
 ```
 
-**Empacotamento previsto:** 23 tarefas, orçamento de ~7 por worker, cortando só em fronteira de fase → **4 batches** (Fases 1+2 = 5 tarefas; Fase 3 = 5 tarefas; Fase 4 = 6 tarefas; Fases 5+6 = 7 tarefas). Como isso passa de um batch, o Execute precisa apresentar a oferta de sub-agentes antes de começar.
+**Empacotamento previsto:** 24 tarefas, orçamento de ~7 por worker, cortando só em fronteira de fase → **4 batches** (Fases 1+2 = 5 tarefas; Fase 3 = 5 tarefas; Fase 4 = 7 tarefas; Fases 5+6 = 7 tarefas). Como isso passa de um batch, o Execute precisa apresentar a oferta de sub-agentes antes de começar. **Revisão pós-Fase-3**: T17 foi inserida e T16/T20/T21/T22 tiveram o escopo estendido (ver nota em Execution Plan) - a contagem de tarefas por lote não mudou (batch 3 = Fase 4 completa = 7 tarefas; batch 4 = Fases 5+6 = 7 tarefas), só o conteúdo de cada uma.
 
 Execução é estritamente sequencial dentro de cada fase - um agente (ou sub-agente de lote) trabalha uma tarefa por vez, em ordem. Fases rodam em sequência.
 
@@ -655,11 +690,12 @@ Execução é estritamente sequencial dentro de cada fase - um agente (ou sub-ag
 | T13 | 1 rota nova + 1 página + 1 e2e | ⚠️ OK - mesmo fluxo ponta a ponta |
 | T14 | 1 rota + 2 e2e | ⚠️ OK - mesma rota, dois arquivos de teste que já cobriam a mesma rota |
 | T15 | 1 página + 1 form colocado + 1 e2e | ⚠️ OK - mesma tela |
-| T16 | 1 arquivo | ✅ Granular |
-| T17 | 1 arquivo | ✅ Granular |
+| T16 | 1 rota + 1 e2e da mesma rota | ⚠️ OK - mesmo padrão de T11 |
+| T17 | 3 arquivos, mesma correção mecânica (`.cpf`→`.documento`) em fluxos não relacionados entre si | ⚠️ Deliberado - nenhum dos três justifica uma tarefa própria sozinho (uma linha cada); agrupados por serem a mesma classe de achado (ver nota em Execution Plan), não por afinidade de domínio |
 | T18 | 1 arquivo | ✅ Granular |
-| T19-T21 | Famílias de arquivos (glob), mudança mecânica idêntica repetida | ⚠️ Deliberado - ver justificativa abaixo |
-| T22-T23 | 1 arquivo cada | ✅ Granular |
+| T19 | 1 arquivo | ✅ Granular |
+| T20-T22 | Famílias de arquivos (glob) + a rota de criação correspondente, mudança mecânica idêntica repetida | ⚠️ Deliberado - ver justificativa abaixo |
+| T23-T24 | 1 arquivo cada | ✅ Granular |
 
 **Justificativa das exceções (⚠️):** nenhuma combina responsabilidades diferentes - cada uma é uma ÚNICA mudança mecânica ou um ÚNICO fluxo ponta a ponta espalhado por arquivos que já eram acoplados antes desta feature (rota + seu e2e; família de specs que já compartilhavam o mesmo padrão de fixture). Dividir mais fundo criaria uma tarefa que produz código sem prova (violaria "nenhuma tarefa produz código não verificado") ou dividiria uma família de arquivos idênticos em N tarefas idênticas sem nenhum ganho de clareza - o oposto do pedido do usuário de manter a feature enxuta.
 
@@ -667,7 +703,7 @@ Execução é estritamente sequencial dentro de cada fase - um agente (ou sub-ag
 
 ## Diagram-Definition Cross-Check
 
-Cada tarefa depende só da imediatamente anterior na corrente única T1→T2→...→T23 (ver nota em Execution Plan) - toda seta correspondente aparece no diagrama da fase de origem ou de destino (o diagrama de cada fase repete a tarefa de fronteira recebida da fase anterior, mesmo padrão de `respostas-normalizadas/tasks.md`).
+Cada tarefa depende só da imediatamente anterior na corrente única T1→T2→...→T24 (ver nota em Execution Plan) - toda seta correspondente aparece no diagrama da fase de origem ou de destino (o diagrama de cada fase repete a tarefa de fronteira recebida da fase anterior, mesmo padrão de `respostas-normalizadas/tasks.md`).
 
 | Task | Depends On (corpo da tarefa) | Diagrama mostra | Status |
 | --- | --- | --- | --- |
@@ -687,13 +723,14 @@ Cada tarefa depende só da imediatamente anterior na corrente única T1→T2→.
 | T14 | T13 | T13 → T14 (Fase 4) | ✅ Match |
 | T15 | T14 | T14 → T15 (Fase 4) | ✅ Match |
 | T16 | T15 | T15 → T16 (Fase 4) | ✅ Match |
-| T17 | T16 | T16 → T17 (Fase 5) | ✅ Match |
+| T17 | T16 | T16 → T17 (Fase 4) | ✅ Match |
 | T18 | T17 | T17 → T18 (Fase 5) | ✅ Match |
-| T19 | T18 | T18 → T19 (Fase 6) | ✅ Match |
+| T19 | T18 | T18 → T19 (Fase 5) | ✅ Match |
 | T20 | T19 | T19 → T20 (Fase 6) | ✅ Match |
 | T21 | T20 | T20 → T21 (Fase 6) | ✅ Match |
 | T22 | T21 | T21 → T22 (Fase 6) | ✅ Match |
 | T23 | T22 | T22 → T23 (Fase 6) | ✅ Match |
+| T24 | T23 | T23 → T24 (Fase 6) | ✅ Match |
 
 Nenhuma tarefa depende de uma tarefa de fase posterior.
 
@@ -718,10 +755,11 @@ Nenhuma tarefa depende de uma tarefa de fase posterior.
 | T13: me/organizacao + página | Rota de API + página | e2e | e2e | ✅ OK |
 | T14: verbas/route.ts | Rota de API | e2e | e2e | ✅ OK |
 | T15: usuarios/novo page | Página | e2e | e2e | ✅ OK |
-| T16: login.spec.ts | Rota de API (prova adicional) | e2e | e2e | ✅ OK |
-| T17: seed.ts | Fixtures/scripts | none | none | ✅ OK |
-| T18: dev-seed-demo.ts | Fixtures/scripts | none | none | ✅ OK |
-| T19-T21: varreduras e2e | Rota de API (regressão de fixture) | e2e | e2e | ✅ OK |
-| T22-T23: docs | Docs/AD | none | none | ✅ OK |
+| T16: login route + login.spec.ts | Rota de API | e2e | e2e | ✅ OK |
+| T17: primeiro-acesso/meus-dados/dados-pessoais | Rota de API + página | e2e | e2e | ✅ OK |
+| T18: seed.ts | Fixtures/scripts | none | none | ✅ OK |
+| T19: dev-seed-demo.ts | Fixtures/scripts | none | none | ✅ OK |
+| T20-T22: varreduras e2e + rotas/páginas de curso/avaliação | Rota de API + página (regressão de fixture) | e2e | e2e | ✅ OK |
+| T23-T24: docs | Docs/AD | none | none | ✅ OK |
 
 Nenhuma violação: todo `Tests: none` corresponde a uma linha "none" da matriz (fixtures/scripts, schema, docs); nenhuma tarefa usa "testado em outra tarefa" como justificativa.
