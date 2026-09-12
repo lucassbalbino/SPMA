@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 37,
+  "next_id": 39,
   "lessons": [
     {
       "id": "L-001",
@@ -654,6 +654,42 @@
       ],
       "created": "2026-09-11T08:49:04Z",
       "last_seen": "2026-09-11T08:49:04Z"
+    },
+    {
+      "id": "L-037",
+      "key": "spec_deviation::a mandatory redirect guard that runs in a protected route group s own layout must target a sibling route group never a page inside that same protected group or the redirect loops on itself",
+      "text": "A mandatory-redirect guard that runs in a protected route group's own layout must target a sibling route group, never a page inside that same protected group, or the redirect loops on itself.",
+      "signal": "spec_deviation",
+      "scope": "auth-guards",
+      "status": "candidate",
+      "features": [
+        "dados-pessoais-separados"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/app/(protegido)/layout.tsx:9-22 (SPEC_DEVIATION: /dados-pessoais vs /painel) (auth-guards)"
+      ],
+      "created": "2026-09-12T00:33:35Z",
+      "last_seen": "2026-09-12T00:33:35Z"
+    },
+    {
+      "id": "L-038",
+      "key": "spec_deviation::when a form s completeness gates navigation access rather than just a ui section its write route must persist all or nothing on the merged resulting state never a shallow merge that can leave the record partially overwritten",
+      "text": "When a form's completeness gates navigation access rather than just a UI section, its write route must persist all-or-nothing on the merged resulting state, never a shallow merge that can leave the record partially overwritten.",
+      "signal": "spec_deviation",
+      "scope": "respostas-repo",
+      "status": "candidate",
+      "features": [
+        "dados-pessoais-separados"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/app/api/usuarios/me/dados-pessoais/route.ts:63-81 (SPEC_DEVIATION: tudo-ou-nada vs merge raso de AVAL-07) (respostas-repo)"
+      ],
+      "created": "2026-09-12T00:33:38Z",
+      "last_seen": "2026-09-12T00:33:38Z"
     }
   ]
 }

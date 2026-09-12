@@ -13,7 +13,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/dados-pessoais-separados/design.md`
-**Status**: 11/11 tarefas implementadas e commitadas. Verifier independente ainda não rodou — feature não fechada até `validation.md` = PASS.
+**Status**: 11/11 tarefas implementadas e commitadas. Verifier independente = PASS (`validation.md`), `validate_state.py dados-pessoais-separados` = exit 0. Feature fechada.
 
 ---
 

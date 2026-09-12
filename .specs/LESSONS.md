@@ -228,6 +228,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: tasks.md T17 SPEC_DEVIATION - agregacao.integration.test.ts:163 (database)
 - last seen: 2026-09-11T08:49:04Z
 
+### L-037 - A mandatory-redirect guard that runs in a protected route group's own layout must target a sibling route group, never a page inside that same protected group, or the redirect loops on itself.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `auth-guards` · harmful: 0
+- features: dados-pessoais-separados
+- evidence: src/app/(protegido)/layout.tsx:9-22 (SPEC_DEVIATION: /dados-pessoais vs /painel) (auth-guards)
+- last seen: 2026-09-12T00:33:35Z
+
+### L-038 - When a form's completeness gates navigation access rather than just a UI section, its write route must persist all-or-nothing on the merged resulting state, never a shallow merge that can leave the record partially overwritten.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `respostas-repo` · harmful: 0
+- features: dados-pessoais-separados
+- evidence: src/app/api/usuarios/me/dados-pessoais/route.ts:63-81 (SPEC_DEVIATION: tudo-ou-nada vs merge raso de AVAL-07) (respostas-repo)
+- last seen: 2026-09-12T00:33:38Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
