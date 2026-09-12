@@ -28,10 +28,14 @@ export const MARCADOR_INICIO = "<<<E2E_JSON>>>";
 export const MARCADOR_FIM = "<<<FIM_E2E_JSON>>>";
 
 const CAMPOS_USUARIO = {
-  cpf: true,
+  documento: true,
   nome: true,
   email: true,
   tipo: true,
+  responsavel: true,
+  telefone: true,
+  uf: true,
+  municipio: true,
   cdOfertante: true,
   senhaHash: true,
   primeiraVez: true,
@@ -48,9 +52,30 @@ type UsuarioFixture = {
   tipo: TipoUsuario;
   senha?: string | null;
   primeiraVez?: boolean;
-  cdOfertante?: number | null;
+  cdOfertante?: string | null;
   dadosPessoaisCompletos?: boolean;
+  // Dados organizacionais (AD-043) - só fazem sentido para tipo "GO", mas
+  // aceitos sem checagem de tipo aqui (fixture de teste, não validação de
+  // produção).
+  responsavel?: string;
+  telefone?: string;
+  uf?: string;
+  municipio?: string;
 };
+
+/**
+ * `UsuarioFixture`/`UsuarioPersistido` (`e2e/helpers/db.ts`) usam `cpf` como
+ * nome de campo por decisão deliberada (abstração de teste própria, não
+ * espelho 1:1 do schema Prisma) - guarda um CPF de 11 dígitos ou o CNPJ de
+ * 14 dígitos de um GO (AD-043). O schema Prisma usa `documento`; esta
+ * função faz a ponte entre os dois nomes na saída do fixture.
+ */
+function paraUsuarioPersistido<T extends { documento: string }>(
+  usuario: T,
+): Omit<T, "documento"> & { cpf: string } {
+  const { documento, ...resto } = usuario;
+  return { cpf: documento, ...resto };
+}
 
 /**
  * As respostas que os specs inspecionam saem das linhas de `TB_Resposta_*`,
@@ -96,26 +121,37 @@ async function executar(
         // Zeradas sempre, para que cada spec comece de um estado previsível.
         tentativasFalhas: 0,
         bloqueadoAte: null,
+        // Dados organizacionais (AD-043) - fusão do antigo `Ofertante` no
+        // próprio GO. `null` quando não informado, mesmo padrão dos demais
+        // campos opcionais acima (cada chamada descreve o estado final
+        // desejado, não um merge parcial).
+        responsavel: dados.responsavel ?? null,
+        telefone: dados.telefone ?? null,
+        uf: dados.uf ?? null,
+        municipio: dados.municipio ?? null,
       };
-      return prisma.usuario.upsert({
-        where: { cpf: dados.cpf },
-        create: { cpf: dados.cpf, ...comum },
+      const usuario = await prisma.usuario.upsert({
+        where: { documento: dados.cpf },
+        create: { documento: dados.cpf, ...comum },
         update: comum,
         select: CAMPOS_USUARIO,
       });
+      return paraUsuarioPersistido(usuario);
     }
 
-    case "getUsuario":
-      return prisma.usuario.findUnique({
-        where: { cpf: argumento as string },
+    case "getUsuario": {
+      const usuario = await prisma.usuario.findUnique({
+        where: { documento: argumento as string },
         select: CAMPOS_USUARIO,
       });
+      return usuario ? paraUsuarioPersistido(usuario) : null;
+    }
 
     case "deleteUsuarios": {
       const cpfs = argumento as string[];
       await prisma.sessao.deleteMany({ where: { cpfUsuario: { in: cpfs } } });
       const { count } = await prisma.usuario.deleteMany({
-        where: { cpf: { in: cpfs } },
+        where: { documento: { in: cpfs } },
       });
       return { count };
     }
@@ -144,22 +180,9 @@ async function executar(
       return respostasPorLinha(prisma, { formulario: "dadosPessoais", cpf });
     }
 
-    case "criarOfertante": {
-      const dados = argumento as { nome: string; uf: string };
-      return prisma.ofertante.create({ data: dados });
-    }
-
-    case "getOfertante":
-      return prisma.ofertante.findUnique({
-        where: { cdOfertante: argumento as number },
-      });
-
-    case "listarOfertantesPorNome":
-      return prisma.ofertante.findMany({ where: { nome: argumento as string } });
-
     case "criarVerba": {
       const dados = argumento as {
-        cdOfertante: number;
+        cdOfertante: string;
         vlVerba: number;
         dtVerba?: string;
       };
@@ -200,7 +223,7 @@ async function executar(
 
     case "criarPreCurso": {
       const dados = argumento as {
-        cdOfertante: number;
+        cdOfertante: string;
         cdVerba: number;
         vlCursoAlocado: number;
         criadoPor: string;
@@ -214,7 +237,7 @@ async function executar(
     // Cascade` para `PreCurso.cdCurso` - apagar o PreCurso já remove o
     // PosCurso associado, sem precisar de um comando de limpeza próprio.
     case "deletePreCursosPorOfertante": {
-      const cdOfertantes = argumento as number[];
+      const cdOfertantes = argumento as string[];
       const { count } = await prisma.preCurso.deleteMany({
         where: { cdOfertante: { in: cdOfertantes } },
       });

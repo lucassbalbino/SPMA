@@ -18,8 +18,15 @@ export type UsuarioFixture = {
   tipo: TipoUsuarioFixture;
   senha?: string | null;
   primeiraVez?: boolean;
-  cdOfertante?: number | null;
+  cdOfertante?: string | null;
   dadosPessoaisCompletos?: boolean;
+  // Dados organizacionais (AD-043) - fusão do antigo `Ofertante` no próprio
+  // GO. Só fazem sentido para `tipo: "GO"`, mas o fixture não valida isso -
+  // é uma abstração de teste, não a validação de produção.
+  responsavel?: string;
+  telefone?: string;
+  uf?: string;
+  municipio?: string;
 };
 
 export type UsuarioPersistido = {
@@ -27,7 +34,11 @@ export type UsuarioPersistido = {
   nome: string | null;
   email: string | null;
   tipo: TipoUsuarioFixture;
-  cdOfertante: number | null;
+  responsavel: string | null;
+  telefone: string | null;
+  uf: string | null;
+  municipio: string | null;
+  cdOfertante: string | null;
   senhaHash: string | null;
   primeiraVez: boolean;
   dadosPessoaisCompletos: boolean;
@@ -38,10 +49,9 @@ export type UsuarioPersistido = {
 };
 
 export type SessaoPersistida = { id: string; cpfUsuario: string; expiraEm: string };
-export type OfertantePersistido = { cdOfertante: number; nome: string; uf: string };
 export type VerbaPersistida = {
   cdVerba: number;
-  cdOfertante: number;
+  cdOfertante: string;
   vlVerba: string;
   dtVerba: string | null;
 };
@@ -95,28 +105,13 @@ export function criarDadosPessoais(
   return executar<Record<string, unknown> | null>("criarDadosPessoais", { cpf, respostas });
 }
 
-export function criarOfertante(dados: {
-  nome: string;
-  uf: string;
-}): OfertantePersistido {
-  return executar<OfertantePersistido>("criarOfertante", dados);
-}
-
-export function getOfertante(cdOfertante: number): OfertantePersistido | null {
-  return executar<OfertantePersistido | null>("getOfertante", cdOfertante);
-}
-
-export function listarOfertantesPorNome(nome: string): OfertantePersistido[] {
-  return executar<OfertantePersistido[]>("listarOfertantesPorNome", nome);
-}
-
 /** Limpa o registro de rate-limit por IP (REQ-SEC-03) dos IPs de teste informados. */
 export function deleteTentativasIp(ips: string[]): void {
   executar("deleteTentativasIp", ips);
 }
 
 export function criarVerba(dados: {
-  cdOfertante: number;
+  cdOfertante: string;
   vlVerba: number;
   dtVerba?: string;
 }): VerbaPersistida {
@@ -129,7 +124,7 @@ export function getVerba(cdVerba: number): VerbaPersistida | null {
 
 export type PreCursoPersistido = {
   cdCurso: number;
-  cdOfertante: number;
+  cdOfertante: string;
   cdVerba: number;
   vlCursoAlocado: string;
   status: "EM_ANDAMENTO" | "ENCERRADO";
@@ -140,7 +135,7 @@ export type PreCursoPersistido = {
 
 /** Insere um Pré-Curso direto no banco - usado tanto pelos testes de saldo (`cadastro-ofertante-verba`) quanto como atalho de fixture nos e2e de `formulario-pre-curso`. */
 export function criarPreCurso(dados: {
-  cdOfertante: number;
+  cdOfertante: string;
   cdVerba: number;
   vlCursoAlocado: number;
   criadoPor: string;
@@ -158,7 +153,7 @@ export function encerrarPreCursoFixture(cdCurso: number): PreCursoPersistido {
 }
 
 /** Chamar antes de `deleteUsuarios` quando o teste criou PreCurso de fixture (FK para o CPF criador). Também remove o PosCurso associado (onDelete: Cascade). */
-export function deletePreCursosPorOfertante(cdOfertantes: number[]): void {
+export function deletePreCursosPorOfertante(cdOfertantes: string[]): void {
   executar("deletePreCursosPorOfertante", cdOfertantes);
 }
 
