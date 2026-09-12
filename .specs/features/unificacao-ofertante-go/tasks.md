@@ -325,7 +325,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T11: `POST /api/usuarios` - GO se identifica por CNPJ, cascata sem Ofertante separado
+### T11: `POST /api/usuarios` - GO se identifica por CNPJ, cascata sem Ofertante separado ✅
 
 **What**: Checagem de existência do `cdOfertante` informado passa de `prisma.ofertante.findUnique` para `prisma.usuario.findUnique({ where: { documento: cdOfertante, tipo: "GO" } })` (rejeita também um documento que existe mas não é GO). `resolverOfertante`/`exigeOfertanteEVerba` continuam chamados como hoje, agora com tipos `string`.
 **Where**: `src/app/api/usuarios/route.ts`, `e2e/usuarios.spec.ts`
@@ -338,14 +338,16 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] `e2e/usuarios.spec.ts`: fixtures usam `cdOfertante` string; CNPJ de teste válido para os GOs criados via API
-- [ ] Teste "GO criando GO herda o próprio ofertante" (linha ~201) atualizado para esperar 403 (UGO-18), não mais sucesso
-- [ ] Teste "GO não cria verba de carona" (linha ~373) removido ou adaptado (a combinação GO-cria-GO já é bloqueada antes de chegar em `exigeOfertanteEVerba`)
-- [ ] Novo teste: AM/GT cria GO com CNPJ válido + nome + uf -> 201, sem nenhum registro em uma tabela `Ofertante` (ela não existe mais)
-- [ ] Novo teste: `cdOfertante` informado aponta para um documento que existe mas é tipo AL -> 400 "Ofertante informado não existe"
-- [ ] Dentro do próprio arquivo `usuarios/route.ts`: `criadoPor: criador.cpf` -> `criador.documento`, e o corpo da resposta (`cpf: usuario.cpf`) -> `documento: usuario.documento` (contrato HTTP passa a expor `documento`, não `cpf`, coerente com T16/T17 fazendo o mesmo em login/sessão)
-- [ ] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/usuarios/route.ts`
-- [ ] Gate check passa: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] `e2e/usuarios.spec.ts`: fixtures usam `cdOfertante` string; CNPJ de teste válido para os GOs criados via API
+- [x] Teste "GO criando GO herda o próprio ofertante" (linha ~201) atualizado para esperar 403 (UGO-18), não mais sucesso
+- [x] Teste "GO não cria verba de carona" (linha ~373) removido ou adaptado (a combinação GO-cria-GO já é bloqueada antes de chegar em `exigeOfertanteEVerba`)
+- [x] Novo teste: AM/GT cria GO com CNPJ válido + nome + uf -> 201, sem nenhum registro em uma tabela `Ofertante` (ela não existe mais)
+- [x] Novo teste: `cdOfertante` informado aponta para um documento que existe mas é tipo AL -> 400 "Ofertante informado não existe"
+- [x] Dentro do próprio arquivo `usuarios/route.ts`: `criadoPor: criador.cpf` -> `criador.documento`, e o corpo da resposta (`cpf: usuario.cpf`) -> `documento: usuario.documento` (contrato HTTP passa a expor `documento`, não `cpf`, coerente com T16/T17 fazendo o mesmo em login/sessão)
+- [x] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/usuarios/route.ts`
+- [x] Gate check passa: `npm run test:unit && npm run test:integration && npm run test:e2e`
+
+**Nota de execução**: dois achados bloqueantes, não previstos por nenhuma tarefa (T1-T24), consertados antes desta tarefa poder rodar seu próprio gate (commit separado `e834334`, antes de T11): (1) `src/lib/auth/rate-limit.ts`/`login/route.ts` ainda liam/gravavam `Usuario.cpf` (removido por T4) e o schema de login (T9) já exigia a chave `documento` no corpo - como praticamente todo e2e do repositório autentica primeiro, a suíte inteira falhava independente da tarefa; (2) `prisma/seed.ts` (rodado incondicionalmente pelo global setup do Playwright) e `scripts/db-test-reset.ts` (ainda truncava `TB_Ofertante`, removida por T4) quebravam a inicialização de QUALQUER rodada de e2e/integration. Também adicionado `deleteVerbasPorOfertante` em `scripts/e2e-fixture.ts`/`e2e/helpers/db.ts` (ausente desde T5): `Verba.cdOfertante` agora aponta direto para `Usuario.documento` sem `onDelete: Cascade`, então limpar os GOs de fixture em `deleteUsuarios` sem isso falha por FK. Além disso, a lógica de `POST /api/usuarios` para criação de GO por AM/GT foi ajustada (SPEC_DEVIATION documentado no código): o `cdOfertante` do próprio GO criado passa a ficar sempre `null` (design.md, "Consequência de B1") em vez de exigir um `cdOfertante` informado externamente (que sob o modelo antigo apontava para um Ofertante autônomo já existente, hoje inexistente); quando uma verba é informada, ela passa a mirar o documento do próprio GO recém-criado. A obrigatoriedade da verba (REQ-OV-08) foi preservada sem alteração.
 
 **Tests**: e2e
 **Gate**: full

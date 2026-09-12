@@ -244,6 +244,21 @@ async function executar(
       return { count };
     }
 
+    // Achado durante T11 (unificacao-ofertante-go): `Verba.cdOfertante` agora
+    // aponta direto para `Usuario.documento` (AD-043, antes apontava para um
+    // `Ofertante` autônomo nunca excluído por `deleteUsuarios`) - sem FK
+    // `onDelete: Cascade` nessa relação, um Verba de fixture bloqueia a
+    // exclusão do GO de teste que ela referencia. Chamar depois de
+    // `deletePreCursosPorOfertante` (PreCurso.cdVerba também é FK para
+    // Verba, sem cascade) e antes de `deleteUsuarios`.
+    case "deleteVerbasPorOfertante": {
+      const cdOfertantes = argumento as string[];
+      const { count } = await prisma.verba.deleteMany({
+        where: { cdOfertante: { in: cdOfertantes } },
+      });
+      return { count };
+    }
+
     case "getPosCurso": {
       const cdCurso = argumento as number;
       const posCurso = await prisma.posCurso.findUnique({ where: { cdCurso } });

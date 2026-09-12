@@ -157,6 +157,11 @@ export function deletePreCursosPorOfertante(cdOfertantes: string[]): void {
   executar("deletePreCursosPorOfertante", cdOfertantes);
 }
 
+/** Chamar depois de `deletePreCursosPorOfertante` e antes de `deleteUsuarios` quando o teste criou Verba de fixture - `Verba.cdOfertante` aponta para o GO (Usuario.documento, AD-043) sem `onDelete: Cascade`, então uma Verba de teste bloqueia a exclusão do GO que ela referencia. */
+export function deleteVerbasPorOfertante(cdOfertantes: string[]): void {
+  executar("deleteVerbasPorOfertante", cdOfertantes);
+}
+
 export type PosCursoPersistido = {
   cdCurso: number;
   status: "EM_ANDAMENTO" | "ENCERRADO";

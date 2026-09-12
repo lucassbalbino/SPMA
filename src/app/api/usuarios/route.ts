@@ -27,6 +27,7 @@ import {
   exigeOfertanteEVerba,
   podeGerenciarVerba,
   podeMatricularAluno,
+  resolverEscopoOfertante,
 } from "@/lib/auth/guards";
 import { obterSessao } from "@/lib/auth/session";
 import { usuarioSchema } from "@/lib/validation/schemas/usuario.schema";
@@ -66,15 +67,35 @@ async function criarUsuario(request: Request) {
     );
   }
 
-  // O escopo do novo usuário é resolvido no servidor: quando o criador é GO,
-  // o `cdOfertante` que veio no payload é ignorado (REQ-AU-08).
-  const cdOfertante = resolverOfertante(criador, dados.tipo, dados.cdOfertante);
+  // SPEC_DEVIATION: antes da unificação (AD-043), o alvo GO sempre precisava
+  // de um `cdOfertante` informado apontando para um Ofertante autônomo já
+  // existente - hoje o GO É o próprio Ofertante (design.md, "Consequência de
+  // B1"), então o `cdOfertante` do PRÓPRIO registro criado fica sempre null
+  // quando o alvo é GO, nunca apontando para outro GO. Só VO/AL herdam um
+  // `cdOfertante` de terceiro (do criador GO, via `resolverEscopoOfertante`,
+  // ou informado por AM/GT no payload). Reason: nenhuma tarefa de tasks.md
+  // resolve esse detalhe explicitamente; sem este ajuste, o novo teste
+  // exigido ("AM/GT cria GO com CNPJ válido -> 201") seria estruturalmente
+  // impossível, porque o GO recém-criado não existe ainda para ser apontado
+  // por si mesmo no momento da checagem de existência abaixo.
+  const alvoEhGO = dados.tipo === "GO";
+  const cdOfertante = alvoEhGO
+    ? null
+    : resolverOfertante(
+        { tipo: criador.tipo, cdOfertante: resolverEscopoOfertante(criador) },
+        dados.tipo,
+        dados.cdOfertante,
+      );
 
-  // REQ-OV-04: erro claro quando o Ofertante informado não existe, em vez de
-  // deixar a constraint de FK do MySQL virar um 500 genérico via
-  // `comTratamentoDeErro`.
+  // REQ-OV-04: erro claro quando o GO informado (para vincular um VO/AL) não
+  // existe, em vez de deixar a constraint de FK do MySQL virar um 500
+  // genérico via `comTratamentoDeErro`. Não se aplica ao próprio GO sendo
+  // criado agora (ver acima) - um documento que existe mas não é GO (ex.:
+  // AL) reprova aqui do mesmo jeito que um inexistente.
   if (cdOfertante !== null) {
-    const ofertante = await prisma.ofertante.findUnique({ where: { cdOfertante } });
+    const ofertante = await prisma.usuario.findUnique({
+      where: { documento: cdOfertante, tipo: "GO" },
+    });
 
     if (!ofertante) {
       return NextResponse.json({ erro: "Ofertante informado não existe" }, { status: 400 });
@@ -82,7 +103,7 @@ async function criarUsuario(request: Request) {
   }
 
   // REQ-OV-08: quem não gere verba não cria verba, nem de carona na criação
-  // de um usuário. O GO herda o Ofertante do criador e consome a verba dele.
+  // de um usuário.
   if (dados.verba && !podeGerenciarVerba(criador.tipo)) {
     return NextResponse.json(
       { erro: "Você não tem permissão para criar verba" },
@@ -90,11 +111,13 @@ async function criarUsuario(request: Request) {
     );
   }
 
-  // Um GO criado por AM/GT nasce vinculado ao Ofertante e com a verba dele no
-  // mesmo passo - nunca sem Ofertante para depois se autocadastrar.
+  // Um GO criado por AM/GT nasce com a verba dele no mesmo passo (REQ-OV-08).
+  // A verba passa a mirar o documento do próprio GO recém-criado (dentro da
+  // transação abaixo), não mais um `cdOfertante` informado à parte - a única
+  // exigência que sobra aqui é a presença da verba em si.
   const comVerba = exigeOfertanteEVerba(criador.tipo, dados.tipo);
 
-  if (comVerba && (cdOfertante === null || !dados.verba)) {
+  if (comVerba && !dados.verba) {
     return NextResponse.json(
       { erro: "Gestor Ofertante exige um Ofertante e o valor da verba" },
       { status: 400 },
@@ -139,40 +162,43 @@ async function criarUsuario(request: Request) {
   // verba órfã nem um GO sem orçamento (mesmo motivo da transação do
   // auto-cadastro em POST /api/ofertantes).
   //
-  // CPF duplicado (violação de unicidade, `cpf` é @id) lança uma exceção do
-  // Prisma não tratada aqui de propósito - `comTratamentoDeErro` (REQ-SEC-11)
-  // é quem a converte num 500 genérico com id de correlação, nunca o erro
-  // cru do Prisma no corpo da resposta. Dentro da transação, ela também
-  // desfaz a verba que porventura já tenha sido criada.
+  // Documento duplicado (violação de unicidade, `documento` é @id) lança uma
+  // exceção do Prisma não tratada aqui de propósito - `comTratamentoDeErro`
+  // (REQ-SEC-11) é quem a converte num 500 genérico com id de correlação,
+  // nunca o erro cru do Prisma no corpo da resposta. Dentro da transação,
+  // ela também desfaz a verba que porventura já tenha sido criada.
   const { usuario, verba, avaliacao } = await prisma.$transaction(async (tx) => {
     const usuarioCriado = await tx.usuario.create({
       data: {
-        cpf: dados.cpf,
+        documento: dados.documento,
         nome: dados.nome,
         email: dados.email ?? null,
         tipo: dados.tipo,
         cdOfertante,
-        criadoPor: criador.cpf,
+        criadoPor: criador.documento,
       },
     });
 
     // AVAL-03/04 (par já matriculado, outra avaliação em andamento) não
-    // podem ocorrer aqui: o CPF acabou de ser criado, então não há nenhuma
-    // AvaliacaoAluno anterior - se o CPF já existisse, o create acima teria
-    // falhado na unicidade.
+    // podem ocorrer aqui: o documento acabou de ser criado, então não há
+    // nenhuma AvaliacaoAluno anterior - se o documento já existisse, o
+    // create acima teria falhado na unicidade.
     const avaliacaoCriada = curso
       ? await tx.avaliacaoAluno.create({
-          data: { cpf: usuarioCriado.cpf, cdCurso: curso.cdCurso },
+          data: { cpf: usuarioCriado.documento, cdCurso: curso.cdCurso },
         })
       : null;
 
-    if (!dados.verba || cdOfertante === null) {
+    // Fora do caso GO (único que exige verba, ver `comVerba` acima), um
+    // `cdOfertante` nulo significa que não há para onde apontar a verba -
+    // mesma rede de segurança de antes desta tarefa.
+    if (!dados.verba || (!alvoEhGO && cdOfertante === null)) {
       return { usuario: usuarioCriado, verba: null, avaliacao: avaliacaoCriada };
     }
 
     const verbaCriada = await tx.verba.create({
       data: {
-        cdOfertante,
+        cdOfertante: alvoEhGO ? usuarioCriado.documento : (cdOfertante as string),
         vlVerba: dados.verba.vlVerba,
         dtVerba: dados.verba.dtVerba,
       },
@@ -184,7 +210,7 @@ async function criarUsuario(request: Request) {
   return NextResponse.json(
     {
       usuario: {
-        cpf: usuario.cpf,
+        documento: usuario.documento,
         nome: usuario.nome,
         email: usuario.email,
         tipo: usuario.tipo,
