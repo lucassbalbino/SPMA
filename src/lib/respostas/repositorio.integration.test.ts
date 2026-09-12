@@ -18,7 +18,7 @@ const CPF_ALUNO = "70172121048";
 // conta - CPF_ALUNO é compartilhado pelos demais testes do arquivo.
 const CPF_ALUNO_DESCARTAVEL = "83641290740";
 
-let cdOfertante: number;
+let cdOfertante: string;
 let cdCursoA: number;
 let cdCursoB: number;
 
@@ -26,19 +26,18 @@ describe("repositório de respostas (integration)", () => {
   beforeAll(async () => {
     await prisma.avaliacaoAluno.deleteMany({ where: { cpf: CPF_ALUNO } });
     await prisma.usuario.deleteMany({
-      where: { cpf: { in: [CPF_GO, CPF_ALUNO, CPF_ALUNO_DESCARTAVEL] } },
+      where: { documento: { in: [CPF_GO, CPF_ALUNO, CPF_ALUNO_DESCARTAVEL] } },
     });
 
-    const ofertante = await prisma.ofertante.create({
-      data: { nome: "Ofertante Respostas Teste", uf: "SP" },
-    });
-    cdOfertante = ofertante.cdOfertante;
+    // AD-043: o GO É o ofertante - sem tabela separada, `cdOfertante` é o
+    // próprio `documento` do GO.
+    cdOfertante = CPF_GO;
 
     await prisma.usuario.create({
-      data: { cpf: CPF_GO, nome: "GO Respostas", tipo: "GO", cdOfertante },
+      data: { documento: CPF_GO, nome: "GO Respostas", tipo: "GO", uf: "SP" },
     });
     await prisma.usuario.create({
-      data: { cpf: CPF_ALUNO, nome: "Aluno Respostas", tipo: "AL" },
+      data: { documento: CPF_ALUNO, nome: "Aluno Respostas", tipo: "AL" },
     });
 
     const verba = await prisma.verba.create({
@@ -86,9 +85,8 @@ describe("repositório de respostas (integration)", () => {
     await prisma.preCurso.deleteMany({ where: { cdOfertante } });
     await prisma.verba.deleteMany({ where: { cdOfertante } });
     await prisma.usuario.deleteMany({
-      where: { cpf: { in: [CPF_GO, CPF_ALUNO, CPF_ALUNO_DESCARTAVEL] } },
+      where: { documento: { in: [CPF_GO, CPF_ALUNO, CPF_ALUNO_DESCARTAVEL] } },
     });
-    await prisma.ofertante.deleteMany({ where: { cdOfertante } });
     await prisma.$disconnect();
   });
 
@@ -457,7 +455,7 @@ describe("repositório de respostas (integration)", () => {
   // PESSOAL-07: uma linha por ALUNO - o dado de um não aparece no do outro.
   it("isola o dado pessoal de Alunos diferentes", async () => {
     await prisma.usuario.create({
-      data: { cpf: CPF_ALUNO_DESCARTAVEL, nome: "Aluno Dado Pessoal", tipo: "AL" },
+      data: { documento: CPF_ALUNO_DESCARTAVEL, nome: "Aluno Dado Pessoal", tipo: "AL" },
     });
 
     await gravarRespostas(prisma, { formulario: "dadosPessoais", cpf: CPF_ALUNO }, {
@@ -479,7 +477,7 @@ describe("repositório de respostas (integration)", () => {
       }),
     ).toEqual({ avalPessoalMunicipio: "Belém, PA" });
 
-    await prisma.usuario.delete({ where: { cpf: CPF_ALUNO_DESCARTAVEL } });
+    await prisma.usuario.delete({ where: { documento: CPF_ALUNO_DESCARTAVEL } });
   });
 
   // PESSOAL-26: falha no meio da gravação não deixa nenhuma linha.
@@ -505,7 +503,7 @@ describe("repositório de respostas (integration)", () => {
   // com ON DELETE CASCADE, sem uma linha de código na aplicação.
   it("remove o dado pessoal quando o Aluno é removido", async () => {
     await prisma.usuario.create({
-      data: { cpf: CPF_ALUNO_DESCARTAVEL, nome: "Aluno Descartável", tipo: "AL" },
+      data: { documento: CPF_ALUNO_DESCARTAVEL, nome: "Aluno Descartável", tipo: "AL" },
     });
 
     await gravarRespostas(
@@ -518,7 +516,7 @@ describe("repositório de respostas (integration)", () => {
       await prisma.dadoPessoalAluno.count({ where: { cpf: CPF_ALUNO_DESCARTAVEL } }),
     ).toBe(2);
 
-    await prisma.usuario.delete({ where: { cpf: CPF_ALUNO_DESCARTAVEL } });
+    await prisma.usuario.delete({ where: { documento: CPF_ALUNO_DESCARTAVEL } });
 
     expect(
       await prisma.dadoPessoalAluno.count({ where: { cpf: CPF_ALUNO_DESCARTAVEL } }),

@@ -43,7 +43,7 @@ const RESPOSTAS_DO_CURSO = {
 
 const DATA_ENCERRAMENTO = new Date("2026-02-10T12:00:00Z");
 
-let cdOfertante: number;
+let cdOfertante: string;
 let cdCurso: number;
 
 function sqlDaMigration(): string[] {
@@ -102,21 +102,20 @@ describe("migration de descarte dos dados pessoais da avaliação (integration)"
     const cpfs = [CPF_GO, CPF_ALUNO_COM_PESSOAIS, CPF_ALUNO_SEM_PESSOAIS];
 
     await prisma.avaliacaoAluno.deleteMany({ where: { cpf: { in: cpfs } } });
-    await prisma.usuario.deleteMany({ where: { cpf: { in: cpfs } } });
+    await prisma.usuario.deleteMany({ where: { documento: { in: cpfs } } });
 
-    const ofertante = await prisma.ofertante.create({
-      data: { nome: "Ofertante Descarte Teste", uf: "AM" },
-    });
-    cdOfertante = ofertante.cdOfertante;
+    // AD-043: o GO É o ofertante - sem tabela separada, `cdOfertante` é o
+    // próprio `documento` do GO.
+    cdOfertante = CPF_GO;
 
     await prisma.usuario.create({
-      data: { cpf: CPF_GO, nome: "GO Descarte", tipo: "GO", cdOfertante },
+      data: { documento: CPF_GO, nome: "GO Descarte", tipo: "GO", uf: "AM" },
     });
     await prisma.usuario.create({
-      data: { cpf: CPF_ALUNO_COM_PESSOAIS, nome: "Aluno Com Pessoais", tipo: "AL" },
+      data: { documento: CPF_ALUNO_COM_PESSOAIS, nome: "Aluno Com Pessoais", tipo: "AL" },
     });
     await prisma.usuario.create({
-      data: { cpf: CPF_ALUNO_SEM_PESSOAIS, nome: "Aluno Sem Pessoais", tipo: "AL" },
+      data: { documento: CPF_ALUNO_SEM_PESSOAIS, nome: "Aluno Sem Pessoais", tipo: "AL" },
     });
 
     const verba = await prisma.verba.create({ data: { cdOfertante, vlVerba: 100000 } });
@@ -161,8 +160,7 @@ describe("migration de descarte dos dados pessoais da avaliação (integration)"
     await prisma.avaliacaoAluno.deleteMany({ where: { cpf: { in: cpfs } } });
     await prisma.preCurso.deleteMany({ where: { cdOfertante } });
     await prisma.verba.deleteMany({ where: { cdOfertante } });
-    await prisma.usuario.deleteMany({ where: { cpf: { in: cpfs } } });
-    await prisma.ofertante.deleteMany({ where: { cdOfertante } });
+    await prisma.usuario.deleteMany({ where: { documento: { in: cpfs } } });
     await prisma.$disconnect();
   });
 
@@ -212,7 +210,7 @@ describe("migration de descarte dos dados pessoais da avaliação (integration)"
   // são tocadas - o descarte é só de linha de resposta.
   it("preserva a conta do Aluno, a avaliação e as colunas de estado", async () => {
     const aluno = await prisma.usuario.findUnique({
-      where: { cpf: CPF_ALUNO_COM_PESSOAIS },
+      where: { documento: CPF_ALUNO_COM_PESSOAIS },
     });
     const avaliacao = await prisma.avaliacaoAluno.findUnique({
       where: { cpf_cdCurso: { cpf: CPF_ALUNO_COM_PESSOAIS, cdCurso } },

@@ -8,25 +8,24 @@ import { calcularSaldoVerba, validarAlocacao, validarNovoValorTotal } from "./sa
 
 const CPF_GO_SALDO = "91092093010";
 
-let cdOfertante: number;
+let cdOfertante: string;
 let cdVerbaVazia: number;
 let cdVerbaComCurso: number;
 
 describe("saldo da verba (integration)", () => {
   beforeAll(async () => {
-    await prisma.usuario.deleteMany({ where: { cpf: CPF_GO_SALDO } });
+    await prisma.usuario.deleteMany({ where: { documento: CPF_GO_SALDO } });
 
-    const ofertante = await prisma.ofertante.create({
-      data: { nome: "Ofertante Saldo Teste", uf: "SP" },
-    });
-    cdOfertante = ofertante.cdOfertante;
+    // AD-043: o GO É o ofertante - sem tabela separada, `cdOfertante` é o
+    // próprio `documento` do GO.
+    cdOfertante = CPF_GO_SALDO;
 
     await prisma.usuario.create({
       data: {
-        cpf: CPF_GO_SALDO,
+        documento: CPF_GO_SALDO,
         nome: "GO Saldo Teste",
         tipo: "GO",
-        cdOfertante,
+        uf: "SP",
       },
     });
 
@@ -53,8 +52,7 @@ describe("saldo da verba (integration)", () => {
   afterAll(async () => {
     await prisma.preCurso.deleteMany({ where: { cdOfertante } });
     await prisma.verba.deleteMany({ where: { cdOfertante } });
-    await prisma.usuario.deleteMany({ where: { cpf: CPF_GO_SALDO } });
-    await prisma.ofertante.deleteMany({ where: { cdOfertante } });
+    await prisma.usuario.deleteMany({ where: { documento: CPF_GO_SALDO } });
     await prisma.$disconnect();
   });
 

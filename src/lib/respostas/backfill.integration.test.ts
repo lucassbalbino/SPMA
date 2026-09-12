@@ -36,7 +36,7 @@ const JSON_AVALIACAO = {
   ],
 };
 
-let cdOfertante: number;
+let cdOfertante: string;
 let cdCursoComRespostas: number;
 let cdCursoSemRespostas: number;
 
@@ -131,18 +131,17 @@ describe("migration de backfill das respostas (integration)", () => {
     await recriarColunaJson();
 
     await prisma.avaliacaoAluno.deleteMany({ where: { cpf: CPF_ALUNO } });
-    await prisma.usuario.deleteMany({ where: { cpf: { in: [CPF_GO, CPF_ALUNO] } } });
+    await prisma.usuario.deleteMany({ where: { documento: { in: [CPF_GO, CPF_ALUNO] } } });
 
-    const ofertante = await prisma.ofertante.create({
-      data: { nome: "Ofertante Backfill Teste", uf: "AM" },
-    });
-    cdOfertante = ofertante.cdOfertante;
+    // AD-043: o GO É o ofertante - sem tabela separada, `cdOfertante` é o
+    // próprio `documento` do GO.
+    cdOfertante = CPF_GO;
 
     await prisma.usuario.create({
-      data: { cpf: CPF_GO, nome: "GO Backfill", tipo: "GO", cdOfertante },
+      data: { documento: CPF_GO, nome: "GO Backfill", tipo: "GO", uf: "AM" },
     });
     await prisma.usuario.create({
-      data: { cpf: CPF_ALUNO, nome: "Aluno Backfill", tipo: "AL" },
+      data: { documento: CPF_ALUNO, nome: "Aluno Backfill", tipo: "AL" },
     });
 
     const verba = await prisma.verba.create({
@@ -208,8 +207,7 @@ describe("migration de backfill das respostas (integration)", () => {
     await prisma.posCurso.deleteMany({ where: { cdCurso: cdCursoComRespostas } });
     await prisma.preCurso.deleteMany({ where: { cdOfertante } });
     await prisma.verba.deleteMany({ where: { cdOfertante } });
-    await prisma.usuario.deleteMany({ where: { cpf: { in: [CPF_GO, CPF_ALUNO] } } });
-    await prisma.ofertante.deleteMany({ where: { cdOfertante } });
+    await prisma.usuario.deleteMany({ where: { documento: { in: [CPF_GO, CPF_ALUNO] } } });
     await restaurarColunaJson();
     await prisma.$disconnect();
   });

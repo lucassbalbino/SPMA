@@ -19,7 +19,7 @@ const CHAVE_MULTIPLA = "avalMotivacoesPosPercepcoes";
 const ATUAR_TURISMO = "tem condições de atuar na área do Turismo";
 const RETOMAR_ESTUDOS = "se sente motivado(a) a retomar os estudos";
 
-let cdOfertante: number;
+let cdOfertante: string;
 let cdCurso: number;
 let cdCursoOutro: number;
 
@@ -29,16 +29,15 @@ describe("agregação de respostas por pergunta (integration)", () => {
   beforeAll(async () => {
     await prisma.avaliacaoAluno.deleteMany({ where: { cpf: { in: CPFS_ALUNOS } } });
     await prisma.usuario.deleteMany({
-      where: { cpf: { in: [CPF_GO, ...CPFS_ALUNOS] } },
+      where: { documento: { in: [CPF_GO, ...CPFS_ALUNOS] } },
     });
 
-    const ofertante = await prisma.ofertante.create({
-      data: { nome: "Ofertante Agregacao Teste", uf: "SP" },
-    });
-    cdOfertante = ofertante.cdOfertante;
+    // AD-043: o GO É o ofertante - sem tabela separada, `cdOfertante` é o
+    // próprio `documento` do GO.
+    cdOfertante = CPF_GO;
 
     await prisma.usuario.create({
-      data: { cpf: CPF_GO, nome: "GO Agregacao", tipo: "GO", cdOfertante },
+      data: { documento: CPF_GO, nome: "GO Agregacao", tipo: "GO", uf: "SP" },
     });
 
     const verba = await prisma.verba.create({ data: { cdOfertante, vlVerba: 100000 } });
@@ -56,7 +55,7 @@ describe("agregação de respostas por pergunta (integration)", () => {
     cdCursoOutro = outro.cdCurso;
 
     for (const cpf of CPFS_ALUNOS) {
-      await prisma.usuario.create({ data: { cpf, nome: `Aluno ${cpf}`, tipo: "AL" } });
+      await prisma.usuario.create({ data: { documento: cpf, nome: `Aluno ${cpf}`, tipo: "AL" } });
       await prisma.avaliacaoAluno.create({ data: { cpf, cdCurso } });
     }
 
@@ -101,9 +100,8 @@ describe("agregação de respostas por pergunta (integration)", () => {
     await prisma.preCurso.deleteMany({ where: { cdOfertante } });
     await prisma.verba.deleteMany({ where: { cdOfertante } });
     await prisma.usuario.deleteMany({
-      where: { cpf: { in: [CPF_GO, ...CPFS_ALUNOS] } },
+      where: { documento: { in: [CPF_GO, ...CPFS_ALUNOS] } },
     });
-    await prisma.ofertante.deleteMany({ where: { cdOfertante } });
     await prisma.$disconnect();
   });
 
