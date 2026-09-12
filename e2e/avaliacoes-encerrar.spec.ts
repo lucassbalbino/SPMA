@@ -1,14 +1,18 @@
 // e2e de POST /api/avaliacoes/[cpf]/[cdCurso]/encerrar
 // (AVAL-12, AVAL-13, AVAL-15, AVAL-16, AVAL-17, AVAL-18, AVAL-19).
+//
+// UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
+// identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
+// `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test } from "@playwright/test";
 import {
   criarAvaliacao,
-  criarOfertante,
   criarPreCurso,
   criarVerba,
   deleteAvaliacoesPorCpf,
   deletePreCursosPorOfertante,
   deleteUsuarios,
+  deleteVerbasPorOfertante,
   getAvaliacao,
   upsertUsuario,
 } from "./helpers/db";
@@ -20,21 +24,40 @@ import {
 } from "./helpers/http";
 
 const SENHA = "SenhaValida123";
-const CPF_GO = "60000164410";
-const CPF_AL = "60000178128";
-const CPFS = [CPF_GO, CPF_AL];
 
-let cdOfertante: number;
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `45${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
+const CNPJ_GO = gerarCnpjValido(1);
+const CPF_AL = "60000178128";
+const CPFS = [CNPJ_GO, CPF_AL];
+
 let cdVerba: number;
 
-async function logarComCsrf(cpf: string): Promise<{ idSessao: string; idCsrf: string }> {
+async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+  const res = await cliente.post("/api/auth/login", { data: { documento, senha: SENHA } });
   const idSessao = idSessaoDaResposta(res);
   const idCsrf = idCsrfDaResposta(res);
   await cliente.dispose();
 
-  if (!idSessao || !idCsrf) throw new Error(`Login não emitiu sessão/CSRF para ${cpf}`);
+  if (!idSessao || !idCsrf) throw new Error(`Login não emitiu sessão/CSRF para ${documento}`);
   return { idSessao, idCsrf };
 }
 
@@ -85,27 +108,36 @@ const PARTE_2_COMPLETA_CONCLUIU = {
 };
 
 test.beforeAll(() => {
+  deletePreCursosPorOfertante([CNPJ_GO]);
+  deleteVerbasPorOfertante([CNPJ_GO]);
   deleteUsuarios(CPFS);
 
-  cdOfertante = criarOfertante({ nome: "Ofertante Encerramento Avaliação", uf: "SP" }).cdOfertante;
-  cdVerba = criarVerba({ cdOfertante, vlVerba: 10000 }).cdVerba;
-
-  upsertUsuario({ cpf: CPF_GO, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante });
+  upsertUsuario({
+    cpf: CNPJ_GO,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "Ofertante Encerramento Avaliação",
+    uf: "SP",
+  });
   upsertUsuario({ cpf: CPF_AL, tipo: "AL", senha: SENHA, primeiraVez: false });
+
+  cdVerba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 10000 }).cdVerba;
 });
 
 test.afterAll(() => {
   deleteAvaliacoesPorCpf(CPFS);
-  deletePreCursosPorOfertante([cdOfertante]);
+  deletePreCursosPorOfertante([CNPJ_GO]);
+  deleteVerbasPorOfertante([CNPJ_GO]);
   deleteUsuarios(CPFS);
 });
 
 function criarCursoFixture(): number {
   return criarPreCurso({
-    cdOfertante,
+    cdOfertante: CNPJ_GO,
     cdVerba,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO,
+    criadoPor: CNPJ_GO,
   }).cdCurso;
 }
 
@@ -250,7 +282,7 @@ test("AVAL-18: o GO que fez a matrícula não pode encerrar", async () => {
     respostas: { ...PARTE_1_COMPLETA, ...PARTE_2_COMPLETA_CONCLUIU },
   });
 
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
   const cliente = await novoCliente();
   const res = await cliente.post(`/api/avaliacoes/${CPF_AL}/${cdCurso}/encerrar`, {
     headers: cabecalhosAutenticados(idSessao, idCsrf),

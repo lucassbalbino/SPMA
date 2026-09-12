@@ -615,10 +615,10 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T22: Varredura - `e2e/avaliacoes*.spec.ts` + rotas/páginas de Avaliação
+### T22: Varredura - `e2e/avaliacoes*.spec.ts` + rotas/páginas de Avaliação ✅
 
 **What**: Mesma varredura mecânica de T20, aplicada à família `avaliacoes*.spec.ts` (`avaliacoes.spec.ts`, `-page`, `-novo`, `-id`, `-encerrar`, `-formulario`). Além da varredura de fixture, corrige as rotas e páginas de produção que passam `sessao.usuario`/`usuario` inteiro para `podeAcessarAvaliacao`/`podeGerenciarAvaliacao` (essas guardas esperam um campo `cpf`, que `Usuario` não tem mais - achado do batch worker de T6-T10): `src/app/api/avaliacoes/route.ts` (`where = {cpf: usuario.cpf}`), `src/app/api/avaliacoes/[cpf]/[cdCurso]/route.ts`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/encerrar/route.ts`, `src/app/(protegido)/avaliacoes/page.tsx` (`where = {cpf: usuario.cpf}`), `src/app/(protegido)/avaliacoes/[cpf]/[cdCurso]/page.tsx`. Em todos os call sites, a chamada passa a mapear explicitamente `{ cpf: usuario.documento, ...resto }` em vez de passar `usuario`/`sessao.usuario` inteiro (o parâmetro das guardas continua se chamando `cpf` de propósito - é sempre um Aluno, ver design.md - só a fonte do valor muda). Esta é a última tarefa de código da feature: o gate completo (`Full-feature`) precisa fechar 100% verde aqui.
-**Where**: `e2e/avaliacoes*.spec.ts`, `src/app/api/avaliacoes/route.ts`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/route.ts`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/encerrar/route.ts`, `src/app/(protegido)/avaliacoes/page.tsx`, `src/app/(protegido)/avaliacoes/[cpf]/[cdCurso]/page.tsx`
+**Where**: `e2e/avaliacoes*.spec.ts`, `src/app/api/avaliacoes/route.ts`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/route.ts`, `src/app/api/avaliacoes/[cpf]/[cdCurso]/encerrar/route.ts`, `src/app/(protegido)/avaliacoes/page.tsx`, `src/app/(protegido)/avaliacoes/[cpf]/[cdCurso]/page.tsx` + achado: `src/app/(protegido)/avaliacoes/novo/page.tsx`, `e2e/login-page.spec.ts` (ver Nota de execução)
 **Depends on**: T21
 **Reuses**: mesmo padrão de T20; `podeAcessarAvaliacao`/`podeGerenciarAvaliacao` (T6, assinatura inalterada)
 **Requirement**: UGO-01, UGO-13 (regressão)
@@ -628,10 +628,12 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] Nenhum arquivo da família e2e chama mais `criarOfertante`/`getOfertante`
-- [ ] `npx tsc --noEmit` limpo em todo o repositório (zero erros - primeira vez desde T4 que isso é exigido)
-- [ ] Todos os testes da família continuam verdes com a mesma contagem de antes
-- [ ] Gate check completo passa (última tarefa de código da feature): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Nenhum arquivo da família e2e chama mais `criarOfertante`/`getOfertante`
+- [x] `npx tsc --noEmit` limpo em todo o repositório (zero erros - primeira vez desde T4 que isso é exigido)
+- [x] Todos os testes da família continuam verdes com a mesma contagem de antes (54 testes nos 6 arquivos, mesma contagem de antes da varredura)
+- [x] Gate check completo passa (última tarefa de código da feature): `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` - **Full-feature 100% verde**: lint 0 erros, build ok, typecheck limpo, 657 unit + 70 integration + **257 e2e** (suíte inteira, não escopada - primeira vez desde antes de T4)
+
+**Achados fora do "What" original (mesma classe recorrente do batch inteiro)**: `podeAcessarAvaliacao(sessao.usuario, ...)` e `podeGerenciarAvaliacao(sessao.usuario, ...)` recebiam `sessao.usuario`/`usuario` inteiro, mas essas duas guardas exigem estruturalmente um campo `cpf` que `Usuario` não tem mais (renomeado para `documento` por T4) - exatamente o achado já previsto na nota de "Restruturação pós-Fase-3" do Execution Plan, agora corrigido: cada call site passa `{ ...usuario, cpf: usuario.documento }` (ou equivalente), nunca o objeto sessão inteiro. `avaliacoes/novo/page.tsx` tinha o mesmo bug de T20/T21 (guard `usuario.cdOfertante === null` sempre verdadeiro para GO, bloqueando toda matrícula) - corrigido para `resolverEscopoOfertante`. **Achado só visível ao rodar a suíte e2e INTEIRA (não escopada) pela primeira vez desde T4**: `e2e/login-page.spec.ts` (testa `LoginForm.tsx` pela UI, não `login.spec.ts`/API) esperava a mensagem antiga "CPF inválido" - virou "Documento inválido" pelo mesmo motivo de T16 (schema deixou de ser CPF-específico). Nenhuma task listava esse arquivo; sem rodar a suíte completa antes de fechar T22 ele teria escapado.
 
 **Tests**: e2e
 **Gate**: full

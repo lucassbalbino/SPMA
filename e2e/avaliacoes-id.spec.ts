@@ -1,14 +1,18 @@
 // e2e de GET/PATCH /api/avaliacoes/[cpf]/[cdCurso] (AVAL-07, AVAL-08, AVAL-09,
 // AVAL-10, AVAL-11, AVAL-14, AVAL-17 parte gravação, AVAL-20, AVAL-21, AVAL-23).
+//
+// UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
+// identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
+// `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test } from "@playwright/test";
 import {
   criarAvaliacao,
-  criarOfertante,
   criarPreCurso,
   criarVerba,
   deleteAvaliacoesPorCpf,
   deletePreCursosPorOfertante,
   deleteUsuarios,
+  deleteVerbasPorOfertante,
   encerrarAvaliacaoFixture,
   getAvaliacao,
   upsertUsuario,
@@ -22,9 +26,28 @@ import {
 
 const SENHA = "SenhaValida123";
 
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `44${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
 const CPF_GT = "60000000060";
-const CPF_GO = "60000013714";
-const CPF_GO_2 = "60000027421";
+const CNPJ_GO = gerarCnpjValido(1);
+const CNPJ_GO_2 = gerarCnpjValido(2);
 const CPF_VO = "60000041173";
 const CPF_AM = "60000054828";
 const CPF_VT = "60000150703";
@@ -37,8 +60,8 @@ const CPF_AL_PRESERVA = "60000424773";
 
 const CPFS = [
   CPF_GT,
-  CPF_GO,
-  CPF_GO_2,
+  CNPJ_GO,
+  CNPJ_GO_2,
   CPF_VO,
   CPF_AM,
   CPF_VT,
@@ -72,38 +95,42 @@ const PARTE_1_RESTANTE = {
   avalExpectRenda: "Média",
 };
 
-let cdOfertante: number;
-let cdOfertante2: number;
 let cdCurso: number;
 
-async function logarComCsrf(cpf: string): Promise<{ idSessao: string; idCsrf: string }> {
+async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+  const res = await cliente.post("/api/auth/login", { data: { documento, senha: SENHA } });
   const idSessao = idSessaoDaResposta(res);
   const idCsrf = idCsrfDaResposta(res);
   await cliente.dispose();
 
-  if (!idSessao || !idCsrf) throw new Error(`Login não emitiu sessão/CSRF para ${cpf}`);
+  if (!idSessao || !idCsrf) throw new Error(`Login não emitiu sessão/CSRF para ${documento}`);
   return { idSessao, idCsrf };
 }
 
 test.beforeAll(() => {
+  deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
+  deleteVerbasPorOfertante([CNPJ_GO, CNPJ_GO_2]);
   deleteUsuarios(CPFS);
 
-  cdOfertante = criarOfertante({ nome: "Ofertante Avaliação Id Teste", uf: "SP" }).cdOfertante;
-  cdOfertante2 = criarOfertante({ nome: "Ofertante Avaliação Id Teste 2", uf: "RJ" }).cdOfertante;
-  const cdVerba = criarVerba({ cdOfertante, vlVerba: 10000 }).cdVerba;
-
   upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
-  upsertUsuario({ cpf: CPF_GO, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante });
   upsertUsuario({
-    cpf: CPF_GO_2,
+    cpf: CNPJ_GO,
     tipo: "GO",
     senha: SENHA,
     primeiraVez: false,
-    cdOfertante: cdOfertante2,
+    nome: "Ofertante Avaliação Id Teste",
+    uf: "SP",
   });
-  upsertUsuario({ cpf: CPF_VO, tipo: "VO", senha: SENHA, primeiraVez: false, cdOfertante });
+  upsertUsuario({
+    cpf: CNPJ_GO_2,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "Ofertante Avaliação Id Teste 2",
+    uf: "RJ",
+  });
+  upsertUsuario({ cpf: CPF_VO, tipo: "VO", senha: SENHA, primeiraVez: false, cdOfertante: CNPJ_GO });
   upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_VT, tipo: "VT", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_AL_PROGRESSIVO, tipo: "AL", senha: SENHA, primeiraVez: false });
@@ -113,11 +140,13 @@ test.beforeAll(() => {
   upsertUsuario({ cpf: CPF_AL_OUTRO, tipo: "AL", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_AL_PRESERVA, tipo: "AL", senha: SENHA, primeiraVez: false });
 
+  const cdVerba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 10000 }).cdVerba;
+
   cdCurso = criarPreCurso({
-    cdOfertante,
+    cdOfertante: CNPJ_GO,
     cdVerba,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO,
+    criadoPor: CNPJ_GO,
   }).cdCurso;
 
   criarAvaliacao({ cpf: CPF_AL_PROGRESSIVO, cdCurso });
@@ -135,7 +164,8 @@ test.beforeAll(() => {
 
 test.afterAll(() => {
   deleteAvaliacoesPorCpf(CPFS);
-  deletePreCursosPorOfertante([cdOfertante, cdOfertante2]);
+  deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
+  deleteVerbasPorOfertante([CNPJ_GO, CNPJ_GO_2]);
   deleteUsuarios(CPFS);
 });
 
@@ -287,7 +317,7 @@ test("AVAL-17: gravação em avaliação já ENCERRADO é rejeitada com 409, dad
 });
 
 test("AVAL-09: o GO que fez a matrícula não pode gravar", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/avaliacoes/${CPF_AL_ACESSO}/${cdCurso}`, {
@@ -377,7 +407,7 @@ test("AVAL-20: outro Aluno consultando recebe 403", async () => {
 });
 
 test("AVAL-21: GO/VO do Ofertante do curso consultam -> 200", async () => {
-  const { idSessao: idSessaoGo, idCsrf: idCsrfGo } = await logarComCsrf(CPF_GO);
+  const { idSessao: idSessaoGo, idCsrf: idCsrfGo } = await logarComCsrf(CNPJ_GO);
   const clienteGo = await novoCliente();
   const resGo = await clienteGo.get(`/api/avaliacoes/${CPF_AL_ACESSO}/${cdCurso}`, {
     headers: cabecalhosAutenticados(idSessaoGo, idCsrfGo),
@@ -395,7 +425,7 @@ test("AVAL-21: GO/VO do Ofertante do curso consultam -> 200", async () => {
 });
 
 test("AVAL-21/AVAL-23: GO/VO de outro Ofertante recebem 403", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO_2);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO_2);
 
   const cliente = await novoCliente();
   const res = await cliente.get(`/api/avaliacoes/${CPF_AL_ACESSO}/${cdCurso}`, {

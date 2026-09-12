@@ -1,61 +1,87 @@
 // e2e de /avaliacoes/[cpf]/[cdCurso] (T9), pela UI real. Cobre AVAL-07 a
 // AVAL-19 na camada de tela.
+//
+// UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
+// identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
+// `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   criarAvaliacao,
-  criarOfertante,
   criarPreCurso,
   criarVerba,
   deleteAvaliacoesPorCpf,
   deletePreCursosPorOfertante,
   deleteUsuarios,
+  deleteVerbasPorOfertante,
   upsertUsuario,
 } from "./helpers/db";
 
 const SENHA = "SenhaValida123";
-const CPF_GO_A = "60000369900";
+
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `46${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
+const CNPJ_GO_A = gerarCnpjValido(1);
 const CPF_AL_A = "60000383643";
 const CPF_AL_OUTRO = "60000397350";
 
-let cdOfertanteA: number;
 let cdVerbaA: number;
 
 test.beforeAll(() => {
-  deleteUsuarios([CPF_GO_A, CPF_AL_A, CPF_AL_OUTRO]);
-
-  cdOfertanteA = criarOfertante({ nome: "Ofertante Formulário Avaliação A", uf: "SP" }).cdOfertante;
-  cdVerbaA = criarVerba({ cdOfertante: cdOfertanteA, vlVerba: 10000 }).cdVerba;
+  deletePreCursosPorOfertante([CNPJ_GO_A]);
+  deleteVerbasPorOfertante([CNPJ_GO_A]);
+  deleteUsuarios([CNPJ_GO_A, CPF_AL_A, CPF_AL_OUTRO]);
 
   upsertUsuario({
-    cpf: CPF_GO_A,
+    cpf: CNPJ_GO_A,
     tipo: "GO",
     senha: SENHA,
     primeiraVez: false,
-    cdOfertante: cdOfertanteA,
+    nome: "Ofertante Formulário Avaliação A",
+    uf: "SP",
   });
   upsertUsuario({ cpf: CPF_AL_A, tipo: "AL", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_AL_OUTRO, tipo: "AL", senha: SENHA, primeiraVez: false });
+
+  cdVerbaA = criarVerba({ cdOfertante: CNPJ_GO_A, vlVerba: 10000 }).cdVerba;
 });
 
 test.afterAll(() => {
   deleteAvaliacoesPorCpf([CPF_AL_A, CPF_AL_OUTRO]);
-  deletePreCursosPorOfertante([cdOfertanteA]);
-  deleteUsuarios([CPF_GO_A, CPF_AL_A, CPF_AL_OUTRO]);
+  deletePreCursosPorOfertante([CNPJ_GO_A]);
+  deleteVerbasPorOfertante([CNPJ_GO_A]);
+  deleteUsuarios([CNPJ_GO_A, CPF_AL_A, CPF_AL_OUTRO]);
 });
 
 function criarAvaliacaoFixture(cpf: string): number {
   const cdCurso = criarPreCurso({
-    cdOfertante: cdOfertanteA,
+    cdOfertante: CNPJ_GO_A,
     cdVerba: cdVerbaA,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO_A,
+    criadoPor: CNPJ_GO_A,
   }).cdCurso;
   criarAvaliacao({ cpf, cdCurso });
   return cdCurso;
 }
 
-async function login(page: Page, cpf: string) {
-  const res = await page.request.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+async function login(page: Page, documento: string) {
+  const res = await page.request.post("/api/auth/login", { data: { documento, senha: SENHA } });
   expect(res.ok()).toBe(true);
 }
 
@@ -395,7 +421,7 @@ test("um GO do Ofertante do curso abre a tela -> vê os dados, sem controles de 
 }) => {
   const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
 
-  await login(page, CPF_GO_A);
+  await login(page, CNPJ_GO_A);
   await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
 
   await expect(page.getByTestId("form-avaliacao")).toBeVisible();

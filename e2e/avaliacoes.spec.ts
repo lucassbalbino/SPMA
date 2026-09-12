@@ -1,13 +1,17 @@
 // e2e de POST/GET /api/avaliacoes (AVAL-01 a 06, AVAL-22).
+//
+// UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
+// identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
+// `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test } from "@playwright/test";
 import {
   criarAvaliacao,
-  criarOfertante,
   criarPreCurso,
   criarVerba,
   deleteAvaliacoesPorCpf,
   deletePreCursosPorOfertante,
   deleteUsuarios,
+  deleteVerbasPorOfertante,
   getAvaliacao,
   upsertUsuario,
 } from "./helpers/db";
@@ -20,87 +24,112 @@ import {
 
 const SENHA = "SenhaValida123";
 
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `41${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
 const CPF_GT = "52161005120";
-const CPF_GO = "52171005246";
-const CPF_GO_2 = "52181005362";
+const CNPJ_GO = gerarCnpjValido(1);
+const CNPJ_GO_2 = gerarCnpjValido(2);
 const CPF_AL = "52191005489";
 const CPF_AL_JA_MATRICULADO = "35379907580";
 const CPF_AL_RN12 = "52601815906";
 const CPF_INEXISTENTE = "11144477735";
 
-const CPFS = [CPF_GT, CPF_GO, CPF_GO_2, CPF_AL, CPF_AL_JA_MATRICULADO, CPF_AL_RN12];
+const CPFS = [CPF_GT, CNPJ_GO, CNPJ_GO_2, CPF_AL, CPF_AL_JA_MATRICULADO, CPF_AL_RN12];
 
-let cdOfertante: number;
-let cdOfertante2: number;
 let cdCursoDoGo: number;
 let cdCursoDoGo2: number;
 let cdCursoJaComAvaliacao: number;
 let cdCursoParaTesteEscopo: number;
 let cdCursoRN12Alvo: number;
 
-async function logarComCsrf(cpf: string): Promise<{ idSessao: string; idCsrf: string }> {
+async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+  const res = await cliente.post("/api/auth/login", { data: { documento, senha: SENHA } });
   const idSessao = idSessaoDaResposta(res);
   const idCsrf = idCsrfDaResposta(res);
   await cliente.dispose();
 
-  if (!idSessao || !idCsrf) throw new Error(`Login não emitiu sessão/CSRF para ${cpf}`);
+  if (!idSessao || !idCsrf) throw new Error(`Login não emitiu sessão/CSRF para ${documento}`);
   return { idSessao, idCsrf };
 }
 
 test.beforeAll(() => {
+  deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
+  deleteVerbasPorOfertante([CNPJ_GO, CNPJ_GO_2]);
   deleteUsuarios(CPFS);
 
-  cdOfertante = criarOfertante({ nome: "Ofertante Avaliação Teste", uf: "SP" }).cdOfertante;
-  cdOfertante2 = criarOfertante({ nome: "Ofertante Avaliação Teste 2", uf: "RJ" }).cdOfertante;
-  const cdVerba = criarVerba({ cdOfertante, vlVerba: 10000 }).cdVerba;
-  const cdVerba2 = criarVerba({ cdOfertante: cdOfertante2, vlVerba: 10000 }).cdVerba;
-
   upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
-  upsertUsuario({ cpf: CPF_GO, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante });
   upsertUsuario({
-    cpf: CPF_GO_2,
+    cpf: CNPJ_GO,
     tipo: "GO",
     senha: SENHA,
     primeiraVez: false,
-    cdOfertante: cdOfertante2,
+    nome: "Ofertante Avaliação Teste",
+    uf: "SP",
+  });
+  upsertUsuario({
+    cpf: CNPJ_GO_2,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "Ofertante Avaliação Teste 2",
+    uf: "RJ",
   });
   upsertUsuario({ cpf: CPF_AL, tipo: "AL", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_AL_JA_MATRICULADO, tipo: "AL", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_AL_RN12, tipo: "AL", senha: SENHA, primeiraVez: false });
 
+  const cdVerba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 10000 }).cdVerba;
+  const cdVerba2 = criarVerba({ cdOfertante: CNPJ_GO_2, vlVerba: 10000 }).cdVerba;
+
   cdCursoDoGo = criarPreCurso({
-    cdOfertante,
+    cdOfertante: CNPJ_GO,
     cdVerba,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO,
+    criadoPor: CNPJ_GO,
   }).cdCurso;
   cdCursoDoGo2 = criarPreCurso({
-    cdOfertante: cdOfertante2,
+    cdOfertante: CNPJ_GO_2,
     cdVerba: cdVerba2,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO_2,
+    criadoPor: CNPJ_GO_2,
   }).cdCurso;
   cdCursoJaComAvaliacao = criarPreCurso({
-    cdOfertante,
+    cdOfertante: CNPJ_GO,
     cdVerba,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO,
+    criadoPor: CNPJ_GO,
   }).cdCurso;
   criarAvaliacao({ cpf: CPF_AL_JA_MATRICULADO, cdCurso: cdCursoJaComAvaliacao });
 
   cdCursoParaTesteEscopo = criarPreCurso({
-    cdOfertante,
+    cdOfertante: CNPJ_GO,
     cdVerba,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO,
+    criadoPor: CNPJ_GO,
   }).cdCurso;
   cdCursoRN12Alvo = criarPreCurso({
-    cdOfertante,
+    cdOfertante: CNPJ_GO,
     cdVerba,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO,
+    criadoPor: CNPJ_GO,
   }).cdCurso;
   // RN-12: CPF_AL_RN12 já tem uma avaliação EM_ANDAMENTO noutro curso.
   criarAvaliacao({ cpf: CPF_AL_RN12, cdCurso: cdCursoDoGo2 });
@@ -108,12 +137,13 @@ test.beforeAll(() => {
 
 test.afterAll(() => {
   deleteAvaliacoesPorCpf(CPFS);
-  deletePreCursosPorOfertante([cdOfertante, cdOfertante2]);
+  deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
+  deleteVerbasPorOfertante([CNPJ_GO, CNPJ_GO_2]);
   deleteUsuarios(CPFS);
 });
 
 test("GO matricula um Aluno num curso do próprio Ofertante -> 201, EM_ANDAMENTO", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/avaliacoes", {
@@ -136,7 +166,7 @@ test("GO matricula um Aluno num curso do próprio Ofertante -> 201, EM_ANDAMENTO
 });
 
 test("AVAL-05 (404): CPF que não corresponde a nenhum usuário", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/avaliacoes", {
@@ -149,7 +179,7 @@ test("AVAL-05 (404): CPF que não corresponde a nenhum usuário", async () => {
 });
 
 test("AVAL-02 (400): CPF corresponde a um usuário que não é Aluno", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/avaliacoes", {
@@ -163,7 +193,7 @@ test("AVAL-02 (400): CPF corresponde a um usuário que não é Aluno", async () 
 
 test("AVAL-03 (409): par (CPF, cdCurso) já matriculado, nenhum novo registro, registro existente inalterado", async () => {
   const antes = getAvaliacao(CPF_AL_JA_MATRICULADO, cdCursoJaComAvaliacao);
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/avaliacoes", {
@@ -180,7 +210,7 @@ test("AVAL-03 (409): par (CPF, cdCurso) já matriculado, nenhum novo registro, r
 
 test("AVAL-04/RN-12 (409): Aluno já tem outra avaliação EM_ANDAMENTO noutro curso, nada criado nem alterado", async () => {
   const antes = getAvaliacao(CPF_AL_RN12, cdCursoDoGo2);
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/avaliacoes", {
@@ -199,7 +229,7 @@ test("AVAL-04/RN-12 (409): Aluno já tem outra avaliação EM_ANDAMENTO noutro c
 });
 
 test("cdCurso inexistente é rejeitado com 404", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/avaliacoes", {
@@ -212,7 +242,7 @@ test("cdCurso inexistente é rejeitado com 404", async () => {
 });
 
 test("AVAL-05 (403): curso de outro Ofertante é rejeitado, nenhum registro criado", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO_2);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO_2);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/avaliacoes", {
@@ -240,7 +270,7 @@ test("AVAL-06 (403): usuário não-GO (Aluno) não pode matricular", async () =>
 });
 
 test("AVAL-22: GO só lista avaliações de cursos do próprio Ofertante", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.get("/api/avaliacoes", {
@@ -251,7 +281,7 @@ test("AVAL-22: GO só lista avaliações de cursos do próprio Ofertante", async
   const corpo = await res.json();
   expect(corpo.avaliacoes.length).toBeGreaterThan(0);
   expect(
-    corpo.avaliacoes.every((a: { cdOfertante: number }) => a.cdOfertante === cdOfertante),
+    corpo.avaliacoes.every((a: { cdOfertante: string }) => a.cdOfertante === CNPJ_GO),
   ).toBe(true);
 
   await cliente.dispose();
@@ -261,14 +291,14 @@ test("AVAL-22: GT lista avaliações de qualquer Ofertante", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CPF_GT);
 
   const cliente = await novoCliente();
-  const res = await cliente.get(`/api/avaliacoes?cdOfertante=${cdOfertante}`, {
+  const res = await cliente.get(`/api/avaliacoes?cdOfertante=${CNPJ_GO}`, {
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(200);
   const corpo = await res.json();
   expect(
-    corpo.avaliacoes.some((a: { cdOfertante: number }) => a.cdOfertante === cdOfertante),
+    corpo.avaliacoes.some((a: { cdOfertante: string }) => a.cdOfertante === CNPJ_GO),
   ).toBe(true);
 
   await cliente.dispose();

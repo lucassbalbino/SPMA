@@ -48,8 +48,15 @@ async function encerrarAvaliacao(request: Request, { params }: Contexto) {
     return NextResponse.json({ erro: "Avaliação não encontrada" }, { status: 404 });
   }
 
-  // AVAL-18: só o próprio Aluno encerra, nunca o GO que fez a matrícula.
-  if (!podeGerenciarAvaliacao(sessao.usuario, avaliacao.cpf)) {
+  // AVAL-18: só o próprio Aluno encerra, nunca o GO que fez a matrícula. A
+  // guarda continua recebendo `cpf` (é sempre a identidade de um Aluno) - só
+  // a fonte do valor muda: `usuario.documento` (renomeado por T4).
+  if (
+    !podeGerenciarAvaliacao(
+      { tipo: sessao.usuario.tipo, cpf: sessao.usuario.documento },
+      avaliacao.cpf,
+    )
+  ) {
     return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
   }
 

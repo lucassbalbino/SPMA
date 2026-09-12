@@ -50,11 +50,14 @@ async function consultarAvaliacao(_request: Request, { params }: Contexto) {
     return NextResponse.json({ erro: "Avaliação não encontrada" }, { status: 404 });
   }
 
+  // As guardas de Avaliação continuam recebendo `cpf` (é sempre a
+  // identidade de um Aluno, ver design.md) - só a fonte do valor muda:
+  // `usuario.documento`, não mais `usuario.cpf` (renomeado por T4).
   if (
-    !podeAcessarAvaliacao(sessao.usuario, {
-      cpfAluno: avaliacao.cpf,
-      cdOfertante: avaliacao.curso.cdOfertante,
-    })
+    !podeAcessarAvaliacao(
+      { ...sessao.usuario, cpf: sessao.usuario.documento },
+      { cpfAluno: avaliacao.cpf, cdOfertante: avaliacao.curso.cdOfertante },
+    )
   ) {
     return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
   }
@@ -99,7 +102,12 @@ async function gravarRespostasAvaliacao(request: Request, { params }: Contexto) 
   }
 
   // AVAL-09: só o próprio Aluno grava, nunca o GO que fez a matrícula.
-  if (!podeGerenciarAvaliacao(sessao.usuario, avaliacaoExistente.cpf)) {
+  if (
+    !podeGerenciarAvaliacao(
+      { tipo: sessao.usuario.tipo, cpf: sessao.usuario.documento },
+      avaliacaoExistente.cpf,
+    )
+  ) {
     return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
   }
 

@@ -63,7 +63,11 @@ test("CA-AU-03: CPF com dígito verificador inválido é rejeitado na UI sem sai
   await page.getByLabel("Senha").fill(SENHA);
   await page.getByRole("button", { name: "Entrar" }).click();
 
-  await expect(erroDoFormulario(page)).toHaveText("CPF inválido");
+  // UGO-10: `loginSchema` (T9) delega para `validarDocumento` (CPF ou CNPJ
+  // pelo comprimento) - a mensagem deixou de ser "CPF inválido" porque o
+  // campo já não é CPF-específico (o mesmo formulário aceita o CNPJ de um
+  // GO, rótulo "CPF" mantido por precedente de LoginForm.tsx).
+  await expect(erroDoFormulario(page)).toHaveText("Documento inválido");
   expect(new URL(page.url()).pathname).toBe("/login");
 
   const cookies = await page.context().cookies();

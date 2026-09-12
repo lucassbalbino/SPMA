@@ -31,9 +31,14 @@ export default async function AvaliacaoPage({ params }: Props) {
     include: { curso: { select: { cdOfertante: true } } },
   });
 
+  // As guardas de Avaliação continuam recebendo `cpf` (é sempre a
+  // identidade de um Aluno) - só a fonte do valor muda: `usuario.documento`,
+  // não mais `usuario.cpf` (renomeado por T4).
+  const usuarioComoAluno = { ...usuario, cpf: usuario.documento };
+
   if (
     !avaliacao ||
-    !podeAcessarAvaliacao(usuario, {
+    !podeAcessarAvaliacao(usuarioComoAluno, {
       cpfAluno: avaliacao.cpf,
       cdOfertante: avaliacao.curso.cdOfertante,
     })
@@ -42,7 +47,8 @@ export default async function AvaliacaoPage({ params }: Props) {
   }
 
   const podeEditar =
-    avaliacao.status === "EM_ANDAMENTO" && podeGerenciarAvaliacao(usuario, avaliacao.cpf);
+    avaliacao.status === "EM_ANDAMENTO" &&
+    podeGerenciarAvaliacao(usuarioComoAluno, avaliacao.cpf);
 
   const respostasIniciais = (await lerRespostas(prisma, {
     formulario: "avaliacao",

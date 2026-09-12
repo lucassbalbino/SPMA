@@ -1,49 +1,87 @@
 // e2e de /avaliacoes (T7), pela UI real. Cobre AVAL-22 na camada de tela.
+//
+// UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
+// identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
+// `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test } from "@playwright/test";
 import {
   criarAvaliacao,
-  criarOfertante,
   criarPreCurso,
   criarVerba,
   deleteAvaliacoesPorCpf,
   deletePreCursosPorOfertante,
   deleteUsuarios,
+  deleteVerbasPorOfertante,
   upsertUsuario,
 } from "./helpers/db";
 
 const SENHA = "SenhaValida123";
+
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `42${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
 const CPF_GT = "60000274003";
-const CPF_GO = "60000287768";
+const CNPJ_GO = gerarCnpjValido(1);
+const CNPJ_GO_2 = gerarCnpjValido(2);
 const CPF_AL = "60000301426";
 
-const CPFS = [CPF_GT, CPF_GO, CPF_AL];
+const CPFS = [CPF_GT, CNPJ_GO, CNPJ_GO_2, CPF_AL];
 
-let cdOfertante: number;
-let cdOfertante2: number;
 let cdCursoDoGo: number;
 
 test.beforeAll(() => {
+  deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
+  deleteVerbasPorOfertante([CNPJ_GO, CNPJ_GO_2]);
   deleteUsuarios(CPFS);
 
-  cdOfertante = criarOfertante({ nome: "Ofertante Listagem Avaliação", uf: "SP" }).cdOfertante;
-  cdOfertante2 = criarOfertante({ nome: "Ofertante Listagem Avaliação 2", uf: "RJ" }).cdOfertante;
-  const verba = criarVerba({ cdOfertante, vlVerba: 5000 });
-  const verba2 = criarVerba({ cdOfertante: cdOfertante2, vlVerba: 5000 });
-
+  upsertUsuario({
+    cpf: CNPJ_GO,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "Ofertante Listagem Avaliação",
+    uf: "SP",
+  });
+  upsertUsuario({
+    cpf: CNPJ_GO_2,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "Ofertante Listagem Avaliação 2",
+    uf: "RJ",
+  });
   upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
-  upsertUsuario({ cpf: CPF_GO, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante });
   upsertUsuario({ cpf: CPF_AL, tipo: "AL", senha: SENHA, primeiraVez: false });
 
+  const verba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 5000 });
+  const verba2 = criarVerba({ cdOfertante: CNPJ_GO_2, vlVerba: 5000 });
+
   cdCursoDoGo = criarPreCurso({
-    cdOfertante,
+    cdOfertante: CNPJ_GO,
     cdVerba: verba.cdVerba,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO,
+    criadoPor: CNPJ_GO,
   }).cdCurso;
   criarAvaliacao({ cpf: CPF_AL, cdCurso: cdCursoDoGo });
 
   const cdCursoDoGo2 = criarPreCurso({
-    cdOfertante: cdOfertante2,
+    cdOfertante: CNPJ_GO_2,
     cdVerba: verba2.cdVerba,
     vlCursoAlocado: 100,
     criadoPor: CPF_GT,
@@ -53,13 +91,14 @@ test.beforeAll(() => {
 
 test.afterAll(() => {
   deleteAvaliacoesPorCpf(CPFS);
-  deletePreCursosPorOfertante([cdOfertante, cdOfertante2]);
+  deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
+  deleteVerbasPorOfertante([CNPJ_GO, CNPJ_GO_2]);
   deleteUsuarios(CPFS);
 });
 
 test("AVAL-22: GO só vê as avaliações de cursos do próprio Ofertante", async ({ page }) => {
   const login = await page.request.post("/api/auth/login", {
-    data: { cpf: CPF_GO, senha: SENHA },
+    data: { documento: CNPJ_GO, senha: SENHA },
   });
   expect(login.ok()).toBe(true);
 
@@ -73,7 +112,7 @@ test("AVAL-22: GO só vê as avaliações de cursos do próprio Ofertante", asyn
 
 test("AVAL-22: GT vê todas as avaliações cadastradas", async ({ page }) => {
   const login = await page.request.post("/api/auth/login", {
-    data: { cpf: CPF_GT, senha: SENHA },
+    data: { documento: CPF_GT, senha: SENHA },
   });
   expect(login.ok()).toBe(true);
 
@@ -85,7 +124,7 @@ test("AVAL-22: GT vê todas as avaliações cadastradas", async ({ page }) => {
 
 test("AVAL-22: Aluno vê a(s) própria(s) avaliação(ões)", async ({ page }) => {
   const login = await page.request.post("/api/auth/login", {
-    data: { cpf: CPF_AL, senha: SENHA },
+    data: { documento: CPF_AL, senha: SENHA },
   });
   expect(login.ok()).toBe(true);
 
@@ -97,7 +136,7 @@ test("AVAL-22: Aluno vê a(s) própria(s) avaliação(ões)", async ({ page }) =
 
 test("cada item lista o status e linka para a tela de detalhe", async ({ page }) => {
   const login = await page.request.post("/api/auth/login", {
-    data: { cpf: CPF_GO, senha: SENHA },
+    data: { documento: CNPJ_GO, senha: SENHA },
   });
   expect(login.ok()).toBe(true);
 

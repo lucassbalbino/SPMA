@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { obterSessao } from "@/lib/auth/session";
-import { podeMatricularAluno } from "@/lib/auth/guards";
+import { podeMatricularAluno, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { matricularAlunoSchema } from "@/lib/validation/schemas/avaliacao.schema";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
@@ -34,7 +34,7 @@ async function matricularAluno(request: Request) {
   const { cpf, cdCurso } = entrada.data;
 
   // AVAL-02: CPF precisa corresponder a um usuário do tipo AL já cadastrado.
-  const aluno = await prisma.usuario.findUnique({ where: { cpf } });
+  const aluno = await prisma.usuario.findUnique({ where: { documento: cpf } });
 
   if (!aluno) {
     return NextResponse.json({ erro: "Aluno não encontrado" }, { status: 404 });
@@ -103,21 +103,22 @@ async function listarAvaliacoes(request: Request) {
   const cdOfertanteFiltro = new URL(request.url).searchParams.get("cdOfertante");
 
   // AVAL-22: mesmo padrão de escopo já usado em pos-cursos/route.ts - GO/VO
-  // nunca confiam num filtro vindo do cliente; AL só vê a própria.
-  let where: { curso?: { cdOfertante?: number }; cpf?: string } = {};
+  // nunca confiam num filtro vindo do cliente (`resolverEscopoOfertante`,
+  // T6/UGO-14); AL só vê a própria.
+  let where: { curso?: { cdOfertante?: string }; cpf?: string } = {};
 
   switch (usuario.tipo) {
     case "AM":
     case "GT":
     case "VT":
-      where = cdOfertanteFiltro ? { curso: { cdOfertante: Number(cdOfertanteFiltro) } } : {};
+      where = cdOfertanteFiltro ? { curso: { cdOfertante: cdOfertanteFiltro } } : {};
       break;
     case "GO":
     case "VO":
-      where = { curso: { cdOfertante: usuario.cdOfertante ?? -1 } };
+      where = { curso: { cdOfertante: resolverEscopoOfertante(usuario) ?? "" } };
       break;
     case "AL":
-      where = { cpf: usuario.cpf };
+      where = { cpf: usuario.documento };
       break;
   }
 

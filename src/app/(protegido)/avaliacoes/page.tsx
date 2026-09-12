@@ -4,7 +4,7 @@
 // (via o PreCurso vinculado - AvaliacaoAluno não tem CD_Ofertante próprio),
 // Aluno só a(s) própria(s) (via o próprio CPF).
 import Link from "next/link";
-import { requireSession } from "@/lib/auth/guards";
+import { requireSession, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function AvaliacoesPage() {
   const { usuario } = await requireSession();
 
-  let where: { curso?: { cdOfertante?: number }; cpf?: string } = {};
+  let where: { curso?: { cdOfertante?: string }; cpf?: string } = {};
 
   switch (usuario.tipo) {
     case "AM":
@@ -22,10 +22,13 @@ export default async function AvaliacoesPage() {
       break;
     case "GO":
     case "VO":
-      where = { curso: { cdOfertante: usuario.cdOfertante ?? -1 } };
+      // UGO-14/AD-043: escopo pelo próprio documento do GO, ou pelo GO ao
+      // qual o VO está vinculado - nunca `usuario.cdOfertante` direto (o do
+      // próprio GO é sempre `null`).
+      where = { curso: { cdOfertante: resolverEscopoOfertante(usuario) ?? "" } };
       break;
     case "AL":
-      where = { cpf: usuario.cpf };
+      where = { cpf: usuario.documento };
       break;
   }
 
