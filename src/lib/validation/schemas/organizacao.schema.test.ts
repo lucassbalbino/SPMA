@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { ofertanteSchema } from "./ofertante.schema";
+import { organizacaoSchema } from "./organizacao.schema";
 
-describe("ofertanteSchema", () => {
+describe("organizacaoSchema", () => {
   it("rejeita quando nome está ausente", () => {
-    const result = ofertanteSchema.safeParse({
+    const result = organizacaoSchema.safeParse({
       uf: "SP",
     });
 
@@ -11,7 +11,7 @@ describe("ofertanteSchema", () => {
   });
 
   it("rejeita quando uf está ausente", () => {
-    const result = ofertanteSchema.safeParse({
+    const result = organizacaoSchema.safeParse({
       nome: "Instituto Exemplo",
     });
 
@@ -19,7 +19,7 @@ describe("ofertanteSchema", () => {
   });
 
   it("rejeita uf com tamanho diferente de 2 caracteres", () => {
-    const result = ofertanteSchema.safeParse({
+    const result = organizacaoSchema.safeParse({
       nome: "Instituto Exemplo",
       uf: "SPP",
     });
@@ -28,7 +28,7 @@ describe("ofertanteSchema", () => {
   });
 
   it("aceita payload válido com apenas os campos obrigatórios", () => {
-    const result = ofertanteSchema.safeParse({
+    const result = organizacaoSchema.safeParse({
       nome: "Instituto Exemplo",
       uf: "SP",
     });
@@ -37,7 +37,7 @@ describe("ofertanteSchema", () => {
   });
 
   it("aceita payload válido com todos os campos opcionais preenchidos", () => {
-    const result = ofertanteSchema.safeParse({
+    const result = organizacaoSchema.safeParse({
       nome: "Instituto Exemplo",
       responsavel: "Fulano de Tal",
       email: "contato@exemplo.org",

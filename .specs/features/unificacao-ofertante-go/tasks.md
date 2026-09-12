@@ -301,7 +301,7 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T10: Substituir `ofertante.schema.ts` por `organizacao.schema.ts`
+### T10: Substituir `ofertante.schema.ts` por `organizacao.schema.ts` ✅
 
 **What**: Novo `src/lib/validation/schemas/organizacao.schema.ts` com os mesmos 6 campos de `ofertanteSchema` (nome, responsavel, email, telefone, uf, municipio) - reaproveitado como o corpo do PATCH de dados organizacionais do GO (T12/T13). `ofertante.schema.ts` e seu teste são removidos.
 **Where**: `src/lib/validation/schemas/organizacao.schema.ts` (novo); remove `src/lib/validation/schemas/ofertante.schema.ts` e `ofertante.schema.test.ts`
@@ -314,9 +314,9 @@ T18 → T19 → T20 → T21 → T22 → T23
 - Skill: NONE
 
 **Done when**:
-- [ ] Mesma cobertura de teste que `ofertante.schema.test.ts` tinha, migrada para `organizacao.schema.test.ts`
-- [ ] `ofertante.schema.ts`/`.test.ts` não existem mais
-- [ ] Gate check passa: `npm run test:unit`
+- [x] Mesma cobertura de teste que `ofertante.schema.test.ts` tinha, migrada para `organizacao.schema.test.ts`
+- [x] `ofertante.schema.ts`/`.test.ts` não existem mais
+- [x] Gate check passa: `npm run test:unit`
 
 **Tests**: unit
 **Gate**: quick
