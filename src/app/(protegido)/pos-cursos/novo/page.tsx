@@ -10,7 +10,7 @@
 // pode iniciar pós-curso, para qualquer Ofertante (autoridade nacional,
 // AD-012) - mesma regra de `podeGerenciarPreCurso`, reaproveitada em
 // `podeGerenciarPosCurso`.
-import { requireSession } from "@/lib/auth/guards";
+import { requireSession, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NovoPosCursoForm } from "./NovoPosCursoForm";
@@ -18,7 +18,12 @@ import { NovoPosCursoForm } from "./NovoPosCursoForm";
 export default async function NovoPosCursoPage() {
   const { usuario } = await requireSession();
 
-  if (usuario.tipo !== "AM" && (usuario.tipo !== "GO" || usuario.cdOfertante === null)) {
+  // UGO-14/AD-043: o escopo do GO é o próprio documento (`resolverEscopoOfertante`,
+  // T6) - `usuario.cdOfertante` é sempre `null` para um GO, nunca a fonte da
+  // verdade de escopo.
+  const escopoOfertante = resolverEscopoOfertante(usuario);
+
+  if (usuario.tipo !== "AM" && (usuario.tipo !== "GO" || escopoOfertante === null)) {
     return (
       <>
         <Card className="w-full max-w-sm">
@@ -36,7 +41,7 @@ export default async function NovoPosCursoPage() {
   }
 
   const preCursosElegiveis = await prisma.preCurso.findMany({
-    where: usuario.tipo === "AM" ? { posCurso: null } : { cdOfertante: usuario.cdOfertante!, posCurso: null },
+    where: usuario.tipo === "AM" ? { posCurso: null } : { cdOfertante: escopoOfertante!, posCurso: null },
     orderBy: { cdCurso: "asc" },
     select: { cdCurso: true },
   });

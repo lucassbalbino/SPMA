@@ -1,69 +1,87 @@
 // e2e de /pos-cursos/[cdCurso] (T9), pela UI real. Cobre REQ-PO-04 a
 // REQ-PO-11 na camada de tela.
+//
+// UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
+// identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
+// `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
-  criarOfertante,
   criarPosCurso,
   criarPreCurso,
   criarVerba,
   deletePreCursosPorOfertante,
   deleteUsuarios,
+  deleteVerbasPorOfertante,
   encerrarPosCursoFixture,
   upsertUsuario,
 } from "./helpers/db";
 
 const SENHA = "SenhaValida123";
-const CPF_GO_A = "52281006360";
-const CPF_GO_B = "52291006487";
+
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `40${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
+const CNPJ_GO_A = gerarCnpjValido(1);
+const CNPJ_GO_B = gerarCnpjValido(2);
 const CPF_VO_A = "52301006565";
 
-let cdOfertanteA: number;
-let cdOfertanteB: number;
 let cdVerbaA: number;
 
 test.beforeAll(() => {
-  deleteUsuarios([CPF_GO_A, CPF_GO_B, CPF_VO_A]);
+  deletePreCursosPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
+  deleteVerbasPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
+  deleteUsuarios([CNPJ_GO_A, CNPJ_GO_B, CPF_VO_A]);
 
-  cdOfertanteA = criarOfertante({
+  upsertUsuario({
+    cpf: CNPJ_GO_A,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
     nome: "Ofertante Formulário Pós-Curso A",
     uf: "SP",
-  }).cdOfertante;
-  cdOfertanteB = criarOfertante({
-    nome: "Ofertante Formulário Pós-Curso B",
-    uf: "RJ",
-  }).cdOfertante;
-
-  cdVerbaA = criarVerba({ cdOfertante: cdOfertanteA, vlVerba: 10000 }).cdVerba;
-
-  upsertUsuario({
-    cpf: CPF_GO_A,
-    tipo: "GO",
-    senha: SENHA,
-    primeiraVez: false,
-    cdOfertante: cdOfertanteA,
   });
   upsertUsuario({
-    cpf: CPF_GO_B,
+    cpf: CNPJ_GO_B,
     tipo: "GO",
     senha: SENHA,
     primeiraVez: false,
-    cdOfertante: cdOfertanteB,
+    nome: "Ofertante Formulário Pós-Curso B",
+    uf: "RJ",
   });
   upsertUsuario({
     cpf: CPF_VO_A,
     tipo: "VO",
     senha: SENHA,
     primeiraVez: false,
-    cdOfertante: cdOfertanteA,
+    cdOfertante: CNPJ_GO_A,
   });
+
+  cdVerbaA = criarVerba({ cdOfertante: CNPJ_GO_A, vlVerba: 10000 }).cdVerba;
 });
 
 test.afterAll(() => {
-  deletePreCursosPorOfertante([cdOfertanteA, cdOfertanteB]);
-  deleteUsuarios([CPF_GO_A, CPF_GO_B, CPF_VO_A]);
+  deletePreCursosPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
+  deleteVerbasPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
+  deleteUsuarios([CNPJ_GO_A, CNPJ_GO_B, CPF_VO_A]);
 });
 
-function criarPosCursoFixture(cdOfertante: number, criadoPor: string): number {
+function criarPosCursoFixture(cdOfertante: string, criadoPor: string): number {
   const cdCurso = criarPreCurso({
     cdOfertante,
     cdVerba: cdVerbaA,
@@ -74,8 +92,8 @@ function criarPosCursoFixture(cdOfertante: number, criadoPor: string): number {
   return cdCurso;
 }
 
-async function login(page: Page, cpf: string) {
-  const res = await page.request.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+async function login(page: Page, documento: string) {
+  const res = await page.request.post("/api/auth/login", { data: { documento, senha: SENHA } });
   expect(res.ok()).toBe(true);
 }
 
@@ -199,9 +217,9 @@ async function preencherTodosOsCampos(page: Page, opcoes: { omitirDetalheAlterac
 }
 
 test("GO salva um bloco parcial e o dado persiste após reload", async ({ page }) => {
-  const cdCurso = criarPosCursoFixture(cdOfertanteA, CPF_GO_A);
+  const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A);
 
-  await login(page, CPF_GO_A);
+  await login(page, CNPJ_GO_A);
   await page.goto(`/pos-cursos/${cdCurso}`);
 
   await abrirBloco(page, 2);
@@ -222,9 +240,9 @@ test("GO salva um bloco parcial e o dado persiste após reload", async ({ page }
 test("encerramento bloqueado por campo condicional pendente referencia o campo", async ({
   page,
 }) => {
-  const cdCurso = criarPosCursoFixture(cdOfertanteA, CPF_GO_A);
+  const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A);
 
-  await login(page, CPF_GO_A);
+  await login(page, CNPJ_GO_A);
   await page.goto(`/pos-cursos/${cdCurso}`);
 
   // Demais 25 campos completos (Independent Test da spec: "mantendo os
@@ -245,9 +263,9 @@ test("encerramento bloqueado por campo condicional pendente referencia o campo",
 });
 
 test("GO preenche os 26 campos e encerra o pós-curso de forma irreversível", async ({ page }) => {
-  const cdCurso = criarPosCursoFixture(cdOfertanteA, CPF_GO_A);
+  const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A);
 
-  await login(page, CPF_GO_A);
+  await login(page, CNPJ_GO_A);
   await page.goto(`/pos-cursos/${cdCurso}`);
 
   await preencherTodosOsCampos(page);
@@ -269,10 +287,10 @@ test("GO preenche os 26 campos e encerra o pós-curso de forma irreversível", a
 });
 
 test("pós-curso encerrado é somente leitura, sem botões de ação", async ({ page }) => {
-  const cdCurso = criarPosCursoFixture(cdOfertanteA, CPF_GO_A);
+  const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A);
   encerrarPosCursoFixture(cdCurso);
 
-  await login(page, CPF_GO_A);
+  await login(page, CNPJ_GO_A);
   await page.goto(`/pos-cursos/${cdCurso}`);
 
   await expect(page.getByTestId("status-pos-curso")).toHaveText("Encerrado");
@@ -284,7 +302,7 @@ test("pós-curso encerrado é somente leitura, sem botões de ação", async ({ 
 });
 
 test("VO visualiza os dados sem controles de edição", async ({ page }) => {
-  const cdCurso = criarPosCursoFixture(cdOfertanteA, CPF_GO_A);
+  const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A);
 
   await login(page, CPF_VO_A);
   await page.goto(`/pos-cursos/${cdCurso}`);
@@ -297,9 +315,9 @@ test("VO visualiza os dados sem controles de edição", async ({ page }) => {
 test("GO de outro Ofertante tentando acessar diretamente recebe não encontrado", async ({
   page,
 }) => {
-  const cdCurso = criarPosCursoFixture(cdOfertanteA, CPF_GO_A);
+  const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A);
 
-  await login(page, CPF_GO_B);
+  await login(page, CNPJ_GO_B);
   const res = await page.goto(`/pos-cursos/${cdCurso}`);
 
   expect(res?.status()).toBe(404);

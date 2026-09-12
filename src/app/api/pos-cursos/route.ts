@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { obterSessao } from "@/lib/auth/session";
-import { podeGerenciarPosCurso } from "@/lib/auth/guards";
+import { podeGerenciarPosCurso, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { criarPosCursoSchema } from "@/lib/validation/schemas/pos-curso.schema";
 import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
@@ -58,7 +58,7 @@ async function criarPosCurso(request: Request) {
   const posCurso = await prisma.posCurso.create({
     data: {
       cdCurso: entrada.data.cdCurso,
-      criadoPor: sessao.usuario.cpf,
+      criadoPor: sessao.usuario.documento,
     },
   });
 
@@ -78,20 +78,20 @@ async function listarPosCursos(request: Request) {
   const cdOfertanteFiltro = new URL(request.url).searchParams.get("cdOfertante");
 
   // REQ-PO-12: mesmo padrão de escopo de listarPreCursos - GO/VO nunca
-  // confiam no filtro do cliente, o próprio cdOfertante do usuário sempre
-  // prevalece. PosCurso não tem CD_Ofertante próprio - o filtro é aplicado
-  // via o PreCurso pai (relação).
-  let where: { preCurso?: { cdOfertante?: number } } = {};
+  // confiam no filtro do cliente, o próprio escopo do usuário sempre
+  // prevalece (`resolverEscopoOfertante`, T6/UGO-14). PosCurso não tem
+  // CD_Ofertante próprio - o filtro é aplicado via o PreCurso pai (relação).
+  let where: { preCurso?: { cdOfertante?: string } } = {};
 
   switch (usuario.tipo) {
     case "AM":
     case "GT":
     case "VT":
-      where = cdOfertanteFiltro ? { preCurso: { cdOfertante: Number(cdOfertanteFiltro) } } : {};
+      where = cdOfertanteFiltro ? { preCurso: { cdOfertante: cdOfertanteFiltro } } : {};
       break;
     case "GO":
     case "VO":
-      where = { preCurso: { cdOfertante: usuario.cdOfertante ?? -1 } };
+      where = { preCurso: { cdOfertante: resolverEscopoOfertante(usuario) ?? "" } };
       break;
     case "AL":
       return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });

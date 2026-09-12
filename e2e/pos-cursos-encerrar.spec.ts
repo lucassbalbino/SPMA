@@ -1,12 +1,16 @@
 // e2e de POST /api/pos-cursos/[cdCurso]/encerrar (REQ-PO-08, REQ-PO-09, REQ-PO-10).
+//
+// UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
+// identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
+// `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test } from "@playwright/test";
 import {
-  criarOfertante,
   criarPosCurso,
   criarPreCurso,
   criarVerba,
   deletePreCursosPorOfertante,
   deleteUsuarios,
+  deleteVerbasPorOfertante,
   getPosCurso,
   upsertUsuario,
 } from "./helpers/db";
@@ -18,20 +22,39 @@ import {
 } from "./helpers/http";
 
 const SENHA = "SenhaValida123";
-const CPF_GO = "52231005816";
-const CPFS = [CPF_GO];
 
-let cdOfertante: number;
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `39${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
+const CNPJ_GO = gerarCnpjValido(1);
+const CPFS = [CNPJ_GO];
+
 let cdVerba: number;
 
-async function logarComCsrf(cpf: string): Promise<{ idSessao: string; idCsrf: string }> {
+async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+  const res = await cliente.post("/api/auth/login", { data: { documento, senha: SENHA } });
   const idSessao = idSessaoDaResposta(res);
   const idCsrf = idCsrfDaResposta(res);
   await cliente.dispose();
 
-  if (!idSessao || !idCsrf) throw new Error(`Login não emitiu sessão/CSRF para ${cpf}`);
+  if (!idSessao || !idCsrf) throw new Error(`Login não emitiu sessão/CSRF para ${documento}`);
   return { idSessao, idCsrf };
 }
 
@@ -71,27 +94,35 @@ const RESPOSTA_COMPLETA = {
 };
 
 test.beforeAll(() => {
+  deletePreCursosPorOfertante([CNPJ_GO]);
+  deleteVerbasPorOfertante([CNPJ_GO]);
   deleteUsuarios(CPFS);
 
-  cdOfertante = criarOfertante({ nome: "Ofertante Encerramento Pós-Curso", uf: "SP" }).cdOfertante;
-  cdVerba = criarVerba({ cdOfertante, vlVerba: 10000 }).cdVerba;
-
-  upsertUsuario({ cpf: CPF_GO, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante });
+  upsertUsuario({
+    cpf: CNPJ_GO,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "Ofertante Encerramento Pós-Curso",
+    uf: "SP",
+  });
+  cdVerba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 10000 }).cdVerba;
 });
 
 test.afterAll(() => {
-  deletePreCursosPorOfertante([cdOfertante]);
+  deletePreCursosPorOfertante([CNPJ_GO]);
+  deleteVerbasPorOfertante([CNPJ_GO]);
   deleteUsuarios(CPFS);
 });
 
 function criarPosCursoFixture(): number {
   const cdCurso = criarPreCurso({
-    cdOfertante,
+    cdOfertante: CNPJ_GO,
     cdVerba,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO,
+    criadoPor: CNPJ_GO,
   }).cdCurso;
-  criarPosCurso({ cdCurso, criadoPor: CPF_GO });
+  criarPosCurso({ cdCurso, criadoPor: CNPJ_GO });
   return cdCurso;
 }
 
@@ -99,7 +130,7 @@ test("REQ-PO-09: encerramento com campo obrigatório faltando é rejeitado com 4
   const cdCurso = criarPosCursoFixture();
   const { posAcompanhPlanoAcao: _omitido, ...respostaIncompleta } = RESPOSTA_COMPLETA;
 
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
   const cliente = await novoCliente();
   await cliente.patch(`/api/pos-cursos/${cdCurso}`, {
     data: respostaIncompleta,
@@ -123,7 +154,7 @@ test("REQ-PO-09: encerramento com campo obrigatório faltando é rejeitado com 4
 test("REQ-PO-10: encerramento com os 26 campos completos -> 200, ENCERRADO, dataEncerramento preenchida", async () => {
   const cdCurso = criarPosCursoFixture();
 
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
   const cliente = await novoCliente();
   await cliente.patch(`/api/pos-cursos/${cdCurso}`, {
     data: RESPOSTA_COMPLETA,
@@ -149,7 +180,7 @@ test("REQ-PO-10: encerramento com os 26 campos completos -> 200, ENCERRADO, data
 test("REQ-PO-08: segunda tentativa de encerrar um pós-curso já ENCERRADO recebe 409", async () => {
   const cdCurso = criarPosCursoFixture();
 
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
   const cliente = await novoCliente();
   await cliente.patch(`/api/pos-cursos/${cdCurso}`, {
     data: RESPOSTA_COMPLETA,
@@ -171,7 +202,7 @@ test("REQ-PO-08: segunda tentativa de encerrar um pós-curso já ENCERRADO receb
 test("REQ-PO-08: PATCH após o encerramento recebe 409 (fecha o gate fim-a-fim com T5)", async () => {
   const cdCurso = criarPosCursoFixture();
 
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
   const cliente = await novoCliente();
   await cliente.patch(`/api/pos-cursos/${cdCurso}`, {
     data: RESPOSTA_COMPLETA,
@@ -194,7 +225,7 @@ test("REQ-PO-08: PATCH após o encerramento recebe 409 (fecha o gate fim-a-fim c
 test("condicional órfã (Q12 preenchida com Q11='Não') é descartada no encerramento", async () => {
   const cdCurso = criarPosCursoFixture();
 
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
   const cliente = await novoCliente();
 
   // Q11="Sim" + Q12 detalhada...

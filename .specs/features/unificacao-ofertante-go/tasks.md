@@ -589,10 +589,10 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T21: Varredura - `e2e/pos-cursos*.spec.ts` + `criadoPor` de `POST /api/pos-cursos`
+### T21: Varredura - `e2e/pos-cursos*.spec.ts` + `criadoPor` de `POST /api/pos-cursos` ✅
 
 **What**: Mesma varredura mecânica de T20, aplicada à família `pos-cursos*.spec.ts` (`pos-cursos.spec.ts`, `-page`, `-formulario`, `-novo`, `-id`, `-encerrar`) e à mesma correção em `src/app/api/pos-cursos/route.ts` (`criadoPor: sessao.usuario.cpf` -> `.documento`).
-**Where**: `e2e/pos-cursos*.spec.ts`, `src/app/api/pos-cursos/route.ts`
+**Where**: `e2e/pos-cursos*.spec.ts`, `src/app/api/pos-cursos/route.ts` + achado: `src/app/(protegido)/pos-cursos/page.tsx`, `src/app/(protegido)/pos-cursos/novo/page.tsx` (ver Nota de execução)
 **Depends on**: T20
 **Reuses**: mesmo padrão de T20
 **Requirement**: UGO-01, UGO-13 (regressão)
@@ -602,11 +602,13 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] Nenhum arquivo da família chama mais `criarOfertante`/`getOfertante`
-- [ ] `POST /api/pos-cursos` grava `criadoPor` com o `documento` de quem criou, não mais `.cpf`
-- [ ] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/pos-cursos/route.ts`
-- [ ] Todos os testes da família continuam verdes com a mesma contagem de antes
-- [ ] Gate check passa: `npm run test:e2e -- pos-cursos`
+- [x] Nenhum arquivo da família chama mais `criarOfertante`/`getOfertante`
+- [x] `POST /api/pos-cursos` grava `criadoPor` com o `documento` de quem criou, não mais `.cpf`
+- [x] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/pos-cursos/route.ts`
+- [x] Todos os testes da família continuam verdes com a mesma contagem de antes (38 testes nos 6 arquivos, mesma contagem de antes da varredura)
+- [x] Gate check passa: `npm run test:e2e -- pos-cursos` (38/38 - `test-results/.last-run.json` confirmado `status: passed`)
+
+**Achados fora do "What" original (mesma classe recorrente desde T11, mesmo padrão de T20)**: `listarPosCursos` também usava `usuario.cdOfertante` direto para o escopo de GO/VO via o PreCurso pai - corrigido para `resolverEscopoOfertante` (T6). Duas telas tinham o mesmo bug, sem nenhuma task cobrindo: `pos-cursos/page.tsx` (mesmo escopo de listagem) e `pos-cursos/novo/page.tsx` (guard `usuario.tipo !== "GO" || usuario.cdOfertante === null` sempre verdadeiro para GO - todo GO estaria bloqueado de iniciar pós-curso). 6 e2e da família reescritos com o mesmo padrão de T20 (`criarOfertante` → `upsertUsuario`, login `{cpf}` → `{documento}`).
 
 **Tests**: e2e
 **Gate**: full

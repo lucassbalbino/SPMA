@@ -6,7 +6,7 @@
 // não tem CD_Ofertante próprio - o filtro é aplicado via o PreCurso pai
 // (relação).
 import Link from "next/link";
-import { requireSession } from "@/lib/auth/guards";
+import { requireSession, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function PosCursosPage() {
   const { usuario } = await requireSession();
 
-  let where: { preCurso?: { cdOfertante?: number } } = {};
+  let where: { preCurso?: { cdOfertante?: string } } = {};
 
   switch (usuario.tipo) {
     case "AM":
@@ -24,10 +24,15 @@ export default async function PosCursosPage() {
       break;
     case "GO":
     case "VO":
-      where = { preCurso: { cdOfertante: usuario.cdOfertante ?? -1 } };
+      // UGO-14/AD-043: escopo pelo próprio documento do GO, ou pelo GO ao
+      // qual o VO está vinculado - nunca `usuario.cdOfertante` direto (o do
+      // próprio GO é sempre `null`).
+      where = { preCurso: { cdOfertante: resolverEscopoOfertante(usuario) ?? "" } };
       break;
     case "AL":
-      where = { preCurso: { cdOfertante: -1 } };
+      // AL não tem escopo por Ofertante (AD-012); "" nunca casa com um
+      // documento real.
+      where = { preCurso: { cdOfertante: "" } };
       break;
   }
 
