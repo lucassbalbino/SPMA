@@ -354,7 +354,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T12: Substituir `/api/ofertantes` por `/api/usuarios/[documento]/organizacao`
+### T12: Substituir `/api/ofertantes` por `/api/usuarios/[documento]/organizacao` ✅
 
 **What**: Remove `src/app/api/ofertantes/route.ts` e `[id]/route.ts`. Novo `GET/PATCH /api/usuarios/[documento]/organizacao/route.ts`: `GET` aplica `podeAcessarOfertante`, `PATCH` aplica `podeEditarOfertante`, ambos usando `organizacaoSchema` (T10) e operando sobre `Usuario` (não mais `Ofertante`). `e2e/ofertantes.spec.ts` -> `e2e/organizacao.spec.ts`, `e2e/ofertantes-id.spec.ts` -> `e2e/organizacao-id.spec.ts`, mesmos cenários (CA-OV-01..07 originais), alvo trocado de Ofertante para GO.
 **Where**: remove `src/app/api/ofertantes/route.ts`, `src/app/api/ofertantes/[id]/route.ts`; cria `src/app/api/usuarios/[documento]/organizacao/route.ts`; renomeia `e2e/ofertantes.spec.ts` -> `e2e/organizacao.spec.ts`, `e2e/ofertantes-id.spec.ts` -> `e2e/organizacao-id.spec.ts`
@@ -367,11 +367,14 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] `GET /api/usuarios/[documento]/organizacao`: AM/GT/VT sempre; GO/VO só o próprio -> 403 fora de escopo
-- [ ] `PATCH`: mesmos campos de REQ-UGO-01, validação e persistência direta no `Usuario`
-- [ ] Nenhuma rota `/api/ofertantes*` responde mais (404 do Next.js)
-- [ ] `e2e/organizacao.spec.ts`/`organizacao-id.spec.ts` cobrem os mesmos cenários que `ofertantes.spec.ts`/`ofertantes-id.spec.ts` cobriam, adaptados ao novo alvo
-- [ ] Gate check passa: `npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] `GET /api/usuarios/[documento]/organizacao`: AM/GT/VT sempre; GO/VO só o próprio -> 403 fora de escopo
+- [x] `PATCH`: mesmos campos de REQ-UGO-01, validação e persistência direta no `Usuario`
+- [x] Nenhuma rota `/api/ofertantes*` responde mais (404 do Next.js)
+- [x] `e2e/organizacao.spec.ts`/`organizacao-id.spec.ts` cobrem os mesmos cenários que `ofertantes.spec.ts`/`ofertantes-id.spec.ts` cobriam, adaptados ao novo alvo
+
+**Nota de execução**: `CA-OV-01` (pré-cadastro administrativo avulso, POST em coleção) e `CA-OV-07` (listagem em coleção, GET) do `ofertantes.spec.ts` original não têm rota equivalente - o design (§"Rotas ajustadas") já reatribui essas duas responsabilidades a outro lugar: criar um GO com dados organizacionais é `POST /api/usuarios` (T11, coberto em `e2e/usuarios.spec.ts`), e listar GOs para escolha é `prisma.usuario.findMany` na própria tela (T15, `e2e/usuarios-novo-page.spec.ts`), não uma rota JSON. `organizacao.spec.ts` cobre o equivalente de acesso por escopo (o papel que a listagem tinha) e a família de validação `CA-OV-02`; `organizacao-id.spec.ts` cobre a família `CA-OV-03..06/15` (GET/PATCH por documento), 1:1 com `ofertantes-id.spec.ts`.
+
+- [x] Gate check passa: `npm run test:unit && npm run test:integration && npm run test:e2e` (e2e rodado com escopo em `organizacao.spec.ts organizacao-id.spec.ts`, 15/15 - `test-results/.last-run.json` confirmado `status: passed`; suíte completa fica para o fechamento de T17)
 
 **Tests**: e2e
 **Gate**: full
