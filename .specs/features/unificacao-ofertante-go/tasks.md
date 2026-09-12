@@ -563,10 +563,10 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T20: Varredura - `e2e/pre-cursos*.spec.ts` + `criadoPor` de `POST /api/pre-cursos`
+### T20: Varredura - `e2e/pre-cursos*.spec.ts` + `criadoPor` de `POST /api/pre-cursos` ✅
 
 **What**: Em cada arquivo da família (`pre-cursos.spec.ts`, `pre-cursos-page.spec.ts`, `pre-cursos-formulario.spec.ts`, `pre-cursos-novo.spec.ts`, `pre-cursos-id.spec.ts`, `pre-cursos-encerrar.spec.ts`): remove a chamada a `criarOfertante`, funde `nome`/`uf` no `upsertUsuario` do GO, troca a variável `cdOfertante`/`cdOfertante2` (hoje `number`) pelo próprio CNPJ do GO de fixture (`string`). Além da varredura de fixture, corrige a própria rota de produção `src/app/api/pre-cursos/route.ts`, que grava `criadoPor: sessao.usuario.cpf` (achado do batch worker de T6-T10) - vira `sessao.usuario.documento`. Mudança mecânica, sem cobertura nova além de confirmar que a família de e2e continua passando (pedido do usuário) - nenhum destes specs testa CNPJ em si.
-**Where**: `e2e/pre-cursos*.spec.ts`, `src/app/api/pre-cursos/route.ts`
+**Where**: `e2e/pre-cursos*.spec.ts`, `src/app/api/pre-cursos/route.ts` + achado: `src/app/(protegido)/pre-cursos/page.tsx`, `src/app/(protegido)/pre-cursos/novo/page.tsx`, `src/app/(protegido)/pre-cursos/novo/NovoPreCursoForm.tsx` (ver Nota de execução)
 **Depends on**: T19
 **Reuses**: `upsertUsuario` com os novos campos organizacionais (T5)
 **Requirement**: UGO-01, UGO-13 (regressão)
@@ -576,11 +576,13 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] Nenhum arquivo da família chama mais `criarOfertante`/`getOfertante`
-- [ ] `POST /api/pre-cursos` grava `criadoPor` com o `documento` de quem criou (GO ou AM), não mais `.cpf`
-- [ ] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/pre-cursos/route.ts`
-- [ ] Todos os testes da família continuam verdes com a mesma contagem de antes
-- [ ] Gate check passa: `npm run test:e2e -- pre-cursos`
+- [x] Nenhum arquivo da família chama mais `criarOfertante`/`getOfertante`
+- [x] `POST /api/pre-cursos` grava `criadoPor` com o `documento` de quem criou (GO ou AM), não mais `.cpf`
+- [x] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/pre-cursos/route.ts`
+- [x] Todos os testes da família continuam verdes com a mesma contagem de antes (40 testes nos 6 arquivos, mesma contagem de antes da varredura)
+- [x] Gate check passa: `npm run test:e2e -- pre-cursos` (40/40 - `test-results/.last-run.json` confirmado `status: passed`)
+
+**Achados fora do "What" original (mesma classe recorrente desde T11)**: `listarPreCursos` também usava `usuario.cdOfertante` direto para o escopo de GO/VO (sempre `null` para GO desde AD-043 - nenhum GO veria pré-curso nenhum na listagem); corrigido para `resolverEscopoOfertante` (T6), junto com o `where.cdOfertante` virando `string`. Duas telas tinham o mesmo bug, sem nenhuma task cobrindo: `src/app/(protegido)/pre-cursos/page.tsx` (mesmo escopo de listagem, mesmo fix) e `src/app/(protegido)/pre-cursos/novo/page.tsx` (guard `usuario.tipo !== "GO" || usuario.cdOfertante === null` sempre verdadeiro para GO - **todo GO estaria bloqueado de criar pré-curso**); `NovoPreCursoForm.tsx` teve o tipo de `nomeOfertante` alargado para aceitar `null` (`Usuario.nome` é nullable, `Ofertante.nome` não era). As 6 specs e2e da família (`pre-cursos.spec.ts`, `-page`, `-novo`, `-id`, `-encerrar`, `-formulario`) reescritas: `criarOfertante` (removido em T5) → `upsertUsuario({tipo:"GO",...})` com CNPJ de fixture; login `{cpf}` → `{documento}`.
 
 **Tests**: e2e
 **Gate**: full

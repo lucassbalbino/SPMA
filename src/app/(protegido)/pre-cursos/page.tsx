@@ -4,7 +4,7 @@
 // consultada direto via Prisma (Server Component só precisa da sessão via
 // requireSession, sem passar por fetch interno - ver design.md).
 import Link from "next/link";
-import { requireSession } from "@/lib/auth/guards";
+import { requireSession, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function PreCursosPage() {
   const { usuario } = await requireSession();
 
-  let where: { cdOfertante?: number } = {};
+  let where: { cdOfertante?: string } = {};
 
   switch (usuario.tipo) {
     case "AM":
@@ -22,10 +22,15 @@ export default async function PreCursosPage() {
       break;
     case "GO":
     case "VO":
-      where = { cdOfertante: usuario.cdOfertante ?? -1 };
+      // UGO-14/AD-043: escopo pelo próprio documento do GO, ou pelo GO ao
+      // qual o VO está vinculado - nunca `usuario.cdOfertante` direto (o do
+      // próprio GO é sempre `null`).
+      where = { cdOfertante: resolverEscopoOfertante(usuario) ?? "" };
       break;
     case "AL":
-      where = { cdOfertante: -1 };
+      // AL não tem escopo por Ofertante (AD-012); "" nunca casa com um
+      // documento real.
+      where = { cdOfertante: "" };
       break;
   }
 

@@ -1,69 +1,87 @@
 // e2e de /pre-cursos/[id] (T10), pela UI real. Cobre REQ-PC-04 a REQ-PC-12
 // na camada de tela.
+//
+// UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
+// identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
+// `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
-  criarOfertante,
   criarPreCurso,
   criarVerba,
   deletePreCursosPorOfertante,
   deleteUsuarios,
+  deleteVerbasPorOfertante,
   encerrarPreCursoFixture,
   upsertUsuario,
 } from "./helpers/db";
 
 const SENHA = "SenhaValida123";
-const CPF_GO_A = "52131004141";
-const CPF_GO_B = "52141004268";
+
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `34${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
+const CNPJ_GO_A = gerarCnpjValido(1);
+const CNPJ_GO_B = gerarCnpjValido(2);
 const CPF_VO_A = "52151004384";
 
-let cdOfertanteA: number;
-let cdOfertanteB: number;
 let cdVerbaA: number;
 
 test.beforeAll(() => {
-  deleteUsuarios([CPF_GO_A, CPF_GO_B, CPF_VO_A]);
+  deletePreCursosPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
+  deleteVerbasPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
+  deleteUsuarios([CNPJ_GO_A, CNPJ_GO_B, CPF_VO_A]);
 
-  cdOfertanteA = criarOfertante({
+  upsertUsuario({
+    cpf: CNPJ_GO_A,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
     nome: "Ofertante Formulário Pré-Curso A",
     uf: "SP",
-  }).cdOfertante;
-  cdOfertanteB = criarOfertante({
-    nome: "Ofertante Formulário Pré-Curso B",
-    uf: "RJ",
-  }).cdOfertante;
-
-  cdVerbaA = criarVerba({ cdOfertante: cdOfertanteA, vlVerba: 10000 }).cdVerba;
-
-  upsertUsuario({
-    cpf: CPF_GO_A,
-    tipo: "GO",
-    senha: SENHA,
-    primeiraVez: false,
-    cdOfertante: cdOfertanteA,
   });
   upsertUsuario({
-    cpf: CPF_GO_B,
+    cpf: CNPJ_GO_B,
     tipo: "GO",
     senha: SENHA,
     primeiraVez: false,
-    cdOfertante: cdOfertanteB,
+    nome: "Ofertante Formulário Pré-Curso B",
+    uf: "RJ",
   });
   upsertUsuario({
     cpf: CPF_VO_A,
     tipo: "VO",
     senha: SENHA,
     primeiraVez: false,
-    cdOfertante: cdOfertanteA,
+    cdOfertante: CNPJ_GO_A,
   });
+
+  cdVerbaA = criarVerba({ cdOfertante: CNPJ_GO_A, vlVerba: 10000 }).cdVerba;
 });
 
 test.afterAll(() => {
-  deletePreCursosPorOfertante([cdOfertanteA, cdOfertanteB]);
-  deleteUsuarios([CPF_GO_A, CPF_GO_B, CPF_VO_A]);
+  deletePreCursosPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
+  deleteVerbasPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
+  deleteUsuarios([CNPJ_GO_A, CNPJ_GO_B, CPF_VO_A]);
 });
 
-async function login(page: Page, cpf: string) {
-  const res = await page.request.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+async function login(page: Page, documento: string) {
+  const res = await page.request.post("/api/auth/login", { data: { documento, senha: SENHA } });
   expect(res.ok()).toBe(true);
 }
 
@@ -251,13 +269,13 @@ async function preencherTodosOsCampos(
 
 test("GO salva um bloco parcial e o dado persiste após reload", async ({ page }) => {
   const { cdCurso } = criarPreCurso({
-    cdOfertante: cdOfertanteA,
+    cdOfertante: CNPJ_GO_A,
     cdVerba: cdVerbaA,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO_A,
+    criadoPor: CNPJ_GO_A,
   });
 
-  await login(page, CPF_GO_A);
+  await login(page, CNPJ_GO_A);
   await page.goto(`/pre-cursos/${cdCurso}`);
 
   await abrirBloco(page, 1);
@@ -275,13 +293,13 @@ test("encerramento bloqueado por campo condicional pendente referencia o campo",
   page,
 }) => {
   const { cdCurso } = criarPreCurso({
-    cdOfertante: cdOfertanteA,
+    cdOfertante: CNPJ_GO_A,
     cdVerba: cdVerbaA,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO_A,
+    criadoPor: CNPJ_GO_A,
   });
 
-  await login(page, CPF_GO_A);
+  await login(page, CNPJ_GO_A);
   await page.goto(`/pre-cursos/${cdCurso}`);
 
   // Demais 55 campos completos (Independent Test da spec: "mantendo os
@@ -303,13 +321,13 @@ test("encerramento bloqueado por campo condicional pendente referencia o campo",
 
 test("GO preenche os 56 campos e encerra o pré-curso de forma irreversível", async ({ page }) => {
   const { cdCurso } = criarPreCurso({
-    cdOfertante: cdOfertanteA,
+    cdOfertante: CNPJ_GO_A,
     cdVerba: cdVerbaA,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO_A,
+    criadoPor: CNPJ_GO_A,
   });
 
-  await login(page, CPF_GO_A);
+  await login(page, CNPJ_GO_A);
   await page.goto(`/pre-cursos/${cdCurso}`);
 
   await preencherTodosOsCampos(page);
@@ -332,14 +350,14 @@ test("GO preenche os 56 campos e encerra o pré-curso de forma irreversível", a
 
 test("pré-curso encerrado é somente leitura, sem botões de ação", async ({ page }) => {
   const { cdCurso } = criarPreCurso({
-    cdOfertante: cdOfertanteA,
+    cdOfertante: CNPJ_GO_A,
     cdVerba: cdVerbaA,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO_A,
+    criadoPor: CNPJ_GO_A,
   });
   encerrarPreCursoFixture(cdCurso);
 
-  await login(page, CPF_GO_A);
+  await login(page, CNPJ_GO_A);
   await page.goto(`/pre-cursos/${cdCurso}`);
 
   await expect(page.getByTestId("status-pre-curso")).toHaveText("Encerrado");
@@ -352,10 +370,10 @@ test("pré-curso encerrado é somente leitura, sem botões de ação", async ({ 
 
 test("VO visualiza os dados sem controles de edição", async ({ page }) => {
   const { cdCurso } = criarPreCurso({
-    cdOfertante: cdOfertanteA,
+    cdOfertante: CNPJ_GO_A,
     cdVerba: cdVerbaA,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO_A,
+    criadoPor: CNPJ_GO_A,
   });
 
   await login(page, CPF_VO_A);
@@ -370,13 +388,13 @@ test("GO de outro Ofertante tentando acessar diretamente recebe não encontrado"
   page,
 }) => {
   const { cdCurso } = criarPreCurso({
-    cdOfertante: cdOfertanteA,
+    cdOfertante: CNPJ_GO_A,
     cdVerba: cdVerbaA,
     vlCursoAlocado: 100,
-    criadoPor: CPF_GO_A,
+    criadoPor: CNPJ_GO_A,
   });
 
-  await login(page, CPF_GO_B);
+  await login(page, CNPJ_GO_B);
   const res = await page.goto(`/pre-cursos/${cdCurso}`);
 
   expect(res?.status()).toBe(404);

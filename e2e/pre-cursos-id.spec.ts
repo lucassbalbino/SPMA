@@ -1,12 +1,16 @@
 // e2e de GET/PATCH /api/pre-cursos/[id] (REQ-PC-04, REQ-PC-05, REQ-PC-06,
 // REQ-PC-12, REQ-PC-13).
+//
+// UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
+// identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
+// `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test } from "@playwright/test";
 import {
-  criarOfertante,
   criarPreCurso,
   criarVerba,
   deletePreCursosPorOfertante,
   deleteUsuarios,
+  deleteVerbasPorOfertante,
   encerrarPreCursoFixture,
   getPreCurso,
   upsertUsuario,
@@ -15,63 +19,95 @@ import { cabecalhosAutenticados, idCsrfDaResposta, idSessaoDaResposta, novoClien
 
 const SENHA = "SenhaValida123";
 
-const CPF_GO = "51506007090";
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `32${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
+const CNPJ_GO = gerarCnpjValido(1);
 const CPF_VO = "51607008033";
-const CPF_GO_2 = "51708009086";
+const CNPJ_GO_2 = gerarCnpjValido(2);
 
-const CPFS = [CPF_GO, CPF_VO, CPF_GO_2];
+const CPFS = [CNPJ_GO, CPF_VO, CNPJ_GO_2];
 
-let cdOfertante: number;
-let cdOfertante2: number;
 let cdVerba: number;
 let cdCursoEmAndamento: number;
 let cdCursoEncerrado: number;
 
-async function logarComCsrf(cpf: string): Promise<{ idSessao: string; idCsrf: string }> {
+async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/auth/login", { data: { cpf, senha: SENHA } });
+  const res = await cliente.post("/api/auth/login", { data: { documento, senha: SENHA } });
   const idSessao = idSessaoDaResposta(res);
   const idCsrf = idCsrfDaResposta(res);
   await cliente.dispose();
 
-  if (!idSessao || !idCsrf) throw new Error(`Login não emitiu sessão/CSRF para ${cpf}`);
+  if (!idSessao || !idCsrf) throw new Error(`Login não emitiu sessão/CSRF para ${documento}`);
   return { idSessao, idCsrf };
 }
 
 test.beforeAll(() => {
+  deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
+  deleteVerbasPorOfertante([CNPJ_GO, CNPJ_GO_2]);
   deleteUsuarios(CPFS);
 
-  cdOfertante = criarOfertante({ nome: "Ofertante Pré-Curso Id Teste", uf: "SP" }).cdOfertante;
-  cdOfertante2 = criarOfertante({ nome: "Ofertante Pré-Curso Id Teste 2", uf: "RJ" }).cdOfertante;
-  cdVerba = criarVerba({ cdOfertante, vlVerba: 10000 }).cdVerba;
+  upsertUsuario({
+    cpf: CNPJ_GO,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "Ofertante Pré-Curso Id Teste",
+    uf: "SP",
+  });
+  upsertUsuario({ cpf: CPF_VO, tipo: "VO", senha: SENHA, primeiraVez: false, cdOfertante: CNPJ_GO });
+  upsertUsuario({
+    cpf: CNPJ_GO_2,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "Ofertante Pré-Curso Id Teste 2",
+    uf: "RJ",
+  });
 
-  upsertUsuario({ cpf: CPF_GO, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante });
-  upsertUsuario({ cpf: CPF_VO, tipo: "VO", senha: SENHA, primeiraVez: false, cdOfertante });
-  upsertUsuario({ cpf: CPF_GO_2, tipo: "GO", senha: SENHA, primeiraVez: false, cdOfertante: cdOfertante2 });
+  cdVerba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 10000 }).cdVerba;
 
   cdCursoEmAndamento = criarPreCurso({
-    cdOfertante,
+    cdOfertante: CNPJ_GO,
     cdVerba,
     vlCursoAlocado: 1000,
-    criadoPor: CPF_GO,
+    criadoPor: CNPJ_GO,
   }).cdCurso;
 
   cdCursoEncerrado = criarPreCurso({
-    cdOfertante,
+    cdOfertante: CNPJ_GO,
     cdVerba,
     vlCursoAlocado: 500,
-    criadoPor: CPF_GO,
+    criadoPor: CNPJ_GO,
   }).cdCurso;
   encerrarPreCursoFixture(cdCursoEncerrado);
 });
 
 test.afterAll(() => {
-  deletePreCursosPorOfertante([cdOfertante, cdOfertante2]);
+  deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
+  deleteVerbasPorOfertante([CNPJ_GO, CNPJ_GO_2]);
   deleteUsuarios(CPFS);
 });
 
 test("REQ-PC-04: GO grava um bloco parcial -> 200, demais campos continuam ausentes", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
@@ -88,7 +124,7 @@ test("REQ-PC-04: GO grava um bloco parcial -> 200, demais campos continuam ausen
 });
 
 test("REQ-PC-04: segundo bloco preserva o primeiro (merge raso)", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
@@ -113,7 +149,7 @@ test("REQ-PC-04: segundo bloco preserva o primeiro (merge raso)", async () => {
 });
 
 test("REQ-PC-06: valor de infraestrutura fora de 0-5 é rejeitado com 400, nada persistido", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
   const antes = getPreCurso(cdCursoEmAndamento);
 
   const cliente = await novoCliente();
@@ -135,7 +171,7 @@ test("REQ-PC-06: valor de infraestrutura fora de 0-5 é rejeitado com 400, nada 
 // uma lista vazia que escapasse da validação apagaria a resposta já gravada
 // sem colocar nada no lugar. O teste prova que a chave sobrevive intacta.
 test("RESP-20: seleção múltipla com lista vazia é rejeitada com 400, resposta anterior intacta", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const gravou = await cliente.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
@@ -158,7 +194,7 @@ test("RESP-20: seleção múltipla com lista vazia é rejeitada com 400, respost
 });
 
 test("edge case (Planejamento): término anterior ao início é rejeitado com 400, nada persistido", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
   const antes = getPreCurso(cdCursoEmAndamento);
 
   const cliente = await novoCliente();
@@ -178,7 +214,7 @@ test("edge case (Planejamento): término anterior ao início é rejeitado com 40
 });
 
 test("edge case (Planejamento): a ordem também é validada contra o estado mesclado quando as datas chegam em PATCHs separados", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const clienteInicio = await novoCliente();
   const resInicio = await clienteInicio.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
@@ -204,7 +240,7 @@ test("edge case (Planejamento): a ordem também é validada contra o estado mesc
 });
 
 test("REQ-PC-12: gravação em pré-curso ENCERRADO é rejeitada com 409, dado inalterado", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
   const antes = getPreCurso(cdCursoEncerrado);
 
   const cliente = await novoCliente();
@@ -222,7 +258,7 @@ test("REQ-PC-12: gravação em pré-curso ENCERRADO é rejeitada com 409, dado i
 });
 
 test("REQ-PC-13: GO de outro Ofertante recebe 403 ao ler", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO_2);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO_2);
 
   const cliente = await novoCliente();
   const res = await cliente.get(`/api/pre-cursos/${cdCursoEmAndamento}`, {
@@ -235,7 +271,7 @@ test("REQ-PC-13: GO de outro Ofertante recebe 403 ao ler", async () => {
 });
 
 test("REQ-PC-15: GO de outro Ofertante recebe 403 ao gravar", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_GO_2);
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO_2);
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {

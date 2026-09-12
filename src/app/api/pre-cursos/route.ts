@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { obterSessao } from "@/lib/auth/session";
-import { podeGerenciarPreCurso } from "@/lib/auth/guards";
+import { podeGerenciarPreCurso, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { criarPreCursoSchema } from "@/lib/validation/schemas/pre-curso.schema";
 import { validarAlocacao } from "@/lib/verba/saldo";
 import { verificarCSRF } from "@/lib/security/csrf";
@@ -64,7 +64,7 @@ async function criarPreCurso(request: Request) {
       cdOfertante: verba.cdOfertante,
       cdVerba: dados.cdVerba,
       vlCursoAlocado: dados.vlCursoAlocado,
-      criadoPor: sessao.usuario.cpf,
+      criadoPor: sessao.usuario.documento,
     },
   });
 
@@ -84,18 +84,19 @@ async function listarPreCursos(request: Request) {
   const cdOfertanteFiltro = new URL(request.url).searchParams.get("cdOfertante");
 
   // REQ-PC-14: mesmo padrão de escopo de listarVerbas - GO/VO nunca confiam
-  // no filtro do cliente, o próprio cdOfertante do usuário sempre prevalece.
-  let where: { cdOfertante?: number } = {};
+  // no filtro do cliente, o próprio escopo do usuário sempre prevalece
+  // (`resolverEscopoOfertante`, T6/UGO-14).
+  let where: { cdOfertante?: string } = {};
 
   switch (usuario.tipo) {
     case "AM":
     case "GT":
     case "VT":
-      where = cdOfertanteFiltro ? { cdOfertante: Number(cdOfertanteFiltro) } : {};
+      where = cdOfertanteFiltro ? { cdOfertante: cdOfertanteFiltro } : {};
       break;
     case "GO":
     case "VO":
-      where = { cdOfertante: usuario.cdOfertante ?? -1 };
+      where = { cdOfertante: resolverEscopoOfertante(usuario) ?? "" };
       break;
     case "AL":
       return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });

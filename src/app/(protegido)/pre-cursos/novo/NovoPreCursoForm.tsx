@@ -21,7 +21,7 @@ import {
 import { criarPreCursoSchema } from "@/lib/validation/schemas/pre-curso.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
 
-type OpcaoVerba = { cdVerba: number; saldoDisponivel: number; nomeOfertante?: string };
+type OpcaoVerba = { cdVerba: number; saldoDisponivel: number; nomeOfertante?: string | null };
 
 export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
   const router = useRouter();
