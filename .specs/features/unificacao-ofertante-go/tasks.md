@@ -133,7 +133,7 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T3: Tornar o mascaramento de log consciente do tipo de documento
+### T3: Tornar o mascaramento de log consciente do tipo de documento ✅
 
 **What**: `mascararCPF` (REQ-SEC-12/AD-029) continua existindo sem mudança de comportamento para CPF; nenhuma máscara nova é aplicada a CNPJ (REQ-UGO-12/AD-043) - o objetivo desta tarefa é só confirmar/testar explicitamente que nenhum call site passa um CNPJ de GO para `mascararCPF` esperando ofuscação (grep + teste que documenta a decisão).
 **Where**: `src/lib/log/mask.ts`
@@ -146,9 +146,9 @@ T18 → T19 → T20 → T21 → T22 → T23
 - Skill: NONE
 
 **Done when**:
-- [ ] Teste novo documenta que `mascararCPF` aplicado a um CNPJ de 14 dígitos produz uma máscara "de CPF" (comportamento aceito, não usado em produção para CNPJ) - guarda de regressão para não crescer indevidamente
-- [ ] Grep confirma (comentário no PR/task) que nenhum log de produção passa `usuario.documento` de um GO por `mascararCPF`
-- [ ] Gate check passa: `npm run test:unit`
+- [x] Teste novo documenta que `mascararCPF` aplicado a um CNPJ de 14 dígitos produz uma máscara "de CPF" (comportamento aceito, não usado em produção para CNPJ) - guarda de regressão para não crescer indevidamente
+- [x] Grep confirma (comentário no PR/task) que nenhum log de produção passa `usuario.documento` de um GO por `mascararCPF` — único call site de produção é `mascararCPFsNoTexto` em `src/lib/errors/api-error.ts:15`, que extrai apenas substrings no formato de CPF (11 dígitos) via regex, nunca recebe um documento inteiro de GO
+- [x] Gate check passa: `npm run test:unit`
 
 **Tests**: unit
 **Gate**: quick
