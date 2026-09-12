@@ -463,7 +463,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T16: Login aceita CNPJ - rota + prova e2e
+### T16: Login aceita CNPJ - rota + prova e2e ✅
 
 **What**: `src/app/api/auth/login/route.ts` lê `entrada.data.documento` (não mais `.cpf`, renomeado por T9) e passa esse valor para `prisma.usuario.findUnique({where:{documento}})`, `registrarFalha`, `resetarTentativas`, `criarSessao`/`rotacionarSessao` (esses helpers de `session.ts` continuam recebendo uma string genérica de identidade - nenhuma mudança de assinatura neles, `Sessao.cpfUsuario` não foi renomeado por T4 de propósito). O corpo da resposta troca `cpf: usuario.cpf` por `documento: usuario.documento` (mesma decisão de contrato HTTP de T11) e `cdOfertante: usuario.cdOfertante` continua igual (já é `string` desde T4). Em `e2e/login.spec.ts`, adiciona um cenário de login bem-sucedido com um GO de fixture identificado por CNPJ válido, ao lado dos cenários de CPF já existentes.
 **Where**: `src/app/api/auth/login/route.ts`, `e2e/login.spec.ts`
@@ -476,11 +476,13 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] Novo teste: GO com CNPJ válido faz login com sucesso (sessão criada)
-- [ ] Testes existentes de CPF (AM/GT/VT/AL) continuam verdes, inalterados
-- [ ] Resposta de login expõe `documento` (não `cpf`) no objeto `usuario`
-- [ ] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/auth/login/route.ts`
-- [ ] Gate check passa: `npm run test:e2e`
+- [x] Novo teste: GO com CNPJ válido faz login com sucesso (sessão criada)
+- [x] Testes existentes de CPF (AM/GT/VT/AL) continuam verdes, inalterados
+- [x] Resposta de login expõe `documento` (não `cpf`) no objeto `usuario`
+- [x] `npx tsc --noEmit` não aponta mais nenhum erro em `src/app/api/auth/login/route.ts`
+- [x] Gate check passa: `npm run test:e2e` (escopo `login.spec.ts`, 12/12 - `test-results/.last-run.json` confirmado `status: passed`; suíte completa fica para o fechamento de T17)
+
+**Nota de execução**: `route.ts` em si já estava correto desde o reparo emergencial pré-T11 (`e834334`) - o próprio corpo da tarefa (ler `documento`, responder `documento`) já valia. O que faltava era só `e2e/login.spec.ts`: as 17 chamadas `data: { cpf: ... }` (schema já exige `documento` desde T9) e a mensagem esperada de CA-AU-03 ("CPF inválido" -> "Documento inválido", `loginSchema` não é mais CPF-específico). Corrigidas mecanicamente + 1 cenário novo (GO por CNPJ).
 
 **Tests**: e2e
 **Gate**: full

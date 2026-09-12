@@ -61,6 +61,29 @@ const CPF_INEXISTENTE = "70780890906";
 // Dígito verificador inválido (CA-AU-03).
 const CPF_INVALIDO = "12345678901";
 
+// UGO-10: GO se identifica por CNPJ (14 dígitos), não CPF - `loginSchema`
+// (T9) decide o algoritmo pelo comprimento antes de saber o tipo.
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `28${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
+const CNPJ_GO = gerarCnpjValido(1);
+
 const ERRO_GENERICO = { erro: "CPF ou senha inválidos" };
 
 const CPFS = [
@@ -72,6 +95,7 @@ const CPFS = [
   CPF_ROTACAO,
   CPF_INEXISTENTE,
   CPF_TIMING,
+  CNPJ_GO,
 ];
 
 test.beforeAll(() => {
@@ -89,6 +113,14 @@ test.beforeAll(() => {
   }
   // Conta criada mas ainda sem senha definida (fluxo de 1º acesso).
   upsertUsuario({ cpf: CPF_PRIMEIRO_ACESSO, tipo: "AL", senha: null });
+  upsertUsuario({
+    cpf: CNPJ_GO,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "GO Login CNPJ",
+    uf: "SP",
+  });
 });
 
 test.afterAll(() => {
@@ -99,7 +131,7 @@ test.afterAll(() => {
 test("CA-AU-01: CPF e senha corretos autenticam e emitem cookie de sessão protegido", async () => {
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { cpf: CPF_COM_SENHA, senha: SENHA },
+    data: { documento: CPF_COM_SENHA, senha: SENHA },
   });
 
   expect(res.status()).toBe(200);
@@ -126,10 +158,29 @@ test("CA-AU-01: CPF e senha corretos autenticam e emitem cookie de sessão prote
   await cliente.dispose();
 });
 
+test("UGO-10: GO com CNPJ válido faz login com sucesso, resposta expõe `documento`", async () => {
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/auth/login", {
+    data: { documento: CNPJ_GO, senha: SENHA },
+  });
+
+  expect(res.status()).toBe(200);
+  const corpo = await res.json();
+  expect(corpo.usuario.documento).toBe(CNPJ_GO);
+  expect(corpo.usuario.tipo).toBe("GO");
+  expect(corpo.usuario).not.toHaveProperty("cpf");
+
+  const idSessao = idSessaoDaResposta(res);
+  expect(idSessao).not.toBeNull();
+  expect(getSessao(idSessao!)?.cpfUsuario).toBe(CNPJ_GO);
+
+  await cliente.dispose();
+});
+
 test("CA-AU-02 (gatilho): conta sem senha definida cria sessão e sinaliza 1º acesso", async () => {
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { cpf: CPF_PRIMEIRO_ACESSO, senha: "qualquer" },
+    data: { documento: CPF_PRIMEIRO_ACESSO, senha: "qualquer" },
   });
 
   expect(res.status()).toBe(200);
@@ -145,14 +196,17 @@ test("CA-AU-02 (gatilho): conta sem senha definida cria sessão e sinaliza 1º a
   await cliente.dispose();
 });
 
-test("CA-AU-03: CPF com dígito verificador inválido é rejeitado como CPF inválido", async () => {
+test("CA-AU-03: CPF com dígito verificador inválido é rejeitado como documento inválido", async () => {
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { cpf: CPF_INVALIDO, senha: SENHA },
+    data: { documento: CPF_INVALIDO, senha: SENHA },
   });
 
   expect(res.status()).toBe(400);
-  expect(await res.json()).toEqual({ erro: "CPF inválido" });
+  // UGO-10: `loginSchema` (T9) delega para `validarDocumento` (CPF ou CNPJ
+  // pelo comprimento) antes de saber o tipo do usuário - a mensagem deixou
+  // de ser "CPF inválido" porque o campo já não é CPF-específico.
+  expect(await res.json()).toEqual({ erro: "Documento inválido" });
   // Erro de formato, não de credencial: não pode virar o erro genérico.
   expect(res.status()).not.toBe(401);
   // Nenhuma sessão emitida.
@@ -164,12 +218,12 @@ test("CA-AU-03: CPF com dígito verificador inválido é rejeitado como CPF inv�
 test("CA-AU-04: CPF inexistente e senha errada produzem resposta indistinguível", async () => {
   const clienteA = await novoCliente();
   const inexistente = await clienteA.post("/api/auth/login", {
-    data: { cpf: CPF_INEXISTENTE, senha: SENHA },
+    data: { documento: CPF_INEXISTENTE, senha: SENHA },
   });
 
   const clienteB = await novoCliente();
   const senhaErrada = await clienteB.post("/api/auth/login", {
-    data: { cpf: CPF_SENHA_ERRADA, senha: SENHA_ERRADA },
+    data: { documento: CPF_SENHA_ERRADA, senha: SENHA_ERRADA },
   });
 
   expect(inexistente.status()).toBe(401);
@@ -189,13 +243,13 @@ test("CA-AU-08: após 5 falhas a conta é bloqueada mesmo com a senha correta", 
 
   for (let i = 0; i < 5; i++) {
     const falha = await cliente.post("/api/auth/login", {
-      data: { cpf: CPF_BLOQUEIO, senha: SENHA_ERRADA },
+      data: { documento: CPF_BLOQUEIO, senha: SENHA_ERRADA },
     });
     expect(falha.status()).toBe(401);
   }
 
   const comSenhaCorreta = await cliente.post("/api/auth/login", {
-    data: { cpf: CPF_BLOQUEIO, senha: SENHA },
+    data: { documento: CPF_BLOQUEIO, senha: SENHA },
   });
 
   expect(comSenhaCorreta.status()).toBe(401);
@@ -215,13 +269,13 @@ test("CA-AU-08: login bem-sucedido zera o contador de falhas", async () => {
 
   for (let i = 0; i < 2; i++) {
     await cliente.post("/api/auth/login", {
-      data: { cpf: CPF_RESET_CONTADOR, senha: SENHA_ERRADA },
+      data: { documento: CPF_RESET_CONTADOR, senha: SENHA_ERRADA },
     });
   }
   expect(getUsuario(CPF_RESET_CONTADOR)?.tentativasFalhas).toBe(2);
 
   const sucesso = await cliente.post("/api/auth/login", {
-    data: { cpf: CPF_RESET_CONTADOR, senha: SENHA },
+    data: { documento: CPF_RESET_CONTADOR, senha: SENHA },
   });
 
   expect(sucesso.status()).toBe(200);
@@ -233,14 +287,14 @@ test("CA-AU-08: login bem-sucedido zera o contador de falhas", async () => {
 test("CA-AU-09: login rotaciona o id de sessão e invalida o anterior", async () => {
   const clienteA = await novoCliente();
   const primeiro = await clienteA.post("/api/auth/login", {
-    data: { cpf: CPF_ROTACAO, senha: SENHA },
+    data: { documento: CPF_ROTACAO, senha: SENHA },
   });
   const idAnterior = idSessaoDaResposta(primeiro);
   expect(idAnterior).not.toBeNull();
 
   const clienteB = await novoCliente();
   const segundo = await clienteB.post("/api/auth/login", {
-    data: { cpf: CPF_ROTACAO, senha: SENHA },
+    data: { documento: CPF_ROTACAO, senha: SENHA },
     headers: { Cookie: `spma_sessao=${idAnterior}` },
   });
   const idNovo = idSessaoDaResposta(segundo);
@@ -259,7 +313,7 @@ test("CA-AU-09: login rotaciona o id de sessão e invalida o anterior", async ()
 test("CA-AU-10: resposta de login não expõe senha nem hash", async () => {
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { cpf: CPF_COM_SENHA, senha: SENHA },
+    data: { documento: CPF_COM_SENHA, senha: SENHA },
   });
 
   const texto = await res.text();
@@ -280,7 +334,7 @@ test("CA-AU-10: resposta de login não expõe senha nem hash", async () => {
 test("REQ-SEC-15: login bem-sucedido também emite o cookie de CSRF (double-submit)", async () => {
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { cpf: CPF_COM_SENHA, senha: SENHA },
+    data: { documento: CPF_COM_SENHA, senha: SENHA },
   });
 
   const cookies = cookiesDaResposta(res);
@@ -328,14 +382,14 @@ test("CA-SEC-04: tempo de resposta é da mesma ordem de grandeza para CPF inexis
   for (let i = 0; i < AMOSTRAS; i++) {
     const inicioA = Date.now();
     await cliente.post("/api/auth/login", {
-      data: { cpf: CPF_TIMING, senha: SENHA_ERRADA },
+      data: { documento: CPF_TIMING, senha: SENHA_ERRADA },
       headers: { "x-forwarded-for": IP_TESTE_TIMING },
     });
     duracoesSenhaErrada.push(Date.now() - inicioA);
 
     const inicioB = Date.now();
     await cliente.post("/api/auth/login", {
-      data: { cpf: CPF_INEXISTENTE, senha: SENHA },
+      data: { documento: CPF_INEXISTENTE, senha: SENHA },
       headers: { "x-forwarded-for": IP_TESTE_TIMING },
     });
     duracoesInexistente.push(Date.now() - inicioB);
@@ -356,7 +410,7 @@ test("CA-SEC-03: IP com falhas acima do limite recebe cooldown mesmo com credenc
   for (let i = 0; i < 20; i++) {
     const cliente = await novoCliente();
     const res = await cliente.post("/api/auth/login", {
-      data: { cpf: gerarCpfValidoESemConta(i), senha: "SenhaQualquer123" },
+      data: { documento: gerarCpfValidoESemConta(i), senha: "SenhaQualquer123" },
       headers: { "x-forwarded-for": IP_TESTE_BLOQUEIO },
     });
     expect(res.status()).toBe(401);
@@ -367,7 +421,7 @@ test("CA-SEC-03: IP com falhas acima do limite recebe cooldown mesmo com credenc
   // é recusada: é o IP que está em cooldown, não a conta.
   const clienteFinal = await novoCliente();
   const resFinal = await clienteFinal.post("/api/auth/login", {
-    data: { cpf: CPF_COM_SENHA, senha: SENHA },
+    data: { documento: CPF_COM_SENHA, senha: SENHA },
     headers: { "x-forwarded-for": IP_TESTE_BLOQUEIO },
   });
 
