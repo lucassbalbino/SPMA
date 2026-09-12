@@ -16,6 +16,7 @@ import {
   requireOfertanteVinculado,
   requirePrimeiroAcessoConcluido,
   requireSession,
+  resolverEscopoOfertante,
 } from "./guards";
 import { obterSessao, type SessaoComUsuario } from "./session";
 import { redirect } from "next/navigation";
@@ -83,26 +84,62 @@ describe("requireOfertanteVinculado", () => {
     vi.clearAllMocks();
   });
 
-  it("redireciona para /cadastro-ofertante quando GO está sem cdOfertante", () => {
+  it("redireciona para /cadastro-ofertante quando GO está com nome null", () => {
     expect(() =>
-      requireOfertanteVinculado({ tipo: "GO", cdOfertante: null }),
+      requireOfertanteVinculado({ tipo: "GO", nome: null, uf: "SP" }),
     ).toThrow("NEXT_REDIRECT:/cadastro-ofertante");
     expect(redirect).toHaveBeenCalledWith("/cadastro-ofertante");
   });
 
-  it("não redireciona quando GO já tem cdOfertante", () => {
-    requireOfertanteVinculado({ tipo: "GO", cdOfertante: 7 });
+  it("redireciona para /cadastro-ofertante quando GO está com uf null", () => {
+    expect(() =>
+      requireOfertanteVinculado({ tipo: "GO", nome: "Instituto Exemplo", uf: null }),
+    ).toThrow("NEXT_REDIRECT:/cadastro-ofertante");
+    expect(redirect).toHaveBeenCalledWith("/cadastro-ofertante");
+  });
+
+  it("não redireciona quando GO já tem nome e uf preenchidos", () => {
+    requireOfertanteVinculado({ tipo: "GO", nome: "Instituto Exemplo", uf: "SP" });
 
     expect(redirect).not.toHaveBeenCalled();
   });
 
-  // AD-012: AL tem escopo pelo curso, não pelo Ofertante - cdOfertante nulo
-  // é o estado normal dele e não pode prendê-lo no cadastro de Ofertante.
-  it("não redireciona perfil não-GO sem cdOfertante", () => {
-    requireOfertanteVinculado({ tipo: "AL", cdOfertante: null });
+  // AD-012: AL tem escopo pelo curso, não pelo Ofertante - nome/uf nulos são
+  // o estado normal dele e não podem prendê-lo no cadastro organizacional.
+  it("não redireciona perfil não-GO com nome/uf null", () => {
+    requireOfertanteVinculado({ tipo: "AL", nome: null, uf: null });
 
     expect(redirect).not.toHaveBeenCalled();
   });
+});
+
+describe("resolverEscopoOfertante", () => {
+  it("GO: devolve o próprio documento (é a origem do escopo, AD-043)", () => {
+    expect(
+      resolverEscopoOfertante({ tipo: "GO", documento: "11222333000181", cdOfertante: null }),
+    ).toBe("11222333000181");
+  });
+
+  it("VO: devolve o cdOfertante (documento do GO ao qual está vinculado)", () => {
+    expect(
+      resolverEscopoOfertante({ tipo: "VO", documento: "11144477735", cdOfertante: "11222333000181" }),
+    ).toBe("11222333000181");
+  });
+
+  it("VO sem cdOfertante: devolve null", () => {
+    expect(
+      resolverEscopoOfertante({ tipo: "VO", documento: "11144477735", cdOfertante: null }),
+    ).toBeNull();
+  });
+
+  it.each(["AM", "GT", "VT", "AL"] as const)(
+    "%s: sempre devolve null (não tem escopo por Ofertante)",
+    (tipo) => {
+      expect(
+        resolverEscopoOfertante({ tipo, documento: "11144477735", cdOfertante: null }),
+      ).toBeNull();
+    },
+  );
 });
 
 describe("requireDadosPessoaisCompletos", () => {
@@ -138,19 +175,19 @@ describe("requireDadosPessoaisCompletos", () => {
 describe("podeAcessarOfertante", () => {
   it("AM sempre pode acessar, para qualquer cdOfertanteAlvo", () => {
     expect(
-      podeAcessarOfertante({ tipo: "AM", cdOfertante: null }, 1),
+      podeAcessarOfertante({ tipo: "AM", documento: "00000000000", cdOfertante: null }, "1"),
     ).toBe(true);
     expect(
-      podeAcessarOfertante({ tipo: "AM", cdOfertante: null }, 999),
+      podeAcessarOfertante({ tipo: "AM", documento: "00000000000", cdOfertante: null }, "999"),
     ).toBe(true);
   });
 
   it("GT sempre pode acessar, para qualquer cdOfertanteAlvo", () => {
     expect(
-      podeAcessarOfertante({ tipo: "GT", cdOfertante: null }, 1),
+      podeAcessarOfertante({ tipo: "GT", documento: "00000000000", cdOfertante: null }, "1"),
     ).toBe(true);
     expect(
-      podeAcessarOfertante({ tipo: "GT", cdOfertante: null }, 999),
+      podeAcessarOfertante({ tipo: "GT", documento: "00000000000", cdOfertante: null }, "999"),
     ).toBe(true);
   });
 
@@ -160,71 +197,90 @@ describe("podeAcessarOfertante", () => {
   // precisa de um ramo correto, não só compilar.
   it("VT sempre pode acessar, para qualquer cdOfertanteAlvo (AD-012: escopo nacional)", () => {
     expect(
-      podeAcessarOfertante({ tipo: "VT", cdOfertante: null }, 1),
+      podeAcessarOfertante({ tipo: "VT", documento: "00000000000", cdOfertante: null }, "1"),
     ).toBe(true);
   });
 
-  it("GO vinculado ao ofertante 1 pedindo o ofertante 2: false", () => {
+  // GO É o próprio Ofertante (AD-043): o escopo dele vem do próprio
+  // documento (via resolverEscopoOfertante), não de um cdOfertante herdado -
+  // esse campo fica sempre null para um GO.
+  it("GO (documento 1) pedindo o ofertante 2: false", () => {
     expect(
-      podeAcessarOfertante({ tipo: "GO", cdOfertante: 1 }, 2),
+      podeAcessarOfertante({ tipo: "GO", documento: "1", cdOfertante: null }, "2"),
     ).toBe(false);
   });
 
-  it("GO vinculado ao ofertante 1 pedindo o ofertante 1: true", () => {
+  it("GO (documento 1) pedindo o próprio ofertante (1): true", () => {
     expect(
-      podeAcessarOfertante({ tipo: "GO", cdOfertante: 1 }, 1),
+      podeAcessarOfertante({ tipo: "GO", documento: "1", cdOfertante: null }, "1"),
     ).toBe(true);
   });
 
-  it("VO vinculado ao ofertante 1 pedindo o ofertante 2: false", () => {
+  it("VO vinculado ao GO 1 pedindo o ofertante 2: false", () => {
     expect(
-      podeAcessarOfertante({ tipo: "VO", cdOfertante: 1 }, 2),
+      podeAcessarOfertante({ tipo: "VO", documento: "99", cdOfertante: "1" }, "2"),
     ).toBe(false);
   });
 
-  it("VO vinculado ao ofertante 1 pedindo o ofertante 1: true", () => {
+  it("VO vinculado ao GO 1 pedindo o ofertante 1: true", () => {
     expect(
-      podeAcessarOfertante({ tipo: "VO", cdOfertante: 1 }, 1),
+      podeAcessarOfertante({ tipo: "VO", documento: "99", cdOfertante: "1" }, "1"),
     ).toBe(true);
   });
 
   it("AL nunca pode acessar por essa via, mesmo com cdOfertanteAlvo coincidente", () => {
     expect(
-      podeAcessarOfertante({ tipo: "AL", cdOfertante: null }, 1),
+      podeAcessarOfertante({ tipo: "AL", documento: "11144477735", cdOfertante: null }, "1"),
     ).toBe(false);
   });
 });
 
 describe("podeEditarOfertante", () => {
   it("AM sempre pode editar, para qualquer cdOfertanteAlvo", () => {
-    expect(podeEditarOfertante({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
-    expect(podeEditarOfertante({ tipo: "AM", cdOfertante: null }, 999)).toBe(true);
+    expect(
+      podeEditarOfertante({ tipo: "AM", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(true);
+    expect(
+      podeEditarOfertante({ tipo: "AM", documento: "00000000000", cdOfertante: null }, "999"),
+    ).toBe(true);
   });
 
   it("GT sempre pode editar, para qualquer cdOfertanteAlvo", () => {
-    expect(podeEditarOfertante({ tipo: "GT", cdOfertante: null }, 1)).toBe(true);
+    expect(
+      podeEditarOfertante({ tipo: "GT", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(true);
   });
 
-  it("GO vinculado ao ofertante 1 pode editar o ofertante 1", () => {
-    expect(podeEditarOfertante({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);
+  it("GO (documento 1) pode editar o próprio ofertante (1)", () => {
+    expect(
+      podeEditarOfertante({ tipo: "GO", documento: "1", cdOfertante: null }, "1"),
+    ).toBe(true);
   });
 
-  it("GO vinculado ao ofertante 1 não pode editar o ofertante 2", () => {
-    expect(podeEditarOfertante({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
+  it("GO (documento 1) não pode editar o ofertante 2", () => {
+    expect(
+      podeEditarOfertante({ tipo: "GO", documento: "1", cdOfertante: null }, "2"),
+    ).toBe(false);
   });
 
   // Diferença chave frente a podeAcessarOfertante: VT lê qualquer Ofertante,
   // mas "somente leitura" é a própria definição do perfil - nunca edita.
   it("VT nunca pode editar, mesmo tendo acesso de leitura nacional", () => {
-    expect(podeEditarOfertante({ tipo: "VT", cdOfertante: null }, 1)).toBe(false);
+    expect(
+      podeEditarOfertante({ tipo: "VT", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(false);
   });
 
   it("VO nunca pode editar, mesmo o próprio ofertante", () => {
-    expect(podeEditarOfertante({ tipo: "VO", cdOfertante: 1 }, 1)).toBe(false);
+    expect(
+      podeEditarOfertante({ tipo: "VO", documento: "99", cdOfertante: "1" }, "1"),
+    ).toBe(false);
   });
 
   it("AL nunca pode editar", () => {
-    expect(podeEditarOfertante({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
+    expect(
+      podeEditarOfertante({ tipo: "AL", documento: "11144477735", cdOfertante: null }, "1"),
+    ).toBe(false);
   });
 });
 
@@ -255,35 +311,51 @@ describe("podeGerenciarVerba", () => {
 });
 
 describe("podeGerenciarPreCurso", () => {
-  it("GO vinculado ao ofertante alvo pode gerenciar", () => {
-    expect(podeGerenciarPreCurso({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);
+  it("GO (documento 1) pode gerenciar o próprio ofertante (1)", () => {
+    expect(
+      podeGerenciarPreCurso({ tipo: "GO", documento: "1", cdOfertante: null }, "1"),
+    ).toBe(true);
   });
 
-  it("GO vinculado a outro ofertante não pode gerenciar", () => {
-    expect(podeGerenciarPreCurso({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
+  it("GO (documento 1) não pode gerenciar o ofertante 2", () => {
+    expect(
+      podeGerenciarPreCurso({ tipo: "GO", documento: "1", cdOfertante: null }, "2"),
+    ).toBe(false);
   });
 
   // AD-040: exceção administrativa para o AM, autoridade nacional (AD-012) -
   // qualquer Ofertante alvo, sem vínculo.
   it("AM pode gerenciar qualquer ofertante, por ser autoridade global", () => {
-    expect(podeGerenciarPreCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
-    expect(podeGerenciarPreCurso({ tipo: "AM", cdOfertante: null }, 2)).toBe(true);
+    expect(
+      podeGerenciarPreCurso({ tipo: "AM", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(true);
+    expect(
+      podeGerenciarPreCurso({ tipo: "AM", documento: "00000000000", cdOfertante: null }, "2"),
+    ).toBe(true);
   });
 
   it("GT não pode gerenciar", () => {
-    expect(podeGerenciarPreCurso({ tipo: "GT", cdOfertante: null }, 1)).toBe(false);
+    expect(
+      podeGerenciarPreCurso({ tipo: "GT", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(false);
   });
 
   it("VT não pode gerenciar", () => {
-    expect(podeGerenciarPreCurso({ tipo: "VT", cdOfertante: null }, 1)).toBe(false);
+    expect(
+      podeGerenciarPreCurso({ tipo: "VT", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(false);
   });
 
   it("VO não pode gerenciar, mesmo o próprio ofertante", () => {
-    expect(podeGerenciarPreCurso({ tipo: "VO", cdOfertante: 1 }, 1)).toBe(false);
+    expect(
+      podeGerenciarPreCurso({ tipo: "VO", documento: "99", cdOfertante: "1" }, "1"),
+    ).toBe(false);
   });
 
   it("AL não pode gerenciar", () => {
-    expect(podeGerenciarPreCurso({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
+    expect(
+      podeGerenciarPreCurso({ tipo: "AL", documento: "11144477735", cdOfertante: null }, "1"),
+    ).toBe(false);
   });
 });
 
@@ -295,32 +367,46 @@ describe("podeGerenciarPosCurso", () => {
     expect(podeGerenciarPosCurso).toBe(podeGerenciarPreCurso);
   });
 
-  it("GO vinculado ao ofertante do PreCurso pai pode gerenciar", () => {
-    expect(podeGerenciarPosCurso({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);
+  it("GO (documento 1) pode gerenciar o ofertante do PreCurso pai (1)", () => {
+    expect(
+      podeGerenciarPosCurso({ tipo: "GO", documento: "1", cdOfertante: null }, "1"),
+    ).toBe(true);
   });
 
-  it("GO vinculado a outro ofertante não pode gerenciar", () => {
-    expect(podeGerenciarPosCurso({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
+  it("GO (documento 1) não pode gerenciar o ofertante 2", () => {
+    expect(
+      podeGerenciarPosCurso({ tipo: "GO", documento: "1", cdOfertante: null }, "2"),
+    ).toBe(false);
   });
 
   it("AM pode gerenciar qualquer ofertante, por ser autoridade global", () => {
-    expect(podeGerenciarPosCurso({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
+    expect(
+      podeGerenciarPosCurso({ tipo: "AM", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(true);
   });
 
   it("GT não pode gerenciar", () => {
-    expect(podeGerenciarPosCurso({ tipo: "GT", cdOfertante: null }, 1)).toBe(false);
+    expect(
+      podeGerenciarPosCurso({ tipo: "GT", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(false);
   });
 
   it("VT não pode gerenciar", () => {
-    expect(podeGerenciarPosCurso({ tipo: "VT", cdOfertante: null }, 1)).toBe(false);
+    expect(
+      podeGerenciarPosCurso({ tipo: "VT", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(false);
   });
 
   it("VO não pode gerenciar, mesmo o próprio ofertante", () => {
-    expect(podeGerenciarPosCurso({ tipo: "VO", cdOfertante: 1 }, 1)).toBe(false);
+    expect(
+      podeGerenciarPosCurso({ tipo: "VO", documento: "99", cdOfertante: "1" }, "1"),
+    ).toBe(false);
   });
 
   it("AL não pode gerenciar", () => {
-    expect(podeGerenciarPosCurso({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
+    expect(
+      podeGerenciarPosCurso({ tipo: "AL", documento: "11144477735", cdOfertante: null }, "1"),
+    ).toBe(false);
   });
 });
 
@@ -329,27 +415,43 @@ describe("podeGerenciarPosCurso", () => {
 // mais alias de podeGerenciarPreCurso: o AM matricula porque cria Aluno em
 // qualquer Ofertante, e o Aluno nasce matriculado.
 describe("podeMatricularAluno", () => {
-  it("GO vinculado ao ofertante do curso pode matricular", () => {
-    expect(podeMatricularAluno({ tipo: "GO", cdOfertante: 1 }, 1)).toBe(true);
+  it("GO (documento 1) pode matricular no próprio ofertante (curso do ofertante 1)", () => {
+    expect(
+      podeMatricularAluno({ tipo: "GO", documento: "1", cdOfertante: null }, "1"),
+    ).toBe(true);
   });
 
-  it("GO vinculado a outro ofertante não pode matricular", () => {
-    expect(podeMatricularAluno({ tipo: "GO", cdOfertante: 1 }, 2)).toBe(false);
+  it("GO (documento 1) não pode matricular em curso de outro ofertante", () => {
+    expect(
+      podeMatricularAluno({ tipo: "GO", documento: "1", cdOfertante: null }, "2"),
+    ).toBe(false);
   });
 
   it("AM matricula em qualquer Ofertante (autoridade nacional, AD-012)", () => {
-    expect(podeMatricularAluno({ tipo: "AM", cdOfertante: null }, 1)).toBe(true);
-    expect(podeMatricularAluno({ tipo: "AM", cdOfertante: null }, 2)).toBe(true);
+    expect(
+      podeMatricularAluno({ tipo: "AM", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(true);
+    expect(
+      podeMatricularAluno({ tipo: "AM", documento: "00000000000", cdOfertante: null }, "2"),
+    ).toBe(true);
   });
 
   it("GT não pode matricular (nem cria Aluno, REQ-AU-05/06)", () => {
-    expect(podeMatricularAluno({ tipo: "GT", cdOfertante: null }, 1)).toBe(false);
+    expect(
+      podeMatricularAluno({ tipo: "GT", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(false);
   });
 
   it("VT/VO/AL não matriculam", () => {
-    expect(podeMatricularAluno({ tipo: "VT", cdOfertante: null }, 1)).toBe(false);
-    expect(podeMatricularAluno({ tipo: "VO", cdOfertante: 1 }, 1)).toBe(false);
-    expect(podeMatricularAluno({ tipo: "AL", cdOfertante: null }, 1)).toBe(false);
+    expect(
+      podeMatricularAluno({ tipo: "VT", documento: "00000000000", cdOfertante: null }, "1"),
+    ).toBe(false);
+    expect(
+      podeMatricularAluno({ tipo: "VO", documento: "99", cdOfertante: "1" }, "1"),
+    ).toBe(false);
+    expect(
+      podeMatricularAluno({ tipo: "AL", documento: "11144477735", cdOfertante: null }, "1"),
+    ).toBe(false);
   });
 
   it("continua sem afetar quem preenche/encerra a avaliação (só o próprio Aluno)", () => {
@@ -391,8 +493,8 @@ describe("podeAcessarAvaliacao", () => {
   it("AL com CPF igual ao alvo pode acessar, independente do cdOfertante", () => {
     expect(
       podeAcessarAvaliacao(
-        { tipo: "AL", cpf: "52998224725", cdOfertante: null },
-        { cpfAluno: "52998224725", cdOfertante: 1 },
+        { tipo: "AL", cpf: "52998224725", documento: "52998224725", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: "1" },
       ),
     ).toBe(true);
   });
@@ -400,26 +502,26 @@ describe("podeAcessarAvaliacao", () => {
   it("AL com CPF diferente do alvo não pode acessar", () => {
     expect(
       podeAcessarAvaliacao(
-        { tipo: "AL", cpf: "11144477735", cdOfertante: null },
-        { cpfAluno: "52998224725", cdOfertante: 1 },
+        { tipo: "AL", cpf: "11144477735", documento: "11144477735", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: "1" },
       ),
     ).toBe(false);
   });
 
-  it("GO vinculado ao cdOfertante do alvo pode acessar", () => {
+  it("GO (documento igual ao cdOfertante do alvo) pode acessar", () => {
     expect(
       podeAcessarAvaliacao(
-        { tipo: "GO", cpf: "11144477735", cdOfertante: 1 },
-        { cpfAluno: "52998224725", cdOfertante: 1 },
+        { tipo: "GO", cpf: "11144477735", documento: "1", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: "1" },
       ),
     ).toBe(true);
   });
 
-  it("GO vinculado a outro Ofertante não pode acessar", () => {
+  it("GO (documento diferente do cdOfertante do alvo) não pode acessar", () => {
     expect(
       podeAcessarAvaliacao(
-        { tipo: "GO", cpf: "11144477735", cdOfertante: 2 },
-        { cpfAluno: "52998224725", cdOfertante: 1 },
+        { tipo: "GO", cpf: "11144477735", documento: "2", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: "1" },
       ),
     ).toBe(false);
   });
@@ -427,8 +529,8 @@ describe("podeAcessarAvaliacao", () => {
   it("VO vinculado ao cdOfertante do alvo pode acessar", () => {
     expect(
       podeAcessarAvaliacao(
-        { tipo: "VO", cpf: "11144477735", cdOfertante: 1 },
-        { cpfAluno: "52998224725", cdOfertante: 1 },
+        { tipo: "VO", cpf: "11144477735", documento: "99", cdOfertante: "1" },
+        { cpfAluno: "52998224725", cdOfertante: "1" },
       ),
     ).toBe(true);
   });
@@ -436,20 +538,20 @@ describe("podeAcessarAvaliacao", () => {
   it("AM/GT/VT sempre podem acessar, para qualquer alvo", () => {
     expect(
       podeAcessarAvaliacao(
-        { tipo: "AM", cpf: "11144477735", cdOfertante: null },
-        { cpfAluno: "52998224725", cdOfertante: 1 },
+        { tipo: "AM", cpf: "11144477735", documento: "00000000000", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: "1" },
       ),
     ).toBe(true);
     expect(
       podeAcessarAvaliacao(
-        { tipo: "GT", cpf: "11144477735", cdOfertante: null },
-        { cpfAluno: "52998224725", cdOfertante: 1 },
+        { tipo: "GT", cpf: "11144477735", documento: "00000000000", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: "1" },
       ),
     ).toBe(true);
     expect(
       podeAcessarAvaliacao(
-        { tipo: "VT", cpf: "11144477735", cdOfertante: null },
-        { cpfAluno: "52998224725", cdOfertante: 1 },
+        { tipo: "VT", cpf: "11144477735", documento: "00000000000", cdOfertante: null },
+        { cpfAluno: "52998224725", cdOfertante: "1" },
       ),
     ).toBe(true);
   });

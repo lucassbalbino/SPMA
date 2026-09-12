@@ -207,7 +207,7 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T6: Reescrever `guards.ts` para escopo por GO/CNPJ
+### T6: Reescrever `guards.ts` para escopo por GO/CNPJ ✅
 
 **What**: Nova função `resolverEscopoOfertante(usuario)` (GO -> o próprio `documento`; VO -> `cdOfertante`; demais -> `null`), usada internamente por `podeAcessarOfertante`, `podeEditarOfertante`, `podeGerenciarPreCurso`, `podeMatricularAluno`, `podeAcessarAvaliacao` (assinaturas públicas inalteradas). `requireOfertanteVinculado` passa a checar dados organizacionais incompletos (`nome`/`uf` nulos) em vez de `cdOfertante === null`.
 **Where**: `src/lib/auth/guards.ts`
@@ -220,11 +220,11 @@ T18 → T19 → T20 → T21 → T22 → T23
 - Skill: NONE
 
 **Done when**:
-- [ ] Todo teste existente de `guards.test.ts` atualizado para `cdOfertante`/`documento` como `string`
-- [ ] Novo teste: GO acessando um recurso cujo `cdOfertanteAlvo` é o próprio `documento` -> permitido
-- [ ] Novo teste: VO acessando um recurso de um GO diferente do seu `cdOfertante` -> negado
-- [ ] `requireOfertanteVinculado` redireciona quando `nome`/`uf` do GO são nulos, não redireciona quando completos
-- [ ] Gate check passa: `npm run test:unit`
+- [x] Todo teste existente de `guards.test.ts` atualizado para `cdOfertante`/`documento` como `string`
+- [x] Novo teste: GO acessando um recurso cujo `cdOfertanteAlvo` é o próprio `documento` -> permitido
+- [x] Novo teste: VO acessando um recurso de um GO diferente do seu `cdOfertante` -> negado
+- [x] `requireOfertanteVinculado` redireciona quando `nome`/`uf` do GO são nulos, não redireciona quando completos
+- [x] Gate check passa: `npm run test:unit`
 
 **Tests**: unit
 **Gate**: quick

@@ -32,15 +32,19 @@ export function requirePrimeiroAcessoConcluido(usuario: {
 }
 
 /**
- * GO sem Ofertante vinculado cadastra o seu antes de seguir (REQ-AU-09).
- * Vale só para GO: AL tem escopo pelo curso e VO/GO são os únicos perfis
- * vinculados a Ofertante (AD-012).
+ * GO sem dados organizacionais completos cadastra os seus antes de seguir
+ * (REQ-AU-09, UGO-01/AD-043). Um GO É o próprio Ofertante (não tem mais
+ * `cdOfertante` de terceiro para checar) - a completude passa a ser medida
+ * pelos dois campos obrigatórios do cadastro organizacional (`nome`, `uf`).
+ * Vale só para GO: AL tem escopo pelo curso e VO nunca cadastra dados
+ * organizacionais próprios (AD-012).
  */
 export function requireOfertanteVinculado(usuario: {
   tipo: TipoUsuario;
-  cdOfertante: number | null;
+  nome: string | null;
+  uf: string | null;
 }): void {
-  if (usuario.tipo === "GO" && usuario.cdOfertante === null) {
+  if (usuario.tipo === "GO" && (usuario.nome === null || usuario.uf === null)) {
     redirect("/cadastro-ofertante");
   }
 }
@@ -69,6 +73,33 @@ export function requireDadosPessoaisCompletos(usuario: {
 }
 
 /**
+ * Único ponto que resolve o escopo de Ofertante EFETIVO de um usuário
+ * (UGO-14/AD-043). Sem `model Ofertante` separado, um GO não "pertence" a um
+ * Ofertante - ele É um, identificado pelo próprio `documento` (CNPJ); seu
+ * `cdOfertante` fica sempre null (não é FK de terceiro, é a origem do
+ * escopo). Um VO continua vinculado via `cdOfertante`, agora apontando para o
+ * `documento` do GO. Os demais tipos não têm escopo por Ofertante.
+ *
+ * As 5 guardas abaixo consomem esta função em vez de ler `usuario.cdOfertante`
+ * diretamente - design.md, Componente `resolverEscopoOfertante`.
+ */
+export function resolverEscopoOfertante(usuario: {
+  tipo: TipoUsuario;
+  documento: string;
+  cdOfertante: string | null;
+}): string | null {
+  if (usuario.tipo === "GO") {
+    return usuario.documento;
+  }
+
+  if (usuario.tipo === "VO") {
+    return usuario.cdOfertante;
+  }
+
+  return null;
+}
+
+/**
  * Guarda de LEITURA por escopo de Ofertante (REQ-SEC-14, REQ-OV-05/07,
  * AD-012), consumida por `cadastro-ofertante-verba` em toda rota de consulta
  * de Ofertante/Verba. Função pura, mesmo estilo de `podeCriar` em
@@ -76,12 +107,13 @@ export function requireDadosPessoaisCompletos(usuario: {
  *
  * AM/GT/VT são os perfis de escopo nacional (AD-012, mesmo grupo que fica com
  * `cdOfertante` sempre null - ver schema.prisma) e sempre podem acessar
- * qualquer Ofertante. GO/VO só acessam o próprio Ofertante vinculado. AL tem
- * escopo pelo curso, não pelo Ofertante (AD-012), e nunca acessa por essa via.
+ * qualquer Ofertante. GO/VO só acessam o próprio Ofertante vinculado (via
+ * `resolverEscopoOfertante`). AL tem escopo pelo curso, não pelo Ofertante
+ * (AD-012), e nunca acessa por essa via.
  */
 export function podeAcessarOfertante(
-  usuario: { tipo: TipoUsuario; cdOfertante: number | null },
-  cdOfertanteAlvo: number,
+  usuario: { tipo: TipoUsuario; documento: string; cdOfertante: string | null },
+  cdOfertanteAlvo: string,
 ): boolean {
   switch (usuario.tipo) {
     case "AM":
@@ -90,7 +122,7 @@ export function podeAcessarOfertante(
       return true;
     case "GO":
     case "VO":
-      return usuario.cdOfertante === cdOfertanteAlvo;
+      return resolverEscopoOfertante(usuario) === cdOfertanteAlvo;
     case "AL":
       return false;
   }
@@ -101,18 +133,18 @@ export function podeAcessarOfertante(
  * separada de `podeAcessarOfertante`: aquela devolve `true` para VT (leitura
  * nacional), e VT nunca deve poder editar - "somente leitura" é a própria
  * definição do perfil. AM/GT sempre podem editar qualquer Ofertante; GO só o
- * próprio; VT/VO/AL nunca.
+ * próprio (via `resolverEscopoOfertante`); VT/VO/AL nunca.
  */
 export function podeEditarOfertante(
-  usuario: { tipo: TipoUsuario; cdOfertante: number | null },
-  cdOfertanteAlvo: number,
+  usuario: { tipo: TipoUsuario; documento: string; cdOfertante: string | null },
+  cdOfertanteAlvo: string,
 ): boolean {
   switch (usuario.tipo) {
     case "AM":
     case "GT":
       return true;
     case "GO":
-      return usuario.cdOfertante === cdOfertanteAlvo;
+      return resolverEscopoOfertante(usuario) === cdOfertanteAlvo;
     case "VT":
     case "VO":
     case "AL":
@@ -137,10 +169,13 @@ export function podeGerenciarVerba(tipo: TipoUsuario): boolean {
  * gere Verba, não Curso.
  */
 export function podeGerenciarPreCurso(
-  usuario: { tipo: TipoUsuario; cdOfertante: number | null },
-  cdOfertanteAlvo: number,
+  usuario: { tipo: TipoUsuario; documento: string; cdOfertante: string | null },
+  cdOfertanteAlvo: string,
 ): boolean {
-  return usuario.tipo === "AM" || (usuario.tipo === "GO" && usuario.cdOfertante === cdOfertanteAlvo);
+  return (
+    usuario.tipo === "AM" ||
+    (usuario.tipo === "GO" && resolverEscopoOfertante(usuario) === cdOfertanteAlvo)
+  );
 }
 
 /**
@@ -164,8 +199,8 @@ export const podeGerenciarPosCurso = podeGerenciarPreCurso;
  * encerrar continua sendo só do próprio Aluno (`podeGerenciarAvaliacao`).
  */
 export function podeMatricularAluno(
-  usuario: { tipo: TipoUsuario; cdOfertante: number | null },
-  cdOfertanteAlvo: number,
+  usuario: { tipo: TipoUsuario; documento: string; cdOfertante: string | null },
+  cdOfertanteAlvo: string,
 ): boolean {
   return usuario.tipo === "AM" || podeGerenciarPreCurso(usuario, cdOfertanteAlvo);
 }
@@ -191,8 +226,13 @@ export function podeGerenciarAvaliacao(
  * recurso é lido tanto pelo dono quanto pela gestão do Ofertante do curso.
  */
 export function podeAcessarAvaliacao(
-  usuario: { tipo: TipoUsuario; cpf: string; cdOfertante: number | null },
-  alvo: { cpfAluno: string; cdOfertante: number },
+  usuario: {
+    tipo: TipoUsuario;
+    cpf: string;
+    documento: string;
+    cdOfertante: string | null;
+  },
+  alvo: { cpfAluno: string; cdOfertante: string },
 ): boolean {
   if (usuario.tipo === "AL") {
     return usuario.cpf === alvo.cpfAluno;
