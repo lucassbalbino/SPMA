@@ -8,7 +8,7 @@ const MATRIZ_ESPERADA: Record<TipoUsuario, TipoUsuario[]> = {
   AM: ["AM", "GT", "VT", "GO", "VO", "AL"],
   GT: ["GT", "VT", "GO"],
   VT: [],
-  GO: ["GO", "VO", "AL"],
+  GO: ["VO", "AL"],
   VO: [],
   AL: [],
 };
@@ -35,42 +35,42 @@ describe("podeCriar", () => {
 describe("resolverOfertante", () => {
   it("ignora cdOfertanteInformado quando criador é GO criando GO", () => {
     const resultado = resolverOfertante(
-      { tipo: TipoUsuario.GO, cdOfertante: 10 },
+      { tipo: TipoUsuario.GO, cdOfertante: "10" },
       TipoUsuario.GO,
-      999,
+      "999",
     );
 
-    expect(resultado).toBe(10);
+    expect(resultado).toBe("10");
   });
 
   it("ignora cdOfertanteInformado quando criador é GO criando VO", () => {
     const resultado = resolverOfertante(
-      { tipo: TipoUsuario.GO, cdOfertante: 10 },
+      { tipo: TipoUsuario.GO, cdOfertante: "10" },
       TipoUsuario.VO,
-      999,
+      "999",
     );
 
-    expect(resultado).toBe(10);
+    expect(resultado).toBe("10");
   });
 
   it("usa cdOfertanteInformado quando criador é AM e alvo é GO", () => {
     const resultado = resolverOfertante(
       { tipo: TipoUsuario.AM, cdOfertante: null },
       TipoUsuario.GO,
-      42,
+      "42",
     );
 
-    expect(resultado).toBe(42);
+    expect(resultado).toBe("42");
   });
 
   it("usa cdOfertanteInformado quando criador é GT e alvo é VO", () => {
     const resultado = resolverOfertante(
       { tipo: TipoUsuario.GT, cdOfertante: null },
       TipoUsuario.VO,
-      77,
+      "77",
     );
 
-    expect(resultado).toBe(77);
+    expect(resultado).toBe("77");
   });
 
   it.each([TipoUsuario.AM, TipoUsuario.GT, TipoUsuario.VT, TipoUsuario.AL])(
@@ -79,7 +79,7 @@ describe("resolverOfertante", () => {
       const resultado = resolverOfertante(
         { tipo: TipoUsuario.AM, cdOfertante: null },
         alvoTipo,
-        123,
+        "123",
       );
 
       expect(resultado).toBeNull();

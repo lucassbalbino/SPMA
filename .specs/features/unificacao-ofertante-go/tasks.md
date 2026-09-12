@@ -231,7 +231,7 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T7: Atualizar `cascata.ts` - GO deixa de criar GO, tipos de `cdOfertante`
+### T7: Atualizar `cascata.ts` - GO deixa de criar GO, tipos de `cdOfertante` ✅
 
 **What**: `TIPOS_PERMITIDOS.GO` passa de `["GO", "VO", "AL"]` para `["VO", "AL"]` (UGO-18/AD-043). `resolverOfertante` passa a operar sobre `string | null` em vez de `number | null`.
 **Where**: `src/lib/auth/cascata.ts`
@@ -244,9 +244,9 @@ T18 → T19 → T20 → T21 → T22 → T23
 - Skill: NONE
 
 **Done when**:
-- [ ] `cascata.test.ts`: `MATRIZ_ESPERADA.GO` vira `["VO", "AL"]`; a combinação GO-cria-GO passa a esperar `false`
-- [ ] Testes de `resolverOfertante` atualizados para `cdOfertante: string`
-- [ ] Gate check passa: `npm run test:unit`
+- [x] `cascata.test.ts`: `MATRIZ_ESPERADA.GO` vira `["VO", "AL"]`; a combinação GO-cria-GO passa a esperar `false`
+- [x] Testes de `resolverOfertante` atualizados para `cdOfertante: string`
+- [x] Gate check passa: `npm run test:unit`
 
 **Tests**: unit
 **Gate**: quick
