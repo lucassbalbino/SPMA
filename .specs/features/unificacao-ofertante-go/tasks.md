@@ -110,7 +110,7 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T2: Criar validador de documento (CPF ou CNPJ pelo comprimento)
+### T2: Criar validador de documento (CPF ou CNPJ pelo comprimento) ✅
 
 **What**: `src/lib/validation/documento.ts` com `normalizarDocumento`/`validarDocumento(valor): {valido, tipo}`, delegando para `cpf.ts` (11 dígitos) ou `cnpj.ts` (14 dígitos) - único ponto que decide qual algoritmo aplicar quando o chamador ainda não sabe o `tipo` do usuário (login).
 **Where**: `src/lib/validation/documento.ts`
@@ -123,10 +123,10 @@ T18 → T19 → T20 → T21 → T22 → T23
 - Skill: NONE
 
 **Done when**:
-- [ ] 11 dígitos válidos -> `{valido:true, tipo:"CPF"}`
-- [ ] 14 dígitos válidos -> `{valido:true, tipo:"CNPJ"}`
-- [ ] Qualquer outro comprimento, ou dígito verificador inválido -> `{valido:false, tipo:null}`
-- [ ] Gate check passa: `npm run test:unit`
+- [x] 11 dígitos válidos -> `{valido:true, tipo:"CPF"}`
+- [x] 14 dígitos válidos -> `{valido:true, tipo:"CNPJ"}`
+- [x] Qualquer outro comprimento, ou dígito verificador inválido -> `{valido:false, tipo:null}`
+- [x] Gate check passa: `npm run test:unit`
 
 **Tests**: unit
 **Gate**: quick
