@@ -9,8 +9,10 @@ export const camposVerbaSchema = z.object({
   dtVerba: z.coerce.date().optional(),
 });
 
+// UGO-14/AD-043: o Ofertante É o GO - `cdOfertante` passa a ser o `documento`
+// (CNPJ) do próprio GO, não mais um id numérico de uma tabela à parte.
 export const verbaSchema = camposVerbaSchema.extend({
-  cdOfertante: z.number().int().positive({ message: "Ofertante é obrigatório" }),
+  cdOfertante: z.string().min(1, { message: "Ofertante é obrigatório" }),
 });
 
 export type VerbaInput = z.infer<typeof verbaSchema>;

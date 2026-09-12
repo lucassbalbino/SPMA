@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { edicaoVerbaSchema, verbaSchema } from "./verba.schema";
 
+const CNPJ_GO = "24000001000102";
+
 describe("verbaSchema", () => {
   it("rejeita vlVerba zero", () => {
-    const result = verbaSchema.safeParse({ cdOfertante: 1, vlVerba: 0 });
+    const result = verbaSchema.safeParse({ cdOfertante: CNPJ_GO, vlVerba: 0 });
 
     expect(result.success).toBe(false);
   });
 
   it("rejeita vlVerba negativo", () => {
-    const result = verbaSchema.safeParse({ cdOfertante: 1, vlVerba: -100 });
+    const result = verbaSchema.safeParse({ cdOfertante: CNPJ_GO, vlVerba: -100 });
 
     expect(result.success).toBe(false);
   });
@@ -20,21 +22,21 @@ describe("verbaSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejeita cdOfertante não-positivo", () => {
-    const result = verbaSchema.safeParse({ cdOfertante: 0, vlVerba: 1000 });
+  it("rejeita cdOfertante vazio", () => {
+    const result = verbaSchema.safeParse({ cdOfertante: "", vlVerba: 1000 });
 
     expect(result.success).toBe(false);
   });
 
   it("aceita payload válido só com campos obrigatórios", () => {
-    const result = verbaSchema.safeParse({ cdOfertante: 1, vlVerba: 1000 });
+    const result = verbaSchema.safeParse({ cdOfertante: CNPJ_GO, vlVerba: 1000 });
 
     expect(result.success).toBe(true);
   });
 
   it("aceita payload válido com dtVerba", () => {
     const result = verbaSchema.safeParse({
-      cdOfertante: 1,
+      cdOfertante: CNPJ_GO,
       vlVerba: 1000,
       dtVerba: "2026-01-15",
     });

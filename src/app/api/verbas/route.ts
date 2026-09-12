@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { obterSessao } from "@/lib/auth/session";
-import { podeGerenciarVerba } from "@/lib/auth/guards";
+import { podeGerenciarVerba, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { verbaSchema } from "@/lib/validation/schemas/verba.schema";
 import { calcularSaldoVerba } from "@/lib/verba/saldo";
 import { verificarCSRF } from "@/lib/security/csrf";
@@ -40,12 +40,14 @@ async function criarVerba(request: Request) {
 
   const dados = entrada.data;
 
-  // CA-OV-09: erro claro, não a constraint de FK crua do MySQL.
-  const ofertante = await prisma.ofertante.findUnique({
-    where: { cdOfertante: dados.cdOfertante },
+  // CA-OV-09: erro claro, não a constraint de FK crua do MySQL. UGO-14/AD-043:
+  // o Ofertante É o GO - existência checada em `Usuario`, não numa tabela à
+  // parte, e o documento precisa pertencer a um GO de fato.
+  const go = await prisma.usuario.findUnique({
+    where: { documento: dados.cdOfertante, tipo: "GO" },
   });
 
-  if (!ofertante) {
+  if (!go) {
     return NextResponse.json({ erro: "Ofertante informado não existe" }, { status: 400 });
   }
 
@@ -71,18 +73,19 @@ async function listarVerbas(request: Request) {
   const cdOfertanteFiltro = new URL(request.url).searchParams.get("cdOfertante");
 
   // REQ-OV-10: mesmo escopo de GET /api/ofertantes. GO/VO nunca confiam no
-  // filtro do cliente - o próprio cdOfertante do usuário sempre prevalece.
-  let where: { cdOfertante?: number } = {};
+  // filtro do cliente - o próprio escopo do usuário sempre prevalece
+  // (`resolverEscopoOfertante`, T6/UGO-14).
+  let where: { cdOfertante?: string } = {};
 
   switch (usuario.tipo) {
     case "AM":
     case "GT":
     case "VT":
-      where = cdOfertanteFiltro ? { cdOfertante: Number(cdOfertanteFiltro) } : {};
+      where = cdOfertanteFiltro ? { cdOfertante: cdOfertanteFiltro } : {};
       break;
     case "GO":
     case "VO":
-      where = { cdOfertante: usuario.cdOfertante ?? -1 };
+      where = { cdOfertante: resolverEscopoOfertante(usuario) ?? "" };
       break;
     case "AL":
       return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
