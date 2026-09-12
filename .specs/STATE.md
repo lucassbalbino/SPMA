@@ -104,16 +104,16 @@ AM cria todos; GT cria GT/VT/GO; GO cria GO/VO/AL; VT/VO/AL não criam ninguém.
 
 **AD-011 — Validação de CPF:** algoritmo padrão módulo 11, no cliente e no servidor.
 
-**AD-012 — Escopo/Multi-tenancy:** GO e VO têm escopo por Ofertante; AL tem escopo pelo curso em que está inscrito (não pelo Ofertante). Toda consulta filtrada pelo escopo do solicitante.
+**AD-012 — Escopo/Multi-tenancy:** GO e VO têm escopo por Ofertante; AL tem escopo pelo curso em que está inscrito (não pelo Ofertante). Toda consulta filtrada pelo escopo do solicitante. ⚠️ *Superada por AD-043 (2026-09-12): não há mais um "Ofertante" separado do GO — o escopo do GO é ele mesmo; o VO tem escopo pelo GO ao qual está vinculado.*
 
 **AD-013 — Acesso fora de escopo retorna HTTP 403 Forbidden** (não "dado invisível"/404).
 
 ### Ofertante e Verba
 
-**AD-014 — Criação de Ofertante:** três formas — pré-cadastro administrativo, por GT, ou pelo próprio GO no 1º acesso quando ainda não vinculado (nesse caso o sistema força o cadastro antes de liberar o resto).
+**AD-014 — Criação de Ofertante:** três formas — pré-cadastro administrativo, por GT, ou pelo próprio GO no 1º acesso quando ainda não vinculado (nesse caso o sistema força o cadastro antes de liberar o resto). ⚠️ *Superada por AD-043 (2026-09-12): "Ofertante" deixa de ser um cadastro de terceiro — as três formas continuam existindo, mas agora cadastram os dados organizacionais do próprio GO, não um registro separado.*
 
 **AD-015 — Verba pertence ao Ofertante, relação 1:N com Curso.**
-Uma verba pode custear vários cursos. A FK fica no Curso (`TB_Pre_Curso.CD_Verba`), com `VL_Curso_Alocado` por curso. TB_Verba NÃO tem CD_Curso.
+Uma verba pode custear vários cursos. A FK fica no Curso (`TB_Pre_Curso.CD_Verba`), com `VL_Curso_Alocado` por curso. TB_Verba NÃO tem CD_Curso. ⚠️ *Parcialmente superada por AD-043 (2026-09-12): a relação 1 Verba : N Curso e a ausência de `CD_Curso` em `TB_Verba` continuam valendo; o que muda é o alvo de `CD_Ofertante` (passa a apontar para o GO, não para uma tabela `Ofertante`).*
 
 **AD-016 — Teto da verba:** o somatório dos valores alocados aos cursos de uma verba pode IGUALAR o valor total da verba (validação `<=`, uso de até 100%). Ultrapassar é bloqueado.
 
@@ -261,3 +261,20 @@ Pedido do usuário, em três partes que chegaram em momentos diferentes da mesma
 
 Feature em `.specs/features/dados-pessoais-separados/` (Complex: `spec.md` 27 requisitos, `design.md`, `tasks.md` 11 tarefas em 5 fases). 10/10 tarefas implementadas e commitadas — **Verifier independente ainda NÃO rodou**, a feature não está fechada.
 **Testes no HEAD:** 611 unit / 70 integration / 258 e2e, gate completo verde.
+
+**AD-043 (2026-09-12) — Ofertante deixa de ser entidade separada: o Gestor Ofertante (GO) passa a SER o Ofertante, identificado por CNPJ (não CPF), e o VO passa a se vincular diretamente ao GO específico. Supera AD-012, AD-014 e AD-015 (anotadas acima, não removidas).**
+
+Pedido do usuário, decisão de negócio já tomada e não reaberta: "Ofertante e Gestor Ofertante são o mesmo ente". Três decisões de forma, resolvidas em Design a partir de investigação real (não suposição) e confirmadas pelo usuário em 2026-09-12:
+
+1. **PK de `Usuario`: campo único `documento` homogêneo (`String @id @db.VarChar(14)`), não uma chave substituta.** `cpf` é renomeado para `documento` e guarda 11 dígitos (AM/GT/VT/AL, inalterado) ou 14 dígitos (GO). Escolhida sobre a alternativa (PK substituta `id` + colunas `cpf`/`cnpj` mutuamente exclusivas) porque: (a) o schema já usa `tipo` como discriminante do que os outros campos significam (`cdOfertante` só não-nulo para GO/VO) — estender essa mesma lógica ao documento é consistente com o desenho existente; (b) a alternativa introduziria a primeira PK substituta do schema inteiro (toda outra tabela usa chave natural/de negócio: `cpf`, `cdOfertante`, `cdVerba`, `cdCurso`, composto `cpf+cdCurso`), quebrando a uniformidade por um ganho que não compensa; (c) mantém "1 lookup de PK" no login independente do tipo de documento. Custo aceito: código que hoje assume 11 dígitos (mascaramento de log AD-029, formatação de exibição) precisa virar `tipo`-aware — mecânico, localizado, apontado pelo compilador TS após o rename.
+2. **Dados organizacionais do GO (nome, responsável, email, telefone, UF, município) viram colunas inline em `Usuario`, não uma tabela 1:1 separada.** `model Ofertante` é removido. `nome` (já existente) passa a significar "nome da organização" para GO; `responsavel`/`telefone`/`uf`/`municipio` são colunas novas, nulas, só preenchidas para GO. Escolhida sobre uma tabela 1:1 porque guardas de gate como `requireOfertanteVinculado` rodam em todo request do layout protegido — inline evita um join extra recorrente; os 6 campos já eram escalares simples no `model Ofertante` antigo (diferente do caso de `DadoPessoalAluno`/AD-042, que é EAV porque é questionário multi-linha).
+3. **VO vincula-se ao CNPJ do GO diretamente** (`Usuario.cdOfertante`, mesmo nome de campo, tipo mudado de `Int` para `String @db.VarChar(14)`); o `cdOfertante` do próprio GO permanece `null` (um GO não pertence a um Ofertante — ele é um). Resolvido por uma função nova (`resolverEscopoOfertante`) chamada pelas guardas de `guards.ts`, em vez de duplicar o ternário "GO usa o próprio documento, VO usa o `cdOfertante`" em cada uma.
+4. **Migração de dados pré-existentes: reset, não transformação.** Investigação direta ao banco de dev (`spma`, antes de decidir) mostrou zero produção: 1 Ofertante, 1 GO, 1 VO, 1 Verba, 1 PreCurso, 2 Avaliações — todos sufixo "(demo)", produzidos por `scripts/dev-seed-demo.ts`. Como um CNPJ não pode ser derivado mecanicamente de um CPF existente (ao contrário da AD-041, cuja transformação `Json?`→linhas era mecânica e sem perda), a migração não tenta transplantar identidade: derruba `TB_Ofertante`, apaga a cadeia de dados de demo afetada (autorizado explicitamente pelo usuário) e `scripts/dev-seed-demo.ts` é atualizado para recriar o mesmo cenário já no formato novo, com CNPJ de teste válido. Mesmo precedente já usado pela AD-042 para o Aluno (reset em vez de transformação com perda). **Salvaguarda documentada para o futuro**: se algum dia existir um ambiente com Ofertante/GO reais antes desta migração rodar, ela não deve rodar sem checar `SELECT COUNT(*) FROM TB_Ofertante` primeiro e obter os CNPJs reais do cliente.
+
+**Nomes mantidos deliberadamente** (decisão explícita de minimizar diff, pedido do usuário nesta sessão): o campo `cdOfertante` continua se chamando `cdOfertante` em todo o código (guards, cascata, rotas, fixtures) mesmo passando a guardar um CNPJ — renomear para algo como `cnpjGestorOfertante` seria "mais correto" mas tocaria ~15 arquivos sem mudar comportamento. `AvaliacaoAluno.cpf`/`RespostaAvaliacao.cpf`/`DadoPessoalAluno.cpf`/`Sessao.cpfUsuario` continuam se chamando `cpf` (sempre referências a um Aluno, que nunca muda de documento).
+
+**CNPJ não é mascarado em log/erro**, diferente de CPF (AD-029): CNPJ é registro público de pessoa jurídica no Brasil, não dado pessoal sob a ótica de LGPD que motivou AD-029.
+
+**Achado durante Tasks, não previsto no Design**: `TIPOS_PERMITIDOS.GO` (AD-009) hoje inclui `GO` — um GO pode criar outro GO, herdando o mesmo `cdOfertante` do criador (`cascata.ts`, testado em `cascata.test.ts:36` e `e2e/usuarios.spec.ts:201`). É exatamente o cenário "dois GOs para a mesma organização" que a unificação 1 GO = 1 CNPJ elimina por construção. `GO` sai da lista de tipos que um GO pode criar (`GO: [VO, AL]`, era `[GO, VO, AL]`) — GO continua criando VO e AL normalmente. Registrado como UGO-18 no spec da feature.
+
+Feature em `.specs/features/unificacao-ofertante-go/` (Complex: `spec.md` 18 requisitos em 3 grupos, `design.md`). `tasks.md` e execução ainda pendentes nesta sessão.
