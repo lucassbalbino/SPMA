@@ -515,7 +515,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T18: `prisma/seed.ts` - campo `documento`
+### T18: `prisma/seed.ts` - campo `documento` ✅
 
 **What**: `seedAdminMaster` grava `documento` em vez de `cpf` (AM continua CPF de 11 dígitos - só o nome do campo Prisma muda).
 **Where**: `prisma/seed.ts`
@@ -529,8 +529,10 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] `npm run db:seed` roda sem erro contra o schema novo
-- [ ] Gate check passa: `npm run lint && npm run build && npm run typecheck`
+- [x] `npm run db:seed` roda sem erro contra o schema novo
+- [x] Gate check passa: `npm run lint && npm run build && npm run typecheck` (`lint` 0 erros; `npx tsc --noEmit` limpo neste arquivo - `build`/`typecheck` do repo inteiro só fecham 100% no gate Full-feature de T22, mesma nota já registrada em T4/T5)
+
+**Nota de execução**: o código já estava correto desde o reparo emergencial pré-T11 (commit `e834334`) - `documento: cpf` na criação e `am.documento` no log já eram assim. Só faltava marcar o checkbox e confirmar o gate.
 
 **Tests**: none
 **Gate**: build
