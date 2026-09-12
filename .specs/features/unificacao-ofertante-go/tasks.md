@@ -253,7 +253,7 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T8: Reescrever `usuarioSchema` - documento condicional por tipo + campos organizacionais
+### T8: Reescrever `usuarioSchema` - documento condicional por tipo + campos organizacionais ✅
 
 **What**: Campo `cpf` renomeado para `documento`; `superRefine` no nível do objeto decide `validarCNPJ` (quando `tipo==="GO"`) ou `validarCPF` (demais), seguido de `transform` que normaliza de acordo; `nome`/`uf` obrigatórios apenas quando `tipo==="GO"` (mantendo `nome` como já era para os demais tipos); `responsavel`/`telefone`/`municipio` opcionais, só aceitos quando `tipo==="GO"`.
 **Where**: `src/lib/validation/schemas/usuario.schema.ts`
@@ -266,11 +266,11 @@ T18 → T19 → T20 → T21 → T22 → T23
 - Skill: NONE
 
 **Done when**:
-- [ ] GO com CNPJ inválido -> issue no campo `documento`
-- [ ] AM/GT/VT/AL com CPF inválido -> issue no campo `documento` (comportamento inalterado)
-- [ ] GO sem `uf` -> issue de campo obrigatório
-- [ ] Tipo != GO com `responsavel`/`telefone`/`municipio` informado -> aceito e ignorado, ou rejeitado (decidir e testar um dos dois, documentando a escolha no teste)
-- [ ] Gate check passa: `npm run test:unit`
+- [x] GO com CNPJ inválido -> issue no campo `documento`
+- [x] AM/GT/VT/AL com CPF inválido -> issue no campo `documento` (comportamento inalterado)
+- [x] GO sem `uf` -> issue de campo obrigatório
+- [x] Tipo != GO com `responsavel`/`telefone`/`municipio` informado -> aceito e ignorado, ou rejeitado (decidir e testar um dos dois, documentando a escolha no teste) - **decisão: rejeitado**, documentada no describe/comentário do schema
+- [x] Gate check passa: `npm run test:unit`
 
 **Tests**: unit
 **Gate**: quick

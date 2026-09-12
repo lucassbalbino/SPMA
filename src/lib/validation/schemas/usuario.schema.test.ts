@@ -3,19 +3,28 @@ import { TipoUsuario } from "../../../generated/prisma/enums";
 import { usuarioSchema } from "./usuario.schema";
 
 const basePayload = {
-  cpf: "111.444.777-35",
+  documento: "111.444.777-35",
   nome: "Fulano de Tal",
 };
 
+// CNPJ válido conhecido (dígitos verificadores corretos), mesmo padrão de
+// basePayload.documento para CPF.
+const cnpjValido = "11.222.333/0001-81";
+
 describe("usuarioSchema", () => {
-  it("rejeita CPF inválido", () => {
+  it("rejeita CPF inválido (tipo != GO)", () => {
     const result = usuarioSchema.safeParse({
       ...basePayload,
-      cpf: "111.444.777-36", // dígito verificador alterado
+      documento: "111.444.777-36", // dígito verificador alterado
       tipo: TipoUsuario.AL,
     });
 
     expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path.includes("documento"))).toBe(
+        true,
+      );
+    }
   });
 
   it("rejeita tipo fora do enum TipoUsuario", () => {
@@ -27,8 +36,8 @@ describe("usuarioSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it.each(Object.values(TipoUsuario))(
-    "aceita payload válido para o tipo %s",
+  it.each(Object.values(TipoUsuario).filter((tipo) => tipo !== TipoUsuario.GO))(
+    "aceita payload válido (CPF) para o tipo %s",
     (tipo) => {
       const result = usuarioSchema.safeParse({
         ...basePayload,
@@ -47,17 +56,136 @@ describe("usuarioSchema", () => {
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.cpf).toBe("11144477735");
+      expect(result.data.documento).toBe("11144477735");
     }
+  });
+});
+
+describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
+  it("aceita GO com CNPJ válido + nome + uf", () => {
+    const result = usuarioSchema.safeParse({
+      nome: "Instituto Exemplo",
+      documento: cnpjValido,
+      uf: "SP",
+      tipo: TipoUsuario.GO,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("normaliza o CNPJ formatado para somente dígitos", () => {
+    const result = usuarioSchema.safeParse({
+      nome: "Instituto Exemplo",
+      documento: cnpjValido,
+      uf: "SP",
+      tipo: TipoUsuario.GO,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.documento).toBe("11222333000181");
+    }
+  });
+
+  it("GO com CNPJ inválido -> issue no campo documento", () => {
+    const result = usuarioSchema.safeParse({
+      nome: "Instituto Exemplo",
+      documento: "11.222.333/0001-82", // dígito verificador alterado
+      uf: "SP",
+      tipo: TipoUsuario.GO,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path.includes("documento"))).toBe(
+        true,
+      );
+    }
+  });
+
+  it("GO com CPF (11 dígitos) em vez de CNPJ -> rejeitado como documento inválido", () => {
+    const result = usuarioSchema.safeParse({
+      ...basePayload,
+      tipo: TipoUsuario.GO,
+      uf: "SP",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path.includes("documento"))).toBe(
+        true,
+      );
+    }
+  });
+
+  it("GO sem uf -> issue de campo obrigatório", () => {
+    const result = usuarioSchema.safeParse({
+      nome: "Instituto Exemplo",
+      documento: cnpjValido,
+      tipo: TipoUsuario.GO,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path.includes("uf"))).toBe(true);
+    }
+  });
+
+  it("aceita GO com os 4 campos organizacionais opcionais preenchidos", () => {
+    const result = usuarioSchema.safeParse({
+      nome: "Instituto Exemplo",
+      documento: cnpjValido,
+      uf: "SP",
+      responsavel: "Fulano de Tal",
+      telefone: "11999999999",
+      municipio: "São Paulo",
+      tipo: TipoUsuario.GO,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.responsavel).toBe("Fulano de Tal");
+      expect(result.data.telefone).toBe("11999999999");
+      expect(result.data.municipio).toBe("São Paulo");
+    }
+  });
+});
+
+describe("usuarioSchema - campos organizacionais fora do tipo GO (decisão desta tarefa: REJEITADOS)", () => {
+  it.each(["responsavel", "telefone", "municipio"] as const)(
+    "rejeita %s informado para um tipo != GO",
+    (campo) => {
+      const result = usuarioSchema.safeParse({
+        ...basePayload,
+        tipo: TipoUsuario.AL,
+        [campo]: "valor qualquer",
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((issue) => issue.path.includes(campo))).toBe(true);
+      }
+    },
+  );
+
+  it("aceita uf informada para um tipo != GO (não é campo exclusivo de GO, só obrigatório para GO)", () => {
+    const result = usuarioSchema.safeParse({
+      ...basePayload,
+      tipo: TipoUsuario.AL,
+      uf: "SP",
+    });
+
+    expect(result.success).toBe(true);
   });
 });
 
 describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
   it("aceita payload sem verba (a obrigatoriedade depende de quem cria)", () => {
     const result = usuarioSchema.safeParse({
-      ...basePayload,
+      nome: "Instituto Exemplo",
+      documento: cnpjValido,
+      uf: "SP",
       tipo: TipoUsuario.GO,
-      cdOfertante: 1,
     });
 
     expect(result.success).toBe(true);
@@ -65,9 +193,10 @@ describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
 
   it("aceita verba com valor e data", () => {
     const result = usuarioSchema.safeParse({
-      ...basePayload,
+      nome: "Instituto Exemplo",
+      documento: cnpjValido,
+      uf: "SP",
       tipo: TipoUsuario.GO,
-      cdOfertante: 1,
       verba: { vlVerba: 5000, dtVerba: "2026-01-15" },
     });
 
@@ -80,9 +209,10 @@ describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
 
   it("rejeita verba com valor não-positivo", () => {
     const result = usuarioSchema.safeParse({
-      ...basePayload,
+      nome: "Instituto Exemplo",
+      documento: cnpjValido,
+      uf: "SP",
       tipo: TipoUsuario.GO,
-      cdOfertante: 1,
       verba: { vlVerba: 0 },
     });
 
@@ -91,10 +221,11 @@ describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
 
   it("a verba não carrega cdOfertante próprio (é sempre o do usuário criado)", () => {
     const result = usuarioSchema.safeParse({
-      ...basePayload,
+      nome: "Instituto Exemplo",
+      documento: cnpjValido,
+      uf: "SP",
       tipo: TipoUsuario.GO,
-      cdOfertante: 1,
-      verba: { vlVerba: 5000, cdOfertante: 999 },
+      verba: { vlVerba: 5000, cdOfertante: "999" },
     });
 
     expect(result.success).toBe(true);
