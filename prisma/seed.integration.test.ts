@@ -27,7 +27,7 @@ describe("seedAdminMaster (integration)", () => {
 
     const usuarios = await prisma.usuario.findMany({ where: { tipo: "AM" } });
     expect(usuarios).toHaveLength(1);
-    expect(usuarios[0].cpf).toBe(TEST_CPF);
+    expect(usuarios[0].documento).toBe(TEST_CPF);
     expect(usuarios[0].nome).toBe(TEST_NOME);
     expect(usuarios[0].senhaHash).toBeNull();
     expect(usuarios[0].primeiraVez).toBe(true);

@@ -23,7 +23,7 @@ export function estaBloqueado(usuario: { bloqueadoAte: Date | null }): boolean {
  */
 export async function registrarFalha(cpf: string): Promise<void> {
   const usuario = await prisma.usuario.findUnique({
-    where: { cpf },
+    where: { documento: cpf },
     select: { tentativasFalhas: true },
   });
 
@@ -34,7 +34,7 @@ export async function registrarFalha(cpf: string): Promise<void> {
   const tentativas = usuario.tentativasFalhas + 1;
 
   await prisma.usuario.update({
-    where: { cpf },
+    where: { documento: cpf },
     data: {
       tentativasFalhas: tentativas,
       ...(tentativas >= MAX_TENTATIVAS
@@ -47,7 +47,7 @@ export async function registrarFalha(cpf: string): Promise<void> {
 /** Login bem-sucedido: zera contador e libera a conta (REQ-AU-11). */
 export async function resetarTentativas(cpf: string): Promise<void> {
   await prisma.usuario.updateMany({
-    where: { cpf },
+    where: { documento: cpf },
     data: { tentativasFalhas: 0, bloqueadoAte: null },
   });
 }

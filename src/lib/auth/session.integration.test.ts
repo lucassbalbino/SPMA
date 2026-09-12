@@ -17,15 +17,15 @@ const CPF_SESSAO = "77788899941";
 describe("session (integration)", () => {
   beforeAll(async () => {
     await prisma.sessao.deleteMany({ where: { cpfUsuario: CPF_SESSAO } });
-    await prisma.usuario.deleteMany({ where: { cpf: CPF_SESSAO } });
+    await prisma.usuario.deleteMany({ where: { documento: CPF_SESSAO } });
     await prisma.usuario.create({
-      data: { cpf: CPF_SESSAO, nome: "Usuário de Sessão", tipo: "AL" },
+      data: { documento: CPF_SESSAO, nome: "Usuário de Sessão", tipo: "AL" },
     });
   });
 
   afterAll(async () => {
     await prisma.sessao.deleteMany({ where: { cpfUsuario: CPF_SESSAO } });
-    await prisma.usuario.deleteMany({ where: { cpf: CPF_SESSAO } });
+    await prisma.usuario.deleteMany({ where: { documento: CPF_SESSAO } });
     await prisma.$disconnect();
   });
 
@@ -68,7 +68,7 @@ describe("session (integration)", () => {
 
     expect(encontrada).not.toBeNull();
     expect(encontrada!.sessao.id).toBe(sessao.id);
-    expect(encontrada!.usuario.cpf).toBe(CPF_SESSAO);
+    expect(encontrada!.usuario.documento).toBe(CPF_SESSAO);
   });
 
   it("buscarSessaoValida retorna null para id inexistente", async () => {

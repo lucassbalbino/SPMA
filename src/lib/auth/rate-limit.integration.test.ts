@@ -33,7 +33,7 @@ async function criarUsuario(
 ) {
   return prisma.usuario.create({
     data: {
-      cpf,
+      documento: cpf,
       nome: `Usuário ${cpf}`,
       tipo: "AL",
       tentativasFalhas: dados.tentativasFalhas ?? 0,
@@ -44,11 +44,11 @@ async function criarUsuario(
 
 describe("rate-limit (integration)", () => {
   beforeAll(async () => {
-    await prisma.usuario.deleteMany({ where: { cpf: { in: TODOS_CPFS } } });
+    await prisma.usuario.deleteMany({ where: { documento: { in: TODOS_CPFS } } });
   });
 
   afterAll(async () => {
-    await prisma.usuario.deleteMany({ where: { cpf: { in: TODOS_CPFS } } });
+    await prisma.usuario.deleteMany({ where: { documento: { in: TODOS_CPFS } } });
     await prisma.$disconnect();
   });
 
@@ -61,7 +61,7 @@ describe("rate-limit (integration)", () => {
     }
 
     const usuario = await prisma.usuario.findUniqueOrThrow({
-      where: { cpf: CPF_CINCO_FALHAS },
+      where: { documento: CPF_CINCO_FALHAS },
     });
     const depois = Date.now();
 
@@ -85,7 +85,7 @@ describe("rate-limit (integration)", () => {
     }
 
     const usuario = await prisma.usuario.findUniqueOrThrow({
-      where: { cpf: CPF_QUATRO_FALHAS },
+      where: { documento: CPF_QUATRO_FALHAS },
     });
 
     expect(usuario.tentativasFalhas).toBe(4);
@@ -99,7 +99,7 @@ describe("rate-limit (integration)", () => {
     });
 
     const usuario = await prisma.usuario.findUniqueOrThrow({
-      where: { cpf: CPF_BLOQUEIO_ATIVO },
+      where: { documento: CPF_BLOQUEIO_ATIVO },
     });
 
     expect(estaBloqueado(usuario)).toBe(true);
@@ -112,7 +112,7 @@ describe("rate-limit (integration)", () => {
     });
 
     const usuario = await prisma.usuario.findUniqueOrThrow({
-      where: { cpf: CPF_BLOQUEIO_EXPIRADO },
+      where: { documento: CPF_BLOQUEIO_EXPIRADO },
     });
 
     expect(estaBloqueado(usuario)).toBe(false);
@@ -122,7 +122,7 @@ describe("rate-limit (integration)", () => {
     await criarUsuario(CPF_SEM_BLOQUEIO);
 
     const usuario = await prisma.usuario.findUniqueOrThrow({
-      where: { cpf: CPF_SEM_BLOQUEIO },
+      where: { documento: CPF_SEM_BLOQUEIO },
     });
 
     expect(estaBloqueado(usuario)).toBe(false);
@@ -137,7 +137,7 @@ describe("rate-limit (integration)", () => {
     await resetarTentativas(CPF_RESET);
 
     const usuario = await prisma.usuario.findUniqueOrThrow({
-      where: { cpf: CPF_RESET },
+      where: { documento: CPF_RESET },
     });
 
     expect(usuario.tentativasFalhas).toBe(0);

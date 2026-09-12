@@ -29,7 +29,7 @@ export async function seedAdminMaster(prisma: PrismaClient) {
 
   return prisma.usuario.create({
     data: {
-      cpf,
+      documento: cpf,
       nome,
       tipo: "AM",
       senhaHash: null,
@@ -43,7 +43,7 @@ async function main() {
   const prisma = new PrismaClient({ adapter });
   try {
     const am = await seedAdminMaster(prisma);
-    console.log(`Admin Master ok: CPF ${am.cpf}`);
+    console.log(`Admin Master ok: CPF ${am.documento}`);
   } finally {
     await prisma.$disconnect();
   }

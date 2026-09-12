@@ -36,13 +36,13 @@ function requisicaoLogin(cpf: string, senha: string, ip: string): Request {
   return new Request("http://localhost/api/auth/login", {
     method: "POST",
     headers: { "content-type": "application/json", "x-forwarded-for": ip },
-    body: JSON.stringify({ cpf, senha }),
+    body: JSON.stringify({ documento: cpf, senha }),
   });
 }
 
 async function limparFixture() {
   await prisma.usuario.deleteMany({
-    where: { cpf: { in: [CPF_INEXISTENTE, CPF_COM_SENHA] } },
+    where: { documento: { in: [CPF_INEXISTENTE, CPF_COM_SENHA] } },
   });
   await prisma.tentativaLoginIp.deleteMany({
     where: { ip: { in: [IP_INEXISTENTE, IP_SENHA_ERRADA] } },
@@ -54,7 +54,7 @@ describe("POST /api/auth/login (integration) - REQ-SEC-04 mecanismo de normaliza
     await limparFixture();
     await prisma.usuario.create({
       data: {
-        cpf: CPF_COM_SENHA,
+        documento: CPF_COM_SENHA,
         nome: "Usuário com senha (timing)",
         tipo: "AL",
         senhaHash: await hashPassword(SENHA_REAL),
@@ -83,7 +83,7 @@ describe("POST /api/auth/login (integration) - REQ-SEC-04 mecanismo de normaliza
     verifyPasswordSpy.mockClear();
 
     const usuario = await prisma.usuario.findUniqueOrThrow({
-      where: { cpf: CPF_COM_SENHA },
+      where: { documento: CPF_COM_SENHA },
     });
 
     const res = await POST(

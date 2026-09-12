@@ -26,7 +26,6 @@ const DOMAIN_TABLES = [
   "TB_Pos_Curso",
   "TB_Pre_Curso",
   "TB_Verba",
-  "TB_Ofertante",
   "TB_Sessao",
   "TB_Usuario",
   // Rate-limit por IP (REQ-SEC-03, seguranca-transversal): sem tabela nesta

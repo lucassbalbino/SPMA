@@ -27,7 +27,7 @@ export function LoginForm() {
     event.preventDefault();
     setErro(null);
 
-    const entrada = loginSchema.safeParse({ cpf, senha });
+    const entrada = loginSchema.safeParse({ documento: cpf, senha });
     if (!entrada.success) {
       setErro(entrada.error.issues[0]?.message ?? "Dados inválidos");
       return;

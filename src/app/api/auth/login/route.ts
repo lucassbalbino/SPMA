@@ -55,8 +55,8 @@ async function login(request: Request) {
     );
   }
 
-  const { cpf, senha } = entrada.data;
-  const usuario = await prisma.usuario.findUnique({ where: { cpf } });
+  const { documento, senha } = entrada.data;
+  const usuario = await prisma.usuario.findUnique({ where: { documento } });
 
   // REQ-SEC-04: `verifyPassword` roda sempre - contra o hash real quando
   // existe, senão contra `DUMMY_HASH` - antes de decidir o veredito. Sem
@@ -80,19 +80,19 @@ async function login(request: Request) {
 
   if (!primeiroAcesso) {
     if (!senhaConfere) {
-      await registrarFalha(cpf);
+      await registrarFalha(documento);
       await registrarFalhaIp(ip);
       return erroCredenciais();
     }
 
-    await resetarTentativas(cpf);
+    await resetarTentativas(documento);
   }
 
   // Rotação do identificador de sessão no login (CA-AU-09).
   const idAnterior = (await cookies()).get(COOKIE_SESSAO)?.value;
   const sessao = idAnterior
-    ? await rotacionarSessao(idAnterior, cpf)
-    : await criarSessao(cpf);
+    ? await rotacionarSessao(idAnterior, documento)
+    : await criarSessao(documento);
 
   await setCookieSessao(sessao.id, sessao.expiraEm);
   // REQ-SEC-15: token de CSRF emitido junto da sessão - protege toda mutação
@@ -102,7 +102,7 @@ async function login(request: Request) {
   // Campos escolhidos um a um: senha e hash nunca saem daqui (CA-AU-10).
   return NextResponse.json({
     usuario: {
-      cpf: usuario.cpf,
+      documento: usuario.documento,
       nome: usuario.nome,
       tipo: usuario.tipo,
       primeiraVez: usuario.primeiraVez,
