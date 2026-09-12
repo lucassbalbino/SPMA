@@ -155,7 +155,7 @@ T18 → T19 → T20 → T21 → T22 → T23
 
 ---
 
-### T4: Migrar `prisma/schema.prisma` para o modelo unificado (AD-043)
+### T4: Migrar `prisma/schema.prisma` para o modelo unificado (AD-043) ✅
 
 **What**: Uma migration Prisma cobrindo: (1) `Usuario.cpf` renomeado para `documento` (`@id @db.VarChar(14)`); (2) `Usuario` ganha `responsavel`/`telefone`/`uf`/`municipio` (nullable); `nome`/`email` existentes reaproveitados; (3) `model Ofertante` removido; (4) `Verba.cdOfertante` e `PreCurso.cdOfertante` passam de `Int` para `String @db.VarChar(14)`, `@relation` apontando para `Usuario.documento`; (5) larguras de `Sessao.cpfUsuario`, `AvaliacaoAluno.cpf`, `RespostaAvaliacao.cpf`, `DadoPessoalAluno.cpf`, `Usuario.criadoPor`, `PreCurso.criadoPor`, `PosCurso.criadoPor` ajustadas de `VarChar(11)` para `VarChar(14)` (nomes de campo mantidos, ver design.md §1). Nenhuma tentativa de preservar o Ofertante/GO/VO de demo hoje existente (isso é T18).
 **Where**: `prisma/schema.prisma` + migration gerada em `prisma/migrations/`
@@ -168,11 +168,13 @@ T18 → T19 → T20 → T21 → T22 → T23
 - Skill: NONE
 
 **Done when**:
-- [ ] `npx prisma migrate dev` aplica limpo em `spma` (dev) e a migration é commitada
-- [ ] `model Ofertante` não existe mais no schema
-- [ ] `Usuario.documento`, `Usuario.responsavel/telefone/uf/municipio` existem; `Usuario.cpf` não existe mais
-- [ ] `Verba.cdOfertante`/`PreCurso.cdOfertante` são `String`
-- [ ] Gate check passa: `npm run lint && npm run build && npm run typecheck` **NÃO** precisa passar ainda neste ponto (esperado quebrar em `guards.ts`/`cascata.ts`/schemas/rotas até a Fase 3/4) - rodar mesmo assim e registrar os erros esperados no commit, não silenciá-los
+- [x] `npx prisma migrate dev` aplica limpo em `spma` (dev) e a migration é commitada
+- [x] `model Ofertante` não existe mais no schema
+- [x] `Usuario.documento`, `Usuario.responsavel/telefone/uf/municipio` existem; `Usuario.cpf` não existe mais
+- [x] `Verba.cdOfertante`/`PreCurso.cdOfertante` são `String`
+- [x] Gate check passa: `npm run lint && npm run build && npm run typecheck` **NÃO** precisa passar ainda neste ponto (esperado quebrar em `guards.ts`/`cascata.ts`/schemas/rotas até a Fase 3/4) - rodar mesmo assim e registrar os erros esperados no commit, não silenciá-los
+
+**Nota de execução**: `npx prisma migrate dev` recusa rodar em modo não-interativo quando a mudança tem perda de dado (coluna obrigatória nova sem default, `TB_Usuario` com 8 linhas). A migration foi por isso autorada manualmente em `prisma/migrations/20260912170000_unificar_ofertante_go/migration.sql` (`SET FOREIGN_KEY_CHECKS=0`, apaga a cadeia de demo do único Ofertante existente, dropa/recria as FKs afetadas, renomeia+amplia `CPF_Usuario`→`Documento_Usuario`, dropa `TB_Ofertante`) e aplicada via `npx prisma migrate dev` (que detectou a migration pendente e aplicou sem gerar diff novo, já que o schema já refletia o estado alvo). `npx prisma migrate status` confirma "Database schema is up to date". Gate rodado: `npm run lint` (0 erros, warnings pré-existentes), `npm run build`/`npm run typecheck` falham como esperado - erros restritos a `.cpf`/`prisma.ofertante` em `prisma/seed.ts`, `scripts/dev-seed-demo.ts`, `scripts/e2e-fixture.ts`, `src/app/api/{usuarios,ofertantes,verbas,pre-cursos,pos-cursos,avaliacoes}/**`, `src/app/api/auth/**` e seus testes de integração - exatamente a superfície que as Fases 3/4 corrigem, nenhum erro de integridade de schema inesperado.
 
 **Tests**: none
 **Gate**: build

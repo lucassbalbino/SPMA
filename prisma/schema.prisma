@@ -40,14 +40,29 @@ enum StatusFormulario {
 // ─────────────────────────────────────────────────────────────
 
 model Usuario {
-  cpf          String      @id @map("CPF_Usuario") @db.VarChar(11)
+  // 11 dígitos (CPF: AM/GT/VT/AL) ou 14 dígitos (CNPJ: GO), conforme `tipo`
+  // (AD-043/UGO-07). Renomeado de `cpf` para `documento` porque deixou de
+  // identificar só pessoa física - o GO é o próprio Ofertante, identificado
+  // pelo CNPJ da organização.
+  documento    String      @id @map("Documento_Usuario") @db.VarChar(14)
+  // Para GO: nome da organização (antes `Ofertante.nome`). Para os demais
+  // tipos: nome da pessoa, sem mudança.
   nome         String?     @map("NM_Usuario") @db.VarChar(255)
   email        String?     @map("Email_Usuario") @db.VarChar(255)
   tipo         TipoUsuario @map("TP_Usuario")
 
-  // GO/VO vinculam-se a um Ofertante; AM/GT/VT e AL ficam null (AD-012).
-  cdOfertante  Int?        @map("CD_Ofertante")
-  ofertante    Ofertante?  @relation("UsuarioOfertante", fields: [cdOfertante], references: [cdOfertante])
+  // Dados organizacionais - só preenchidos para tipo=GO (fusão do antigo
+  // `model Ofertante` no próprio GO, Decisão B1/AD-043).
+  responsavel  String?     @map("Resp_Organizacao") @db.VarChar(255)
+  telefone     String?     @map("Tel_Organizacao") @db.VarChar(50)
+  uf           String?     @map("UF_Organizacao") @db.VarChar(2)
+  municipio    String?     @map("Municipio_Organizacao") @db.VarChar(255)
+
+  // VO vincula-se diretamente ao GO (documento/CNPJ); GO/AM/GT/VT/AL ficam
+  // null - um GO não pertence a um Ofertante, ele É um (AD-043).
+  cdOfertante  String?     @map("CD_Ofertante") @db.VarChar(14)
+  ofertante    Usuario?    @relation("UsuarioOfertante", fields: [cdOfertante], references: [documento])
+  vinculados   Usuario[]   @relation("UsuarioOfertante")
 
   // Autenticação (AD-005, AD-010, AD-030)
   senhaHash    String?     @map("Senha_Hash") @db.VarChar(255) // null até cadastrar no 1º acesso
@@ -66,15 +81,17 @@ model Usuario {
 
   // Auditoria
   dataCriacao  DateTime    @default(now()) @map("Data_Criacao")
-  criadoPor    String?     @map("Criado_Por") @db.VarChar(11)
-  criador      Usuario?    @relation("Cascata", fields: [criadoPor], references: [cpf])
+  criadoPor    String?     @map("Criado_Por") @db.VarChar(14)
+  criador      Usuario?    @relation("Cascata", fields: [criadoPor], references: [documento])
   criados      Usuario[]   @relation("Cascata")
 
   // Relações de domínio
   avaliacoes       AvaliacaoAluno[] @relation("AlunoAvaliacoes")
   dadosPessoais    DadoPessoalAluno[]
   cursosCriados    PreCurso[]       @relation("GoCursos")
+  cursosOfertados  PreCurso[]       @relation("PreCursoOfertante")
   posCursosCriados PosCurso[]       @relation("GoPosCursos")
+  verbas           Verba[]
   sessoes          Sessao[]
 
   @@index([cdOfertante])
@@ -88,8 +105,10 @@ model Usuario {
 
 model Sessao {
   id            String    @id @default(uuid()) @map("ID_Sessao")
-  cpfUsuario    String    @map("CPF_Usuario") @db.VarChar(11)
-  usuario       Usuario   @relation(fields: [cpfUsuario], references: [cpf], onDelete: Cascade)
+  // Nome de campo mantido (AD-043): largura ampliada para caber o CNPJ de um
+  // GO logado, além do CPF dos demais tipos.
+  cpfUsuario    String    @map("CPF_Usuario") @db.VarChar(14)
+  usuario       Usuario   @relation(fields: [cpfUsuario], references: [documento], onDelete: Cascade)
 
   criadaEm      DateTime  @default(now()) @map("Criada_Em")
   ultimaAtividade DateTime @default(now()) @map("Ultima_Atividade")
@@ -114,35 +133,16 @@ model TentativaLoginIp {
 }
 
 // ─────────────────────────────────────────────────────────────
-// OFERTANTE  (AD-014)
-// ─────────────────────────────────────────────────────────────
-
-model Ofertante {
-  cdOfertante    Int      @id @default(autoincrement()) @map("CD_Ofertante")
-  nome           String   @map("NM_Ofertante") @db.VarChar(255)
-  responsavel    String?  @map("Resp_Ofertante") @db.VarChar(255)
-  email          String?  @map("Email_Ofertante") @db.VarChar(255)
-  telefone       String?  @map("Tel_Ofertante") @db.VarChar(50)
-  uf             String   @map("UF_Ofertante") @db.VarChar(2)
-  municipio      String?  @map("Municipio_Ofertante") @db.VarChar(255)
-
-  dataCriacao    DateTime @default(now()) @map("Data_Criacao")
-  criadoPor      String?  @map("Criado_Por") @db.VarChar(11)
-
-  usuarios       Usuario[] @relation("UsuarioOfertante")
-  verbas         Verba[]
-
-  @@map("TB_Ofertante")
-}
-
-// ─────────────────────────────────────────────────────────────
-// VERBA  (AD-015: pertence ao Ofertante, 1:N com Curso; AD-016: teto <=)
+// VERBA  (AD-015: pertence ao GO/Ofertante, 1:N com Curso; AD-016: teto <=)
+// `model Ofertante` removido (AD-043) - o GO passou a SER o Ofertante.
 // ─────────────────────────────────────────────────────────────
 
 model Verba {
   cdVerba        Int        @id @default(autoincrement()) @map("CD_Verba")
-  cdOfertante    Int        @map("CD_Ofertante")
-  ofertante      Ofertante  @relation(fields: [cdOfertante], references: [cdOfertante])
+  // Aponta para o CNPJ (Usuario.documento) de um GO, não mais para um
+  // `Ofertante` autônomo (AD-043). Nome de campo mantido.
+  cdOfertante    String     @map("CD_Ofertante") @db.VarChar(14)
+  ofertante      Usuario    @relation(fields: [cdOfertante], references: [documento])
 
   dtVerba        DateTime?  @map("DT_Verba") @db.Date
   vlVerba        Decimal    @map("VL_Verba") @db.Decimal(10, 2) // valor TOTAL da verba
@@ -163,7 +163,10 @@ model Verba {
 
 model PreCurso {
   cdCurso        Int              @id @default(autoincrement()) @map("CD_Curso")
-  cdOfertante    Int              @map("CD_Ofertante")
+  // Aponta para o CNPJ (Usuario.documento) de um GO, não mais para um
+  // `Ofertante` autônomo (AD-043). Nome de campo mantido.
+  cdOfertante    String           @map("CD_Ofertante") @db.VarChar(14)
+  ofertante      Usuario          @relation("PreCursoOfertante", fields: [cdOfertante], references: [documento])
 
   // Verba que custeia este curso + valor alocado (AD-015, AD-016)
   cdVerba        Int              @map("CD_Verba")
@@ -173,8 +176,8 @@ model PreCurso {
   status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
 
   dataCriacao       DateTime      @default(now()) @map("Data_Criacao")
-  criadoPor         String        @map("Criado_Por") @db.VarChar(11)
-  criador           Usuario       @relation("GoCursos", fields: [criadoPor], references: [cpf])
+  criadoPor         String        @map("Criado_Por") @db.VarChar(14)
+  criador           Usuario       @relation("GoCursos", fields: [criadoPor], references: [documento])
   dataEncerramento  DateTime?     @map("Data_Encerramento")
 
   posCurso       PosCurso?
@@ -197,8 +200,8 @@ model PosCurso {
   status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
 
   dataCriacao          DateTime   @default(now()) @map("Data_Criacao")
-  criadoPor            String     @map("Criado_Por") @db.VarChar(11)
-  criador              Usuario    @relation("GoPosCursos", fields: [criadoPor], references: [cpf])
+  criadoPor            String     @map("Criado_Por") @db.VarChar(14)
+  criador              Usuario    @relation("GoPosCursos", fields: [criadoPor], references: [documento])
   dataUltimaAtualizacao DateTime  @updatedAt @map("Data_Ultima_Atualizacao")
   dataEncerramento     DateTime?  @map("Data_Encerramento")
 
@@ -215,10 +218,13 @@ model PosCurso {
 // ─────────────────────────────────────────────────────────────
 
 model AvaliacaoAluno {
-  cpf            String           @map("CPF") @db.VarChar(11)
+  // Nome de campo mantido (AD-043): sempre referência a um Aluno, que nunca
+  // muda de documento (continua CPF de 11 dígitos) - só a largura da coluna
+  // acompanha `Usuario.documento`, que agora é VarChar(14).
+  cpf            String           @map("CPF") @db.VarChar(14)
   cdCurso        Int              @map("CD_Curso")
 
-  aluno          Usuario          @relation("AlunoAvaliacoes", fields: [cpf], references: [cpf])
+  aluno          Usuario          @relation("AlunoAvaliacoes", fields: [cpf], references: [documento])
   curso          PreCurso         @relation(fields: [cdCurso], references: [cdCurso])
 
   status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
@@ -279,7 +285,8 @@ model RespostaPosCurso {
 
 model RespostaAvaliacao {
   id        Int            @id @default(autoincrement()) @map("ID_Resposta")
-  cpf       String         @map("CPF") @db.VarChar(11)
+  // Nome de campo mantido (AD-043) - largura acompanha AvaliacaoAluno.cpf.
+  cpf       String         @map("CPF") @db.VarChar(14)
   cdCurso   Int            @map("CD_Curso")
   avaliacao AvaliacaoAluno @relation(fields: [cpf, cdCurso], references: [cpf, cdCurso], onDelete: Cascade)
 
@@ -306,8 +313,9 @@ model RespostaAvaliacao {
 
 model DadoPessoalAluno {
   id      Int     @id @default(autoincrement()) @map("ID_Dado")
-  cpf     String  @map("CPF") @db.VarChar(11)
-  usuario Usuario @relation(fields: [cpf], references: [cpf], onDelete: Cascade)
+  // Nome de campo mantido (AD-043) - largura acompanha Usuario.documento.
+  cpf     String  @map("CPF") @db.VarChar(14)
+  usuario Usuario @relation(fields: [cpf], references: [documento], onDelete: Cascade)
 
   chave   String  @map("Chave") @db.VarChar(100)
   ordem   Int     @default(0) @map("Ordem")
