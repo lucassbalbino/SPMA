@@ -49,6 +49,29 @@ describe("comTratamentoDeErro", () => {
     expect(mensagemLogada).not.toContain("52998224725");
   });
 
+  // P2 AC7 (correção pós-Verifier, ranked gap #4): CNPJ de GO não é CPF e
+  // não deve sair mascarado do log - antes desta correção, o padrão de
+  // detecção casava com os primeiros 11 dos 14 dígitos de qualquer CNPJ cru
+  // encontrado em texto livre (achado real, não só teórico: ver
+  // `PADRAO_CPF` em api-error.ts), mascarando parcialmente um identificador
+  // que deveria ficar inteiro e legível.
+  it("NÃO mascara um CNPJ de 14 dígitos reconhecível no log de servidor (GO se identifica por CNPJ, não é CPF)", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const cnpj = "11222333000181";
+
+    const handler = comTratamentoDeErro(
+      async (_request: Request): Promise<Response> => {
+        throw new Error(`Gestor Ofertante ${cnpj} causou violação de unicidade`);
+      },
+    );
+
+    await handler(new Request("http://localhost/api/x"));
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const [, mensagemLogada] = spy.mock.calls[0] as [string, string];
+    expect(mensagemLogada).toContain(cnpj);
+  });
+
   it("handler que responde normalmente (não lança) passa através sem alteração", async () => {
     const handler = comTratamentoDeErro(async (_request: Request) =>
       NextResponse.json({ ok: true }, { status: 200 }),

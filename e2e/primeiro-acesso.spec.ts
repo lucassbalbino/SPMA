@@ -24,12 +24,37 @@ const CPF_SENHA_CURTA = "20060070099";
 const CPF_SEM_CSRF = "20070020000";
 const CPF_SENHA_DIVERGENTE = "20080030009";
 
+// UGO-10/P2 AC6: 1º acesso mantém a mesma regra para GO, agora chaveada por
+// CNPJ (14 dígitos) em vez de CPF - achado pelo Verifier independente
+// (ranked gap #4: nenhum teste exercitava este caminho com um GO real).
+function calcularDvCnpj(digitos: number[]): number {
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitos.length - 1; i >= 0; i--) {
+    soma += digitos[i] * peso;
+    peso = peso === 9 ? 2 : peso + 1;
+  }
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCnpjValido(indice: number): string {
+  const base12 = `25${String(indice).padStart(6, "0")}0001`;
+  const digitos = base12.split("").map(Number);
+  const d1 = calcularDvCnpj(digitos);
+  const d2 = calcularDvCnpj([...digitos, d1]);
+  return `${base12}${d1}${d2}`;
+}
+
+const CNPJ_GO_DEFINE_SENHA = gerarCnpjValido(1);
+
 const CPFS = [
   CPF_DEFINE_SENHA,
   CPF_SEM_SESSAO,
   CPF_SENHA_CURTA,
   CPF_SEM_CSRF,
   CPF_SENHA_DIVERGENTE,
+  CNPJ_GO_DEFINE_SENHA,
 ];
 
 /** Loga uma conta em 1º acesso (senhaHash null) e devolve o id da sessão. */
@@ -73,8 +98,10 @@ async function abrirSessaoDePrimeiroAcessoComCsrf(
 test.beforeAll(() => {
   deleteUsuarios(CPFS);
   for (const cpf of CPFS) {
+    if (cpf === CNPJ_GO_DEFINE_SENHA) continue;
     upsertUsuario({ cpf, tipo: "AL", senha: null, primeiraVez: true });
   }
+  upsertUsuario({ cpf: CNPJ_GO_DEFINE_SENHA, tipo: "GO", senha: null, primeiraVez: true });
 });
 
 test.afterAll(() => {
@@ -110,6 +137,34 @@ test("CA-AU-02: define a senha, desativa primeiraVez e passa a autenticar com el
   const clienteLogin = await novoCliente();
   const login = await clienteLogin.post("/api/auth/login", {
     data: { documento: CPF_DEFINE_SENHA, senha: NOVA_SENHA },
+  });
+  expect(login.status()).toBe(200);
+  expect((await login.json()).primeiroAcesso).toBe(false);
+
+  await cliente.dispose();
+  await clienteLogin.dispose();
+});
+
+test("CA-AU-02 com GO identificado por CNPJ: define a senha, desativa primeiraVez e passa a autenticar com ela (P2 AC6)", async () => {
+  const { idSessao, idCsrf } = await abrirSessaoDePrimeiroAcessoComCsrf(
+    CNPJ_GO_DEFINE_SENHA,
+  );
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/auth/primeiro-acesso", {
+    data: { senha: NOVA_SENHA, confirmacaoSenha: NOVA_SENHA },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(200);
+
+  const usuario = getUsuario(CNPJ_GO_DEFINE_SENHA);
+  expect(usuario?.primeiraVez).toBe(false);
+  expect(usuario?.senhaHash).not.toBeNull();
+
+  const clienteLogin = await novoCliente();
+  const login = await clienteLogin.post("/api/auth/login", {
+    data: { documento: CNPJ_GO_DEFINE_SENHA, senha: NOVA_SENHA },
   });
   expect(login.status()).toBe(200);
   expect((await login.json()).primeiroAcesso).toBe(false);

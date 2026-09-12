@@ -71,6 +71,7 @@ const CNPJ_NOVO_GO_SEM_VERBA = gerarCnpjValido(6);
 
 const CPF_NOVO_AL = "30010020004";
 const CPF_NOVO_VO = "30030040000";
+const CPF_NOVO_VO_FORJADO = "30023004037";
 const CPF_FORJADO_GT = "30040050009";
 const CPF_SEM_SESSAO = "30050060007";
 const CPF_SEM_CSRF = "30091002052";
@@ -94,6 +95,7 @@ const CPFS = [
   CNPJ_NOVO_GO_SEM_VERBA,
   CPF_NOVO_AL,
   CPF_NOVO_VO,
+  CPF_NOVO_VO_FORJADO,
   CPF_FORJADO_GT,
   CPF_SEM_SESSAO,
   CPF_SEM_CSRF,
@@ -273,7 +275,7 @@ test("UGO-18: GO tentando criar outro GO recebe 403 e nada é criado (GO deixou 
   await cliente.dispose();
 });
 
-test("REQ-AU-08: GO criando VO herda o próprio ofertante, ignorando o payload", async () => {
+test("REQ-AU-08: GO criando VO sem informar cdOfertante herda o próprio escopo", async () => {
   const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
   const cliente = await novoCliente();
 
@@ -282,15 +284,38 @@ test("REQ-AU-08: GO criando VO herda o próprio ofertante, ignorando o payload",
       documento: CPF_NOVO_VO,
       nome: "VO Novo",
       tipo: "VO",
-      // Valor forjado: o servidor tem de ignorá-lo.
-      cdOfertante: CNPJ_GO_ALHEIO,
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(resVo.status()).toBe(201);
   expect(getUsuario(CPF_NOVO_VO)?.cdOfertante).toBe(CNPJ_GO_CRIADOR);
-  expect(getUsuario(CPF_NOVO_VO)?.cdOfertante).not.toBe(CNPJ_GO_ALHEIO);
+
+  await cliente.dispose();
+});
+
+// UGO-16 (P3 AC3, correção pós-Verifier iteração 1): antes desta correção, um
+// `cdOfertante` forjado apontando para outro GO era silenciosamente
+// substituído pelo escopo do criador (o VO acabava criado sob o GO correto,
+// mas sem 403 avisando a tentativa de forja) - este teste cobria esse
+// comportamento antigo com `expect(resVo.status()).toBe(201)`; agora prova o
+// oposto: a tentativa é rejeitada, nada é criado.
+test("UGO-16: GO forjando cdOfertante de outro GO ao criar VO recebe 403, nada é criado", async () => {
+  const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
+  const cliente = await novoCliente();
+
+  const resVo = await cliente.post("/api/usuarios", {
+    data: {
+      documento: CPF_NOVO_VO_FORJADO,
+      nome: "VO Novo",
+      tipo: "VO",
+      cdOfertante: CNPJ_GO_ALHEIO,
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(resVo.status()).toBe(403);
+  expect(getUsuario(CPF_NOVO_VO_FORJADO)).toBeNull();
 
   await cliente.dispose();
 });
@@ -344,7 +369,17 @@ test("CA-SEC-15: POST sem token CSRF válido é rejeitado com 403, nenhum usuár
   await cliente.dispose();
 });
 
-test("REQ-SEC-11: POST com documento já existente devolve erro genérico + idCorrelacao, nunca o erro cru do Prisma", async () => {
+// UGO-10 (P2 AC4, correção pós-Verifier iteração 1): antes desta correção,
+// documento duplicado não tinha nenhuma checagem explícita - a violação de
+// unicidade do Prisma subia crua até `comTratamentoDeErro`, que a convertia
+// num 500 genérico (este teste, então chamado "REQ-SEC-11", provava
+// exatamente isso). A spec sempre exigiu "erro claro de duplicidade" (AC4);
+// agora `POST /api/usuarios` faz a checagem antes do `create` e responde 409
+// - a garantia de REQ-SEC-11 (nunca vazar erro cru do Prisma) continua
+// provada, mas por um teste unitário determinístico de exceção genuína
+// (`src/lib/errors/api-error.test.ts`), não mais por esta corrida específica
+// que deixou de existir.
+test("UGO-10: POST com documento já existente devolve 409 com erro claro de duplicidade, nunca o erro cru do Prisma", async () => {
   const { idSessao, idCsrf } = await sessaoDoGoComCsrf();
   const headers = cabecalhosAutenticados(idSessao, idCsrf);
 
@@ -355,21 +390,15 @@ test("REQ-SEC-11: POST com documento já existente devolve erro genérico + idCo
   });
   expect(primeiro.status()).toBe(201);
 
-  // Mesmo documento de novo: viola a unicidade (`documento` é @id) -
-  // exceção real do Prisma, não tratada na rota, capturada por
-  // `comTratamentoDeErro`.
   const clienteSegundo = await novoCliente();
   const segundo = await clienteSegundo.post("/api/usuarios", {
     data: { documento: CPF_DUPLICADO, nome: "Segundo Cadastro", tipo: "AL", cdCurso: cdCursoDoGo },
     headers,
   });
 
-  expect(segundo.status()).toBe(500);
+  expect(segundo.status()).toBe(409);
   const corpo = await segundo.json();
-  expect(corpo.erro).toBe("Erro interno. Contate o suporte informando o código.");
-  expect(corpo.idCorrelacao).toMatch(
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-  );
+  expect(corpo.erro).toBe("Documento já cadastrado");
   // Nunca o erro cru do Prisma (nome de constraint, classe do erro, etc.)
   // no corpo devolvido ao cliente.
   const texto = JSON.stringify(corpo);

@@ -67,6 +67,49 @@ async function criarUsuario(request: Request) {
     );
   }
 
+  // UGO-16 (P3 AC3): um GO só pode vincular VO ao PRÓPRIO CNPJ. Antes desta
+  // correção, um `cdOfertante` forjado apontando para outro GO era
+  // silenciosamente substituído pelo escopo do criador (`resolverOfertante`
+  // abaixo ignora o valor informado quando `criador.tipo === "GO"`) - a
+  // criação acabava indo para o lugar certo, mas sem avisar quem tentou
+  // forjar o vínculo, e o gate de validação achou o caso indistinguível de
+  // "não informou nada". Rejeitar explicitamente com 403 fecha essa
+  // diferença (achado pelo Verifier independente, ranked gap #1).
+  if (
+    criador.tipo === "GO" &&
+    dados.cdOfertante !== undefined &&
+    dados.cdOfertante !== resolverEscopoOfertante(criador)
+  ) {
+    return NextResponse.json(
+      { erro: "Você não tem permissão para vincular a outro Gestor Ofertante" },
+      { status: 403 },
+    );
+  }
+
+  // UGO-10 (P2 AC4): documento (CPF ou CNPJ) duplicado precisa de um erro
+  // claro de duplicidade, não a exceção crua de unicidade do Prisma
+  // convertida em 500 genérico por `comTratamentoDeErro` (achado pelo
+  // Verifier independente, ranked gap #2 - design.md descrevia o 500
+  // genérico como "mesmo padrão de CPF duplicado hoje", mas a spec sempre
+  // exigiu um erro claro; não havia, de fato, nenhum precedente de "erro
+  // claro" pré-existente para reaproveitar, então esta checagem passa a ser
+  // esse precedente, unificado para CPF e CNPJ).
+  const documentoExistente = await prisma.usuario.findUnique({
+    where: { documento: dados.documento },
+  });
+
+  if (documentoExistente) {
+    return NextResponse.json(
+      {
+        erro:
+          dados.tipo === "GO"
+            ? "CNPJ já cadastrado para outro Gestor Ofertante"
+            : "Documento já cadastrado",
+      },
+      { status: 409 },
+    );
+  }
+
   // SPEC_DEVIATION: antes da unificação (AD-043), o alvo GO sempre precisava
   // de um `cdOfertante` informado apontando para um Ofertante autônomo já
   // existente - hoje o GO É o próprio Ofertante (design.md, "Consequência de
@@ -162,11 +205,14 @@ async function criarUsuario(request: Request) {
   // verba órfã nem um GO sem orçamento (mesmo motivo da transação do
   // auto-cadastro em POST /api/ofertantes).
   //
-  // Documento duplicado (violação de unicidade, `documento` é @id) lança uma
-  // exceção do Prisma não tratada aqui de propósito - `comTratamentoDeErro`
-  // (REQ-SEC-11) é quem a converte num 500 genérico com id de correlação,
-  // nunca o erro cru do Prisma no corpo da resposta. Dentro da transação,
-  // ela também desfaz a verba que porventura já tenha sido criada.
+  // Documento duplicado já foi barrado acima com 409 claro (UGO-10) - a
+  // checagem prévia elimina a corrida óbvia (checa-então-cria não é atômico),
+  // mas uma colisão residual entre a checagem e o `create` ainda é possível
+  // sob concorrência; nesse caso raro, a violação de unicidade do Prisma
+  // segue sem tratamento explícito aqui e cai no 500 genérico de
+  // `comTratamentoDeErro` (REQ-SEC-11), nunca no erro cru do Prisma no corpo
+  // da resposta. Dentro da transação, ela também desfaz a verba que
+  // porventura já tenha sido criada.
   const { usuario, verba, avaliacao } = await prisma.$transaction(async (tx) => {
     const usuarioCriado = await tx.usuario.create({
       data: {

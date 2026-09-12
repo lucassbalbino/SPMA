@@ -215,7 +215,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 **Where**: `src/lib/auth/guards.ts`
 **Depends on**: T5
 **Reuses**: as 6 guardas existentes, só o corpo interno muda
-**Requirement**: UGO-14, UGO-17, UGO-18, UGO-19, UGO-20
+**Requirement**: UGO-14, UGO-17, UGO-18 ~~, UGO-19, UGO-20~~ (correção pós-Verifier, iteração 1: `spec.md` só define UGO-01..18 - `UGO-19`/`UGO-20` citados aqui não existem; `requireOfertanteVinculado` cobre UGO-01, já listado em T13/T19, então nada fica sem cobertura ao remover os dois IDs inexistentes)
 
 **Tools**:
 - MCP: NONE
@@ -387,7 +387,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 **Where**: `src/app/api/usuarios/me/organizacao/route.ts` (novo), `src/app/(onboarding)/cadastro-ofertante/page.tsx`, `e2e/cadastro-ofertante-page.spec.ts`
 **Depends on**: T12
 **Reuses**: padrão exato de `src/app/api/usuarios/me/dados-pessoais/route.ts` (tudo-ou-nada, mesmo guard de sessão)
-**Requirement**: UGO-01, UGO-02, UGO-03, UGO-04, UGO-20
+**Requirement**: UGO-01, UGO-02, UGO-03, UGO-04 ~~, UGO-20~~ (correção pós-Verifier, iteração 1: `spec.md` só define UGO-01..18 - `UGO-20` citado aqui não existe; os 4 IDs restantes já cobrem integralmente esta tarefa)
 
 **Tools**:
 - MCP: NONE
@@ -681,6 +681,37 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
+## Fix Tasks (post-Verifier, iteração 1 de no máximo 3)
+
+O Verifier independente (author ≠ verifier, worktree isolado) rodou após T24 e retornou **FAIL** com 7 gaps ranqueados. T25 fecha os gaps #1-#6; #7 é deliberadamente adiado (justificativa abaixo). Reabre o Verifier ao final desta tarefa.
+
+### T25: Corrigir gaps ranqueados #1-#6 do Verifier (iteração 1) ✅
+
+**What**:
+- Gap #1 (Major, UGO-16): `POST /api/usuarios` agora rejeita com 403 quando um GO informa `cdOfertante` diferente do próprio escopo resolvido, em vez de silenciosamente substituir pelo escopo do criador.
+- Gap #2 (Major, UGO-10): `POST /api/usuarios` faz `findUnique` por `documento` antes do `create` e responde 409 com mensagem clara de duplicidade (CPF ou CNPJ) - `design.md` (Error Handling Strategy) corrigido para não descrever mais um 500 genérico como intencional.
+- Gap #3 (Major, cobertura): `e2e/cadastro-ofertante-page.spec.ts` ganha os 3 testes de guard que a rota substituída (`POST /api/ofertantes`) tinha e a nova (`PATCH /api/usuarios/me/organizacao`) não tinha (401 sem sessão, 403 tipo não-GO, 403 sem CSRF).
+- Gap #4 (Minor, login/UGO-11..13): `loginSchema` para de rejeitar com "Documento inválido" um documento de tamanho diferente de 11/14 - deixa passar e `POST /api/auth/login` responde a mesma mensagem genérica de credencial errada (design.md já descrevia esse comportamento; só o código divergia). Adicionado teste de 1º acesso com GO identificado por CNPJ (`e2e/primeiro-acesso.spec.ts`). Corrigido bug real de mascaramento: `PADRAO_CPF` (`api-error.ts`) casava com os 11 primeiros dígitos de qualquer sequência mais longa, mascarando parcialmente um CNPJ de 14 dígitos que a spec exige deixar intacto - adicionados limites de dígito (`(?<!\d)`/`(?!\d)`) e teste comportamental no call site real.
+- Gap #5 (Minor, higiene): removido `Normalizacao-Respostas.docx` (arquivo de outra feature, comitado por engano em `915e1c7`).
+- Gap #6 (Minor, artefatos obsoletos): `tasks.md` (T6, T13) tinha `UGO-19`/`UGO-20`, ids que não existem em `spec.md` (só há UGO-01..18) - corrigido com nota de correção (mesmo padrão de transparência do T15). `spec.md`/`STATE.md` seguem "Pending"/"EM ANDAMENTO" até o Verifier confirmar PASS nesta iteração - atualização final é o último passo do fechamento, não desta tarefa.
+- Gap #7 (Cosmético, rótulo "CPF" em telas que também aceitam CNPJ) **deliberadamente NÃO corrigido nesta iteração**: mudar o rótulo quebraria `page.getByLabel("CPF")` em ~30 arquivos e2e já escritos para o rótulo atual (mesmo ripple já documentado em T16/T17/T22) - risco de regressão amplo para um achado cosmético, sem nenhum impacto funcional. Fica registrado para uma tarefa dedicada futura, fora do orçamento de 3 iterações do Verifier.
+
+**Where**: `src/app/api/usuarios/route.ts`, `src/lib/validation/schemas/login.schema.ts` (+ `.test.ts`), `src/lib/errors/api-error.ts` (+ `.test.ts`), `src/app/api/auth/login/route.integration.test.ts`, `e2e/cadastro-ofertante-page.spec.ts`, `e2e/primeiro-acesso.spec.ts`, `.specs/features/unificacao-ofertante-go/design.md`, `.specs/features/unificacao-ofertante-go/tasks.md`, `Normalizacao-Respostas.docx` (removido)
+**Depends on**: T24 (Verifier iteração 1)
+**Requirement**: UGO-10, UGO-16, UGO-11, UGO-12, UGO-13, UGO-01..04
+
+**Nota de execução**: A suíte e2e completa (rodada como parte do gate desta tarefa) revelou 2 testes pré-existentes em `e2e/usuarios.spec.ts` que codificavam o comportamento ANTIGO como se fosse o esperado - achado consequencial (mesmo padrão já visto em T13-T22), não um bug novo: `REQ-AU-08` (linha ~276) esperava 201 com o `cdOfertante` forjado silenciosamente ignorado - dividido em dois testes (um sem `cdOfertante` informado, que continua herdando; outro com `cdOfertante` forjado, agora 403, usando um documento próprio - `CPF_NOVO_VO_FORJADO` - para não colidir com o primeiro teste); `REQ-SEC-11` (linha ~347) esperava 500 genérico para documento duplicado - renomeado para `UGO-10` e reescrito para 409 com mensagem clara (a garantia de REQ-SEC-11 em si continua provada, só que pelo teste unitário de exceção genuína em `api-error.test.ts`, não mais por esta rota que deixou de lançar exceção nesse caminho).
+
+**Done when**:
+- [x] Gaps #1-#6 corrigidos com evidência (código + teste), #7 documentado como deliberadamente adiado
+- [x] Gate completo (lint + build + typecheck + unit + integration + e2e) verde - typecheck limpo, lint 0 erros, build ok, unit 659/659, integration 71/71, e2e 262/262 (7.4min, 0 skips)
+- [x] Verifier independente redisparado (iteração 2)
+
+**Tests**: `src/app/api/auth/login/route.integration.test.ts`, `src/lib/validation/schemas/login.schema.test.ts`, `src/lib/errors/api-error.test.ts`, `e2e/cadastro-ofertante-page.spec.ts`, `e2e/primeiro-acesso.spec.ts`, `e2e/usuarios.spec.ts`
+**Gate**: Full-feature
+
+---
+
 ## Phase Execution Map
 
 ```
@@ -692,6 +723,7 @@ Phase 3:  T6 ------→ T7 ------→ T8 ------→ T9 ------→ T10
 Phase 4:  T11 -----→ T12 -----→ T13 -----→ T14 -----→ T15 -----→ T16 -----→ T17
 Phase 5:  T18 -----→ T19
 Phase 6:  T20 -----→ T21 -----→ T22 -----→ T23 -----→ T24
+Fix (pós-Verifier): T24 -----→ T25
 ```
 
 **Empacotamento previsto:** 24 tarefas, orçamento de ~7 por worker, cortando só em fronteira de fase → **4 batches** (Fases 1+2 = 5 tarefas; Fase 3 = 5 tarefas; Fase 4 = 7 tarefas; Fases 5+6 = 7 tarefas). Como isso passa de um batch, o Execute precisa apresentar a oferta de sub-agentes antes de começar. **Revisão pós-Fase-3**: T17 foi inserida e T16/T20/T21/T22 tiveram o escopo estendido (ver nota em Execution Plan) - a contagem de tarefas por lote não mudou (batch 3 = Fase 4 completa = 7 tarefas; batch 4 = Fases 5+6 = 7 tarefas), só o conteúdo de cada uma.

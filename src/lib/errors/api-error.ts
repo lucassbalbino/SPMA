@@ -9,7 +9,15 @@ import { mascararCPF } from "../log/mask";
 
 // CPF em formato cru (11 dígitos) ou pontuado (000.000.000-00) - o mesmo
 // padrão reconhecível em qualquer texto livre de mensagem de erro/stack.
-const PADRAO_CPF = /\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g;
+//
+// UGO-12/AD-043 (correção pós-Verifier, ranked gap #4): sem os limites de
+// dígito `(?<!\d)`/`(?!\d)`, este padrão casava com os primeiros 11 dígitos
+// de qualquer sequência mais longa - inclusive um CNPJ de 14 dígitos (que a
+// spec exige NÃO mascarar, por identificar pessoa jurídica, não física), que
+// acabava parcialmente mascarado (11 primeiros dígitos viravam máscara, os 3
+// últimos ficavam expostos soltos) em vez de sair intacto do log. Os limites
+// garantem que só um run de dígitos com exatamente o comprimento de CPF casa.
+const PADRAO_CPF = /(?<!\d)\d{3}\.?\d{3}\.?\d{3}-?\d{2}(?!\d)/g;
 
 function mascararCPFsNoTexto(texto: string): string {
   return texto.replace(PADRAO_CPF, (cpfEncontrado) => mascararCPF(cpfEncontrado));

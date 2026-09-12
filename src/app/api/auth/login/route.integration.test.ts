@@ -101,4 +101,25 @@ describe("POST /api/auth/login (integration) - REQ-SEC-04 mecanismo de normaliza
       expect.anything(),
     );
   });
+
+  // P2 AC5 (correção pós-Verifier, ranked gap #4): `loginSchema` deixa passar
+  // um documento de tamanho diferente de 11/14 (não rejeita no formato, ver
+  // login.schema.test.ts) - é aqui, na rota, que ele precisa terminar com a
+  // MESMA resposta genérica de credencial errada, nunca uma mensagem
+  // distinta de "formato inválido" que revelaria a camada que reprovou.
+  it("documento de tamanho diferente de 11/14: mesma resposta genérica de credencial errada, sem consulta reveladora", async () => {
+    const DOCUMENTO_TAMANHO_INVALIDO = "123456789";
+
+    const res = await POST(
+      requisicaoLogin(
+        DOCUMENTO_TAMANHO_INVALIDO,
+        "qualquerSenha1",
+        "198.51.100.62",
+      ),
+    );
+    const corpo = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(corpo.erro).toBe("CPF ou senha inválidos");
+  });
 });
