@@ -1,7 +1,12 @@
 // Popula o banco de DESENVOLVIMENTO (`.env` -> `spma`) com o cenário mínimo
-// para navegar o sistema inteiro pela interface: um elemento de cada
-// (Ofertante, Verba, Pré-Curso, Pós-Curso, matrícula do Aluno) e um usuário
-// de cada um dos seis perfis (AM/GT/VT/GO/VO/AL), todos com senha.
+// para navegar o sistema inteiro pela interface: uma Verba, um Pré-Curso, um
+// Pós-Curso, a matrícula do Aluno, e um usuário de cada um dos seis perfis
+// (AM/GT/VT/GO/VO/AL), todos com senha.
+//
+// UGO-14/AD-043 (Decisão C): sem `model Ofertante` separado, o GO de demo É
+// o Ofertante - identificado por CNPJ, com nome/uf/responsavel/email/
+// municipio gravados direto no próprio `Usuario`. `Verba`/`PreCurso`
+// referenciam o CNPJ do GO diretamente, sem uma tabela intermediária.
 //
 // Não é seed de produção nem fixture de teste: `prisma/seed.ts` cria o
 // Admin Master real, e `scripts/e2e-fixture.ts` serve a suíte e2e contra
@@ -20,75 +25,68 @@ import type { TipoUsuario } from "../src/generated/prisma/enums";
 loadEnv();
 
 const SENHA = "SenhaDemo123";
-const NOME_OFERTANTE = "Instituto Turismo Litoral (demo)";
+const NOME_ORGANIZACAO = "Instituto Turismo Litoral (demo)";
 
 const CPF_AM = "70000000159";
 const CPF_GT = "40200030094";
 const CPF_VT = "70000000230";
-const CPF_GO = "60000369900";
+// CNPJ (14 dígitos, dígitos verificadores válidos) - GO se identifica por
+// CNPJ desde a unificação (UGO-07/AD-043); os demais perfis continuam CPF.
+const CNPJ_GO = "60000369000126";
 const CPF_VO = "70000000310";
 const CPF_AL = "60000383643";
 
 // Ordem importa: `criadoPor` é FK para a própria tabela, então cada linha só
 // entra depois de quem a criou. A cascata reproduz `lib/auth/cascata.ts`
-// (AM cria GT; GT cria VT e GO; GO cria VO e AL) e `vinculado` marca quem
-// leva `cdOfertante` — só GO/VO (AD-012).
+// (AM cria GT; GT cria VT e GO; GO cria VO e AL) e `cdOfertante` marca quem
+// se vincula a um GO existente - só VO agora (AD-043; o GO É o Ofertante,
+// o próprio `cdOfertante` dele fica sempre `null`).
 const USUARIOS: {
-  cpf: string;
+  documento: string;
   nome: string;
   tipo: TipoUsuario;
-  vinculado: boolean;
+  cdOfertante: string | null;
   criadoPor: string | null;
+  uf?: string;
+  responsavel?: string;
+  telefone?: string;
+  municipio?: string;
+  email?: string;
 }[] = [
-  { cpf: CPF_AM, nome: "Helena Souza (demo)", tipo: "AM", vinculado: false, criadoPor: null },
-  { cpf: CPF_GT, nome: "Carlos Tavares (demo)", tipo: "GT", vinculado: false, criadoPor: CPF_AM },
-  { cpf: CPF_VT, nome: "Rafael Nunes (demo)", tipo: "VT", vinculado: false, criadoPor: CPF_GT },
-  { cpf: CPF_GO, nome: "Marina Duarte (demo)", tipo: "GO", vinculado: true, criadoPor: CPF_GT },
-  { cpf: CPF_VO, nome: "Beatriz Lima (demo)", tipo: "VO", vinculado: true, criadoPor: CPF_GO },
-  { cpf: CPF_AL, nome: "Joana Ribeiro (demo)", tipo: "AL", vinculado: false, criadoPor: CPF_GO },
+  { documento: CPF_AM, nome: "Helena Souza (demo)", tipo: "AM", cdOfertante: null, criadoPor: null },
+  { documento: CPF_GT, nome: "Carlos Tavares (demo)", tipo: "GT", cdOfertante: null, criadoPor: CPF_AM },
+  { documento: CPF_VT, nome: "Rafael Nunes (demo)", tipo: "VT", cdOfertante: null, criadoPor: CPF_GT },
+  {
+    documento: CNPJ_GO,
+    nome: NOME_ORGANIZACAO,
+    tipo: "GO",
+    cdOfertante: null,
+    criadoPor: CPF_GT,
+    uf: "SP",
+    municipio: "Santos",
+    responsavel: "Marina Duarte (demo)",
+    email: "contato@exemplo.dev",
+  },
+  { documento: CPF_VO, nome: "Beatriz Lima (demo)", tipo: "VO", cdOfertante: CNPJ_GO, criadoPor: CNPJ_GO },
+  { documento: CPF_AL, nome: "Joana Ribeiro (demo)", tipo: "AL", cdOfertante: null, criadoPor: CNPJ_GO },
 ];
 
-const CPFS = USUARIOS.map((u) => u.cpf);
+const DOCUMENTOS = USUARIOS.map((u) => u.documento);
 
 async function limpar(prisma: PrismaClient) {
-  const ofertantes = await prisma.ofertante.findMany({
-    where: { nome: NOME_OFERTANTE },
-    select: { cdOfertante: true },
-  });
-  const cdOfertantes = ofertantes.map((o) => o.cdOfertante);
-
-  await prisma.avaliacaoAluno.deleteMany({ where: { cpf: { in: CPFS } } });
+  await prisma.avaliacaoAluno.deleteMany({ where: { cpf: CPF_AL } });
   // PosCurso cai por cascade junto com o PreCurso.
-  await prisma.preCurso.deleteMany({ where: { cdOfertante: { in: cdOfertantes } } });
-  await prisma.verba.deleteMany({ where: { cdOfertante: { in: cdOfertantes } } });
-  await prisma.sessao.deleteMany({ where: { cpfUsuario: { in: CPFS } } });
-  // Criado_Por é ON DELETE SET NULL: apagar a cascata inteira de uma vez não
-  // esbarra na auto-referência.
-  await prisma.usuario.deleteMany({ where: { cpf: { in: CPFS } } });
-  await prisma.ofertante.deleteMany({ where: { cdOfertante: { in: cdOfertantes } } });
+  await prisma.preCurso.deleteMany({ where: { cdOfertante: CNPJ_GO } });
+  await prisma.verba.deleteMany({ where: { cdOfertante: CNPJ_GO } });
+  await prisma.sessao.deleteMany({ where: { cpfUsuario: { in: DOCUMENTOS } } });
+  // Criado_Por e CD_Ofertante são ON DELETE SET NULL: apagar a cascata
+  // inteira de uma vez não esbarra nas duas auto-referências.
+  await prisma.usuario.deleteMany({ where: { documento: { in: DOCUMENTOS } } });
 
   console.log("Dados de demonstração removidos.");
 }
 
 async function semear(prisma: PrismaClient) {
-  const ofertante =
-    (await prisma.ofertante.findFirst({ where: { nome: NOME_OFERTANTE } })) ??
-    (await prisma.ofertante.create({
-      data: {
-        nome: NOME_OFERTANTE,
-        uf: "SP",
-        municipio: "Santos",
-        responsavel: "Marina Duarte",
-        email: "contato@exemplo.dev",
-      },
-    }));
-
-  const verba =
-    (await prisma.verba.findFirst({ where: { cdOfertante: ofertante.cdOfertante } })) ??
-    (await prisma.verba.create({
-      data: { cdOfertante: ofertante.cdOfertante, vlVerba: 250000, dtVerba: new Date() },
-    }));
-
   const senhaHash = await hashPassword(SENHA);
   for (const usuario of USUARIOS) {
     const comum = {
@@ -96,31 +94,42 @@ async function semear(prisma: PrismaClient) {
       tipo: usuario.tipo,
       senhaHash,
       primeiraVez: false,
-      cdOfertante: usuario.vinculado ? ofertante.cdOfertante : null,
+      cdOfertante: usuario.cdOfertante,
       criadoPor: usuario.criadoPor,
       tentativasFalhas: 0,
       bloqueadoAte: null,
+      uf: usuario.uf ?? null,
+      responsavel: usuario.responsavel ?? null,
+      telefone: usuario.telefone ?? null,
+      municipio: usuario.municipio ?? null,
+      email: usuario.email ?? null,
     };
     await prisma.usuario.upsert({
-      where: { cpf: usuario.cpf },
-      create: { cpf: usuario.cpf, ...comum },
+      where: { documento: usuario.documento },
+      create: { documento: usuario.documento, ...comum },
       update: comum,
     });
   }
+
+  const verba =
+    (await prisma.verba.findFirst({ where: { cdOfertante: CNPJ_GO } })) ??
+    (await prisma.verba.create({
+      data: { cdOfertante: CNPJ_GO, vlVerba: 250000, dtVerba: new Date() },
+    }));
 
   // Um curso só: é nele que ficam o Pós-Curso e a matrícula do Aluno, para
   // que as três telas de formulário falem do mesmo curso.
   const curso =
     (await prisma.preCurso.findFirst({
-      where: { cdOfertante: ofertante.cdOfertante },
+      where: { cdOfertante: CNPJ_GO },
       orderBy: { cdCurso: "asc" },
     })) ??
     (await prisma.preCurso.create({
       data: {
-        cdOfertante: ofertante.cdOfertante,
+        cdOfertante: CNPJ_GO,
         cdVerba: verba.cdVerba,
         vlCursoAlocado: 12000,
-        criadoPor: CPF_GO,
+        criadoPor: CNPJ_GO,
       },
     }));
 
@@ -129,7 +138,7 @@ async function semear(prisma: PrismaClient) {
   });
   if (!posExistente) {
     await prisma.posCurso.create({
-      data: { cdCurso: curso.cdCurso, criadoPor: CPF_GO },
+      data: { cdCurso: curso.cdCurso, criadoPor: CNPJ_GO },
     });
   }
 
@@ -147,16 +156,16 @@ async function semear(prisma: PrismaClient) {
   console.log(`
 Cenário de demonstração pronto. Senha de todos: ${SENHA}
 
-  Ofertante  #${ofertante.cdOfertante}  ${NOME_OFERTANTE}
+  Ofertante  ${NOME_ORGANIZACAO} (CNPJ ${CNPJ_GO})
   Verba      #${verba.cdVerba}  R$ 250.000,00 (R$ 12.000,00 alocados no curso)
   Curso      #${curso.cdCurso}  pré-curso + pós-curso + matrícula da Aluna
 
-  Admin Master     CPF ${CPF_AM}  (cria qualquer perfil)
-  Gestor Turismo   CPF ${CPF_GT}  (cria usuários, gere ofertantes e verbas)
+  Admin Master     CPF  ${CPF_AM}  (cria qualquer perfil)
+  Gestor Turismo   CPF  ${CPF_GT}  (cria usuários, gere ofertantes e verbas)
   Visualiz. Turismo CPF ${CPF_VT}  (leitura nacional, não escreve)
-  Gestor Ofertante CPF ${CPF_GO}  (dono do ofertante; preenche pré/pós-curso)
-  Visualiz. Ofertante CPF ${CPF_VO}  (leitura só do próprio ofertante)
-  Aluno            CPF ${CPF_AL}  (matriculado no curso #${curso.cdCurso})
+  Gestor Ofertante CNPJ ${CNPJ_GO}  (é o próprio ofertante; preenche pré/pós-curso)
+  Visualiz. Ofertante CPF ${CPF_VO}  (leitura só do ofertante vinculado)
+  Aluno            CPF  ${CPF_AL}  (matriculado no curso #${curso.cdCurso})
 
 Roteiro das telas (http://localhost:3000):
 

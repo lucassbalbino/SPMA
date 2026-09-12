@@ -539,7 +539,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T19: `scripts/dev-seed-demo.ts` - cenário de demo no formato unificado (Decisão C/AD-043)
+### T19: `scripts/dev-seed-demo.ts` - cenário de demo no formato unificado (Decisão C/AD-043) ✅
 
 **What**: Remove a criação separada de `Ofertante`; o GO de demo (`CPF_GO` -> `CNPJ_GO`, um CNPJ de teste válido) grava nome/uf/responsavel/email/municipio diretamente no próprio `Usuario`; `Verba`/`PreCurso` referenciam `CNPJ_GO` direto. `limpar()` ajustado (sem `prisma.ofertante`). Autorizado pelo usuário nesta sessão: apaga e recria o registro de demo existente.
 **Where**: `scripts/dev-seed-demo.ts`
@@ -552,9 +552,11 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] `npm run dev:seed-demo:limpar` remove o cenário antigo (Ofertante+GO+VO+Verba+PreCurso+Avaliações de demo)
-- [ ] `npm run dev:seed-demo` recria o mesmo cenário navegável, GO com CNPJ de teste válido
-- [ ] Gate check passa: `npm run lint && npm run build && npm run typecheck`
+- [x] `npm run dev:seed-demo:limpar` remove o cenário antigo (Ofertante+GO+VO+Verba+PreCurso+Avaliações de demo)
+- [x] `npm run dev:seed-demo` recria o mesmo cenário navegável, GO com CNPJ de teste válido
+- [x] Gate check passa: `npm run lint && npm run build && npm run typecheck` (`lint` 0 erros; `npx tsc --noEmit` limpo neste arquivo; `build`/`typecheck` do repo inteiro fecham 100% só no gate Full-feature de T22)
+
+**Nota de execução**: GO de demo passa de "Marina Duarte (demo)" (pessoa, tipo GO vinculado a um `Ofertante` à parte "Instituto Turismo Litoral") para o próprio `Usuario` GO carregando `nome="Instituto Turismo Litoral (demo)"` (organização) + `responsavel="Marina Duarte (demo)"` (pessoa de contato) + uf/municipio/email - mesmo padrão de campo que `usuarioSchema` (T8) já usa. CNPJ de demo (`60000369000126`) derivado do prefixo do antigo `CPF_GO` para manter alguma continuidade visual entre execuções. Testado: seed limpo, seed idempotente (2ª rodada não duplica, mesmo `cdCurso`), limpar remove tudo (`Usuario.cdOfertante`/`criadoPor` são `ON DELETE SET NULL` - migration `20260912170000.../migration.sql:84-85` - então um único `deleteMany` sobre os 6 documentos, sem ordem especial, já é seguro).
 
 **Tests**: none
 **Gate**: build
