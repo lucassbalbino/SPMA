@@ -61,11 +61,30 @@ Regra de autorização de escrita, validada em toda operação de criação de u
 | GO | GO, VO, AL |
 | VT, VO, AL | Nenhum (somente leitura) |
 
+> **SPEC_DEVIATION (AD-043, `unificacao-ofertante-go`, 2026-09):** a linha "GO
+> | GO, VO, AL" não vale mais - **GO deixou de poder criar outro GO**
+> (`TIPOS_PERMITIDOS.GO` passou a `["VO", "AL"]`). Motivo: o GO É o próprio
+> Ofertante agora (ver 2.3); permitir que um GO crie outro GO não tinha mais
+> um "Ofertante de destino" claro para vincular o novo registro. Decisão do
+> usuário desta sessão, não erro de leitura desta tabela.
+
 ### 2.3 Escopo Multi-Tenant por Ofertante
 
 Usuários dos tipos GO e VO estão associados a um Ofertante específico. O Aluno (AL) associa-se ao curso em que se inscreve, não ao Ofertante. Toda consulta de dados feita por esses perfis é filtrada pelo escopo correspondente. Tentativas de acesso a dados fora do próprio escopo retornam erro de acesso negado (HTTP 403).
 
 Quando um GO é criado sem Ofertante vinculado, o sistema exige o cadastro do Ofertante no primeiro acesso, antes de liberar as demais funcionalidades. O Ofertante é associado a uma verba, que o Gestor Ofertante distribui entre os cursos que cria — uma mesma verba pode ser dividida entre mais de um curso, respeitado o valor total disponível.
+
+> **SPEC_DEVIATION (AD-043, `unificacao-ofertante-go`, 2026-09):** este
+> parágrafo descreve o GO como "associado a um Ofertante" - um registro de
+> terceiro, à parte. Essa leitura foi rescindida: **o GO É o próprio
+> Ofertante**, identificado por CNPJ (14 dígitos; os demais perfis continuam
+> por CPF). "Cadastrar o Ofertante no primeiro acesso" (AD-014, ainda válido)
+> passou a significar completar os próprios dados organizacionais
+> (nome/UF/responsável/telefone/município) direto no registro do GO, não
+> criar um registro em outra tabela. VO continua vinculado a um GO (o
+> "Ofertante" de que este parágrafo fala, para o VO, é sempre o GO ao qual
+> ele está associado). Decisão de negócio do usuário, motivada por não haver
+> nenhum caso real de um Ofertante com mais de um GO no banco de produção.
 
 ### 2.4 Autenticação
 
@@ -100,6 +119,19 @@ Usuário — controla login e permissão; cria outros usuários em cascata.
 
 ### 3.3 TB_Ofertante
 
+> **SPEC_DEVIATION (AD-043, `unificacao-ofertante-go`, 2026-09): esta tabela
+> não existe mais como model separado.** Os campos abaixo (`NM_Ofertante`,
+> `Resp_Ofertante`, `Email_Ofertante`, `Tel_Ofertante`, `UF_Ofertante`,
+> `Municipio_Ofertante`) foram todos incorporados direto a `TB_Usuario` (3.2)
+> como colunas nullable, preenchidas apenas quando `TP_Usuario='GO'`.
+> `CD_Ofertante` (a antiga chave primária desta tabela) deixou de existir -
+> em qualquer outra tabela que a referenciava (`TB_Verba.CD_Ofertante`,
+> `TB_Pre_Curso.CD_Ofertante`, `TB_Usuario.CD_Ofertante` do VO), a FK passa a
+> apontar direto para `TB_Usuario.CPF_Usuario` (renomeado para
+> `Documento_Usuario`, ver 3.2), que para um GO é o próprio CNPJ. A tabela
+> abaixo é preservada como registro histórico de como o modelo era antes da
+> unificação - não reflete o schema atual.
+
 | Campo | Tipo | Obrigatório | Regra |
 |---|---|---|---|
 | `CD_Ofertante` | INT | Sim | Chave primária |
@@ -113,6 +145,10 @@ Usuário — controla login e permissão; cria outros usuários em cascata.
 | `Criado_Por` | VARCHAR(11) | Sim | — |
 
 O cadastro do Ofertante pode ocorrer de três formas: pré-cadastro administrativo, cadastro realizado por um Gestor Turismo, ou cadastro realizado pelo próprio Gestor Ofertante em seu primeiro acesso, quando ainda não estiver vinculado a nenhum Ofertante.
+
+> As três formas continuam existindo (ver 2.3) - o que mudou é o alvo: hoje
+> as três gravam os campos organizacionais direto no registro do próprio GO,
+> não criam um registro numa tabela à parte.
 
 ### 3.4 TB_Verba
 

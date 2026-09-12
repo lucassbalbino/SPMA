@@ -661,7 +661,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 
 ---
 
-### T24: Anotar SPEC_DEVIATION em `docs/SPMA_Especificacao_Cliente_v2.md`
+### T24: Anotar SPEC_DEVIATION em `docs/SPMA_Especificacao_Cliente_v2.md` ✅
 
 **What**: Nota de desvio deliberado (mesmo padrão `SPEC_DEVIATION` já usado no código) nas seções 2.2/2.3/3.3, registrando que o documento do cliente descreve Ofertante como entidade própria e que a unificação com o GO é decisão do usuário desta sessão, não erro de leitura da spec fonte.
 **Where**: `docs/SPMA_Especificacao_Cliente_v2.md`
@@ -674,7 +674,7 @@ T19 → T20 → T21 → T22 → T23 → T24
 - Skill: NONE
 
 **Done when**:
-- [ ] Seções 2.2/2.3/3.3 têm uma nota `SPEC_DEVIATION` explícita, com referência à AD-043
+- [x] Seções 2.2/2.3/3.3 têm uma nota `SPEC_DEVIATION` explícita, com referência à AD-043
 
 **Tests**: none
 **Gate**: quick
