@@ -410,6 +410,32 @@ test("UGO-10: POST com documento já existente devolve 409 com erro claro de dup
   await clienteSegundo.dispose();
 });
 
+// R3 (achado residual da validation.md, iteração 2): o ramo GO/CNPJ da
+// mensagem de duplicidade (`route.ts:104-107`) não tinha asserção própria -
+// o teste acima só exercita o ramo genérico (CPF/AL). CNPJ_GO_ALHEIO já
+// existe como fixture (beforeAll), então tentar recriá-lo como GO é o
+// "Independent Test" que P2 (spec.md) descreve literalmente.
+test("UGO-10: POST com CNPJ de GO já existente devolve 409 com a mensagem específica de GO", async () => {
+  const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
+
+  const cliente = await novoCliente();
+  const res = await cliente.post("/api/usuarios", {
+    data: {
+      documento: CNPJ_GO_ALHEIO,
+      nome: "Segundo GO Com Mesmo CNPJ",
+      tipo: "GO",
+      uf: "SP",
+      verba: { vlVerba: 1000, dtVerba: "2026-03-10" },
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(409);
+  expect((await res.json()).erro).toBe("CNPJ já cadastrado para outro Gestor Ofertante");
+
+  await cliente.dispose();
+});
+
 test("UGO-01/UGO-07: AM cria GO com CNPJ válido + nome + uf + verba - 201, verba atrelada ao próprio GO recém-criado, sem Ofertante separado", async () => {
   const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
 

@@ -240,6 +240,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: src/app/api/usuarios/me/dados-pessoais/route.ts:63-81 (SPEC_DEVIATION: tudo-ou-nada vs merge raso de AVAL-07) (respostas-repo)
 - last seen: 2026-09-12T00:33:38Z
 
+### L-039 - When an entity absorbs the table it used to point at, its own copy of that foreign key must be null on creation, never a value still required from the request payload.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: unificacao-ofertante-go
+- evidence: src/app/api/usuarios/route.ts:113 (SPEC_DEVIATION: cdOfertante do proprio GO criado fica sempre null) (routes)
+- last seen: 2026-09-12T23:51:04Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

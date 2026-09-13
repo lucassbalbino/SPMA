@@ -1,5 +1,4 @@
-// PATCH /api/usuarios/me/organizacao (UGO-01, UGO-02, UGO-03, UGO-04,
-// UGO-20).
+// PATCH /api/usuarios/me/organizacao (UGO-01, UGO-02, UGO-03, UGO-04).
 //
 // Auto-cadastro/completude dos dados organizacionais do próprio GO no 1º
 // acesso (substitui o antigo POST /api/ofertantes de auto-cadastro, AD-014).

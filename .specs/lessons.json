@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 39,
+  "next_id": 40,
   "lessons": [
     {
       "id": "L-001",
@@ -690,6 +690,24 @@
       ],
       "created": "2026-09-12T00:33:38Z",
       "last_seen": "2026-09-12T00:33:38Z"
+    },
+    {
+      "id": "L-039",
+      "key": "spec_deviation::when an entity absorbs the table it used to point at its own copy of that foreign key must be null on creation never a value still required from the request payload",
+      "text": "When an entity absorbs the table it used to point at, its own copy of that foreign key must be null on creation, never a value still required from the request payload.",
+      "signal": "spec_deviation",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "unificacao-ofertante-go"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/app/api/usuarios/route.ts:113 (SPEC_DEVIATION: cdOfertante do proprio GO criado fica sempre null) (routes)"
+      ],
+      "created": "2026-09-12T23:51:04Z",
+      "last_seen": "2026-09-12T23:51:04Z"
     }
   ]
 }

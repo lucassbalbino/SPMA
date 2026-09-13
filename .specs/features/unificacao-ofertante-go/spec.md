@@ -124,30 +124,30 @@ Toda ambiguidade é resolvida ou registrada aqui — nada fica silenciosamente i
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| UGO-01 | P1: GO passa a ser o próprio Ofertante | Design | Pending |
-| UGO-02 | P1: GO passa a ser o próprio Ofertante | Design | Pending |
-| UGO-03 | P1: GO passa a ser o próprio Ofertante | Design | Pending |
-| UGO-04 | P1: GO passa a ser o próprio Ofertante | Design | Pending |
-| UGO-05 | P1: GO passa a ser o próprio Ofertante | Design | Pending |
-| UGO-06 | P1: GO passa a ser o próprio Ofertante | Design | Pending |
-| UGO-07 | P2: GO se identifica por CNPJ | Design | Pending |
-| UGO-08 | P2: GO se identifica por CNPJ | Design | Pending |
-| UGO-09 | P2: GO se identifica por CNPJ | Design | Pending |
-| UGO-10 | P2: GO se identifica por CNPJ | Design | Pending |
-| UGO-11 | P2: GO se identifica por CNPJ | Design | Pending |
-| UGO-12 | P2: GO se identifica por CNPJ | Design | Pending |
-| UGO-13 | P2: GO se identifica por CNPJ | Design | Pending |
-| UGO-14 | P3: VO se vincula diretamente ao GO específico | Design | Pending |
-| UGO-15 | P3: VO se vincula diretamente ao GO específico | Design | Pending |
-| UGO-16 | P3: VO se vincula diretamente ao GO específico | Design | Pending |
-| UGO-17 | P3: VO se vincula diretamente ao GO específico | Design | Pending |
-| UGO-18 | P3: VO se vincula diretamente ao GO específico | Tasks | Pending |
+| UGO-01 | P1: GO passa a ser o próprio Ofertante | Design | Verified |
+| UGO-02 | P1: GO passa a ser o próprio Ofertante | Design | Verified |
+| UGO-03 | P1: GO passa a ser o próprio Ofertante | Design | Verified |
+| UGO-04 | P1: GO passa a ser o próprio Ofertante | Design | Verified |
+| UGO-05 | P1: GO passa a ser o próprio Ofertante | Design | Verified |
+| UGO-06 | P1: GO passa a ser o próprio Ofertante | Design | Verified |
+| UGO-07 | P2: GO se identifica por CNPJ | Design | Verified |
+| UGO-08 | P2: GO se identifica por CNPJ | Design | Verified |
+| UGO-09 | P2: GO se identifica por CNPJ | Design | Verified |
+| UGO-10 | P2: GO se identifica por CNPJ | Design | Verified |
+| UGO-11 | P2: GO se identifica por CNPJ | Design | Verified |
+| UGO-12 | P2: GO se identifica por CNPJ | Design | Verified |
+| UGO-13 | P2: GO se identifica por CNPJ | Design | Verified |
+| UGO-14 | P3: VO se vincula diretamente ao GO específico | Design | Verified |
+| UGO-15 | P3: VO se vincula diretamente ao GO específico | Design | Verified |
+| UGO-16 | P3: VO se vincula diretamente ao GO específico | Design | Verified |
+| UGO-17 | P3: VO se vincula diretamente ao GO específico | Design | Verified |
+| UGO-18 | P3: VO se vincula diretamente ao GO específico | Tasks | Verified |
 
 **ID format:** `UGO-NN` (Unificação Gestor Ofertante).
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 18 total, 0 mapped a tasks ainda, 18 unmapped ⚠️ (mapeamento acontece na fase de Tasks).
+**Coverage:** 18 total, 18/18 verificados - Verifier independente (iteração 2/3, `validation.md`) confirmou evidência `file:line` para cada um, PASS ✅.
 
 ---
 
