@@ -19,10 +19,15 @@ import {
 import { matricularAlunoSchema } from "@/lib/validation/schemas/avaliacao.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
 
+// `nome` vem da resposta "Nome da Ação de Qualificação" do pré-curso
+// (RESP-01), não de coluna própria - pode faltar se o GO ainda não
+// preencheu essa pergunta.
+type OpcaoCurso = { cdCurso: number; nome: string | null };
+
 export function MatricularAlunoForm({
-  cdCursosDisponiveis,
+  cursosDisponiveis,
 }: {
-  cdCursosDisponiveis: number[];
+  cursosDisponiveis: OpcaoCurso[];
 }) {
   const router = useRouter();
 
@@ -64,7 +69,7 @@ export function MatricularAlunoForm({
     }
   }
 
-  if (cdCursosDisponiveis.length === 0) {
+  if (cursosDisponiveis.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
         Nenhum curso cadastrado ainda - crie um pré-curso antes de matricular um aluno.
@@ -93,9 +98,13 @@ export function MatricularAlunoForm({
               <SelectValue placeholder="Selecione um curso" />
             </SelectTrigger>
             <SelectContent>
-              {cdCursosDisponiveis.map((cd) => (
-                <SelectItem key={cd} value={String(cd)} data-testid={`opcao-curso-${cd}`}>
-                  Curso #{cd}
+              {cursosDisponiveis.map((curso) => (
+                <SelectItem
+                  key={curso.cdCurso}
+                  value={String(curso.cdCurso)}
+                  data-testid={`opcao-curso-${curso.cdCurso}`}
+                >
+                  {curso.nome ?? `Curso #${curso.cdCurso}`}
                 </SelectItem>
               ))}
             </SelectContent>

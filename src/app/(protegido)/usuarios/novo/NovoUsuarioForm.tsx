@@ -21,22 +21,27 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { TIPOS_PERMITIDOS } from "@/lib/auth/cascata";
+import { NOME_TIPO_USUARIO } from "@/lib/ui/tipos-usuario";
 import { usuarioSchema } from "@/lib/validation/schemas/usuario.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import type { TipoUsuario } from "@/generated/prisma/enums";
 
 type OpcaoGo = { documento: string; nome: string | null };
+// `nome` vem da resposta "Nome da Ação de Qualificação" do pré-curso
+// (RESP-01), não de coluna própria - pode faltar se o GO ainda não
+// preencheu essa pergunta.
+type OpcaoCurso = { cdCurso: number; nome: string | null };
 
 export function NovoUsuarioForm({
   tipoCriador,
   escolheOfertante,
   gos,
-  cdCursosDisponiveis,
+  cursosDisponiveis,
 }: {
   tipoCriador: TipoUsuario;
   escolheOfertante: boolean;
   gos: OpcaoGo[];
-  cdCursosDisponiveis: number[];
+  cursosDisponiveis: OpcaoCurso[];
 }) {
   const router = useRouter();
   const tiposPermitidos = TIPOS_PERMITIDOS[tipoCriador];
@@ -44,7 +49,9 @@ export function NovoUsuarioForm({
   const [documento, setDocumento] = useState("");
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [tipo, setTipo] = useState<TipoUsuario | "">(tiposPermitidos[0] ?? "");
+  // Vazio até o usuário escolher: o formulário mostra só o tipo primeiro e
+  // abre os demais campos depois de definido (nenhum tipo pré-selecionado).
+  const [tipo, setTipo] = useState<TipoUsuario | "">("");
   const [cdOfertante, setCdOfertante] = useState("");
   const [uf, setUf] = useState("");
   const [responsavel, setResponsavel] = useState("");
@@ -68,6 +75,14 @@ export function NovoUsuarioForm({
   // AVAL-01: todo Aluno nasce matriculado, então o curso é obrigatório para
   // qualquer perfil que crie um AL (hoje AM e GO - REQ-AU-05/06).
   const pedeCurso = tipo === "AL";
+  // GO se identifica por CNPJ (14 dígitos), os demais tipos por CPF (11) -
+  // mesma distinção de `usuarioSchema`/`validarCNPJ`/`validarCPF`. O campo
+  // de documento trava a digitação nesse tamanho, dígitos apenas.
+  const tamanhoDocumento = tipo === "GO" ? 14 : 11;
+
+  function handleDocumentoChange(valor: string) {
+    setDocumento(valor.replace(/\D/g, "").slice(0, tamanhoDocumento));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -127,6 +142,7 @@ export function NovoUsuarioForm({
       setDocumento("");
       setNome("");
       setEmail("");
+      setTipo("");
       setCdOfertante("");
       setUf("");
       setResponsavel("");
@@ -148,37 +164,6 @@ export function NovoUsuarioForm({
     <form onSubmit={handleSubmit} noValidate>
       <FieldGroup>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="cpf">CPF</FieldLabel>
-          <Input
-            id="cpf"
-            name="cpf"
-            value={documento}
-            onChange={(event) => setDocumento(event.target.value)}
-            disabled={enviando}
-          />
-        </Field>
-        <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="nome">Nome</FieldLabel>
-          <Input
-            id="nome"
-            name="nome"
-            value={nome}
-            onChange={(event) => setNome(event.target.value)}
-            disabled={enviando}
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="email">E-mail</FieldLabel>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            disabled={enviando}
-          />
-        </Field>
-        <Field data-invalid={!!erro}>
           <FieldLabel htmlFor="tipo">Tipo</FieldLabel>
           <select
             id="tipo"
@@ -188,135 +173,173 @@ export function NovoUsuarioForm({
             disabled={enviando}
             className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none md:text-sm dark:bg-input/30"
           >
+            <option value="">Selecione</option>
             {tiposPermitidos.map((opcao) => (
               <option key={opcao} value={opcao}>
-                {opcao}
+                {NOME_TIPO_USUARIO[opcao]}
               </option>
             ))}
           </select>
         </Field>
-        {pedeGoParaVo && (
-          <Field data-invalid={!!erro}>
-            <FieldLabel htmlFor="cdOfertante">Ofertante</FieldLabel>
-            <select
-              id="cdOfertante"
-              name="cdOfertante"
-              value={cdOfertante}
-              onChange={(event) => setCdOfertante(event.target.value)}
-              disabled={enviando || gos.length === 0}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none md:text-sm dark:bg-input/30"
-            >
-              <option value="">Selecione</option>
-              {gos.map((go) => (
-                <option key={go.documento} value={go.documento}>
-                  {go.nome ?? go.documento}
-                </option>
-              ))}
-            </select>
-            {gos.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Nenhum Ofertante cadastrado - cadastre um antes de criar o vinculado.
-              </p>
-            )}
-          </Field>
-        )}
-        {pedeOrganizacional && (
+        {tipo && (
           <>
             <Field data-invalid={!!erro}>
-              <FieldLabel htmlFor="uf">UF</FieldLabel>
+              <FieldLabel htmlFor="cpf">{tipo === "GO" ? "CNPJ" : "CPF"}</FieldLabel>
               <Input
-                id="uf"
-                name="uf"
-                maxLength={2}
-                value={uf}
-                onChange={(event) => setUf(event.target.value.toUpperCase())}
+                id="cpf"
+                name="cpf"
+                inputMode="numeric"
+                maxLength={tamanhoDocumento}
+                value={documento}
+                onChange={(event) => handleDocumentoChange(event.target.value)}
                 disabled={enviando}
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor="responsavel">Responsável</FieldLabel>
-              <Input
-                id="responsavel"
-                name="responsavel"
-                value={responsavel}
-                onChange={(event) => setResponsavel(event.target.value)}
-                disabled={enviando}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="telefone">Telefone</FieldLabel>
-              <Input
-                id="telefone"
-                name="telefone"
-                value={telefone}
-                onChange={(event) => setTelefone(event.target.value)}
-                disabled={enviando}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="municipio">Município</FieldLabel>
-              <Input
-                id="municipio"
-                name="municipio"
-                value={municipio}
-                onChange={(event) => setMunicipio(event.target.value)}
-                disabled={enviando}
-              />
-            </Field>
-          </>
-        )}
-        {pedeVerba && (
-          <>
             <Field data-invalid={!!erro}>
-              <FieldLabel htmlFor="vlVerba">Valor da verba</FieldLabel>
+              <FieldLabel htmlFor="nome">Nome</FieldLabel>
               <Input
-                id="vlVerba"
-                name="vlVerba"
-                type="number"
-                min="0"
-                step="0.01"
-                value={vlVerba}
-                onChange={(event) => setVlVerba(event.target.value)}
+                id="nome"
+                name="nome"
+                value={nome}
+                onChange={(event) => setNome(event.target.value)}
                 disabled={enviando}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="dtVerba">Data da verba</FieldLabel>
+              <FieldLabel htmlFor="email">E-mail</FieldLabel>
               <Input
-                id="dtVerba"
-                name="dtVerba"
-                type="date"
-                value={dtVerba}
-                onChange={(event) => setDtVerba(event.target.value)}
+                id="email"
+                name="email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 disabled={enviando}
               />
             </Field>
-          </>
-        )}
-        {pedeCurso && (
-          <Field data-invalid={!!erro}>
-            <FieldLabel htmlFor="cdCurso">Curso</FieldLabel>
-            <select
-              id="cdCurso"
-              name="cdCurso"
-              value={cdCurso}
-              onChange={(event) => setCdCurso(event.target.value)}
-              disabled={enviando || cdCursosDisponiveis.length === 0}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none md:text-sm dark:bg-input/30"
-            >
-              <option value="">Selecione</option>
-              {cdCursosDisponiveis.map((cd) => (
-                <option key={cd} value={cd}>
-                  Curso #{cd}
-                </option>
-              ))}
-            </select>
-            {cdCursosDisponiveis.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Nenhum curso disponível - crie um pré-curso antes de criar o aluno.
-              </p>
+            {pedeGoParaVo && (
+              <Field data-invalid={!!erro}>
+                <FieldLabel htmlFor="cdOfertante">Ofertante</FieldLabel>
+                <select
+                  id="cdOfertante"
+                  name="cdOfertante"
+                  value={cdOfertante}
+                  onChange={(event) => setCdOfertante(event.target.value)}
+                  disabled={enviando || gos.length === 0}
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none md:text-sm dark:bg-input/30"
+                >
+                  <option value="">Selecione</option>
+                  {gos.map((go) => (
+                    <option key={go.documento} value={go.documento}>
+                      {go.nome ?? go.documento}
+                    </option>
+                  ))}
+                </select>
+                {gos.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum Ofertante cadastrado - cadastre um antes de criar o vinculado.
+                  </p>
+                )}
+              </Field>
             )}
-          </Field>
+            {pedeOrganizacional && (
+              <>
+                <Field data-invalid={!!erro}>
+                  <FieldLabel htmlFor="uf">UF</FieldLabel>
+                  <Input
+                    id="uf"
+                    name="uf"
+                    maxLength={2}
+                    value={uf}
+                    onChange={(event) => setUf(event.target.value.toUpperCase())}
+                    disabled={enviando}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="responsavel">Responsável</FieldLabel>
+                  <Input
+                    id="responsavel"
+                    name="responsavel"
+                    value={responsavel}
+                    onChange={(event) => setResponsavel(event.target.value)}
+                    disabled={enviando}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="telefone">Telefone</FieldLabel>
+                  <Input
+                    id="telefone"
+                    name="telefone"
+                    value={telefone}
+                    onChange={(event) => setTelefone(event.target.value)}
+                    disabled={enviando}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="municipio">Município</FieldLabel>
+                  <Input
+                    id="municipio"
+                    name="municipio"
+                    value={municipio}
+                    onChange={(event) => setMunicipio(event.target.value)}
+                    disabled={enviando}
+                  />
+                </Field>
+              </>
+            )}
+            {pedeVerba && (
+              <>
+                <Field data-invalid={!!erro}>
+                  <FieldLabel htmlFor="vlVerba">Valor da verba</FieldLabel>
+                  <Input
+                    id="vlVerba"
+                    name="vlVerba"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={vlVerba}
+                    onChange={(event) => setVlVerba(event.target.value)}
+                    disabled={enviando}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="dtVerba">Data da verba</FieldLabel>
+                  <Input
+                    id="dtVerba"
+                    name="dtVerba"
+                    type="date"
+                    value={dtVerba}
+                    onChange={(event) => setDtVerba(event.target.value)}
+                    disabled={enviando}
+                  />
+                </Field>
+              </>
+            )}
+            {pedeCurso && (
+              <Field data-invalid={!!erro}>
+                <FieldLabel htmlFor="cdCurso">Curso</FieldLabel>
+                <select
+                  id="cdCurso"
+                  name="cdCurso"
+                  value={cdCurso}
+                  onChange={(event) => setCdCurso(event.target.value)}
+                  disabled={enviando || cursosDisponiveis.length === 0}
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none md:text-sm dark:bg-input/30"
+                >
+                  <option value="">Selecione</option>
+                  {cursosDisponiveis.map((curso) => (
+                    <option key={curso.cdCurso} value={curso.cdCurso}>
+                      {curso.nome ?? `Curso #${curso.cdCurso}`}
+                    </option>
+                  ))}
+                </select>
+                {cursosDisponiveis.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum curso disponível - crie um pré-curso antes de criar o aluno.
+                  </p>
+                )}
+              </Field>
+            )}
+          </>
         )}
         {erro && <FieldError>{erro}</FieldError>}
         <Button type="submit" disabled={enviando}>

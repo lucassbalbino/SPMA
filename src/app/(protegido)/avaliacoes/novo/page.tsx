@@ -40,6 +40,22 @@ export default async function NovaAvaliacaoPage() {
     select: { cdCurso: true },
   });
 
+  // O nome do curso não é coluna de `PreCurso` - é a resposta da Seção 2, Q8
+  // ("Nome da Ação de Qualificação") do formulário de pré-curso, gravada em
+  // `RespostaPreCurso` (RESP-01). Pode faltar se o GO ainda não preencheu
+  // essa pergunta - o select cai pro "Curso #cd" nesse caso.
+  const nomesCursos =
+    cursosDoOfertante.length > 0
+      ? await prisma.respostaPreCurso.findMany({
+          where: {
+            cdCurso: { in: cursosDoOfertante.map((curso) => curso.cdCurso) },
+            chave: "qualifNomeCurso",
+          },
+          select: { cdCurso: true, valor: true },
+        })
+      : [];
+  const nomePorCurso = new Map(nomesCursos.map((linha) => [linha.cdCurso, linha.valor]));
+
   return (
     <>
       <Card className="w-full max-w-sm">
@@ -47,7 +63,12 @@ export default async function NovaAvaliacaoPage() {
           <CardTitle>Matricular aluno</CardTitle>
         </CardHeader>
         <CardContent>
-          <MatricularAlunoForm cdCursosDisponiveis={cursosDoOfertante.map((c) => c.cdCurso)} />
+          <MatricularAlunoForm
+            cursosDisponiveis={cursosDoOfertante.map((curso) => ({
+              cdCurso: curso.cdCurso,
+              nome: nomePorCurso.get(curso.cdCurso) ?? null,
+            }))}
+          />
         </CardContent>
       </Card>
     </>
