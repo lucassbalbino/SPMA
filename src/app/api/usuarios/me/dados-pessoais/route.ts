@@ -14,74 +14,44 @@
 // passa com os 7 de uma vez) quanto a edição pelo perfil (estado anterior já
 // completo, um PATCH de 1 campo mescla e o resultado continua completo).
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
-import { obterSessao } from "@/lib/auth/session";
 import { respostasDadosPessoaisSchema } from "@/lib/validation/schemas/dados-pessoais.schema";
 import { validarCompletudeDadosPessoais } from "@/lib/dados-pessoais/completude";
-import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import {
-  gravarRespostas,
-  lerRespostas,
-  lerRespostasParaApi,
-  ISOLAMENTO_RESPOSTAS,
-} from "@/lib/respostas/repositorio";
+import { exigirMutacao } from "@/lib/api/guardas";
+import { corpoValidado } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
+import { aplicarPatchRespostas } from "@/lib/respostas/patch";
 
 async function gravarDadosPessoais(request: Request) {
-  // REQ-SEC-15: mesma ordem RH->CSRF->Sessão->Guard das demais rotas mutantes.
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
+  const sessao = await exigirMutacao(request);
 
   // PESSOAL-20: só o Aluno tem essa área, reforçado no backend (não só na
   // navegação escondida).
   if (sessao.usuario.tipo !== "AL") {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
-  const corpo = await request.json().catch(() => null);
-  const entrada = respostasDadosPessoaisSchema.safeParse(corpo);
+  const patch = await corpoValidado(request, respostasDadosPessoaisSchema);
+  const cpf = sessao.usuario.documento;
 
-  if (!entrada.success) {
-    return NextResponse.json(
-      { erro: entrada.error.issues[0]?.message ?? "Dados inválidos" },
-      { status: 400 },
-    );
-  }
-
-  const alvo = { formulario: "dadosPessoais" as const, cpf: sessao.usuario.documento };
-
-  const atuais = await lerRespostas(prisma, alvo);
-  const mescladas = { ...atuais, ...entrada.data };
-
-  // PESSOAL-05/18: só persiste quando o resultado mesclado tem os 7 campos
-  // válidos. Cobre tanto "faltou responder" (primeira gravação) quanto
-  // "deixou vazia/inválida" (edição) sem regra própria para o segundo caso -
-  // um valor vazio/inválido já falha no safeParse acima.
-  const { completo } = validarCompletudeDadosPessoais(mescladas);
-
-  if (!completo) {
-    return NextResponse.json(
-      { erro: "Complete todos os dados pessoais" },
-      { status: 400 },
-    );
-  }
-
-  const { respostas } = await prisma.$transaction(async (tx) => {
-    await gravarRespostas(tx, alvo, entrada.data);
-    await tx.usuario.update({
-      where: { documento: sessao.usuario.documento },
-      data: { dadosPessoaisCompletos: true },
-    });
-
-    return { respostas: await lerRespostasParaApi(tx, alvo) };
-  }, ISOLAMENTO_RESPOSTAS);
+  const { respostas } = await aplicarPatchRespostas({
+    alvo: { formulario: "dadosPessoais", cpf },
+    patch,
+    // PESSOAL-05/18: só persiste quando o resultado mesclado tem os 7 campos
+    // válidos. Cobre tanto "faltou responder" (primeira gravação) quanto
+    // "deixou vazia/inválida" (edição) sem regra própria para o segundo caso -
+    // um valor vazio/inválido já falha no schema acima.
+    validarMesclado: (mescladas) => {
+      if (!validarCompletudeDadosPessoais(mescladas).completo) {
+        throw erroHttp(400, "Complete todos os dados pessoais");
+      }
+    },
+    gravarRegistro: (tx) =>
+      tx.usuario.update({
+        where: { documento: cpf },
+        data: { dadosPessoaisCompletos: true },
+      }),
+  });
 
   return NextResponse.json({ respostas });
 }

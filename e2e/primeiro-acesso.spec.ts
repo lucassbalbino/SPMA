@@ -8,6 +8,7 @@
 // válido).
 import { expect, test } from "@playwright/test";
 import { deleteUsuarios, getUsuario, upsertUsuario } from "./helpers/db";
+import { geradorDeCnpj } from "./helpers/cnpj";
 import {
   cabecalhoCookie,
   cabecalhosAutenticados,
@@ -27,24 +28,15 @@ const CPF_SENHA_DIVERGENTE = "20080030009";
 // UGO-10/P2 AC6: 1º acesso mantém a mesma regra para GO, agora chaveada por
 // CNPJ (14 dígitos) em vez de CPF - achado pelo Verifier independente
 // (ranked gap #4: nenhum teste exercitava este caminho com um GO real).
-function calcularDvCnpj(digitos: number[]): number {
-  let soma = 0;
-  let peso = 2;
-  for (let i = digitos.length - 1; i >= 0; i--) {
-    soma += digitos[i] * peso;
-    peso = peso === 9 ? 2 : peso + 1;
-  }
-  const resto = soma % 11;
-  return resto < 2 ? 0 : 11 - resto;
-}
-
-function gerarCnpjValido(indice: number): string {
-  const base12 = `25${String(indice).padStart(6, "0")}0001`;
-  const digitos = base12.split("").map(Number);
-  const d1 = calcularDvCnpj(digitos);
-  const d2 = calcularDvCnpj([...digitos, d1]);
-  return `${base12}${d1}${d2}`;
-}
+// Prefixo 21, não 25: 25 já é o espaço de `verbas.spec.ts`, e os dois
+// geravam o MESMO CNPJ no índice 1 - cada um apagando a fixture do outro no
+// beforeAll/afterAll contra o mesmo banco `spma_test`. Só não quebrava porque
+// `workers: 1` (playwright.config.ts) serializa os arquivos; passaria a
+// quebrar de forma intermitente no dia em que a suíte paralelizasse. A
+// colisão ficou visível ao extrair o gerador para `helpers/cnpj.ts`, que
+// tornou o prefixo uma linha explícita por spec em vez de um literal perdido
+// no meio de uma função copiada.
+const gerarCnpjValido = geradorDeCnpj("21");
 
 const CNPJ_GO_DEFINE_SENHA = gerarCnpjValido(1);
 

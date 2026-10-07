@@ -3,96 +3,53 @@
 // src/app/api/auth/primeiro-acesso.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { obterSessao } from "@/lib/auth/session";
 import { podeGerenciarPreCurso } from "@/lib/auth/guards";
 import { validarCompletudePreCurso } from "@/lib/pre-curso/completude";
 import { normalizarCondicionaisPreCurso } from "@/lib/pre-curso/condicionais";
-import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import {
-  apagarRespostas,
-  lerRespostas,
-  respostasOuNulo,
-  ISOLAMENTO_RESPOSTAS,
-} from "@/lib/respostas/repositorio";
+import { exigirMutacao } from "@/lib/api/guardas";
+import { idPositivo } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
+import { encerrarFormulario } from "@/lib/respostas/encerramento";
 
 type Contexto = { params: Promise<{ id: string }> };
 
-function parseId(id: string): number | null {
-  const cdCurso = Number(id);
-  return Number.isInteger(cdCurso) && cdCurso > 0 ? cdCurso : null;
-}
-
 async function encerrarPreCurso(request: Request, { params }: Contexto) {
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const cdCurso = parseId((await params).id);
-
-  if (cdCurso === null) {
-    return NextResponse.json({ erro: "Id inválido" }, { status: 400 });
-  }
+  const sessao = await exigirMutacao(request);
+  const cdCurso = idPositivo((await params).id);
 
   const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso } });
 
   if (!preCurso) {
-    return NextResponse.json({ erro: "Pré-curso não encontrado" }, { status: 404 });
+    throw erroHttp(404, "Pré-curso não encontrado");
   }
 
   if (!podeGerenciarPreCurso(sessao.usuario, preCurso.cdOfertante)) {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
   // AD-018/RN-09: transição irreversível - encerrar de novo é rejeitado.
   if (preCurso.status === "ENCERRADO") {
-    return NextResponse.json({ erro: "Pré-curso já está encerrado" }, { status: 409 });
+    throw erroHttp(409, "Pré-curso já está encerrado");
   }
-
-  const alvo = { formulario: "preCurso" as const, cdCurso };
-  const respostasAtuais = await lerRespostas(prisma, alvo);
 
   // Respostas de perguntas condicionais que a resposta-mãe tornou
   // inaplicáveis (ex.: Q25="Não, apenas equipamentos básicos" com Q25.1
-  // ainda preenchida de uma escolha anterior) são descartadas AQUI, no
-  // momento em que o formulário vira registro final e imutável - durante o
-  // preenchimento elas ficam preservadas, para o Gestor poder ir e voltar
-  // entre as alternativas. Sem isso, o registro encerrado guardaria uma
-  // contradição interna, exatamente o que o AD-037 barra nas perguntas de
-  // seleção múltipla.
-  const respostas = normalizarCondicionaisPreCurso(respostasAtuais);
-  const { completo, pendentes } = validarCompletudePreCurso(respostas);
-
-  if (!completo) {
-    return NextResponse.json(
-      { erro: "Existem campos obrigatórios pendentes", pendentes },
-      { status: 400 },
-    );
-  }
-
-  // RESP-08/AD-038: as órfãs somem como linhas, na mesma transação que grava
-  // ENCERRADO.
-  const orfas = Object.keys(respostasAtuais).filter((chave) => !(chave in respostas));
-
-  const atualizado = await prisma.$transaction(async (tx) => {
-    if (orfas.length > 0) {
-      await apagarRespostas(tx, alvo, orfas);
-    }
-    return tx.preCurso.update({
-      where: { cdCurso },
-      data: { status: "ENCERRADO", dataEncerramento: new Date() },
-    });
-  }, ISOLAMENTO_RESPOSTAS);
-
-  return NextResponse.json({
-    preCurso: { ...atualizado, respostas: respostasOuNulo(respostas) },
+  // ainda preenchida de uma escolha anterior) são descartadas no
+  // `normalizar` abaixo, dentro de `encerrarFormulario` - no momento em que o
+  // formulário vira registro final e imutável. Durante o preenchimento elas
+  // ficam preservadas, para o Gestor poder ir e voltar entre as
+  // alternativas. Sem isso, o registro encerrado guardaria uma contradição
+  // interna, exatamente o que o AD-037 barra nas perguntas de seleção
+  // múltipla.
+  const { registro, respostas } = await encerrarFormulario({
+    alvo: { formulario: "preCurso", cdCurso },
+    normalizar: normalizarCondicionaisPreCurso,
+    validarCompletude: validarCompletudePreCurso,
+    encerrarRegistro: (tx, data) => tx.preCurso.update({ where: { cdCurso }, data }),
   });
+
+  return NextResponse.json({ preCurso: { ...registro, respostas } });
 }
 
 export const POST = comTratamentoDeErro(encerrarPreCurso);

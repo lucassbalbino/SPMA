@@ -5,23 +5,16 @@
 // demais rotas de API e nunca devolve 5xx nesse caminho.
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { COOKIE_SESSAO, destruirSessao, obterSessao } from "@/lib/auth/session";
-import { limparCookieCSRF, verificarCSRF } from "@/lib/security/csrf";
+import { COOKIE_SESSAO, destruirSessao } from "@/lib/auth/session";
+import { limparCookieCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { exigirMutacao } from "@/lib/api/guardas";
 
 async function logout(request: Request) {
-  // REQ-SEC-15: mutação autenticada por cookie exige token anti-CSRF válido,
-  // checado antes da sessão (design.md - RH -> CSRF -> Guard). Sem token
-  // válido a sessão permanece ativa - o logout não acontece.
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
+  // REQ-SEC-15: `exigirMutacao` checa o token anti-CSRF ANTES da sessão
+  // (design.md - RH -> CSRF -> Guard). Sem token válido a sessão permanece
+  // ativa - o logout não acontece.
+  const sessao = await exigirMutacao(request);
 
   await destruirSessao(sessao.sessao.id);
   (await cookies()).delete(COOKIE_SESSAO);

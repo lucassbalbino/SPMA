@@ -4,30 +4,24 @@
 // Q9 não abre um "Qual?" — é a própria pergunta que já pede o tipo da
 // deficiência. Então não há tabela de regras aqui, só o schema exigido inteiro.
 //
-// `ResultadoCompletude` é redeclarado, não importado de
-// `src/lib/avaliacao/completude.ts`: os dois domínios não devem ficar acoplados
-// por uma interface de 2 campos (design.md, item 2).
+// A forma do veredito vem de `validation/completude.ts`, não de
+// `src/lib/avaliacao/completude.ts`: o ponto do design.md (item 2) era não
+// acoplar os DOMÍNIOS entre si, e continua valendo - o tipo compartilhado
+// mora na camada de validação, da qual os dois já dependem, e nenhuma regra
+// de negócio atravessa.
 import { respostasDadosPessoaisSchema } from "../validation/schemas/dados-pessoais.schema";
+import {
+  pendentesDoResultado,
+  vereditoCompletude,
+  type ResultadoCompletude,
+} from "../validation/completude";
 
 const schemaExigido = respostasDadosPessoaisSchema.required();
 
-export interface ResultadoCompletudeDadosPessoais {
-  completo: boolean;
-  pendentes: string[];
-}
+export type ResultadoCompletudeDadosPessoais = ResultadoCompletude;
 
 export function validarCompletudeDadosPessoais(
   respostas: unknown,
 ): ResultadoCompletudeDadosPessoais {
-  const resultado = schemaExigido.safeParse(respostas);
-
-  if (resultado.success) {
-    return { completo: true, pendentes: [] };
-  }
-
-  const pendentes = [
-    ...new Set(resultado.error.issues.map((issue) => issue.path.join("."))),
-  ];
-
-  return { completo: false, pendentes };
+  return vereditoCompletude(pendentesDoResultado(schemaExigido.safeParse(respostas)));
 }

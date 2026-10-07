@@ -2,50 +2,28 @@
 // da avaliação (AVAL-12/13/15/16/17/18/19).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { obterSessao } from "@/lib/auth/session";
 import { podeGerenciarAvaliacao } from "@/lib/auth/guards";
 import { validarCompletudeAvaliacao } from "@/lib/avaliacao/completude";
 import { normalizarCondicionaisAvaliacao } from "@/lib/avaliacao/condicionais";
-import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import {
-  apagarRespostas,
-  lerRespostas,
-  respostasOuNulo,
-  ISOLAMENTO_RESPOSTAS,
-} from "@/lib/respostas/repositorio";
+import { exigirMutacao } from "@/lib/api/guardas";
+import { idPositivo } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
+import { encerrarFormulario } from "@/lib/respostas/encerramento";
 
 type Contexto = { params: Promise<{ cpf: string; cdCurso: string }> };
 
-function parseCdCurso(id: string): number | null {
-  const cdCurso = Number(id);
-  return Number.isInteger(cdCurso) && cdCurso > 0 ? cdCurso : null;
-}
-
 async function encerrarAvaliacao(request: Request, { params }: Contexto) {
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const { cpf } = await params;
-  const cdCurso = parseCdCurso((await params).cdCurso);
-
-  if (cdCurso === null) {
-    return NextResponse.json({ erro: "Id inválido" }, { status: 400 });
-  }
+  const sessao = await exigirMutacao(request);
+  const { cpf, cdCurso: cdCursoBruto } = await params;
+  const cdCurso = idPositivo(cdCursoBruto);
 
   const avaliacao = await prisma.avaliacaoAluno.findUnique({
     where: { cpf_cdCurso: { cpf, cdCurso } },
   });
 
   if (!avaliacao) {
-    return NextResponse.json({ erro: "Avaliação não encontrada" }, { status: 404 });
+    throw erroHttp(404, "Avaliação não encontrada");
   }
 
   // AVAL-18: só o próprio Aluno encerra, nunca o GO que fez a matrícula. A
@@ -57,54 +35,31 @@ async function encerrarAvaliacao(request: Request, { params }: Contexto) {
       avaliacao.cpf,
     )
   ) {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
   // AD-018/AVAL-19: transição irreversível - encerrar de novo é rejeitado.
   if (avaliacao.status === "ENCERRADO") {
-    return NextResponse.json({ erro: "Esta avaliação já está encerrada" }, { status: 409 });
+    throw erroHttp(409, "Esta avaliação já está encerrada");
   }
 
   // Respostas que a própria avaliação tornou inaplicáveis (Q12/Q16 com a
   // pergunta-mãe em "Não", Q30.j sem Q30="Outra", e as 22 chaves de "apenas
-  // para quem concluiu" quando Q22="Não") são descartadas AQUI, no momento
-  // em que a avaliação vira registro final e imutável. No PATCH elas
-  // continuam preservadas de propósito - é edge case explícito da spec
-  // (Q22 alterada de "Sim" para "Não" numa gravação posterior preserva o
+  // para quem concluiu" quando Q22="Não") são descartadas pelo `normalizar`
+  // abaixo, no momento em que a avaliação vira registro final e imutável. No
+  // PATCH elas continuam preservadas de propósito - é edge case explícito da
+  // spec (Q22 alterada de "Sim" para "Não" numa gravação posterior preserva o
   // que já estava salvo), para o aluno poder corrigir Q22 sem perder o que
   // respondeu; o descarte só acontece quando ele confirma o encerramento.
-  const alvo = { formulario: "avaliacao" as const, cpf, cdCurso };
-  const respostasAtuais = await lerRespostas(prisma, alvo);
-  const respostas = normalizarCondicionaisAvaliacao(respostasAtuais);
-
-  // AVAL-12/13: gate "Concluiu o curso?" - une pendências de Parte 1 e Parte 2.
-  const { completo, pendentes } = validarCompletudeAvaliacao(respostas);
-
-  if (!completo) {
-    return NextResponse.json(
-      { erro: "Existem campos obrigatórios pendentes", pendentes },
-      { status: 400 },
-    );
-  }
-
-  // RESP-08: as órfãs somem como linhas - incluindo as 22 chaves de "apenas
-  // para quem concluiu" quando Q22="Não" - na mesma transação que grava
-  // ENCERRADO.
-  const orfas = Object.keys(respostasAtuais).filter((chave) => !(chave in respostas));
-
-  const atualizada = await prisma.$transaction(async (tx) => {
-    if (orfas.length > 0) {
-      await apagarRespostas(tx, alvo, orfas);
-    }
-    return tx.avaliacaoAluno.update({
-      where: { cpf_cdCurso: { cpf, cdCurso } },
-      data: { status: "ENCERRADO", dataEncerramento: new Date() },
-    });
-  }, ISOLAMENTO_RESPOSTAS);
-
-  return NextResponse.json({
-    avaliacao: { ...atualizada, respostas: respostasOuNulo(respostas) },
+  const { registro, respostas } = await encerrarFormulario({
+    alvo: { formulario: "avaliacao", cpf, cdCurso },
+    normalizar: normalizarCondicionaisAvaliacao,
+    validarCompletude: validarCompletudeAvaliacao,
+    encerrarRegistro: (tx, data) =>
+      tx.avaliacaoAluno.update({ where: { cpf_cdCurso: { cpf, cdCurso } }, data }),
   });
+
+  return NextResponse.json({ avaliacao: { ...registro, respostas } });
 }
 
 export const POST = comTratamentoDeErro(encerrarAvaliacao);

@@ -3,9 +3,15 @@
 // POST(...)` cru de cada rota: `export const POST = comTratamentoDeErro(async
 // (...) => {...})`. Nenhuma rota trata exceção sozinha - qualquer uma não
 // prevista aqui vira 500 genérico em vez de vazar mensagem/stack ao cliente.
+//
+// Este wrapper é também o conversor de `ErroHttp` (lib/api/erro-http.ts) em
+// resposta: é o que permite uma rota recusar com `throw erroHttp(403, ...)`
+// numa linha, e os helpers de `lib/api/` aplicarem a ordem CSRF -> sessão num
+// lugar só, em vez de cada rota repetir o preâmbulo inteiro.
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { mascararCPF } from "../log/mask";
+import { ErroHttp } from "../api/erro-http";
 
 // CPF em formato cru (11 dígitos) ou pontuado (000.000.000-00) - o mesmo
 // padrão reconhecível em qualquer texto livre de mensagem de erro/stack.
@@ -39,6 +45,14 @@ export function comTratamentoDeErro<
     try {
       return await handler(...args);
     } catch (erro) {
+      // Recusa PREVISTA (401/403/404/409...), lançada pelos helpers de
+      // `lib/api/requisicao.ts` ou pela própria rota: sai como o corpo que
+      // ela pediu. Não é falha interna - nada a logar nem a mascarar, e
+      // nenhum id de correlação a inventar.
+      if (erro instanceof ErroHttp) {
+        return NextResponse.json(erro.corpo, { status: erro.status });
+      }
+
       const idCorrelacao = randomUUID();
       const detalhe =
         erro instanceof Error ? (erro.stack ?? erro.message) : String(erro);

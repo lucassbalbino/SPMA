@@ -3,34 +3,29 @@
 // questionário fonte (`docs/Questionario_do_Gestor_Pre_Curso.md`) viram uma
 // tabela `BLOCOS` (metadados: bloco, chave, rótulo, tipo, opções,
 // condicional, opção excludente) em vez de 56 blocos JSX escritos à mão -
-// `renderCampo` interpreta essa tabela genericamente, igual ao padrão de
+// `CampoResposta` interpreta essa tabela genericamente, igual ao padrão de
 // reuso de opções já usado em `pre-curso.schema.ts` (nunca duplicar a lista
 // de campos em dois lugares). Os rótulos carregam a numeração do papel
 // (1..32) para o Gestor conseguir conferir contra o questionário impresso.
 //
-// Estado único `respostas: RespostasPreCursoParcial` (design.md) com
-// `setCampo` genérico; `alterados` rastreia só as chaves tocadas desde o
-// último "Salvar rascunho" para o PATCH enviar apenas o bloco alterado
-// (REQ-PC-04), não os 56 campos inteiros a cada auto-save.
+// O estado, as duas ações e o render de campo vivem em
+// `src/components/formulario/` - esta tela é a TABELA mais a ligação com ela.
+// O que ela acrescenta ao render genérico é o campo "Qual?/Quais?" revelado
+// pela regra condicional da própria chave, passado como filho de
+// `CampoResposta`.
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { CampoResposta } from "@/components/formulario/CampoResposta";
+import { CascaFormulario } from "@/components/formulario/CascaFormulario";
+import { useFormularioRespostas } from "@/components/formulario/useFormularioRespostas";
+import type {
+  BlocoDef as BlocoGenerico,
+  CampoDef as CampoGenerico,
+  OpcaoEscala,
+} from "@/components/formulario/tipos";
 import {
   EXCLUSIVA_DIAGNOSTICO,
   EXCLUSIVA_DIVULGACAO,
@@ -62,53 +57,34 @@ import {
   type ChaveCondicionalPreCurso,
 } from "@/lib/pre-curso/condicionais";
 import { chavesOrfas } from "@/lib/validation/condicionais";
-import { headerCSRF } from "@/lib/security/csrf-client";
 import type { StatusFormulario } from "@/generated/prisma/enums";
 
 type Chave = keyof RespostasPreCurso;
 
-type TipoCampo =
-  | "texto"
-  | "email"
-  | "textarea"
-  | "numero"
-  | "data"
-  | "select"
-  | "radio"
-  | "checkboxes"
-  | "escala";
-
-interface CampoDef {
-  chave: Chave;
-  rotulo: string;
-  tipo: TipoCampo;
-  opcoes?: readonly string[];
-  // Campo de texto livre revelado pela regra condicional da própria chave
-  // (`src/lib/pre-curso/condicionais.ts`) - a mesma que decide, no
-  // encerramento, se ele é exigido e se um valor gravado ali é órfão.
+/**
+ * O pré-curso estende o campo genérico com o par "Qual?/Quais?": um texto
+ * livre revelado pela regra condicional da própria chave
+ * (`src/lib/pre-curso/condicionais.ts`) - a mesma que decide, no
+ * encerramento, se ele é exigido e se um valor gravado ali é órfão.
+ */
+interface CampoDef extends CampoGenerico<Chave, RespostasPreCursoParcial> {
   outroChave?: ChaveCondicionalPreCurso;
   outroRotulo?: string;
-  // Opção que, no papel, nega todas as outras ("Não foram realizadas
-  // consultas...") - marcá-la limpa as demais e vice-versa.
-  exclusiva?: string;
-  visivelSe?: (respostas: RespostasPreCursoParcial) => boolean;
 }
 
-interface BlocoDef {
-  titulo: string;
-  enunciado?: string;
+type BlocoDef = Omit<BlocoGenerico<Chave, RespostasPreCursoParcial>, "campos"> & {
   campos: CampoDef[];
-}
+};
 
 // AD-019: escala crescente 0 (Não há disponibilidade) a 5 (Ótimo), Q23/Q24.
-const ESCALA_OPCOES = [
+const ESCALA_OPCOES: readonly OpcaoEscala[] = [
   { valor: "0", rotulo: "0 - Não há disponibilidade" },
   { valor: "1", rotulo: "1 - Péssimo" },
   { valor: "2", rotulo: "2 - Ruim" },
   { valor: "3", rotulo: "3 - Regular" },
   { valor: "4", rotulo: "4 - Bom" },
   { valor: "5", rotulo: "5 - Ótimo" },
-] as const;
+];
 
 // `visivelSe` e a exigência de encerramento saem da MESMA regra: a tela não
 // pode revelar um campo que a completude não cobra, nem esconder um que ela
@@ -474,332 +450,78 @@ export function PreCursoForm({
   respostasIniciais: RespostasPreCursoParcial;
   podeEditar: boolean;
 }) {
-  const router = useRouter();
-
-  const [respostas, setRespostas] = useState<RespostasPreCursoParcial>(respostasIniciais);
-  const [alterados, setAlterados] = useState<Set<Chave>>(new Set());
-  const [erro, setErro] = useState<string | null>(null);
-  const [pendentes, setPendentes] = useState<string[]>([]);
-  const [salvando, setSalvando] = useState(false);
-  const [encerrando, setEncerrando] = useState(false);
-  const [statusAtual, setStatusAtual] = useState<StatusFormulario>(status);
-
-  const somenteLeitura = !podeEditar || statusAtual === "ENCERRADO";
-  const desabilitado = somenteLeitura || salvando || encerrando;
-
-  function setCampo(chave: Chave, valor: unknown) {
-    setRespostas((atual) => ({ ...atual, [chave]: valor }));
-    setAlterados((atual) => new Set(atual).add(chave));
-  }
-
-  // Espelha, na tela, a regra que `multiplaComExclusiva` aplica no servidor:
-  // marcar a opção excludente limpa as demais, e marcar qualquer outra
-  // desmarca a excludente.
-  function toggleCheckbox(campo: CampoDef, opcao: string, marcado: boolean) {
-    const atuais = (respostas[campo.chave] as string[] | undefined) ?? [];
-
-    let novos: string[];
-    if (!marcado) {
-      novos = atuais.filter((item) => item !== opcao);
-    } else if (campo.exclusiva !== undefined && opcao === campo.exclusiva) {
-      novos = [opcao];
-    } else {
-      novos = [...atuais.filter((item) => item !== campo.exclusiva), opcao];
-    }
-
-    setCampo(campo.chave, novos);
-  }
-
-  async function salvarRascunho() {
-    setErro(null);
-    setSalvando(true);
-    try {
-      // Uma condicional que ficou órfã (o Gestor respondeu, mudou a
-      // pergunta-mãe e o campo sumiu da tela) não vai no PATCH: o valor
-      // continua no estado local, caso ele volte atrás, mas não é gravado
-      // como resposta de uma pergunta que não se aplica mais.
-      const orfas = new Set<string>(chavesOrfas(REGRAS_CONDICIONAIS_PRE_CURSO, respostas));
-      const corpo = Object.fromEntries(
-        [...alterados]
-          .filter((chave) => !orfas.has(chave))
-          .map((chave) => [chave, respostas[chave]]),
-      );
-      const res = await fetch(`/api/pre-cursos/${cdCurso}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...headerCSRF() },
-        body: JSON.stringify(corpo),
-      });
-      const resposta = await res.json();
-
-      if (!res.ok) {
-        setErro(resposta.erro ?? "Não foi possível salvar");
-        return;
-      }
-
-      setAlterados(new Set());
-      router.refresh();
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  async function encerrar() {
-    setErro(null);
-    setPendentes([]);
-    setEncerrando(true);
-    try {
-      const res = await fetch(`/api/pre-cursos/${cdCurso}/encerrar`, {
-        method: "POST",
-        headers: { ...headerCSRF() },
-      });
-      const resposta = await res.json();
-
-      if (!res.ok) {
-        setErro(resposta.erro ?? "Não foi possível encerrar");
-        setPendentes(resposta.pendentes ?? []);
-        return;
-      }
-
-      setStatusAtual("ENCERRADO");
-      router.refresh();
-    } finally {
-      setEncerrando(false);
-    }
-  }
-
-  function renderCampo(campo: CampoDef): ReactNode {
-    if (campo.visivelSe && !campo.visivelSe(respostas)) {
-      return null;
-    }
-
-    const valor = respostas[campo.chave];
-    let controle: ReactNode;
-
-    switch (campo.tipo) {
-      case "texto":
-      case "email":
-        controle = (
-          <Input
-            id={campo.chave}
-            data-testid={`campo-${campo.chave}`}
-            type={campo.tipo === "email" ? "email" : "text"}
-            value={(valor as string | undefined) ?? ""}
-            onChange={(event) => setCampo(campo.chave, event.target.value)}
-            disabled={desabilitado}
-          />
-        );
-        break;
-      case "textarea":
-        controle = (
-          <Textarea
-            id={campo.chave}
-            data-testid={`campo-${campo.chave}`}
-            value={(valor as string | undefined) ?? ""}
-            onChange={(event) => setCampo(campo.chave, event.target.value)}
-            disabled={desabilitado}
-          />
-        );
-        break;
-      case "numero":
-        controle = (
-          <Input
-            id={campo.chave}
-            data-testid={`campo-${campo.chave}`}
-            type="number"
-            value={valor === undefined || valor === null ? "" : String(valor)}
-            onChange={(event) =>
-              setCampo(campo.chave, event.target.value === "" ? undefined : Number(event.target.value))
-            }
-            disabled={desabilitado}
-          />
-        );
-        break;
-      case "data":
-        controle = (
-          <Input
-            id={campo.chave}
-            data-testid={`campo-${campo.chave}`}
-            type="date"
-            value={(valor as string | undefined) ?? ""}
-            onChange={(event) => setCampo(campo.chave, event.target.value)}
-            disabled={desabilitado}
-          />
-        );
-        break;
-      case "select":
-        controle = (
-          <Select
-            value={(valor as string | undefined) ?? null}
-            onValueChange={(novoValor) => setCampo(campo.chave, novoValor)}
-          >
-            <SelectTrigger
-              id={campo.chave}
-              data-testid={`campo-${campo.chave}-select`}
-              disabled={desabilitado}
-            >
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              {campo.opcoes?.map((opcao, indice) => (
-                <SelectItem
-                  key={opcao}
-                  value={opcao}
-                  data-testid={`campo-${campo.chave}-opcao-${indice}`}
-                >
-                  {opcao}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
-        break;
-      case "escala":
-        controle = (
-          <Select
-            value={valor === undefined || valor === null ? null : String(valor)}
-            onValueChange={(novoValor) => setCampo(campo.chave, Number(novoValor))}
-          >
-            <SelectTrigger
-              id={campo.chave}
-              data-testid={`campo-${campo.chave}-select`}
-              disabled={desabilitado}
-            >
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              {ESCALA_OPCOES.map((opcao) => (
-                <SelectItem
-                  key={opcao.valor}
-                  value={opcao.valor}
-                  data-testid={`campo-${campo.chave}-opcao-${opcao.valor}`}
-                >
-                  {opcao.rotulo}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
-        break;
-      case "radio":
-        controle = (
-          <RadioGroup
-            aria-label={campo.rotulo}
-            data-testid={`campo-${campo.chave}-grupo`}
-            value={(valor as string | undefined) ?? null}
-            onValueChange={(novoValor) => setCampo(campo.chave, novoValor)}
-          >
-            {campo.opcoes?.map((opcao, indice) => (
-              <FieldLabel key={opcao} htmlFor={`${campo.chave}-${indice}`}>
-                <RadioGroupItem
-                  id={`${campo.chave}-${indice}`}
-                  value={opcao}
-                  data-testid={`campo-${campo.chave}-opcao-${indice}`}
-                  disabled={desabilitado}
-                />
-                {opcao}
-              </FieldLabel>
-            ))}
-          </RadioGroup>
-        );
-        break;
-      case "checkboxes":
-        controle = (
-          <div data-testid={`campo-${campo.chave}-grupo`} className="flex flex-col gap-2">
-            {campo.opcoes?.map((opcao, indice) => (
-              <FieldLabel key={opcao} htmlFor={`${campo.chave}-${indice}`}>
-                <Checkbox
-                  id={`${campo.chave}-${indice}`}
-                  data-testid={`campo-${campo.chave}-opcao-${indice}`}
-                  checked={((valor as string[] | undefined) ?? []).includes(opcao)}
-                  onCheckedChange={(marcado) => toggleCheckbox(campo, opcao, marcado === true)}
-                  disabled={desabilitado}
-                />
-                {opcao}
-              </FieldLabel>
-            ))}
-          </div>
-        );
-        break;
-    }
-
-    const campoOutro = acionaOutro(campo, respostas) ? campo.outroChave! : null;
-
-    return (
-      <Field key={campo.chave} data-invalid={pendentes.includes(campo.chave)}>
-        <FieldLabel htmlFor={campo.chave}>{campo.rotulo}</FieldLabel>
-        {controle}
-        {campoOutro && (
-          <Field data-invalid={pendentes.includes(campoOutro)}>
-            <FieldLabel htmlFor={campoOutro}>{ROTULOS[campoOutro]}</FieldLabel>
-            <Input
-              id={campoOutro}
-              data-testid={`campo-${campoOutro}`}
-              value={(respostas[campoOutro] as string | undefined) ?? ""}
-              onChange={(event) => setCampo(campoOutro, event.target.value)}
-              disabled={desabilitado}
-            />
-          </Field>
-        )}
-      </Field>
-    );
-  }
+  const form = useFormularioRespostas<Chave, RespostasPreCursoParcial>({
+    status,
+    respostasIniciais,
+    podeEditar,
+    urlPatch: `/api/pre-cursos/${cdCurso}`,
+    urlEncerrar: `/api/pre-cursos/${cdCurso}/encerrar`,
+    // Uma condicional que ficou órfã (o Gestor respondeu, mudou a
+    // pergunta-mãe e o campo sumiu da tela) não vai no PATCH.
+    naoAplicaveis: (respostas) => chavesOrfas(REGRAS_CONDICIONAIS_PRE_CURSO, respostas),
+  });
 
   return (
-    <Card className="w-full max-w-3xl" data-testid="form-pre-curso">
-      <CardHeader>
-        <CardTitle>Pré-curso #{cdCurso}</CardTitle>
-        <p className="text-sm text-muted-foreground" data-testid="status-pre-curso">
-          {statusAtual === "ENCERRADO" ? "Encerrado" : "Em andamento"}
-        </p>
-        {somenteLeitura && (
-          <p className="text-sm text-muted-foreground" data-testid="somente-leitura-pre-curso">
-            Somente leitura.
-          </p>
-        )}
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {erro && <FieldError data-testid="erro-pre-curso">{erro}</FieldError>}
-        {pendentes.length > 0 && (
-          <div data-testid="lista-pendencias" className="text-sm text-destructive">
-            <p>Campos pendentes:</p>
-            <ul className="ml-4 list-disc">
-              {pendentes.map((chave) => (
-                <li key={chave} data-testid={`pendencia-${chave}`}>
-                  {ROTULOS[chave as Chave] ?? chave}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <Accordion>
-          {BLOCOS.map((bloco, indice) => (
-            <AccordionItem key={bloco.titulo} value={bloco.titulo}>
-              <AccordionTrigger data-testid={`bloco-${indice + 1}`}>{bloco.titulo}</AccordionTrigger>
-              <AccordionContent>
-                {bloco.enunciado && (
-                  <p className="mb-2 text-sm text-muted-foreground">{bloco.enunciado}</p>
-                )}
-                <FieldGroup>{bloco.campos.map((campo) => renderCampo(campo))}</FieldGroup>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-        {!somenteLeitura && (
-          <div className="flex gap-2">
-            <Button type="button" onClick={salvarRascunho} disabled={salvando || encerrando}>
-              Salvar rascunho
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={encerrar}
-              disabled={salvando || encerrando}
-            >
-              Encerrar
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <CascaFormulario
+      testid="pre-curso"
+      titulo={`Pré-curso #${cdCurso}`}
+      status={form.statusAtual}
+      somenteLeitura={form.somenteLeitura}
+      erro={form.erro}
+      pendentes={form.pendentes}
+      rotuloDaChave={(chave) => ROTULOS[chave as Chave] ?? chave}
+      salvando={form.salvando}
+      encerrando={form.encerrando}
+      aoSalvar={form.salvarRascunho}
+      aoEncerrar={form.encerrar}
+    >
+      <Accordion>
+        {BLOCOS.map((bloco, indice) => (
+          <AccordionItem key={bloco.titulo} value={bloco.titulo}>
+            <AccordionTrigger data-testid={`bloco-${indice + 1}`}>{bloco.titulo}</AccordionTrigger>
+            <AccordionContent>
+              {bloco.enunciado && (
+                <p className="mb-2 text-sm text-muted-foreground">{bloco.enunciado}</p>
+              )}
+              <FieldGroup>
+                {bloco.campos
+                  .filter((campo) => !campo.visivelSe || campo.visivelSe(form.respostas))
+                  .map((campo) => {
+                    const campoOutro = acionaOutro(campo, form.respostas)
+                      ? campo.outroChave!
+                      : null;
+
+                    return (
+                      <CampoResposta
+                        key={campo.chave}
+                        campo={campo}
+                        valor={form.respostas[campo.chave]}
+                        desabilitado={form.desabilitado}
+                        invalido={form.pendentes.includes(campo.chave)}
+                        opcoesEscala={ESCALA_OPCOES}
+                        aoAlterar={form.setCampo}
+                        aoAlternarOpcao={form.toggleCheckbox}
+                      >
+                        {campoOutro && (
+                          <Field data-invalid={form.pendentes.includes(campoOutro)}>
+                            <FieldLabel htmlFor={campoOutro}>{ROTULOS[campoOutro]}</FieldLabel>
+                            <Input
+                              id={campoOutro}
+                              data-testid={`campo-${campoOutro}`}
+                              value={(form.respostas[campoOutro] as string | undefined) ?? ""}
+                              onChange={(event) => form.setCampo(campoOutro, event.target.value)}
+                              disabled={form.desabilitado}
+                            />
+                          </Field>
+                        )}
+                      </CampoResposta>
+                    );
+                  })}
+              </FieldGroup>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </CascaFormulario>
   );
 }

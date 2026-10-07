@@ -24,6 +24,38 @@ async function obterTotalAlocado(cdVerba: number): Promise<Prisma.Decimal> {
   return agregado._sum.vlCursoAlocado ?? new Prisma.Decimal(0);
 }
 
+/**
+ * Total alocado de VÁRIAS verbas numa consulta só, indexado por `cdVerba`.
+ *
+ * `GET /api/verbas` chamava `calcularSaldoVerba` dentro de um `map`, o que
+ * custava 2 consultas POR VERBA (a verba de novo + o agregado) em cima da
+ * listagem que já as havia trazido - um N+1 que crescia com o número de
+ * verbas do Ofertante. Aqui é um `groupBy` só, para a lista inteira.
+ *
+ * Verba sem nenhum curso alocado não aparece no resultado do `groupBy`:
+ * ausente no Map significa zero alocado, e o chamador trata com `?? 0`.
+ */
+export async function saldosDasVerbas(
+  cdVerbas: number[],
+): Promise<Map<number, Prisma.Decimal>> {
+  if (cdVerbas.length === 0) {
+    return new Map();
+  }
+
+  const agregados = await prisma.preCurso.groupBy({
+    by: ["cdVerba"],
+    where: { cdVerba: { in: cdVerbas } },
+    _sum: { vlCursoAlocado: true },
+  });
+
+  return new Map(
+    agregados.map((agregado) => [
+      agregado.cdVerba,
+      agregado._sum.vlCursoAlocado ?? new Prisma.Decimal(0),
+    ]),
+  );
+}
+
 export async function calcularSaldoVerba(cdVerba: number): Promise<SaldoVerba> {
   const verba = await prisma.verba.findUniqueOrThrow({
     where: { cdVerba },
@@ -43,14 +75,22 @@ export async function calcularSaldoVerba(cdVerba: number): Promise<SaldoVerba> {
  * Usado na edição do valor total da Verba (REQ-OV-09/CA-OV-14): o novo valor
  * nunca pode ficar abaixo do que já foi alocado a cursos. Igualdade é
  * permitida (AD-016 - uso de até 100%).
+ *
+ * Devolve `totalAlocado` junto do veredito porque quem recusa precisa
+ * informá-lo na resposta: a rota de edição chamava esta função e, ao reprovar,
+ * chamava `calcularSaldoVerba` SÓ para reler o mesmo número - duas consultas
+ * extras para um valor que já estava calculado aqui.
  */
 export async function validarNovoValorTotal(
   cdVerba: number,
   novoValorTotal: number,
-): Promise<boolean> {
+): Promise<{ valido: boolean; totalAlocado: Prisma.Decimal }> {
   const totalAlocado = await obterTotalAlocado(cdVerba);
 
-  return new Prisma.Decimal(novoValorTotal).greaterThanOrEqualTo(totalAlocado);
+  return {
+    valido: new Prisma.Decimal(novoValorTotal).greaterThanOrEqualTo(totalAlocado),
+    totalAlocado,
+  };
 }
 
 /**

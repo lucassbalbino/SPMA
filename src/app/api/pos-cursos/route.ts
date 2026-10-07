@@ -2,64 +2,44 @@
 // GET /api/pos-cursos - listagem escopada por Ofertante (REQ-PO-12).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { obterSessao } from "@/lib/auth/session";
-import { podeGerenciarPosCurso, resolverEscopoOfertante } from "@/lib/auth/guards";
+import { podeGerenciarPosCurso } from "@/lib/auth/guards";
 import { criarPosCursoSchema } from "@/lib/validation/schemas/pos-curso.schema";
-import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import { montarRespostas, respostasOuNulo } from "@/lib/respostas/repositorio";
+import { exigirMutacao, exigirSessao } from "@/lib/api/guardas";
+import { corpoValidado } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
+import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
+import {
+  LINHAS_RESPOSTA_ORDENADAS,
+  montarRespostas,
+  respostasOuNulo,
+} from "@/lib/respostas/repositorio";
 
 async function criarPosCurso(request: Request) {
-  // REQ-SEC-15: mutação autenticada por cookie exige token anti-CSRF válido,
-  // checado antes até da sessão (mesma ordem RH→CSRF→Guard de pre-cursos/route.ts).
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
+  const sessao = await exigirMutacao(request);
+  const { cdCurso } = await corpoValidado(request, criarPosCursoSchema);
 
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const corpo = await request.json().catch(() => null);
-  const entrada = criarPosCursoSchema.safeParse(corpo);
-
-  if (!entrada.success) {
-    return NextResponse.json(
-      { erro: entrada.error.issues[0]?.message ?? "Dados inválidos" },
-      { status: 400 },
-    );
-  }
-
-  const preCurso = await prisma.preCurso.findUnique({
-    where: { cdCurso: entrada.data.cdCurso },
-  });
+  const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso } });
 
   if (!preCurso) {
-    return NextResponse.json({ erro: "Pré-curso não encontrado" }, { status: 404 });
+    throw erroHttp(404, "Pré-curso não encontrado");
   }
 
   // REQ-PO-01/03: só o GO vinculado ao Ofertante do Pré-Curso pai cria o pós-curso.
   if (!podeGerenciarPosCurso(sessao.usuario, preCurso.cdOfertante)) {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
   // REQ-PO-02: relação 1:1 - checagem explícita antes do create para devolver
   // um 409 limpo em vez de deixar a constraint de PK do Prisma estourar como 500.
-  const posCursoExistente = await prisma.posCurso.findUnique({
-    where: { cdCurso: entrada.data.cdCurso },
-  });
+  const posCursoExistente = await prisma.posCurso.findUnique({ where: { cdCurso } });
 
   if (posCursoExistente) {
-    return NextResponse.json({ erro: "Este curso já tem um pós-curso" }, { status: 409 });
+    throw erroHttp(409, "Este curso já tem um pós-curso");
   }
 
   const posCurso = await prisma.posCurso.create({
-    data: {
-      cdCurso: entrada.data.cdCurso,
-      criadoPor: sessao.usuario.documento,
-    },
+    data: { cdCurso, criadoPor: sessao.usuario.documento },
   });
 
   // Pós-curso nasce sem nenhuma linha de resposta - `null`, como a coluna
@@ -68,44 +48,31 @@ async function criarPosCurso(request: Request) {
 }
 
 async function listarPosCursos(request: Request) {
-  const sessao = await obterSessao();
+  const sessao = await exigirSessao();
+  const filtro = new URL(request.url).searchParams.get("cdOfertante");
 
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const usuario = sessao.usuario;
-  const cdOfertanteFiltro = new URL(request.url).searchParams.get("cdOfertante");
-
-  // REQ-PO-12: mesmo padrão de escopo de listarPreCursos - GO/VO nunca
-  // confiam no filtro do cliente, o próprio escopo do usuário sempre
-  // prevalece (`resolverEscopoOfertante`, T6/UGO-14). PosCurso não tem
+  // REQ-PO-12: escopo resolvido por `escopoDeLeitura` - GO/VO nunca confiam
+  // no filtro do cliente (ver `lib/api/escopo.ts`). PosCurso não tem
   // CD_Ofertante próprio - o filtro é aplicado via o PreCurso pai (relação).
-  let where: { preCurso?: { cdOfertante?: string } } = {};
+  const escopo = escopoDeLeitura(sessao.usuario, filtro);
 
-  switch (usuario.tipo) {
-    case "AM":
-    case "GT":
-    case "VT":
-      where = cdOfertanteFiltro ? { preCurso: { cdOfertante: cdOfertanteFiltro } } : {};
-      break;
-    case "GO":
-    case "VO":
-      where = { preCurso: { cdOfertante: resolverEscopoOfertante(usuario) ?? "" } };
-      break;
-    case "AL":
-      return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+  if (escopo.tipo === "proprioAluno") {
+    throw erroHttp(403, "Acesso negado");
   }
 
   // Inclui o cdOfertante do PreCurso pai na resposta - PosCurso não tem essa
   // coluna própria, e a listagem precisa expor a que Ofertante cada item
   // pertence (mesmo formato "achatado" que GET /api/pre-cursos já entrega).
   const posCursos = await prisma.posCurso.findMany({
-    where,
+    where: whereDeEscopo(
+      escopo,
+      (cdOfertante) => ({ preCurso: { cdOfertante } }),
+      () => ({ preCurso: { cdOfertante: "" } }),
+    ),
     orderBy: { cdCurso: "asc" },
     include: {
       preCurso: { select: { cdOfertante: true } },
-      linhasResposta: { orderBy: [{ chave: "asc" }, { ordem: "asc" }] },
+      linhasResposta: LINHAS_RESPOSTA_ORDENADAS,
     },
   });
 

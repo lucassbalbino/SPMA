@@ -3,135 +3,77 @@
 // bloqueada em pré-curso ENCERRADO por REQ-PC-12).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { obterSessao } from "@/lib/auth/session";
 import { podeAcessarOfertante, podeGerenciarPreCurso } from "@/lib/auth/guards";
 import {
   ordemDatasValida,
   respostasPreCursoSchema,
 } from "@/lib/validation/schemas/pre-curso.schema";
-import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import {
-  gravarRespostas,
-  lerRespostas,
-  lerRespostasParaApi,
-  ISOLAMENTO_RESPOSTAS,
-} from "@/lib/respostas/repositorio";
+import { exigirMutacao, exigirSessao } from "@/lib/api/guardas";
+import { corpoValidado, idPositivo } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
+import { lerRespostasParaApi } from "@/lib/respostas/repositorio";
+import { aplicarPatchRespostas } from "@/lib/respostas/patch";
 
 type Contexto = { params: Promise<{ id: string }> };
 
-function parseId(id: string): number | null {
-  const cdCurso = Number(id);
-  return Number.isInteger(cdCurso) && cdCurso > 0 ? cdCurso : null;
-}
-
 async function consultarPreCurso(_request: Request, { params }: Contexto) {
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const cdCurso = parseId((await params).id);
-
-  if (cdCurso === null) {
-    return NextResponse.json({ erro: "Id inválido" }, { status: 400 });
-  }
+  const sessao = await exigirSessao();
+  const cdCurso = idPositivo((await params).id);
 
   const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso } });
 
   if (!preCurso) {
-    return NextResponse.json({ erro: "Pré-curso não encontrado" }, { status: 404 });
+    throw erroHttp(404, "Pré-curso não encontrado");
   }
 
   if (!podeAcessarOfertante(sessao.usuario, preCurso.cdOfertante)) {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
-  const respostas = await lerRespostasParaApi(prisma, {
-    formulario: "preCurso",
-    cdCurso,
-  });
+  const respostas = await lerRespostasParaApi(prisma, { formulario: "preCurso", cdCurso });
 
   return NextResponse.json({ preCurso: { ...preCurso, respostas } });
 }
 
 async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
-  // REQ-SEC-15: mesma ordem RH→CSRF→Sessão→Guard das demais rotas mutantes.
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const cdCurso = parseId((await params).id);
-
-  if (cdCurso === null) {
-    return NextResponse.json({ erro: "Id inválido" }, { status: 400 });
-  }
+  const sessao = await exigirMutacao(request);
+  const cdCurso = idPositivo((await params).id);
 
   const preCursoExistente = await prisma.preCurso.findUnique({ where: { cdCurso } });
 
   if (!preCursoExistente) {
-    return NextResponse.json({ erro: "Pré-curso não encontrado" }, { status: 404 });
+    throw erroHttp(404, "Pré-curso não encontrado");
   }
 
   if (!podeGerenciarPreCurso(sessao.usuario, preCursoExistente.cdOfertante)) {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
   // REQ-PC-12: somente leitura depois de encerrado, sem exceção.
   if (preCursoExistente.status === "ENCERRADO") {
-    return NextResponse.json(
-      { erro: "Pré-curso já encerrado, somente leitura" },
-      { status: 409 },
-    );
+    throw erroHttp(409, "Pré-curso já encerrado, somente leitura");
   }
 
-  const corpo = await request.json().catch(() => null);
-  const entrada = respostasPreCursoSchema.partial().safeParse(corpo);
+  const patch = await corpoValidado(request, respostasPreCursoSchema.partial());
 
-  if (!entrada.success) {
-    return NextResponse.json(
-      { erro: entrada.error.issues[0]?.message ?? "Dados inválidos" },
-      { status: 400 },
-    );
-  }
+  // REQ-PC-04: merge raso - só as chaves enviadas são alteradas (RESP-01,
+  // RESP-03). Edge case da spec (Planejamento): a validação de ordem das
+  // datas roda contra o estado MESCLADO, não só o corpo do PATCH - cobre
+  // tanto as duas datas chegando no mesmo PATCH quanto uma data setada num
+  // PATCH anterior e a outra agora.
+  const { registro, respostas } = await aplicarPatchRespostas({
+    alvo: { formulario: "preCurso", cdCurso },
+    patch,
+    validarMesclado: (mescladas) => {
+      if (!ordemDatasValida(mescladas)) {
+        throw erroHttp(400, "Data de término não pode ser anterior à data de início");
+      }
+    },
+    gravarRegistro: (tx) => tx.preCurso.findUniqueOrThrow({ where: { cdCurso } }),
+  });
 
-  const alvo = { formulario: "preCurso" as const, cdCurso };
-
-  // REQ-PC-04: merge raso - só as chaves enviadas são alteradas
-  // (RESP-01, RESP-03).
-  const respostasAtuais = await lerRespostas(prisma, alvo);
-  const respostasMescladas = { ...respostasAtuais, ...entrada.data };
-
-  // Edge case da spec (Planejamento): a validação roda contra o estado
-  // MESCLADO, não só o corpo do PATCH - cobre tanto as duas datas chegando
-  // no mesmo PATCH quanto uma data setada num PATCH anterior e a outra
-  // agora.
-  if (!ordemDatasValida(respostasMescladas)) {
-    return NextResponse.json(
-      { erro: "Data de término não pode ser anterior à data de início" },
-      { status: 400 },
-    );
-  }
-
-  // O corpo devolve o estado MESCLADO relido do banco, não `respostasMescladas`
-  // calculado antes da gravação: é o que garante que o cliente veja o que
-  // ficou persistido de fato.
-  const { preCurso, respostas } = await prisma.$transaction(async (tx) => {
-    await gravarRespostas(tx, alvo, entrada.data);
-    return {
-      preCurso: await tx.preCurso.findUniqueOrThrow({ where: { cdCurso } }),
-      respostas: await lerRespostasParaApi(tx, alvo),
-    };
-  }, ISOLAMENTO_RESPOSTAS);
-
-  return NextResponse.json({ preCurso: { ...preCurso, respostas } });
+  return NextResponse.json({ preCurso: { ...registro, respostas } });
 }
 
 export const GET = comTratamentoDeErro(consultarPreCurso);

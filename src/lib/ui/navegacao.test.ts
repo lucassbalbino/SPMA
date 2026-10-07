@@ -4,6 +4,7 @@ import {
   hrefAtivo,
   modulosDoPerfil,
   navegacaoDoPerfil,
+  ROTAS_COM_SESSAO,
   type ItemNavegacao,
 } from "./navegacao";
 
@@ -182,5 +183,52 @@ describe("hrefAtivo", () => {
 
   it("lista vazia não marca nenhum item", () => {
     expect(hrefAtivo("/painel", [])).toBeNull();
+  });
+});
+
+// `ROTAS_COM_SESSAO` alimenta o redirect por cookie do proxy. O que importa
+// nao e a lista exata (ela cresce com as features), e sim que ela seja
+// DERIVADA da tabela de navegacao: a versao anterior era um literal mantido a
+// mao no proxy e ficou 4 rotas para tras.
+describe("ROTAS_COM_SESSAO", () => {
+  it("cobre toda rota oferecida a algum perfil", () => {
+    const daTabela = Object.values(TipoUsuario).flatMap((tipo) =>
+      navegacaoDoPerfil(tipo).map((item) => item.href),
+    );
+
+    for (const href of daTabela) {
+      expect(ROTAS_COM_SESSAO).toContain(href);
+    }
+  });
+
+  // Nao sao itens de menu - sao destino de guard -, entao nao viriam da
+  // tabela sozinhas, mas exigem sessao igual.
+  it.each(["/primeiro-acesso", "/cadastro-ofertante", "/dados-pessoais"])(
+    "inclui a rota de onboarding %s",
+    (rota) => {
+      expect(ROTAS_COM_SESSAO).toContain(rota);
+    },
+  );
+
+  it("inclui as rotas que o literal antigo do proxy esquecera", () => {
+    expect(ROTAS_COM_SESSAO).toEqual(
+      expect.arrayContaining([
+        "/pre-cursos",
+        "/pos-cursos",
+        "/avaliacoes",
+        "/meus-dados",
+        "/dados-pessoais",
+      ]),
+    );
+  });
+
+  it("nao repete href (varios perfis compartilham as mesmas telas)", () => {
+    expect(new Set(ROTAS_COM_SESSAO).size).toBe(ROTAS_COM_SESSAO.length);
+  });
+
+  // /login nao pode entrar: o proxy redirecionaria /login para /login.
+  it("nao inclui rota publica", () => {
+    expect(ROTAS_COM_SESSAO).not.toContain("/login");
+    expect(ROTAS_COM_SESSAO).not.toContain("/");
   });
 });

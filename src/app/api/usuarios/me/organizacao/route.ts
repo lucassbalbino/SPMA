@@ -14,69 +14,38 @@
 // depois é `PATCH /api/usuarios/[documento]/organizacao` (T12).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { obterSessao } from "@/lib/auth/session";
 import { organizacaoSchema } from "@/lib/validation/schemas/organizacao.schema";
-import { verificarCSRF } from "@/lib/security/csrf";
+import {
+  CAMPOS_ORGANIZACAO,
+  dadosOrganizacao,
+} from "@/lib/validation/schemas/organizacao-dados";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { exigirMutacao } from "@/lib/api/guardas";
+import { corpoValidado } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
 
 async function gravarOrganizacao(request: Request) {
-  // REQ-SEC-15: mesma ordem RH->CSRF->Sessão->Guard das demais rotas mutantes.
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
+  const sessao = await exigirMutacao(request);
 
   // Só o GO tem essa área, reforçado no backend (não só na navegação
   // escondida, AD-039).
   if (sessao.usuario.tipo !== "GO") {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
   // UGO-01 AC4: um GO que já concluiu o cadastro organizacional (nome/uf
   // completos) não pode se auto-cadastrar de novo por aqui - dados
   // preservados, sem tocar no banco.
   if (sessao.usuario.nome !== null && sessao.usuario.uf !== null) {
-    return NextResponse.json(
-      { erro: "Dados organizacionais já cadastrados" },
-      { status: 409 },
-    );
+    throw erroHttp(409, "Dados organizacionais já cadastrados");
   }
 
-  const corpo = await request.json().catch(() => null);
-  const entrada = organizacaoSchema.safeParse(corpo);
+  const entrada = await corpoValidado(request, organizacaoSchema);
 
-  if (!entrada.success) {
-    return NextResponse.json(
-      { erro: entrada.error.issues[0]?.message ?? "Dados inválidos" },
-      { status: 400 },
-    );
-  }
-
-  const dados = entrada.data;
   const usuario = await prisma.usuario.update({
     where: { documento: sessao.usuario.documento },
-    data: {
-      nome: dados.nome,
-      responsavel: dados.responsavel ?? null,
-      email: dados.email ?? null,
-      telefone: dados.telefone ?? null,
-      uf: dados.uf,
-      municipio: dados.municipio ?? null,
-    },
-    select: {
-      documento: true,
-      nome: true,
-      responsavel: true,
-      email: true,
-      telefone: true,
-      uf: true,
-      municipio: true,
-    },
+    data: dadosOrganizacao(entrada),
+    select: CAMPOS_ORGANIZACAO,
   });
 
   return NextResponse.json({ usuario });

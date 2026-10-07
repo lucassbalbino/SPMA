@@ -14,21 +14,20 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
 import { COOKIE_SESSAO } from "@/lib/auth/session-cookie";
+import { ROTAS_COM_SESSAO } from "@/lib/ui/navegacao";
 
-// Mesmas 4 rotas que o matcher cobria antes do CSP exigir um matcher amplo
-// (receita oficial do Next para nonce - ver design.md Tech Decisions). A
-// checagem de cookie-presença agora é restrita por pathname aqui dentro, não
-// mais pelo matcher, para o CSP/nonce poder ser aplicado a qualquer página
-// (incluindo /login).
-const ROTAS_PROTEGIDAS = [
-  "/painel",
-  "/usuarios",
-  "/primeiro-acesso",
-  "/cadastro-ofertante",
-];
-
+// A checagem de cookie-presença é restrita por pathname aqui dentro, não pelo
+// matcher (que precisou ficar amplo para o CSP/nonce valer em qualquer
+// página, incluindo /login - receita oficial do Next, ver design.md Tech
+// Decisions).
+//
+// A lista vem de `lib/ui/navegacao.ts`, a mesma fonte única do menu (AD-039),
+// em vez de um literal mantido à mão aqui - que havia ficado para trás em 4
+// rotas conforme as features novas chegaram. `navegacao.ts` não importa
+// Prisma (só `generated/prisma/enums`, sem dependências), então o proxy segue
+// sem nenhuma dependência de banco, nem transitiva.
 function precisaSessao(pathname: string): boolean {
-  return ROTAS_PROTEGIDAS.some(
+  return ROTAS_COM_SESSAO.some(
     (rota) => pathname === rota || pathname.startsWith(`${rota}/`),
   );
 }

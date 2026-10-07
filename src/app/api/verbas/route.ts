@@ -2,43 +2,25 @@
 // GET /api/verbas - listagem escopada com saldo disponível (REQ-OV-10/11).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { obterSessao } from "@/lib/auth/session";
-import { podeGerenciarVerba, resolverEscopoOfertante } from "@/lib/auth/guards";
+import { podeGerenciarVerba } from "@/lib/auth/guards";
 import { verbaSchema } from "@/lib/validation/schemas/verba.schema";
-import { calcularSaldoVerba } from "@/lib/verba/saldo";
-import { verificarCSRF } from "@/lib/security/csrf";
+import { saldosDasVerbas } from "@/lib/verba/saldo";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { exigirMutacao, exigirSessao } from "@/lib/api/guardas";
+import { corpoValidado } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
+import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 
 async function criarVerba(request: Request) {
-  // REQ-SEC-15: mutação autenticada por cookie exige token anti-CSRF válido,
-  // checado antes até da sessão (design.md - RH -> CSRF -> Guard).
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
+  const sessao = await exigirMutacao(request);
 
   // REQ-OV-08: só AM/GT criam Verba - o GO a consome (aloca a cursos, feature
   // futura), não a cria.
   if (!podeGerenciarVerba(sessao.usuario.tipo)) {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
-  const corpo = await request.json().catch(() => null);
-  const entrada = verbaSchema.safeParse(corpo);
-
-  if (!entrada.success) {
-    return NextResponse.json(
-      { erro: entrada.error.issues[0]?.message ?? "Dados inválidos" },
-      { status: 400 },
-    );
-  }
-
-  const dados = entrada.data;
+  const dados = await corpoValidado(request, verbaSchema);
 
   // CA-OV-09: erro claro, não a constraint de FK crua do MySQL. UGO-14/AD-043:
   // o Ofertante É o GO - existência checada em `Usuario`, não numa tabela à
@@ -48,7 +30,7 @@ async function criarVerba(request: Request) {
   });
 
   if (!go) {
-    return NextResponse.json({ erro: "Ofertante informado não existe" }, { status: 400 });
+    throw erroHttp(400, "Ofertante informado não existe");
   }
 
   const verba = await prisma.verba.create({
@@ -63,43 +45,32 @@ async function criarVerba(request: Request) {
 }
 
 async function listarVerbas(request: Request) {
-  const sessao = await obterSessao();
+  const sessao = await exigirSessao();
+  const filtro = new URL(request.url).searchParams.get("cdOfertante");
 
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
+  // REQ-OV-10: escopo resolvido por `escopoDeLeitura` - GO/VO nunca confiam
+  // no filtro do cliente (ver `lib/api/escopo.ts`).
+  const escopo = escopoDeLeitura(sessao.usuario, filtro);
+
+  if (escopo.tipo === "proprioAluno") {
+    throw erroHttp(403, "Acesso negado");
   }
 
-  const usuario = sessao.usuario;
-  const cdOfertanteFiltro = new URL(request.url).searchParams.get("cdOfertante");
-
-  // REQ-OV-10: mesmo escopo de GET /api/ofertantes. GO/VO nunca confiam no
-  // filtro do cliente - o próprio escopo do usuário sempre prevalece
-  // (`resolverEscopoOfertante`, T6/UGO-14).
-  let where: { cdOfertante?: string } = {};
-
-  switch (usuario.tipo) {
-    case "AM":
-    case "GT":
-    case "VT":
-      where = cdOfertanteFiltro ? { cdOfertante: cdOfertanteFiltro } : {};
-      break;
-    case "GO":
-    case "VO":
-      where = { cdOfertante: resolverEscopoOfertante(usuario) ?? "" };
-      break;
-    case "AL":
-      return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
-  }
-
-  const verbas = await prisma.verba.findMany({ where, orderBy: { cdVerba: "asc" } });
-  const verbasComSaldo = await Promise.all(
-    verbas.map(async (verba) => ({
-      ...verba,
-      saldoDisponivel: (await calcularSaldoVerba(verba.cdVerba)).saldoDisponivel,
-    })),
+  const where = whereDeEscopo(
+    escopo,
+    (cdOfertante) => ({ cdOfertante }),
+    () => ({ cdOfertante: "" }),
   );
 
-  return NextResponse.json({ verbas: verbasComSaldo });
+  const verbas = await prisma.verba.findMany({ where, orderBy: { cdVerba: "asc" } });
+  const saldos = await saldosDasVerbas(verbas.map((verba) => verba.cdVerba));
+
+  return NextResponse.json({
+    verbas: verbas.map((verba) => ({
+      ...verba,
+      saldoDisponivel: verba.vlVerba.minus(saldos.get(verba.cdVerba) ?? 0),
+    })),
+  });
 }
 
 export const POST = comTratamentoDeErro(criarVerba);

@@ -3,7 +3,7 @@
 // `PosCursoForm.tsx`/`PreCursoForm.tsx`: os blocos do questionário fonte
 // (`docs/Questionario_do_Aluno_1.md`, Q1-Q21 = Parte 1, Q22-Q38 = Parte 2)
 // viram tabelas `BLOCOS_PARTE_1`/`BLOCOS_PARTE_2` interpretadas genericamente
-// por `renderCampo`. Os rótulos carregam a numeração do papel.
+// por `CampoResposta`. Os rótulos carregam a numeração do papel.
 //
 // Diferença chave frente às duas features anteriores: dois gates empilhados
 // (AD-023/AVAL-10: Parte 2 inteira bloqueada até `parte1Completa`; AVAL-12/13:
@@ -19,25 +19,22 @@
 // Q22 e Q23 NÃO levam `bloqueadoSe`: são do bloco "Participação", que todo
 // aluno responde. O cabeçalho "Avaliação do curso (apenas para quem
 // concluiu)" do papel só começa em Q24.
+// O estado, as duas ações e o render de campo vivem em
+// `src/components/formulario/` - esta tela é a TABELA mais a ligação com ela,
+// mais os dois gates que só ela tem.
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { FieldGroup } from "@/components/ui/field";
+import { CampoResposta } from "@/components/formulario/CampoResposta";
+import { CascaFormulario } from "@/components/formulario/CascaFormulario";
+import { useFormularioRespostas } from "@/components/formulario/useFormularioRespostas";
+import type {
+  BlocoDef as BlocoGenerico,
+  CampoDef as CampoGenerico,
+  OpcaoEscala,
+} from "@/components/formulario/tipos";
 import {
   OPCOES_AMPLIACAO_CONHECIMENTO,
   OPCOES_ATIVIDADE_TURISMO,
@@ -66,35 +63,21 @@ import {
   naoConcluiuDeclarado,
 } from "@/lib/avaliacao/condicionais";
 import { chavesOrfas } from "@/lib/validation/condicionais";
-import { headerCSRF } from "@/lib/security/csrf-client";
 import type { StatusFormulario } from "@/generated/prisma/enums";
 
 type Chave = keyof RespostasAvaliacao;
-
-type TipoCampo = "texto" | "textarea" | "numero" | "select" | "radio" | "checkboxes" | "escala";
-
-interface CampoDef {
-  chave: Chave;
-  rotulo: string;
-  tipo: TipoCampo;
-  opcoes?: readonly string[];
-  visivelSe?: (respostas: RespostasAvaliacaoParcial) => boolean;
-}
-
-interface BlocoDef {
-  titulo: string;
-  campos: CampoDef[];
-}
+type CampoDef = CampoGenerico<Chave, RespostasAvaliacaoParcial>;
+type BlocoDef = BlocoGenerico<Chave, RespostasAvaliacaoParcial>;
 
 // Q24 (AD-020): valor armazenado é crescente (1=Péssimo .. 5=Ótimo), mas a
 // ordem apresentada segue a da tabela do papel, que começa em ÓTIMO.
-const ESCALA_AVALIACAO_OPCOES = [
+const ESCALA_AVALIACAO_OPCOES: readonly OpcaoEscala[] = [
   { valor: "5", rotulo: "Ótimo" },
   { valor: "4", rotulo: "Bom" },
   { valor: "3", rotulo: "Regular" },
   { valor: "2", rotulo: "Ruim" },
   { valor: "1", rotulo: "Péssimo" },
-] as const;
+];
 
 // Enquanto Q22 não é "Sim", as chaves de "apenas para quem concluiu" ficam
 // visíveis porém não editáveis.
@@ -423,333 +406,103 @@ export function AvaliacaoForm({
   respostasIniciais: RespostasAvaliacaoParcial;
   podeEditar: boolean;
 }) {
-  const router = useRouter();
-
-  const [respostas, setRespostas] = useState<RespostasAvaliacaoParcial>(respostasIniciais);
-  const [alterados, setAlterados] = useState<Set<Chave>>(new Set());
-  const [erro, setErro] = useState<string | null>(null);
-  const [pendentes, setPendentes] = useState<string[]>([]);
-  const [salvando, setSalvando] = useState(false);
-  const [encerrando, setEncerrando] = useState(false);
-  const [statusAtual, setStatusAtual] = useState<StatusFormulario>(status);
   const [parte1Completa, setParte1Completa] = useState(parte1CompletaInicial);
 
-  const somenteLeitura = !podeEditar || statusAtual === "ENCERRADO";
-  const desabilitado = somenteLeitura || salvando || encerrando;
+  const form = useFormularioRespostas<Chave, RespostasAvaliacaoParcial>({
+    status,
+    respostasIniciais,
+    podeEditar,
+    urlPatch: `/api/avaliacoes/${cpf}/${cdCurso}`,
+    urlEncerrar: `/api/avaliacoes/${cpf}/${cdCurso}/encerrar`,
+    // Resposta que deixou de se aplicar (condicional órfã, ou chave de
+    // "apenas para quem concluiu" depois de o aluno marcar Q22="Não") não vai
+    // no PATCH: o valor continua no estado local, caso ele volte atrás, e o
+    // que já estava salvo no servidor segue preservado (edge case da spec)
+    // até o encerramento.
+    naoAplicaveis: (respostas) => [
+      ...chavesOrfas(REGRAS_CONDICIONAIS_AVALIACAO, respostas),
+      ...(naoConcluiuDeclarado(respostas) ? CHAVES_SOMENTE_CONCLUINTE : []),
+    ],
+    // AVAL-08: o servidor recalcula `parte1Completa` a cada gravação e o
+    // gate da Parte 2 na tela segue esse valor, nunca um cálculo próprio.
+    aoSalvar: (corpo) => {
+      const avaliacao = corpo.avaliacao as { parte1Completa: boolean };
+      setParte1Completa(avaliacao.parte1Completa);
+    },
+  });
 
-  function setCampo(chave: Chave, valor: unknown) {
-    setRespostas((atual) => ({ ...atual, [chave]: valor }));
-    setAlterados((atual) => new Set(atual).add(chave));
-  }
-
-  function toggleCheckbox(chave: Chave, opcao: string, marcado: boolean) {
-    const atuais = (respostas[chave] as string[] | undefined) ?? [];
-    const novos = marcado ? [...atuais, opcao] : atuais.filter((item) => item !== opcao);
-    setCampo(chave, novos);
-  }
-
-  async function salvarRascunho() {
-    setErro(null);
-    setSalvando(true);
-    try {
-      // Resposta que deixou de se aplicar (condicional órfã, ou chave de
-      // "apenas para quem concluiu" depois de o aluno marcar Q22="Não") não
-      // vai no PATCH: o valor continua no estado local, caso ele volte
-      // atrás, e o que já estava salvo no servidor segue preservado (edge
-      // case da spec) até o encerramento.
-      const naoAplicaveis = new Set<string>([
-        ...chavesOrfas(REGRAS_CONDICIONAIS_AVALIACAO, respostas),
-        ...(naoConcluiuDeclarado(respostas) ? CHAVES_SOMENTE_CONCLUINTE : []),
-      ]);
-      const corpo = Object.fromEntries(
-        [...alterados]
-          .filter((chave) => !naoAplicaveis.has(chave))
-          .map((chave) => [chave, respostas[chave]]),
-      );
-      const res = await fetch(`/api/avaliacoes/${cpf}/${cdCurso}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...headerCSRF() },
-        body: JSON.stringify(corpo),
-      });
-      const resposta = await res.json();
-
-      if (!res.ok) {
-        setErro(resposta.erro ?? "Não foi possível salvar");
-        return;
-      }
-
-      setParte1Completa(resposta.avaliacao.parte1Completa);
-      setAlterados(new Set());
-      router.refresh();
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  async function encerrar() {
-    setErro(null);
-    setPendentes([]);
-    setEncerrando(true);
-    try {
-      const res = await fetch(`/api/avaliacoes/${cpf}/${cdCurso}/encerrar`, {
-        method: "POST",
-        headers: { ...headerCSRF() },
-      });
-      const resposta = await res.json();
-
-      if (!res.ok) {
-        setErro(resposta.erro ?? "Não foi possível encerrar");
-        setPendentes(resposta.pendentes ?? []);
-        return;
-      }
-
-      setStatusAtual("ENCERRADO");
-      router.refresh();
-    } finally {
-      setEncerrando(false);
-    }
-  }
-
-  function renderCampo(campo: CampoDef, bloqueioExtra: boolean): ReactNode {
-    if (campo.visivelSe && !campo.visivelSe(respostas)) {
-      return null;
-    }
-
+  /**
+   * Os dois gates empilhados desta tela, somados ao `desabilitado` comum:
+   * `bloqueioDaParte` é a Parte 2 inteira travada até a Parte 1 fechar
+   * (AVAL-10); o segundo termo é o gate "Concluiu o curso?" (AVAL-12/13),
+   * campo a campo.
+   */
+  function campoDesabilitado(campo: CampoDef, bloqueioDaParte: boolean): boolean {
     const bloqueadoPeloGateDeConclusao =
-      somenteConcluinte.has(campo.chave) && respostas.avalParticipConcluiuCurso !== "Sim";
-    const campoDesabilitado = desabilitado || bloqueioExtra || bloqueadoPeloGateDeConclusao;
-    const valor = respostas[campo.chave];
-    let controle: ReactNode;
+      somenteConcluinte.has(campo.chave) &&
+      form.respostas.avalParticipConcluiuCurso !== "Sim";
 
-    switch (campo.tipo) {
-      case "texto":
-        controle = (
-          <Input
-            id={campo.chave}
-            data-testid={`campo-${campo.chave}`}
-            type="text"
-            value={(valor as string | undefined) ?? ""}
-            onChange={(event) => setCampo(campo.chave, event.target.value)}
-            disabled={campoDesabilitado}
-          />
-        );
-        break;
-      case "textarea":
-        controle = (
-          <Textarea
-            id={campo.chave}
-            data-testid={`campo-${campo.chave}`}
-            value={(valor as string | undefined) ?? ""}
-            onChange={(event) => setCampo(campo.chave, event.target.value)}
-            disabled={campoDesabilitado}
-          />
-        );
-        break;
-      case "numero":
-        controle = (
-          <Input
-            id={campo.chave}
-            data-testid={`campo-${campo.chave}`}
-            type="number"
-            value={valor === undefined || valor === null ? "" : String(valor)}
-            onChange={(event) =>
-              setCampo(campo.chave, event.target.value === "" ? undefined : Number(event.target.value))
-            }
-            disabled={campoDesabilitado}
-          />
-        );
-        break;
-      case "select":
-        controle = (
-          <Select
-            value={(valor as string | undefined) ?? null}
-            onValueChange={(novoValor) => setCampo(campo.chave, novoValor)}
-          >
-            <SelectTrigger
-              id={campo.chave}
-              data-testid={`campo-${campo.chave}-select`}
-              disabled={campoDesabilitado}
-            >
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              {campo.opcoes?.map((opcao, indice) => (
-                <SelectItem
-                  key={opcao}
-                  value={opcao}
-                  data-testid={`campo-${campo.chave}-opcao-${indice}`}
-                >
-                  {opcao}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
-        break;
-      case "escala":
-        controle = (
-          <Select
-            value={valor === undefined || valor === null ? null : String(valor)}
-            onValueChange={(novoValor) => setCampo(campo.chave, Number(novoValor))}
-          >
-            <SelectTrigger
-              id={campo.chave}
-              data-testid={`campo-${campo.chave}-select`}
-              disabled={campoDesabilitado}
-            >
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              {ESCALA_AVALIACAO_OPCOES.map((opcao) => (
-                <SelectItem
-                  key={opcao.valor}
-                  value={opcao.valor}
-                  data-testid={`campo-${campo.chave}-opcao-${opcao.valor}`}
-                >
-                  {opcao.rotulo}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
-        break;
-      case "radio":
-        controle = (
-          <RadioGroup
-            aria-label={campo.rotulo}
-            data-testid={`campo-${campo.chave}-grupo`}
-            value={(valor as string | undefined) ?? null}
-            onValueChange={(novoValor) => setCampo(campo.chave, novoValor)}
-          >
-            {campo.opcoes?.map((opcao, indice) => (
-              <FieldLabel key={opcao} htmlFor={`${campo.chave}-${indice}`}>
-                <RadioGroupItem
-                  id={`${campo.chave}-${indice}`}
-                  value={opcao}
-                  data-testid={`campo-${campo.chave}-opcao-${indice}`}
-                  disabled={campoDesabilitado}
-                />
-                {opcao}
-              </FieldLabel>
-            ))}
-          </RadioGroup>
-        );
-        break;
-      case "checkboxes":
-        controle = (
-          <div data-testid={`campo-${campo.chave}-grupo`} className="flex flex-col gap-2">
-            {campo.opcoes?.map((opcao, indice) => (
-              <FieldLabel key={opcao} htmlFor={`${campo.chave}-${indice}`}>
-                <Checkbox
-                  id={`${campo.chave}-${indice}`}
-                  data-testid={`campo-${campo.chave}-opcao-${indice}`}
-                  checked={((valor as string[] | undefined) ?? []).includes(opcao)}
-                  onCheckedChange={(marcado) =>
-                    toggleCheckbox(campo.chave, opcao, marcado === true)
-                  }
-                  disabled={campoDesabilitado}
-                />
-                {opcao}
-              </FieldLabel>
-            ))}
-          </div>
-        );
-        break;
-    }
+    return form.desabilitado || bloqueioDaParte || bloqueadoPeloGateDeConclusao;
+  }
 
+  function renderBlocos(blocos: BlocoDef[], prefixo: string, bloqueioDaParte: boolean) {
     return (
-      <Field key={campo.chave} data-invalid={pendentes.includes(campo.chave)}>
-        <FieldLabel htmlFor={campo.chave}>{campo.rotulo}</FieldLabel>
-        {controle}
-      </Field>
+      <Accordion>
+        {blocos.map((bloco, indice) => (
+          <AccordionItem key={bloco.titulo} value={bloco.titulo}>
+            <AccordionTrigger data-testid={`bloco-${prefixo}-${indice + 1}`}>
+              {bloco.titulo}
+            </AccordionTrigger>
+            <AccordionContent>
+              <FieldGroup>
+                {bloco.campos
+                  .filter((campo) => !campo.visivelSe || campo.visivelSe(form.respostas))
+                  .map((campo) => (
+                    <CampoResposta
+                      key={campo.chave}
+                      campo={campo}
+                      valor={form.respostas[campo.chave]}
+                      desabilitado={campoDesabilitado(campo, bloqueioDaParte)}
+                      invalido={form.pendentes.includes(campo.chave)}
+                      opcoesEscala={ESCALA_AVALIACAO_OPCOES}
+                      aoAlterar={form.setCampo}
+                      aoAlternarOpcao={form.toggleCheckbox}
+                    />
+                  ))}
+              </FieldGroup>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     );
   }
 
   return (
-    <Card className="w-full max-w-3xl" data-testid="form-avaliacao">
-      <CardHeader>
-        <CardTitle>
-          Avaliação #{cdCurso} - CPF {cpf}
-        </CardTitle>
-        <p className="text-sm text-muted-foreground" data-testid="status-avaliacao">
-          {statusAtual === "ENCERRADO" ? "Encerrado" : "Em andamento"}
+    <CascaFormulario
+      testid="avaliacao"
+      titulo={`Avaliação #${cdCurso} - CPF ${cpf}`}
+      status={form.statusAtual}
+      somenteLeitura={form.somenteLeitura}
+      erro={form.erro}
+      pendentes={form.pendentes}
+      rotuloDaChave={(chave) => ROTULOS[chave as Chave] ?? chave}
+      salvando={form.salvando}
+      encerrando={form.encerrando}
+      aoSalvar={form.salvarRascunho}
+      aoEncerrar={form.encerrar}
+    >
+      <h2 className="text-sm font-semibold">
+        Parte 1 — Situação Profissional e Motivação
+      </h2>
+      {renderBlocos(BLOCOS_PARTE_1, "parte1", false)}
+
+      <h2 className="text-sm font-semibold">Parte 2 — Avaliação Pós-Curso</h2>
+      {!parte1Completa && (
+        <p className="text-sm text-muted-foreground" data-testid="aviso-parte2-bloqueada">
+          Complete a Parte 1 para responder esta seção.
         </p>
-        {somenteLeitura && (
-          <p className="text-sm text-muted-foreground" data-testid="somente-leitura-avaliacao">
-            Somente leitura.
-          </p>
-        )}
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {erro && <FieldError data-testid="erro-avaliacao">{erro}</FieldError>}
-        {pendentes.length > 0 && (
-          <div data-testid="lista-pendencias" className="text-sm text-destructive">
-            <p>Campos pendentes:</p>
-            <ul className="ml-4 list-disc">
-              {pendentes.map((chave) => (
-                <li key={chave} data-testid={`pendencia-${chave}`}>
-                  {ROTULOS[chave as Chave] ?? chave}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <h2 className="text-sm font-semibold">
-          Parte 1 — Situação Profissional e Motivação
-        </h2>
-        <Accordion>
-          {BLOCOS_PARTE_1.map((bloco, indice) => (
-            <AccordionItem key={bloco.titulo} value={bloco.titulo}>
-              <AccordionTrigger data-testid={`bloco-parte1-${indice + 1}`}>
-                {bloco.titulo}
-              </AccordionTrigger>
-              <AccordionContent>
-                <FieldGroup>
-                  {bloco.campos.map((campo) => renderCampo(campo, false))}
-                </FieldGroup>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-
-        <h2 className="text-sm font-semibold">Parte 2 — Avaliação Pós-Curso</h2>
-        {!parte1Completa && (
-          <p className="text-sm text-muted-foreground" data-testid="aviso-parte2-bloqueada">
-            Complete a Parte 1 para responder esta seção.
-          </p>
-        )}
-        <Accordion>
-          {BLOCOS_PARTE_2.map((bloco, indice) => (
-            <AccordionItem key={bloco.titulo} value={bloco.titulo}>
-              <AccordionTrigger data-testid={`bloco-parte2-${indice + 1}`}>
-                {bloco.titulo}
-              </AccordionTrigger>
-              <AccordionContent>
-                <FieldGroup>
-                  {bloco.campos.map((campo) => renderCampo(campo, !parte1Completa))}
-                </FieldGroup>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-
-        {!somenteLeitura && (
-          <div className="flex gap-2">
-            <Button type="button" onClick={salvarRascunho} disabled={salvando || encerrando}>
-              Salvar rascunho
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={encerrar}
-              disabled={salvando || encerrando}
-            >
-              Encerrar
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+      {renderBlocos(BLOCOS_PARTE_2, "parte2", !parte1Completa)}
+    </CascaFormulario>
   );
 }

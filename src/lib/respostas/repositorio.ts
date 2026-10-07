@@ -57,6 +57,20 @@ const SCHEMAS = {
 
 type LinhaResposta = { chave: string; ordem: number; valor: string };
 
+/**
+ * `include` das rotas de listagem, que trazem as linhas junto do registro-pai
+ * numa consulta só (em vez de uma ida ao banco por item da lista).
+ *
+ * A ordenação não é cosmética: `montarRespostas` remonta cada lista de
+ * múltipla escolha na ordem em que as linhas chegam, então `ordem: "asc"` é o
+ * que preserva a ordem original das opções escolhidas. Era repetida à mão nas
+ * 3 rotas de listagem.
+ */
+export const LINHAS_RESPOSTA_ORDENADAS = {
+  // Sem `as const`: os tipos gerados do Prisma recusam um `orderBy` readonly.
+  orderBy: [{ chave: "asc" as const }, { ordem: "asc" as const }],
+};
+
 /** Filtro das linhas de um único registro de formulário. */
 function filtroDoPai(alvo: AlvoRespostas) {
   if (alvo.formulario === "dadosPessoais") {
@@ -72,32 +86,23 @@ async function buscarLinhas(
   tx: ClienteRespostas,
   alvo: AlvoRespostas,
 ): Promise<LinhaResposta[]> {
-  const orderBy = [{ chave: "asc" }, { ordem: "asc" }] as const;
+  const { orderBy } = LINHAS_RESPOSTA_ORDENADAS;
 
   if (alvo.formulario === "preCurso") {
-    return tx.respostaPreCurso.findMany({
-      where: { cdCurso: alvo.cdCurso },
-      orderBy: [...orderBy],
-    });
+    return tx.respostaPreCurso.findMany({ where: { cdCurso: alvo.cdCurso }, orderBy });
   }
 
   if (alvo.formulario === "posCurso") {
-    return tx.respostaPosCurso.findMany({
-      where: { cdCurso: alvo.cdCurso },
-      orderBy: [...orderBy],
-    });
+    return tx.respostaPosCurso.findMany({ where: { cdCurso: alvo.cdCurso }, orderBy });
   }
 
   if (alvo.formulario === "dadosPessoais") {
-    return tx.dadoPessoalAluno.findMany({
-      where: { cpf: alvo.cpf },
-      orderBy: [...orderBy],
-    });
+    return tx.dadoPessoalAluno.findMany({ where: { cpf: alvo.cpf }, orderBy });
   }
 
   return tx.respostaAvaliacao.findMany({
     where: { cpf: alvo.cpf, cdCurso: alvo.cdCurso },
-    orderBy: [...orderBy],
+    orderBy,
   });
 }
 

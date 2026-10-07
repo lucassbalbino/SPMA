@@ -9,6 +9,7 @@ import {
   getUsuario,
   upsertUsuario,
 } from "./helpers/db";
+import { geradorDeCnpj } from "./helpers/cnpj";
 import {
   cookiesDaResposta,
   idSessaoDaResposta,
@@ -63,24 +64,7 @@ const CPF_INVALIDO = "12345678901";
 
 // UGO-10: GO se identifica por CNPJ (14 dígitos), não CPF - `loginSchema`
 // (T9) decide o algoritmo pelo comprimento antes de saber o tipo.
-function calcularDvCnpj(digitos: number[]): number {
-  let soma = 0;
-  let peso = 2;
-  for (let i = digitos.length - 1; i >= 0; i--) {
-    soma += digitos[i] * peso;
-    peso = peso === 9 ? 2 : peso + 1;
-  }
-  const resto = soma % 11;
-  return resto < 2 ? 0 : 11 - resto;
-}
-
-function gerarCnpjValido(indice: number): string {
-  const base12 = `28${String(indice).padStart(6, "0")}0001`;
-  const digitos = base12.split("").map(Number);
-  const d1 = calcularDvCnpj(digitos);
-  const d2 = calcularDvCnpj([...digitos, d1]);
-  return `${base12}${d1}${d2}`;
-}
+const gerarCnpjValido = geradorDeCnpj("28");
 
 const CNPJ_GO = gerarCnpjValido(1);
 

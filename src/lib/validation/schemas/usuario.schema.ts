@@ -3,11 +3,19 @@ import { TipoUsuario } from "../../../generated/prisma/enums";
 import { camposVerbaSchema } from "./verba.schema";
 import { normalizarCPF, validarCPF } from "../cpf";
 import { normalizarCNPJ, validarCNPJ } from "../cnpj";
+import { OPCOES_UF } from "./pre-curso.schema";
 
 // Campos organizacionais (AD-043/UGO-01/UGO-08): só fazem sentido para GO,
 // que passou a SER o próprio Ofertante. `uf` é obrigatória para GO (checado
 // em superRefine, junto do `nome` que a base já exige para todo mundo);
 // `responsavel`/`telefone`/`municipio` continuam opcionais mesmo para GO.
+//
+// `uf` NÃO entra nesta lista por decisão explícita, fixada em teste
+// ("aceita uf informada para um tipo != GO"): ela é obrigatória PARA GO, mas
+// não exclusiva DE GO. Consequência a conhecer: `{ tipo: "AL", uf: "SP" }`
+// valida, e `POST /api/usuarios` grava essa UF num Usuario não-GO. Se um dia
+// a intenção for que só GO tenha UF, mude a decisão e o teste junto - não
+// este array sozinho.
 const CAMPOS_SO_GO = ["responsavel", "telefone", "municipio"] as const;
 
 export const usuarioSchema = z
@@ -32,7 +40,11 @@ export const usuarioSchema = z
     verba: camposVerbaSchema.optional(),
     responsavel: z.string().optional(),
     telefone: z.string().optional(),
-    uf: z.string().optional(),
+    // Mesma lista canônica de `identifUf`/`avalPessoalEstado`, em vez de uma
+    // string livre: a UF do GO acaba na MESMA coluna `Usuario.uf` que o guard
+    // `requireOfertanteVinculado` consulta, e aceitar "ZZ" aqui enquanto o
+    // questionário exige uma UF real é uma divergência sem motivo.
+    uf: z.enum(OPCOES_UF, { message: "UF inválida" }).optional(),
     municipio: z.string().optional(),
   })
   .superRefine((data, ctx) => {

@@ -23,18 +23,18 @@ export function obterIpCliente(request: Request): string {
   return header.split(",")[0].trim();
 }
 
-/** IP bloqueado é o que tem `bloqueadoAte` no futuro. */
+/**
+ * IP bloqueado é o que tem `bloqueadoAte` no futuro. IP sem registro (nunca
+ * falhou) e IP com `bloqueadoAte` nulo (falhou, mas não o bastante) são os
+ * dois casos de "não bloqueado" - o `?.` cobre os dois de uma vez.
+ */
 export async function ipEstaBloqueado(ip: string): Promise<boolean> {
   const registro = await prisma.tentativaLoginIp.findUnique({
     where: { ip },
     select: { bloqueadoAte: true },
   });
 
-  return (
-    registro?.bloqueadoAte !== null &&
-    registro?.bloqueadoAte !== undefined &&
-    registro.bloqueadoAte.getTime() > Date.now()
-  );
+  return (registro?.bloqueadoAte?.getTime() ?? 0) > Date.now();
 }
 
 /**

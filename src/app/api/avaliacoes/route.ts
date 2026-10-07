@@ -2,60 +2,44 @@
 // GET /api/avaliacoes - listagem escopada (AVAL-22).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { obterSessao } from "@/lib/auth/session";
-import { podeMatricularAluno, resolverEscopoOfertante } from "@/lib/auth/guards";
+import type { Prisma } from "@/generated/prisma/client";
+import { podeMatricularAluno } from "@/lib/auth/guards";
 import { matricularAlunoSchema } from "@/lib/validation/schemas/avaliacao.schema";
-import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import { montarRespostas, respostasOuNulo } from "@/lib/respostas/repositorio";
+import { exigirMutacao, exigirSessao } from "@/lib/api/guardas";
+import { corpoValidado } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
+import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
+import {
+  LINHAS_RESPOSTA_ORDENADAS,
+  montarRespostas,
+  respostasOuNulo,
+} from "@/lib/respostas/repositorio";
 
 async function matricularAluno(request: Request) {
-  // REQ-SEC-15: mesma ordem RH→CSRF→Sessão→Guard das demais rotas mutantes.
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const corpo = await request.json().catch(() => null);
-  const entrada = matricularAlunoSchema.safeParse(corpo);
-
-  if (!entrada.success) {
-    return NextResponse.json(
-      { erro: entrada.error.issues[0]?.message ?? "Dados inválidos" },
-      { status: 400 },
-    );
-  }
-
-  const { cpf, cdCurso } = entrada.data;
+  const sessao = await exigirMutacao(request);
+  const { cpf, cdCurso } = await corpoValidado(request, matricularAlunoSchema);
 
   // AVAL-02: CPF precisa corresponder a um usuário do tipo AL já cadastrado.
   const aluno = await prisma.usuario.findUnique({ where: { documento: cpf } });
 
   if (!aluno) {
-    return NextResponse.json({ erro: "Aluno não encontrado" }, { status: 404 });
+    throw erroHttp(404, "Aluno não encontrado");
   }
 
   if (aluno.tipo !== "AL") {
-    return NextResponse.json(
-      { erro: "CPF informado não é de um Aluno" },
-      { status: 400 },
-    );
+    throw erroHttp(400, "CPF informado não é de um Aluno");
   }
 
   const curso = await prisma.preCurso.findUnique({ where: { cdCurso } });
 
   if (!curso) {
-    return NextResponse.json({ erro: "Curso não encontrado" }, { status: 404 });
+    throw erroHttp(404, "Curso não encontrado");
   }
 
   // AVAL-05/06: só o GO vinculado ao Ofertante do curso matricula.
   if (!podeMatricularAluno(sessao.usuario, curso.cdOfertante)) {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
   // AVAL-03: checagem explícita antes do create para devolver um 409 limpo
@@ -65,10 +49,7 @@ async function matricularAluno(request: Request) {
   });
 
   if (avaliacaoExistente) {
-    return NextResponse.json(
-      { erro: "Este aluno já tem avaliação para este curso" },
-      { status: 409 },
-    );
+    throw erroHttp(409, "Este aluno já tem avaliação para este curso");
   }
 
   // AVAL-04/RN-12: um Aluno nunca tem duas avaliações EM_ANDAMENTO simultâneas.
@@ -77,15 +58,10 @@ async function matricularAluno(request: Request) {
   });
 
   if (avaliacaoEmAndamento) {
-    return NextResponse.json(
-      { erro: "Este aluno já tem uma avaliação em andamento noutro curso" },
-      { status: 409 },
-    );
+    throw erroHttp(409, "Este aluno já tem uma avaliação em andamento noutro curso");
   }
 
-  const avaliacao = await prisma.avaliacaoAluno.create({
-    data: { cpf, cdCurso },
-  });
+  const avaliacao = await prisma.avaliacaoAluno.create({ data: { cpf, cdCurso } });
 
   // Avaliação nasce sem nenhuma linha de resposta - `null`, como a coluna
   // JSON devolvia.
@@ -93,41 +69,27 @@ async function matricularAluno(request: Request) {
 }
 
 async function listarAvaliacoes(request: Request) {
-  const sessao = await obterSessao();
+  const sessao = await exigirSessao();
+  const filtro = new URL(request.url).searchParams.get("cdOfertante");
 
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const usuario = sessao.usuario;
-  const cdOfertanteFiltro = new URL(request.url).searchParams.get("cdOfertante");
-
-  // AVAL-22: mesmo padrão de escopo já usado em pos-cursos/route.ts - GO/VO
-  // nunca confiam num filtro vindo do cliente (`resolverEscopoOfertante`,
-  // T6/UGO-14); AL só vê a própria.
-  let where: { curso?: { cdOfertante?: string }; cpf?: string } = {};
-
-  switch (usuario.tipo) {
-    case "AM":
-    case "GT":
-    case "VT":
-      where = cdOfertanteFiltro ? { curso: { cdOfertante: cdOfertanteFiltro } } : {};
-      break;
-    case "GO":
-    case "VO":
-      where = { curso: { cdOfertante: resolverEscopoOfertante(usuario) ?? "" } };
-      break;
-    case "AL":
-      where = { cpf: usuario.documento };
-      break;
-  }
+  // AVAL-22: escopo resolvido por `escopoDeLeitura` - GO/VO nunca confiam no
+  // filtro do cliente; AL, diferente das outras listagens, TEM escopo aqui
+  // (a própria avaliação, por CPF) em vez de 403.
+  const escopo = escopoDeLeitura(sessao.usuario, filtro);
 
   const avaliacoes = await prisma.avaliacaoAluno.findMany({
-    where,
+    // Os dois ramos têm formas DIFERENTES de `where` (por relação vs. por
+    // CPF), por isso o tipo é explícito: é a única listagem em que o ramo sem
+    // escopo de Ofertante filtra por identidade em vez de devolver 403.
+    where: whereDeEscopo<Prisma.AvaliacaoAlunoWhereInput>(
+      escopo,
+      (cdOfertante) => ({ curso: { cdOfertante } }),
+      () => ({ cpf: escopo.tipo === "proprioAluno" ? escopo.cpf : "" }),
+    ),
     orderBy: [{ cdCurso: "asc" }, { cpf: "asc" }],
     include: {
       curso: { select: { cdOfertante: true } },
-      linhasResposta: { orderBy: [{ chave: "asc" }, { ordem: "asc" }] },
+      linhasResposta: LINHAS_RESPOSTA_ORDENADAS,
     },
   });
 

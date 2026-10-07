@@ -5,6 +5,7 @@
 // direto no próprio GO.
 import { expect, test } from "@playwright/test";
 import { deleteUsuarios, getUsuario, upsertUsuario } from "./helpers/db";
+import { geradorDeCnpj } from "./helpers/cnpj";
 import {
   cabecalhoCookie,
   cabecalhosAutenticados,
@@ -15,24 +16,7 @@ import {
 
 const SENHA = "SenhaValida123";
 
-function calcularDvCnpj(digitos: number[]): number {
-  let soma = 0;
-  let peso = 2;
-  for (let i = digitos.length - 1; i >= 0; i--) {
-    soma += digitos[i] * peso;
-    peso = peso === 9 ? 2 : peso + 1;
-  }
-  const resto = soma % 11;
-  return resto < 2 ? 0 : 11 - resto;
-}
-
-function gerarCnpjValido(indice: number): string {
-  const base12 = `24${String(indice).padStart(6, "0")}0001`;
-  const digitos = base12.split("").map(Number);
-  const d1 = calcularDvCnpj(digitos);
-  const d2 = calcularDvCnpj([...digitos, d1]);
-  return `${base12}${d1}${d2}`;
-}
+const gerarCnpjValido = geradorDeCnpj("24");
 
 // CPF válido por módulo 11, mesmo algoritmo usado em e2e/login.spec.ts, com
 // prefixo próprio ("41") para não colidir com o CPF de nenhum outro arquivo

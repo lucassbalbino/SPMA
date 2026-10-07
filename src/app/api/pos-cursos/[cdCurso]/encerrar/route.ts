@@ -2,42 +2,20 @@
 // pós-curso (REQ-PO-08, REQ-PO-09, REQ-PO-10).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { obterSessao } from "@/lib/auth/session";
 import { podeGerenciarPosCurso } from "@/lib/auth/guards";
 import { validarCompletudePosCurso } from "@/lib/pos-curso/completude";
 import { normalizarCondicionaisPosCurso } from "@/lib/pos-curso/condicionais";
-import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import {
-  apagarRespostas,
-  lerRespostas,
-  respostasOuNulo,
-  ISOLAMENTO_RESPOSTAS,
-} from "@/lib/respostas/repositorio";
+import { exigirMutacao } from "@/lib/api/guardas";
+import { idPositivo } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
+import { encerrarFormulario } from "@/lib/respostas/encerramento";
 
 type Contexto = { params: Promise<{ cdCurso: string }> };
 
-function parseId(id: string): number | null {
-  const cdCurso = Number(id);
-  return Number.isInteger(cdCurso) && cdCurso > 0 ? cdCurso : null;
-}
-
 async function encerrarPosCurso(request: Request, { params }: Contexto) {
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const cdCurso = parseId((await params).cdCurso);
-
-  if (cdCurso === null) {
-    return NextResponse.json({ erro: "Id inválido" }, { status: 400 });
-  }
+  const sessao = await exigirMutacao(request);
+  const cdCurso = idPositivo((await params).cdCurso);
 
   const posCurso = await prisma.posCurso.findUnique({
     where: { cdCurso },
@@ -45,54 +23,32 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
   });
 
   if (!posCurso) {
-    return NextResponse.json({ erro: "Pós-curso não encontrado" }, { status: 404 });
+    throw erroHttp(404, "Pós-curso não encontrado");
   }
 
   if (!podeGerenciarPosCurso(sessao.usuario, posCurso.preCurso.cdOfertante)) {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
   // AD-018: transição irreversível - encerrar de novo é rejeitado.
   if (posCurso.status === "ENCERRADO") {
-    return NextResponse.json({ erro: "Pós-curso já está encerrado" }, { status: 409 });
+    throw erroHttp(409, "Pós-curso já está encerrado");
   }
-
-  const alvo = { formulario: "posCurso" as const, cdCurso };
-  const respostasAtuais = await lerRespostas(prisma, alvo);
 
   // Q12 preenchida com Q11="Não" (o Gestor respondeu "Sim", detalhou e
-  // depois mudou de ideia) é descartada AQUI, no momento em que o
-  // formulário vira registro final e imutável - durante o preenchimento o
-  // valor fica preservado. Sem isso, o registro encerrado guardaria uma
-  // contradição interna, exatamente o que o AD-037 barra nas perguntas de
-  // seleção múltipla.
-  const respostas = normalizarCondicionaisPosCurso(respostasAtuais);
-  const { completo, pendentes } = validarCompletudePosCurso(respostas);
-
-  if (!completo) {
-    return NextResponse.json(
-      { erro: "Existem campos obrigatórios pendentes", pendentes },
-      { status: 400 },
-    );
-  }
-
-  // RESP-08: as órfãs somem como linhas, na mesma transação que grava
-  // ENCERRADO.
-  const orfas = Object.keys(respostasAtuais).filter((chave) => !(chave in respostas));
-
-  const atualizado = await prisma.$transaction(async (tx) => {
-    if (orfas.length > 0) {
-      await apagarRespostas(tx, alvo, orfas);
-    }
-    return tx.posCurso.update({
-      where: { cdCurso },
-      data: { status: "ENCERRADO", dataEncerramento: new Date() },
-    });
-  }, ISOLAMENTO_RESPOSTAS);
-
-  return NextResponse.json({
-    posCurso: { ...atualizado, respostas: respostasOuNulo(respostas) },
+  // depois mudou de ideia) é descartada pelo `normalizar` abaixo, no momento
+  // em que o formulário vira registro final e imutável - durante o
+  // preenchimento o valor fica preservado. Sem isso, o registro encerrado
+  // guardaria uma contradição interna, exatamente o que o AD-037 barra nas
+  // perguntas de seleção múltipla.
+  const { registro, respostas } = await encerrarFormulario({
+    alvo: { formulario: "posCurso", cdCurso },
+    normalizar: normalizarCondicionaisPosCurso,
+    validarCompletude: validarCompletudePosCurso,
+    encerrarRegistro: (tx, data) => tx.posCurso.update({ where: { cdCurso }, data }),
   });
+
+  return NextResponse.json({ posCurso: { ...registro, respostas } });
 }
 
 export const POST = comTratamentoDeErro(encerrarPosCurso);

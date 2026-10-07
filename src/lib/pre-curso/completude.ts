@@ -16,22 +16,18 @@
 // preenchimento incremental), as 3 regras condicionais nunca chegavam a
 // rodar e ficavam fora de `pendentes`.
 import { respostasPreCursoSchema } from "../validation/schemas/pre-curso.schema";
+import {
+  pendentesDoResultado,
+  vereditoCompletude,
+  type ResultadoCompletude,
+} from "../validation/completude";
 import { pendenciasCondicionaisPreCurso } from "./condicionais";
 
-export interface ResultadoCompletude {
-  completo: boolean;
-  pendentes: string[];
-}
+export type { ResultadoCompletude };
 
 export function validarCompletudePreCurso(respostas: unknown): ResultadoCompletude {
-  const resultadoBase = respostasPreCursoSchema.safeParse(respostas);
-  const pendentesBase = resultadoBase.success
-    ? []
-    : resultadoBase.error.issues.map((issue) => issue.path.join("."));
-
-  const pendentes = [
-    ...new Set([...pendentesBase, ...pendenciasCondicionaisPreCurso(respostas)]),
-  ];
-
-  return { completo: pendentes.length === 0, pendentes };
+  return vereditoCompletude(
+    pendentesDoResultado(respostasPreCursoSchema.safeParse(respostas)),
+    pendenciasCondicionaisPreCurso(respostas),
+  );
 }

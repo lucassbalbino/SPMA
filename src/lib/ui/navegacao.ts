@@ -65,6 +65,38 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
   [TipoUsuario.AL]: [{ rotulo: "Minha avaliação", itens: [MINHA_AVALIACAO, MEUS_DADOS] }],
 };
 
+/**
+ * Rotas de onboarding: existem como destino de guard, não como item de menu,
+ * então não aparecem em `MODULOS_POR_PERFIL` - mas exigem sessão igual.
+ */
+const ROTAS_ONBOARDING = ["/primeiro-acesso", "/cadastro-ofertante", "/dados-pessoais"];
+
+/**
+ * Toda rota que exige sessão, derivada da própria tabela de navegação.
+ *
+ * Consumida por `src/proxy.ts` para o redirect barato por presença de cookie.
+ * Antes era uma lista literal de 4 rotas mantida à mão lá, que ficou para trás
+ * conforme as features novas chegaram: `/pre-cursos`, `/pos-cursos`,
+ * `/avaliacoes`, `/meus-dados` e `/dados-pessoais` nunca foram acrescentadas.
+ * O efeito era só de UX (o redirect do proxy poupa renderizar o layout; os
+ * guards de `(protegido)`/`(onboarding)` seguem sendo a autoridade e já
+ * barravam o acesso de qualquer forma), mas é exatamente o tipo de lista
+ * paralela que AD-039 manda não existir.
+ *
+ * Este módulo não importa Prisma - só `generated/prisma/enums`, que a própria
+ * Prisma marca como seguro de importar direto -, então o proxy continua sem
+ * nenhuma dependência de banco, nem transitiva.
+ */
+export const ROTAS_COM_SESSAO: readonly string[] = [
+  ...new Set([
+    PAINEL.href,
+    ...Object.values(MODULOS_POR_PERFIL).flatMap((modulos) =>
+      modulos.flatMap((modulo) => modulo.itens.map((item) => item.href)),
+    ),
+    ...ROTAS_ONBOARDING,
+  ]),
+];
+
 /** Itens do cabeçalho: "Painel" + os itens de todos os módulos do perfil. */
 export function navegacaoDoPerfil(tipo: TipoUsuario): ItemNavegacao[] {
   return [PAINEL, ...MODULOS_POR_PERFIL[tipo].flatMap((modulo) => modulo.itens)];

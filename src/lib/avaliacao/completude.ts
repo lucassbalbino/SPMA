@@ -14,9 +14,16 @@
 // encerramento.
 import { respostasAvaliacaoSchema } from "../validation/schemas/avaliacao.schema";
 import {
+  pendentesDoResultado,
+  vereditoCompletude,
+  type ResultadoCompletude,
+} from "../validation/completude";
+import {
   pendenciasCondicionaisParte1,
   pendenciasCondicionaisParte2,
 } from "./condicionais";
+
+export type { ResultadoCompletude };
 
 // As 10 chaves de Parte 1 sempre-obrigatórias (as 12 chaves da Parte 1 menos
 // os 2 condicionais, checados à parte pelas regras de `condicionais.ts`).
@@ -75,33 +82,18 @@ const parte2SchemaQuandoConcluiu = respostasAvaliacaoSchema.pick({
   avalGeralRecomendaCurso: true,
 }).required();
 
-export interface ResultadoCompletude {
-  completo: boolean;
-  pendentes: string[];
-}
-
 function dados(respostas: unknown): Record<string, unknown> {
   return typeof respostas === "object" && respostas !== null
     ? (respostas as Record<string, unknown>)
     : {};
 }
 
-function issuesParaPendentes(resultado: { success: boolean; error?: { issues: { path: PropertyKey[] }[] } }): string[] {
-  if (resultado.success) {
-    return [];
-  }
-
-  return resultado.error!.issues.map((issue) => issue.path.join("."));
-}
-
 // AD-023/RN-13: gate Parte 1 → Parte 2. Recomputado a cada PATCH (AVAL-08).
 export function validarCompletudeParte1(respostas: unknown): ResultadoCompletude {
-  const pendentesBase = issuesParaPendentes(parte1SchemaBase.safeParse(respostas));
-  const pendentes = [
-    ...new Set([...pendentesBase, ...pendenciasCondicionaisParte1(respostas)]),
-  ];
-
-  return { completo: pendentes.length === 0, pendentes };
+  return vereditoCompletude(
+    pendentesDoResultado(parte1SchemaBase.safeParse(respostas)),
+    pendenciasCondicionaisParte1(respostas),
+  );
 }
 
 // AVAL-12/13: gate interno "Concluiu o curso?" - só avaliado no encerramento.
@@ -112,31 +104,27 @@ export function validarCompletudeParte2(respostas: unknown): ResultadoCompletude
   const brutos = dados(respostas);
   const concluiuCurso = brutos.avalParticipConcluiuCurso;
 
-  const pendentesSempre = issuesParaPendentes(parte2SchemaSempre.safeParse(respostas));
+  const pendentesSempre = pendentesDoResultado(parte2SchemaSempre.safeParse(respostas));
 
+  // Q22 em branco: o gate não pode nem ser avaliado, então ela mesma é a
+  // primeira pendência.
   if (concluiuCurso !== "Sim" && concluiuCurso !== "Não") {
     return {
       completo: false,
-      pendentes: [...new Set(["avalParticipConcluiuCurso", ...pendentesSempre])],
+      pendentes: vereditoCompletude(["avalParticipConcluiuCurso"], pendentesSempre)
+        .pendentes,
     };
   }
 
   if (concluiuCurso === "Não") {
-    const pendentes = [
-      ...new Set([...pendentesSempre, ...pendenciasCondicionaisParte2(respostas)]),
-    ];
-    return { completo: pendentes.length === 0, pendentes };
+    return vereditoCompletude(pendentesSempre, pendenciasCondicionaisParte2(respostas));
   }
 
-  const pendentes = [
-    ...new Set([
-      ...pendentesSempre,
-      ...issuesParaPendentes(parte2SchemaQuandoConcluiu.safeParse(respostas)),
-      ...pendenciasCondicionaisParte2(respostas),
-    ]),
-  ];
-
-  return { completo: pendentes.length === 0, pendentes };
+  return vereditoCompletude(
+    pendentesSempre,
+    pendentesDoResultado(parte2SchemaQuandoConcluiu.safeParse(respostas)),
+    pendenciasCondicionaisParte2(respostas),
+  );
 }
 
 // Usada só no encerramento (AVAL-15/16) - une as pendências de Parte 1 e
@@ -144,9 +132,8 @@ export function validarCompletudeParte2(respostas: unknown): ResultadoCompletude
 // alcançável (AVAL-10), mas o encerramento reavalia as duas de forma
 // independente, sem assumir esse histórico.
 export function validarCompletudeAvaliacao(respostas: unknown): ResultadoCompletude {
-  const parte1 = validarCompletudeParte1(respostas);
-  const parte2 = validarCompletudeParte2(respostas);
-  const pendentes = [...new Set([...parte1.pendentes, ...parte2.pendentes])];
-
-  return { completo: pendentes.length === 0, pendentes };
+  return vereditoCompletude(
+    validarCompletudeParte1(respostas).pendentes,
+    validarCompletudeParte2(respostas).pendentes,
+  );
 }

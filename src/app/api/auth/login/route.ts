@@ -23,6 +23,7 @@ import {
 } from "@/lib/auth/session";
 import { setCookieCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { corpoValidado } from "@/lib/api/requisicao";
 
 /**
  * Resposta única para CPF inexistente, senha errada, conta bloqueada e IP
@@ -43,19 +44,9 @@ async function login(request: Request) {
     return erroCredenciais();
   }
 
-  const corpo = await request.json().catch(() => null);
-  const entrada = loginSchema.safeParse(corpo);
-
   // Validação de formato acontece antes de qualquer consulta ao banco
   // (CA-AU-03): CPF inválido nem chega a virar busca de usuário.
-  if (!entrada.success) {
-    return NextResponse.json(
-      { erro: entrada.error.issues[0]?.message ?? "Dados inválidos" },
-      { status: 400 },
-    );
-  }
-
-  const { documento, senha } = entrada.data;
+  const { documento, senha } = await corpoValidado(request, loginSchema);
   const usuario = await prisma.usuario.findUnique({ where: { documento } });
 
   // REQ-SEC-04: `verifyPassword` roda sempre - contra o hash real quando

@@ -2,48 +2,33 @@
 // GET /api/pre-cursos - listagem escopada por Ofertante (REQ-PC-14).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { obterSessao } from "@/lib/auth/session";
-import { podeGerenciarPreCurso, resolverEscopoOfertante } from "@/lib/auth/guards";
+import { podeGerenciarPreCurso } from "@/lib/auth/guards";
 import { criarPreCursoSchema } from "@/lib/validation/schemas/pre-curso.schema";
 import { validarAlocacao } from "@/lib/verba/saldo";
-import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import { montarRespostas, respostasOuNulo } from "@/lib/respostas/repositorio";
+import { exigirMutacao, exigirSessao } from "@/lib/api/guardas";
+import { corpoValidado } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
+import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
+import {
+  LINHAS_RESPOSTA_ORDENADAS,
+  montarRespostas,
+  respostasOuNulo,
+} from "@/lib/respostas/repositorio";
 
 async function criarPreCurso(request: Request) {
-  // REQ-SEC-15: mutação autenticada por cookie exige token anti-CSRF válido,
-  // checado antes até da sessão (mesma ordem RH→CSRF→Guard de verbas/route.ts).
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const corpo = await request.json().catch(() => null);
-  const entrada = criarPreCursoSchema.safeParse(corpo);
-
-  if (!entrada.success) {
-    return NextResponse.json(
-      { erro: entrada.error.issues[0]?.message ?? "Dados inválidos" },
-      { status: 400 },
-    );
-  }
-
-  const dados = entrada.data;
+  const sessao = await exigirMutacao(request);
+  const dados = await corpoValidado(request, criarPreCursoSchema);
 
   const verba = await prisma.verba.findUnique({ where: { cdVerba: dados.cdVerba } });
 
   if (!verba) {
-    return NextResponse.json({ erro: "Verba informada não existe" }, { status: 400 });
+    throw erroHttp(400, "Verba informada não existe");
   }
 
   // REQ-PC-01/03: só o GO vinculado ao Ofertante da Verba cria o pré-curso.
   if (!podeGerenciarPreCurso(sessao.usuario, verba.cdOfertante)) {
-    return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+    throw erroHttp(403, "Acesso negado");
   }
 
   // REQ-PC-02: teto de valor (RN-10/AD-016), reuso de cadastro-ofertante-verba.
@@ -53,10 +38,9 @@ async function criarPreCurso(request: Request) {
   );
 
   if (!valido) {
-    return NextResponse.json(
-      { erro: "Valor alocado excede o saldo disponível da verba", saldoDisponivel },
-      { status: 400 },
-    );
+    throw erroHttp(400, "Valor alocado excede o saldo disponível da verba", {
+      saldoDisponivel,
+    });
   }
 
   const preCurso = await prisma.preCurso.create({
@@ -74,46 +58,33 @@ async function criarPreCurso(request: Request) {
 }
 
 async function listarPreCursos(request: Request) {
-  const sessao = await obterSessao();
+  const sessao = await exigirSessao();
+  const filtro = new URL(request.url).searchParams.get("cdOfertante");
 
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
+  // REQ-PC-14: escopo resolvido por `escopoDeLeitura` - GO/VO nunca confiam
+  // no filtro do cliente (ver `lib/api/escopo.ts`).
+  const escopo = escopoDeLeitura(sessao.usuario, filtro);
 
-  const usuario = sessao.usuario;
-  const cdOfertanteFiltro = new URL(request.url).searchParams.get("cdOfertante");
-
-  // REQ-PC-14: mesmo padrão de escopo de listarVerbas - GO/VO nunca confiam
-  // no filtro do cliente, o próprio escopo do usuário sempre prevalece
-  // (`resolverEscopoOfertante`, T6/UGO-14).
-  let where: { cdOfertante?: string } = {};
-
-  switch (usuario.tipo) {
-    case "AM":
-    case "GT":
-    case "VT":
-      where = cdOfertanteFiltro ? { cdOfertante: cdOfertanteFiltro } : {};
-      break;
-    case "GO":
-    case "VO":
-      where = { cdOfertante: resolverEscopoOfertante(usuario) ?? "" };
-      break;
-    case "AL":
-      return NextResponse.json({ erro: "Acesso negado" }, { status: 403 });
+  if (escopo.tipo === "proprioAluno") {
+    throw erroHttp(403, "Acesso negado");
   }
 
   const registros = await prisma.preCurso.findMany({
-    where,
+    where: whereDeEscopo(
+      escopo,
+      (cdOfertante) => ({ cdOfertante }),
+      () => ({ cdOfertante: "" }),
+    ),
     orderBy: { cdCurso: "asc" },
-    include: { linhasResposta: { orderBy: [{ chave: "asc" }, { ordem: "asc" }] } },
+    include: { linhasResposta: LINHAS_RESPOSTA_ORDENADAS },
   });
 
-  const preCursos = registros.map(({ linhasResposta, ...preCurso }) => ({
-    ...preCurso,
-    respostas: respostasOuNulo(montarRespostas("preCurso", linhasResposta)),
-  }));
-
-  return NextResponse.json({ preCursos });
+  return NextResponse.json({
+    preCursos: registros.map(({ linhasResposta, ...preCurso }) => ({
+      ...preCurso,
+      respostas: respostasOuNulo(montarRespostas("preCurso", linhasResposta)),
+    })),
+  });
 }
 
 export const POST = comTratamentoDeErro(criarPreCurso);

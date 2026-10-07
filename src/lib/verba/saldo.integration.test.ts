@@ -71,15 +71,23 @@ describe("saldo da verba (integration)", () => {
   });
 
   it("validarNovoValorTotal: permite igualar o valor já alocado (AD-016)", async () => {
-    const valido = await validarNovoValorTotal(cdVerbaComCurso, 4000);
+    const { valido } = await validarNovoValorTotal(cdVerbaComCurso, 4000);
 
     expect(valido).toBe(true);
   });
 
   it("validarNovoValorTotal: rejeita valor menor que o já alocado", async () => {
-    const valido = await validarNovoValorTotal(cdVerbaComCurso, 3999.99);
+    const { valido } = await validarNovoValorTotal(cdVerbaComCurso, 3999.99);
 
     expect(valido).toBe(false);
+  });
+
+  // `totalAlocado` passou a vir junto do veredito para a rota de edição poder
+  // informá-lo ao recusar sem uma segunda consulta (ver `saldo.ts`).
+  it("validarNovoValorTotal: devolve o total já alocado junto do veredito", async () => {
+    const { totalAlocado } = await validarNovoValorTotal(cdVerbaComCurso, 3999.99);
+
+    expect(totalAlocado.toNumber()).toBe(4000);
   });
 
   it("CA-OV-12: validarAlocacao aceita uma alocação que iguala o saldo disponível (AD-016)", async () => {

@@ -17,9 +17,6 @@
 // nenhuma feature construiu isso ainda. A checagem de existência do
 // Ofertante abaixo cobre só o caminho de criação, que é o único que existe.
 // Se uma rota de edição for criada no futuro, ela precisa da mesma checagem.
-//
-// Não usa `requireSession()` (que redireciona): rota de API responde 401 -
-// ver comentário em lib/auth/guards.ts.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { podeCriar, resolverOfertante } from "@/lib/auth/cascata";
@@ -29,42 +26,19 @@ import {
   podeMatricularAluno,
   resolverEscopoOfertante,
 } from "@/lib/auth/guards";
-import { obterSessao } from "@/lib/auth/session";
 import { usuarioSchema } from "@/lib/validation/schemas/usuario.schema";
-import { verificarCSRF } from "@/lib/security/csrf";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
+import { exigirMutacao } from "@/lib/api/guardas";
+import { corpoValidado } from "@/lib/api/requisicao";
+import { erroHttp } from "@/lib/api/erro-http";
 
 async function criarUsuario(request: Request) {
-  // REQ-SEC-15: mutação autenticada por cookie exige token anti-CSRF válido,
-  // checado antes da sessão (design.md - RH -> CSRF -> Guard).
-  if (!(await verificarCSRF(request))) {
-    return NextResponse.json({ erro: "Requisição inválida" }, { status: 403 });
-  }
-
-  const sessao = await obterSessao();
-
-  if (!sessao) {
-    return NextResponse.json({ erro: "Não autenticado" }, { status: 401 });
-  }
-
-  const corpo = await request.json().catch(() => null);
-  const entrada = usuarioSchema.safeParse(corpo);
-
-  if (!entrada.success) {
-    return NextResponse.json(
-      { erro: entrada.error.issues[0]?.message ?? "Dados inválidos" },
-      { status: 400 },
-    );
-  }
-
+  const sessao = await exigirMutacao(request);
+  const dados = await corpoValidado(request, usuarioSchema);
   const criador = sessao.usuario;
-  const dados = entrada.data;
 
   if (!podeCriar(criador.tipo, dados.tipo)) {
-    return NextResponse.json(
-      { erro: "Você não tem permissão para criar este tipo de usuário" },
-      { status: 403 },
-    );
+    throw erroHttp(403, "Você não tem permissão para criar este tipo de usuário");
   }
 
   // UGO-16 (P3 AC3): um GO só pode vincular VO ao PRÓPRIO CNPJ. Antes desta
@@ -80,10 +54,7 @@ async function criarUsuario(request: Request) {
     dados.cdOfertante !== undefined &&
     dados.cdOfertante !== resolverEscopoOfertante(criador)
   ) {
-    return NextResponse.json(
-      { erro: "Você não tem permissão para vincular a outro Gestor Ofertante" },
-      { status: 403 },
-    );
+    throw erroHttp(403, "Você não tem permissão para vincular a outro Gestor Ofertante");
   }
 
   // UGO-10 (P2 AC4): documento (CPF ou CNPJ) duplicado precisa de um erro
@@ -99,14 +70,11 @@ async function criarUsuario(request: Request) {
   });
 
   if (documentoExistente) {
-    return NextResponse.json(
-      {
-        erro:
-          dados.tipo === "GO"
-            ? "CNPJ já cadastrado para outro Gestor Ofertante"
-            : "Documento já cadastrado",
-      },
-      { status: 409 },
+    throw erroHttp(
+      409,
+      dados.tipo === "GO"
+        ? "CNPJ já cadastrado para outro Gestor Ofertante"
+        : "Documento já cadastrado",
     );
   }
 
@@ -141,17 +109,14 @@ async function criarUsuario(request: Request) {
     });
 
     if (!ofertante) {
-      return NextResponse.json({ erro: "Ofertante informado não existe" }, { status: 400 });
+      throw erroHttp(400, "Ofertante informado não existe");
     }
   }
 
   // REQ-OV-08: quem não gere verba não cria verba, nem de carona na criação
   // de um usuário.
   if (dados.verba && !podeGerenciarVerba(criador.tipo)) {
-    return NextResponse.json(
-      { erro: "Você não tem permissão para criar verba" },
-      { status: 403 },
-    );
+    throw erroHttp(403, "Você não tem permissão para criar verba");
   }
 
   // Um GO criado por AM/GT nasce com a verba dele no mesmo passo (REQ-OV-08).
@@ -161,25 +126,19 @@ async function criarUsuario(request: Request) {
   const comVerba = exigeOfertanteEVerba(criador.tipo, dados.tipo);
 
   if (comVerba && !dados.verba) {
-    return NextResponse.json(
-      { erro: "Gestor Ofertante exige um Ofertante e o valor da verba" },
-      { status: 400 },
-    );
+    throw erroHttp(400, "Gestor Ofertante exige um Ofertante e o valor da verba");
   }
 
   // AVAL-01: todo Aluno nasce matriculado - o curso é obrigatório e é
   // conferido aqui, não só no formulário.
   if (dados.tipo === "AL" && !dados.cdCurso) {
-    return NextResponse.json({ erro: "Curso é obrigatório para Aluno" }, { status: 400 });
+    throw erroHttp(400, "Curso é obrigatório para Aluno");
   }
 
   // Curso informado na criação de quem não é Aluno seria silenciosamente
   // descartado - é erro de quem chama, não um padrão a assumir.
   if (dados.cdCurso && dados.tipo !== "AL") {
-    return NextResponse.json(
-      { erro: "Curso só se aplica à criação de Aluno" },
-      { status: 400 },
-    );
+    throw erroHttp(400, "Curso só se aplica à criação de Aluno");
   }
 
   const curso = dados.cdCurso
@@ -187,7 +146,7 @@ async function criarUsuario(request: Request) {
     : null;
 
   if (dados.cdCurso && !curso) {
-    return NextResponse.json({ erro: "Curso não encontrado" }, { status: 404 });
+    throw erroHttp(404, "Curso não encontrado");
   }
 
   // AVAL-05/06: o escopo da matrícula é o Ofertante do curso, não o do Aluno
@@ -195,10 +154,7 @@ async function criarUsuario(request: Request) {
   // POST /api/avaliacoes: a tela só oferece cursos do escopo, o servidor é
   // quem decide.
   if (curso && !podeMatricularAluno(criador, curso.cdOfertante)) {
-    return NextResponse.json(
-      { erro: "Você não pode matricular alunos neste curso" },
-      { status: 403 },
-    );
+    throw erroHttp(403, "Você não pode matricular alunos neste curso");
   }
 
   // Usuário, verba e matrícula são um passo só: um erro no meio não pode deixar uma
@@ -223,9 +179,11 @@ async function criarUsuario(request: Request) {
         cdOfertante,
         criadoPor: criador.documento,
         // UGO-01/08: dados organizacionais só existem para o tipo GO -
-        // `usuarioSchema` já rejeita esses campos para qualquer outro tipo
-        // (CAMPOS_SO_GO), então gravar `?? null` aqui nunca perde dado real
-        // de um perfil que não os enviou.
+        // `usuarioSchema` já rejeita `responsavel`/`telefone`/`municipio` para
+        // qualquer outro tipo (CAMPOS_SO_GO), então gravar `?? null` aqui
+        // nunca perde dado real de um perfil que não os enviou. `uf` é a
+        // exceção deliberada daquela lista: é aceita fora de GO e, se vier,
+        // é gravada.
         responsavel: dados.responsavel ?? null,
         telefone: dados.telefone ?? null,
         uf: dados.uf ?? null,

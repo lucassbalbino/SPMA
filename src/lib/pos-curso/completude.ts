@@ -14,22 +14,18 @@
 // registrada em `.specs/LESSONS.md` a partir do que aconteceu em
 // `formulario-pre-curso`.
 import { respostasPosCursoSchema } from "../validation/schemas/pos-curso.schema";
+import {
+  pendentesDoResultado,
+  vereditoCompletude,
+  type ResultadoCompletude,
+} from "../validation/completude";
 import { pendenciasCondicionaisPosCurso } from "./condicionais";
 
-export interface ResultadoCompletude {
-  completo: boolean;
-  pendentes: string[];
-}
+export type { ResultadoCompletude };
 
 export function validarCompletudePosCurso(respostas: unknown): ResultadoCompletude {
-  const resultadoBase = respostasPosCursoSchema.safeParse(respostas);
-  const pendentesBase = resultadoBase.success
-    ? []
-    : resultadoBase.error.issues.map((issue) => issue.path.join("."));
-
-  const pendentes = [
-    ...new Set([...pendentesBase, ...pendenciasCondicionaisPosCurso(respostas)]),
-  ];
-
-  return { completo: pendentes.length === 0, pendentes };
+  return vereditoCompletude(
+    pendentesDoResultado(respostasPosCursoSchema.safeParse(respostas)),
+    pendenciasCondicionaisPosCurso(respostas),
+  );
 }
