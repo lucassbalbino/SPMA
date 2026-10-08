@@ -3,148 +3,165 @@
 Objetivo: publicar o SPMA numa URL HTTPS que o cliente abre no navegador dele,
 sem instalar nada. **Não é produção** — é ambiente de homologação/UAT.
 
-Host recomendado: **Railway** — sobe a aplicação Next e um MySQL gerenciado no
-mesmo projeto, com rede privada entre eles. É o único provedor da lista que
-resolve app + MySQL sem um segundo serviço.
+Arranjo atual: a aplicação roda **na sua máquina** (build de produção, banco
+`spma_uat` no MySQL do `docker-compose`) e um **túnel Cloudflare** publica essa
+porta local numa URL `https://*.trycloudflare.com`. Custo zero, sem conta, sem
+cartão e sem provedor de nuvem no meio.
+
+Por que não Railway: o passo-a-passo anterior dependia do crédito de trial, que
+não existe mais — ver "Alternativas" no fim.
 
 ---
 
 ## Pré-requisitos
 
-- Repositório no GitHub em dia (`git push origin main`).
-- Conta em <https://railway.com> (login com GitHub).
-- Plano Hobby (~US$ 5/mês, com crédito de trial). **Derrube o projeto quando a
-  validação terminar** — a cobrança é por uso contínuo.
+- Docker Desktop rodando (`docker compose ps` mostra `spma-mysql` como
+  `healthy`).
+- `cloudflared` instalado: `winget install --id Cloudflare.cloudflared`.
+  Abra um terminal **novo** depois de instalar — o PATH só vale para shells
+  criados após a instalação.
+- Nada de conta no Cloudflare: o `--url` usa um quick tunnel anônimo.
 
----
+A porta é a **3100**, não a 3000, para a homologação conviver com o
+`npm run dev`. Quem define isso é o `PORT` do `.env.uat`.
 
-## 1. Criar o projeto e o banco
-
-1. Railway → **New Project** → **Deploy from GitHub repo** → `lucassbalbino/SPMA`.
-2. Dentro do projeto: **+ Create** → **Database** → **Add MySQL**.
-
-O serviço MySQL passa a expor `MYSQL_URL` (rede interna do projeto) e as partes
-soltas (`MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`).
-
-3. Ainda no serviço **MySQL** (não no da aplicação): **Settings** →
-   **Networking** → **TCP Proxy** → informe a porta interna **3306**. Só então
-   aparece a variável `MYSQL_PUBLIC_URL`, a única alcançável de fora do projeto
-   — sem ela o seed do passo 5 não roda da sua máquina.
-
-   No serviço da aplicação essa opção não existe: lá o Networking só oferece
-   domínio HTTP. Se preferir não expor o banco, veja "Semear sem TCP Proxy" no
-   passo 5.
-
-## 2. Variáveis de ambiente da aplicação
-
-No serviço da aplicação → aba **Variables**:
-
-| Variável | Valor |
-| --- | --- |
-| `DATABASE_URL` | `${{MySQL.MYSQL_URL}}?allowPublicKeyRetrieval=true` |
-| `NODE_ENV` | `production` |
-| `SEED_AM_CPF` | CPF do Administrador Master (11 dígitos, válido no módulo 11) |
-| `SEED_AM_NOME` | Nome do Administrador Master |
-
-`SESSION_SECRET` **não** é necessário: a sessão é persistida em `TB_Sessao`, não
-assinada por segredo (ver `src/lib/auth/session.ts`).
-
-O `allowPublicKeyRetrieval=true` é obrigatório: o MySQL 8 do Railway usa
-`caching_sha2_password` e a conexão do driver não é TLS na rede interna — sem
-esse parâmetro a conexão trava num timeout de pool.
-
-> Se o deploy acusar erro de conexão com o banco, troque `MYSQL_URL` por
-> `MYSQL_PUBLIC_URL` na `DATABASE_URL` (a rede privada do Railway é IPv6-only e
-> alguns runtimes não a resolvem).
-
-## 3. Comandos de build e start
-
-No serviço da aplicação → **Settings**:
-
-- **Build Command:** `npm run build`
-  (já inclui `prisma generate` — `src/generated/` não é versionado, então sem
-  isso o build em nuvem falha)
-- **Start Command:** `npm run start:prod`
-  (`prisma migrate deploy && next start` — aplica as migrations a cada deploy)
-
-## 4. Gerar a URL pública
-
-Serviço da aplicação → **Settings** → **Networking** → **Generate Domain**.
-Sai algo como `https://spma-production.up.railway.app`.
-
-**Tem de ser HTTPS.** O cookie de sessão é emitido com `secure` (REQ-SEC-07);
-por `http://` puro o login não persiste.
-
-## 5. Semear o Administrador Master (uma vez)
-
-O primeiro AM não é criado pela interface. Rode da sua máquina, apontando para a
-URL **pública** do banco (copie de MySQL → Variables → `MYSQL_PUBLIC_URL`):
+## 1. Subir o banco
 
 ```powershell
-$env:DATABASE_URL = "mysql://root:SENHA@ROTA.proxy.rlwy.net:PORTA/railway?allowPublicKeyRetrieval=true"
-npm run db:seed
+docker compose up -d
 ```
 
-A variável do shell tem precedência sobre o `.env` local (o `dotenv` não
-sobrescreve o que já está no ambiente), então isso não toca no seu banco de dev.
+O banco `spma_uat` não precisa ser criado à mão: o `prisma migrate deploy` do
+passo 3 o cria (o usuário `spma` tem `ALL PRIVILEGES`, ver
+`docker/mysql-init/01-grants.sql`).
 
-Encerrada a validação, desligue o Public Access do MySQL: com ele ligado o banco
-fica exposto na internet, protegido só pela senha.
+Ele é **separado de propósito** do `spma` (dev) e do `spma_test` (truncado a
+cada rodada e2e): o que o cliente digitar na validação não se mistura com
+nenhum dos dois, e rodar a suíte de testes no meio da homologação não apaga os
+dados dele.
+
+## 2. Build de produção
+
+```powershell
+npm run build
+```
+
+Inclui `prisma generate` (o `src/generated/` não é versionado). Refaça o build
+a cada mudança de código que o cliente precise ver — `next start` serve o
+build, não recompila.
+
+## 3. Subir a aplicação
+
+```powershell
+npm run uat:start
+```
+
+É `dotenv -e .env.uat -- prisma migrate deploy && next start`: aplica as
+migrations em `spma_uat` e serve em `http://localhost:3100`. Deixe rodando
+neste terminal.
+
+## 4. Semear o Administrador Master (uma vez)
+
+Em outro terminal:
+
+```powershell
+npm run uat:seed
+```
+
+CPF e nome vêm de `SEED_AM_CPF`/`SEED_AM_NOME` no `.env.uat`. O seed é
+idempotente — só cria o AM se nenhum existir.
+
+`SESSION_SECRET` não é necessário: a sessão é persistida em `TB_Sessao`, não
+assinada por segredo (ver `src/lib/auth/session.ts`).
 
 Opcional — cenário de demonstração navegável (1 ofertante, 1 verba, 1 curso com
 pré e pós-curso, 1 aluno matriculado e um usuário de cada perfil —
 AM/GT/VT/GO/VO/AL — com senha `SenhaDemo123`):
 
 ```powershell
-npm run dev:seed-demo
+npm run uat:seed-demo
 ```
 
-Use o seed de demo só se o cliente quiser ver telas já preenchidas. Para uma
-validação limpa, deixe só o AM e peça que ele cadastre tudo pela interface.
+Use só se o cliente quiser ver telas já preenchidas. Para uma validação limpa,
+deixe só o AM e peça que ele cadastre tudo pela interface.
 
-Se `prisma migrate deploy` não rodar no start (CLI podada do runtime), aplique as
-migrations pela mesma via, antes do seed:
+## 5. Abrir o túnel
+
+Em um terceiro terminal:
 
 ```powershell
-npx prisma migrate deploy
+npm run uat:tunnel
 ```
 
-### Semear sem TCP Proxy
-
-Alternativa que dispensa expor o banco: no serviço da aplicação, troque
-temporariamente o **Custom Start Command** por
+O `cloudflared` imprime a URL no meio do log, em um quadro:
 
 ```
-prisma migrate deploy && npm run db:seed && next start
++---------------------------------------------------------------------------+
+|  https://palavra-palavra-palavra-palavra.trycloudflare.com                 |
++---------------------------------------------------------------------------+
 ```
 
-O deploy roda o seed de dentro da rede privada, usando a `MYSQL_URL` interna.
-O seed é idempotente (só cria o AM se nenhum existir), então rodar a cada
-deploy não duplica nada — dá até para deixar assim no ambiente de teste.
-Depois é só voltar o comando para `npm run start:prod`.
+É essa URL que vai para o cliente. **Tem de ser a HTTPS do túnel**: os cookies
+de sessão e de CSRF são emitidos com `secure` (REQ-SEC-07), então por
+`http://` puro o login não persiste. Como o túnel termina TLS na borda da
+Cloudflare, o navegador vê HTTPS e os cookies colam — não há nada a configurar
+no Next para isso.
 
 ## 6. O que entregar ao cliente
 
-- A URL `https://....up.railway.app`.
+- A URL `https://....trycloudflare.com` (válida só enquanto o túnel estiver no
+  ar).
 - O CPF do Administrador Master e o aviso de que o **primeiro acesso pede o
   cadastro da senha** (mínimo 8 caracteres).
 - Aviso: **5 tentativas de login erradas bloqueiam o CPF por 15 minutos**
   (REQ-SEC-01) — é comportamento esperado, não defeito.
+- A janela combinada: a URL morre quando você fecha o túnel.
+
+## 7. Encerrar a sessão de validação
+
+`Ctrl+C` no terminal do túnel (a URL deixa de existir na hora) e `Ctrl+C` no da
+aplicação. O banco `spma_uat` continua no volume do Docker — na próxima sessão
+é só repetir os passos 1, 3 e 5, e os dados da validação anterior estarão lá.
+Para começar do zero: `docker compose exec mysql mysql -uspma -pspma_dev_only -e "DROP DATABASE spma_uat"`.
 
 ---
+
+## Limites deste arranjo
+
+- **Só está no ar enquanto sua máquina e o túnel estiverem.** Serve para
+  sessões de validação combinadas, não para "deixa no ar que eu vejo quando
+  der".
+- **A URL muda a cada `uat:tunnel`.** Quick tunnel é anônimo e efêmero. URL
+  fixa exige conta Cloudflare + domínio próprio (~R$40/ano) e um named tunnel.
+- Sem backup, sem retenção, sem SLA. É homologação.
 
 ## Regras deste ambiente
 
 - **Não inserir dados pessoais reais** (CPF, e-mail, telefone de pessoas de
-  verdade). É ambiente de teste, sem backup nem plano de retenção — LGPD vale
-  igual. Use dados fictícios.
-- O banco é descartável: `docker`/`docker-compose.yml` continuam sendo o
-  ambiente de desenvolvimento local; este deploy não substitui nenhum dos dois.
-- Ao encerrar a validação, delete o projeto no Railway para parar a cobrança.
+  verdade). LGPD vale igual aqui. Use dados fictícios.
+- O `docker-compose.yml` continua sendo o ambiente de desenvolvimento local;
+  esta homologação não substitui nem o dev nem os testes — só reaproveita o
+  mesmo servidor MySQL, em outro banco.
 
-## Alternativa (se preferir Vercel)
+## Alternativas
 
-Vercel hospeda o Next sem esforço, mas **não tem MySQL** — exigiria um banco
-externo (TiDB Cloud Serverless, Aiven ou PlanetScale) e o pool de conexões
-passaria a ser um problema em ambiente serverless, com um `DATABASE_URL` apontando
-para fora. Para um ambiente de teste, não compensa a complexidade extra.
+Se o cliente precisar de uma URL no ar **24/7**, independente da sua máquina, o
+substituto gratuito mais direto do Railway é o **Northflank** (plano Sandbox:
+2 serviços + 1 banco + 2 crons grátis, sempre ligados, MySQL entre os bancos
+gerenciados). Ressalva: o compute grátis é da faixa 0.2 vCPU / 512 MB, onde
+`next build` provavelmente estoura memória — o caminho é buildar a imagem
+localmente (com `output: "standalone"`) e dar deploy a partir de um registry
+como o GHCR.
+
+Descartados e por quê:
+
+- **Vercel Hobby**: não tem MySQL (exigiria Aiven free ou TiDB Serverless por
+  fora), o pool de conexões sofre em serverless, o argon2 pesa no tempo de
+  função, e a cláusula de uso não-comercial do Hobby não combina com projeto
+  de cliente.
+- **Render free**: o banco gratuito deles é só PostgreSQL, e o web service
+  dorme após 15 min de inatividade (cold start de ~1 min na frente do cliente).
+- **Fly.io**: não tem mais allowance gratuita.
+- **Oracle Cloud Always Free** (VM ARM, grátis para sempre, `docker compose` +
+  `cloudflared` na VM): a opção gratuita mais robusta, mas é administrar
+  servidor, e capacidade ARM no free tier costuma faltar na criação.
