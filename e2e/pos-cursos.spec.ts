@@ -1,7 +1,7 @@
 // e2e de GET /api/pos-cursos (REQ-PO-12).
 //
 // Os testes de POST saíram com a rota (decisão do usuário, 2026-10-09): o
-// Pós-Curso nasce na transação de POST /api/pre-cursos, coberta em
+// Pós-Curso nasce na transação de POST /api/cursos, coberta em
 // `pre-cursos.spec.ts`. REQ-PO-01/02/03 deixaram de ser uma rota própria.
 //
 // UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,

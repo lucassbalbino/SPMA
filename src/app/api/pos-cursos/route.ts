@@ -1,7 +1,7 @@
 // GET /api/pos-cursos - listagem escopada por Ofertante (REQ-PO-12).
 //
 // NÃO existe POST aqui, de propósito (decisão do usuário, 2026-10-09): o
-// Pós-Curso nasce junto do curso, na transação de POST /api/pre-cursos, e não
+// Pós-Curso nasce junto do curso, na transação de POST /api/cursos, e não
 // há nenhum outro jeito de criá-lo. Pré-Curso e Pós-Curso não são dois cursos
 // (AD-040 - `PosCurso.CD_Curso` é PK e FK 1:1 para `PreCurso.CD_Curso`), então
 // criar os dois questionários é um ato só. Criar pós-curso avulso rescinde
