@@ -155,25 +155,6 @@ export function podeMatricularAluno(
 }
 
 /**
- * Existe ALGUM Ofertante em que este perfil pode criar curso/matricular? É a
- * pergunta que uma TELA DE LISTA faz para decidir se mostra o atalho de
- * criação - ela não tem um Ofertante-alvo em mãos, ao contrário de
- * `podeGerenciarPreCurso`/`podeMatricularAluno`, que decidem o acesso a um
- * recurso concreto.
- *
- * Deriva daquelas duas, e é só isso que as três listas usavam escrito à mão
- * como `usuario.tipo === "GO"` - o que escondia o atalho do AM, embora AD-040
- * lhe dê a exceção administrativa, a navegação (`lib/ui/navegacao.ts`) já lhe
- * oferecesse "Novo curso" e a API aceitasse a chamada.
- *
- * Continua sendo conveniência de UI, nunca autorização: quem decide de fato é
- * a guarda por Ofertante, reavaliada no servidor a cada request (AD-033).
- */
-export function podeCriarCursoOuMatricular(tipo: TipoUsuario): boolean {
-  return tipo === "AM" || tipo === "GO";
-}
-
-/**
  * Guarda de ESCRITA sobre a própria AvaliacaoAluno (AVAL-09/18) - primeira
  * guarda de identidade pura do projeto: nenhum perfil de gestão escreve
  * respostas ou encerra, só a própria pessoa (seção 6 do documento fonte,

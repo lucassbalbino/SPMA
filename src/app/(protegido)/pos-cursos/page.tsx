@@ -7,10 +7,9 @@
 // (relação). O escopo em si vem de `escopoDeLeitura`, a mesma função que a
 // rota usa.
 import Link from "next/link";
-import { podeCriarCursoOuMatricular, requireSession } from "@/lib/auth/guards";
+import { requireSession } from "@/lib/auth/guards";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import { prisma } from "@/lib/db/prisma";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function PosCursosPage() {
@@ -26,17 +25,10 @@ export default async function PosCursosPage() {
     orderBy: { cdCurso: "asc" },
   });
 
-  // Mesma regra da rota de criação (AD-040: AM também cria), em vez de um
-  // `tipo === "GO"` escrito à mão.
-  const podeCriar = podeCriarCursoOuMatricular(usuario.tipo);
-
   return (
     <Card className="w-full max-w-2xl">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle>Pós-cursos</CardTitle>
-        {podeCriar && (
-          <Button render={<Link href="/pos-cursos/novo">Novo pós-curso</Link>} />
-        )}
       </CardHeader>
       <CardContent>
         {posCursos.length === 0 ? (

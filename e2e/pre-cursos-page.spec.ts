@@ -84,6 +84,11 @@ test("REQ-PC-14: GO só vê os pré-cursos do próprio Ofertante", async ({ page
   const itens = await page.getByTestId("lista-pre-cursos").getByRole("listitem").count();
   expect(itens).toBe(1);
   await expect(page.getByText(`Pré-curso #${cdCursoDoGo}`)).toBeVisible();
+
+  // A listagem não tem mais atalho de criação: criar curso é só "Novo curso"
+  // na navbar (/pre-cursos/novo). O GO é quem via o botão, então é aqui que a
+  // ausência prova algo.
+  await expect(page.getByText("Novo pré-curso")).toHaveCount(0);
 });
 
 test("REQ-PC-14: GT vê todos os pré-cursos cadastrados", async ({ page }) => {

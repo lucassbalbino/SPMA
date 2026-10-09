@@ -5,11 +5,10 @@
 // Aluno só a(s) própria(s) (via o próprio CPF). O escopo vem de
 // `escopoDeLeitura`, a mesma função que GET /api/avaliacoes usa.
 import Link from "next/link";
-import { podeCriarCursoOuMatricular, requireSession } from "@/lib/auth/guards";
+import { requireSession } from "@/lib/auth/guards";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function AvaliacoesPage() {
@@ -27,17 +26,10 @@ export default async function AvaliacoesPage() {
     orderBy: [{ cdCurso: "asc" }, { cpf: "asc" }],
   });
 
-  // Mesma regra da rota de matrícula (AVAL-05/06: AM também matricula), em
-  // vez de um `tipo === "GO"` escrito à mão.
-  const podeMatricular = podeCriarCursoOuMatricular(usuario.tipo);
-
   return (
     <Card className="w-full max-w-2xl">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle>Avaliações do Aluno</CardTitle>
-        {podeMatricular && (
-          <Button render={<Link href="/avaliacoes/novo">Matricular aluno</Link>} />
-        )}
       </CardHeader>
       <CardContent>
         {avaliacoes.length === 0 ? (

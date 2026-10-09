@@ -21,7 +21,6 @@ export {
   exigeOfertanteEVerba,
   podeAcessarAvaliacao,
   podeAcessarOfertante,
-  podeCriarCursoOuMatricular,
   podeEditarOfertante,
   podeGerenciarAvaliacao,
   podeGerenciarPosCurso,

@@ -92,6 +92,10 @@ test("AVAL-22: GO só vê as avaliações de cursos do próprio Ofertante", asyn
   const itens = await page.getByTestId("lista-avaliacoes").getByRole("listitem").count();
   expect(itens).toBe(1);
   await expect(page.getByText(`Avaliação #${cdCursoDoGo}`)).toBeVisible();
+
+  // A listagem não tem mais atalho de matrícula: o aluno nasce matriculado no
+  // ato de criação do usuário (AVAL-01, POST /api/usuarios).
+  await expect(page.getByText("Matricular aluno")).toHaveCount(0);
 });
 
 test("AVAL-22: GT vê todas as avaliações cadastradas", async ({ page }) => {

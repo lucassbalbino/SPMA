@@ -88,6 +88,10 @@ test("REQ-PO-12: GO só vê os pós-cursos do próprio Ofertante", async ({ page
   const itens = await page.getByTestId("lista-pos-cursos").getByRole("listitem").count();
   expect(itens).toBe(1);
   await expect(page.getByText(`Pós-curso #${cdCursoDoGo}`)).toBeVisible();
+
+  // A listagem não tem mais atalho de criação - o pós-curso nasce junto do
+  // curso, na transação de POST /api/pre-cursos.
+  await expect(page.getByText("Novo pós-curso")).toHaveCount(0);
 });
 
 test("REQ-PO-12: GT vê todos os pós-cursos cadastrados", async ({ page }) => {
