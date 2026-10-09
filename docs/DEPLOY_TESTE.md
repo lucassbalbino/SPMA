@@ -18,8 +18,15 @@ não existe mais — ver "Alternativas" no fim.
 - Docker Desktop rodando (`docker compose ps` mostra `spma-mysql` como
   `healthy`).
 - `cloudflared` instalado: `winget install --id Cloudflare.cloudflared`.
-  Abra um terminal **novo** depois de instalar — o PATH só vale para shells
-  criados após a instalação.
+  O instalador acrescenta `C:\Program Files (x86)\cloudflared\` ao PATH de
+  máquina, mas só processos criados **depois** disso o veem. Dentro do VSCode
+  isso tem uma pegadinha: o terminal integrado herda o ambiente da janela do
+  VSCode, então abrir uma aba nova não basta — é preciso reiniciar o VSCode
+  inteiro. Para resolver na hora, no terminal atual:
+
+  ```powershell
+  $env:Path += ";C:\Program Files (x86)\cloudflared\"
+  ```
 - Nada de conta no Cloudflare: o `--url` usa um quick tunnel anônimo.
 
 A porta é a **3100**, não a 3000, para a homologação conviver com o
