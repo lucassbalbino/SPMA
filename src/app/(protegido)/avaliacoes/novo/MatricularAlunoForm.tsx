@@ -1,7 +1,8 @@
 // Formulário de matrícula de um Aluno num curso (AVAL-01 a 05), colocado
-// junto de `page.tsx` (T8). Client Component separado pelo mesmo motivo de
-// `NovoPosCursoForm.tsx`: `page.tsx` precisa continuar Server Component para
-// chamar `requireSession()`.
+// junto de `page.tsx` (T8). Client Component separado porque `page.tsx`
+// precisa continuar Server Component para chamar `requireSession()` - era o
+// mesmo motivo do `NovoPosCursoForm.tsx`, removido junto da criação avulsa de
+// pós-curso (2026-10-09).
 "use client";
 
 import { useState, type FormEvent } from "react";

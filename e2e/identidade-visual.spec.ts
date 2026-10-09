@@ -184,7 +184,6 @@ test.describe("casca comum", () => {
       "/pre-cursos",
       "/pre-cursos/novo",
       "/pos-cursos",
-      "/pos-cursos/novo",
       "/avaliacoes",
       "/avaliacoes/novo",
     ];
@@ -399,7 +398,6 @@ test.describe("menu de navegação por perfil", () => {
       ["/pre-cursos", "Pré-cursos"],
       ["/pre-cursos/novo", "Pré-cursos"],
       ["/pos-cursos", "Pós-cursos"],
-      ["/pos-cursos/novo", "Pós-cursos"],
       ["/avaliacoes", "Avaliações"],
       ["/avaliacoes/novo", "Avaliações"],
     ];

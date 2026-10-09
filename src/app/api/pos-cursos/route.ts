@@ -1,12 +1,16 @@
-// POST /api/pos-cursos - criação de pós-curso (REQ-PO-01/02/03).
 // GET /api/pos-cursos - listagem escopada por Ofertante (REQ-PO-12).
+//
+// NÃO existe POST aqui, de propósito (decisão do usuário, 2026-10-09): o
+// Pós-Curso nasce junto do curso, na transação de POST /api/pre-cursos, e não
+// há nenhum outro jeito de criá-lo. Pré-Curso e Pós-Curso não são dois cursos
+// (AD-040 - `PosCurso.CD_Curso` é PK e FK 1:1 para `PreCurso.CD_Curso`), então
+// criar os dois questionários é um ato só. Criar pós-curso avulso rescinde
+// REQ-PO-01/02/03 como ROTA: a autorização e a unicidade que elas pediam
+// continuam valendo, agora exercidas na rota de criação do curso.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { podeGerenciarPosCurso } from "@/lib/auth/guards";
-import { criarPosCursoSchema } from "@/lib/validation/schemas/pos-curso.schema";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import { exigirMutacao, exigirSessao } from "@/lib/api/guardas";
-import { corpoValidado } from "@/lib/api/requisicao";
+import { exigirSessao } from "@/lib/api/guardas";
 import { erroHttp } from "@/lib/api/erro-http";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import {
@@ -14,38 +18,6 @@ import {
   montarRespostas,
   respostasOuNulo,
 } from "@/lib/respostas/repositorio";
-
-async function criarPosCurso(request: Request) {
-  const sessao = await exigirMutacao(request);
-  const { cdCurso } = await corpoValidado(request, criarPosCursoSchema);
-
-  const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso } });
-
-  if (!preCurso) {
-    throw erroHttp(404, "Pré-curso não encontrado");
-  }
-
-  // REQ-PO-01/03: só o GO vinculado ao Ofertante do Pré-Curso pai cria o pós-curso.
-  if (!podeGerenciarPosCurso(sessao.usuario, preCurso.cdOfertante)) {
-    throw erroHttp(403, "Acesso negado");
-  }
-
-  // REQ-PO-02: relação 1:1 - checagem explícita antes do create para devolver
-  // um 409 limpo em vez de deixar a constraint de PK do Prisma estourar como 500.
-  const posCursoExistente = await prisma.posCurso.findUnique({ where: { cdCurso } });
-
-  if (posCursoExistente) {
-    throw erroHttp(409, "Este curso já tem um pós-curso");
-  }
-
-  const posCurso = await prisma.posCurso.create({
-    data: { cdCurso, criadoPor: sessao.usuario.documento },
-  });
-
-  // Pós-curso nasce sem nenhuma linha de resposta - `null`, como a coluna
-  // JSON devolvia.
-  return NextResponse.json({ posCurso: { ...posCurso, respostas: null } }, { status: 201 });
-}
 
 async function listarPosCursos(request: Request) {
   const sessao = await exigirSessao();
@@ -85,5 +57,4 @@ async function listarPosCursos(request: Request) {
   });
 }
 
-export const POST = comTratamentoDeErro(criarPosCurso);
 export const GET = comTratamentoDeErro(listarPosCursos);

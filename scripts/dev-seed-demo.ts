@@ -175,7 +175,6 @@ Roteiro das telas (http://localhost:3000):
   /pre-cursos/novo                     criação
   /pre-cursos/${curso.cdCurso}${" ".repeat(Math.max(0, 24 - String(curso.cdCurso).length))}formulário de 56 campos
   /pos-cursos                          lista
-  /pos-cursos/novo                     criação
   /pos-cursos/${curso.cdCurso}${" ".repeat(Math.max(0, 24 - String(curso.cdCurso).length))}formulário de 26 campos
   /avaliacoes                          lista
   /avaliacoes/novo                     matrícula (só como Gestor Ofertante)

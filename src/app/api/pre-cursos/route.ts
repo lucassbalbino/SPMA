@@ -51,10 +51,10 @@ async function criarPreCurso(request: Request) {
   // /api/usuarios, que já cria usuário + verba + matrícula num passo só: um
   // erro no meio não pode deixar curso sem pós-curso.
   //
-  // Consequência aceita junto da decisão: /pos-cursos/novo filtra
-  // `posCurso: null` e portanto nunca lista um curso criado pela UI, e POST
-  // /api/pos-cursos responde 409 para esses cursos. As duas rotas ficam
-  // órfãs de propósito, não quebradas.
+  // É o ÚNICO jeito de um PosCurso nascer: a tela /pos-cursos/novo e o POST
+  // /api/pos-cursos foram removidos (2026-10-09), porque criar pós-curso
+  // avulso deixou de ser um ato possível. Mexer nesta transação é mexer na
+  // criação de pós-curso do sistema inteiro.
   const { preCurso, posCurso } = await prisma.$transaction(async (tx) => {
     const preCursoCriado = await tx.preCurso.create({
       data: {

@@ -1,13 +1,6 @@
 import { z } from "zod";
 import { multiplaComExclusiva } from "../multipla";
 
-// Criação do pós-curso (REQ-PO-01).
-export const criarPosCursoSchema = z.object({
-  cdCurso: z.number().int().positive({ message: "Curso é obrigatório" }),
-});
-
-export type CriarPosCursoInput = z.infer<typeof criarPosCursoSchema>;
-
 // ---- Constantes de opções ----
 //
 // Transcritas de `docs/Questionario_do_Gestor_Pos_Curso.md` (a numeração das

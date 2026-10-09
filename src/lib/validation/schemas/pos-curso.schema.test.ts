@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  criarPosCursoSchema,
-  datasReaisEmOrdem,
-  respostasPosCursoSchema,
-} from "./pos-curso.schema";
+import { datasReaisEmOrdem, respostasPosCursoSchema } from "./pos-curso.schema";
 
 // Fixture com as 26 chaves do questionário fonte
 // (`docs/Questionario_do_Gestor_Pos_Curso.md`) preenchidas com valores
@@ -45,21 +41,6 @@ const RESPOSTA_VALIDA = {
 
   posContEstrategias: ["Estabelecimento de parcerias junto a entidades públicas."],
 };
-
-describe("criarPosCursoSchema", () => {
-  it("aceita cdCurso positivo", () => {
-    expect(criarPosCursoSchema.safeParse({ cdCurso: 1 }).success).toBe(true);
-  });
-
-  it("rejeita cdCurso ausente", () => {
-    expect(criarPosCursoSchema.safeParse({}).success).toBe(false);
-  });
-
-  it("rejeita cdCurso não-positivo", () => {
-    expect(criarPosCursoSchema.safeParse({ cdCurso: 0 }).success).toBe(false);
-    expect(criarPosCursoSchema.safeParse({ cdCurso: -1 }).success).toBe(false);
-  });
-});
 
 describe("respostasPosCursoSchema", () => {
   it("aceita a resposta válida completa", () => {

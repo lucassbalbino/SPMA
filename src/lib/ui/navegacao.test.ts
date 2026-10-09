@@ -54,7 +54,6 @@ const ROTAS_IMPLEMENTADAS = [
   "/pre-cursos/novo",
   "/pre-cursos/[id]",
   "/pos-cursos",
-  "/pos-cursos/novo",
   "/pos-cursos/[cdCurso]",
   "/avaliacoes",
   "/avaliacoes/novo",
