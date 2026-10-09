@@ -14,7 +14,7 @@
     "uat:start": "dotenv -e .env.uat -- npm run start:prod",
     "uat:seed": "dotenv -e .env.uat -- tsx prisma/seed.ts",
     "uat:seed-demo": "dotenv -e .env.uat -- tsx scripts/dev-seed-demo.ts",
-    "uat:tunnel": "cloudflared tunnel --url http://localhost:3100",
+    "uat:tunnel": "tsx scripts/uat-tunnel.ts",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --exclude \"**/*.integration.test.ts\"",
