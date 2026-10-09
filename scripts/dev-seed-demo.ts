@@ -177,7 +177,6 @@ Roteiro das telas (http://localhost:3000):
   /pos-cursos                          lista
   /pos-cursos/${curso.cdCurso}${" ".repeat(Math.max(0, 24 - String(curso.cdCurso).length))}formulário de 26 campos
   /avaliacoes                          lista
-  /avaliacoes/novo                     matrícula (só como Gestor Ofertante)
   /avaliacoes/${CPF_AL}/${curso.cdCurso}    formulário do Aluno (só logado como ele)
   /usuarios/novo                       criação de usuário
 

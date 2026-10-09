@@ -185,7 +185,6 @@ test.describe("casca comum", () => {
       "/pre-cursos/novo",
       "/pos-cursos",
       "/avaliacoes",
-      "/avaliacoes/novo",
     ];
 
     const espacamentos: string[] = [];
@@ -376,10 +375,13 @@ test.describe("menu de navegação por perfil", () => {
 
   test("UI-03: numa sub-rota o item da rota-pai continua marcado", async ({ page }) => {
     await logar(page, CPF_NAV_GT, SENHA);
-    await page.goto("/avaliacoes/novo");
+    // /pre-cursos/novo existe e NÃO é item de menu do GT (só AM e GO recebem
+    // "Novo curso"), que é exatamente o caso que este teste prova. Era
+    // /avaliacoes/novo, removida com a matrícula avulsa (2026-10-09).
+    await page.goto("/pre-cursos/novo");
 
     const menu = menuDaCasca(page);
-    await expect(menu.getByRole("link", { name: "Avaliações" })).toHaveAttribute(
+    await expect(menu.getByRole("link", { name: "Pré-cursos" })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -399,7 +401,6 @@ test.describe("menu de navegação por perfil", () => {
       ["/pre-cursos/novo", "Pré-cursos"],
       ["/pos-cursos", "Pós-cursos"],
       ["/avaliacoes", "Avaliações"],
-      ["/avaliacoes/novo", "Avaliações"],
     ];
 
     for (const [rota, rotulo] of esperado) {

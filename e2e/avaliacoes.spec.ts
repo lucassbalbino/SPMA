@@ -1,4 +1,8 @@
-// e2e de POST/GET /api/avaliacoes (AVAL-01 a 06, AVAL-22).
+// e2e de GET /api/avaliacoes (AVAL-22).
+//
+// Os testes de POST saíram com a rota (decisão do usuário, 2026-10-09): o
+// Aluno nasce matriculado na transação de POST /api/usuarios, coberta em
+// `usuarios.spec.ts`. AVAL-01 a 06 deixaram de ser uma rota própria.
 //
 // UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
 // identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
@@ -12,7 +16,6 @@ import {
   deletePreCursosPorOfertante,
   deleteUsuarios,
   deleteVerbasPorOfertante,
-  getAvaliacao,
   upsertUsuario,
 } from "./helpers/db";
 import { geradorDeCnpj } from "./helpers/cnpj";
@@ -31,17 +34,14 @@ const CPF_GT = "52161005120";
 const CNPJ_GO = gerarCnpjValido(1);
 const CNPJ_GO_2 = gerarCnpjValido(2);
 const CPF_AL = "52191005489";
-const CPF_AL_JA_MATRICULADO = "35379907580";
-const CPF_AL_RN12 = "52601815906";
-const CPF_INEXISTENTE = "11144477735";
+// Aluno de um curso de OUTRO Ofertante: é o que dá dente ao "GO só lista as do
+// próprio" - sem ele a asserção passaria com a lista toda de um só Ofertante.
+const CPF_AL_DE_OUTRO_OFERTANTE = "52601815906";
 
-const CPFS = [CPF_GT, CNPJ_GO, CNPJ_GO_2, CPF_AL, CPF_AL_JA_MATRICULADO, CPF_AL_RN12];
+const CPFS = [CPF_GT, CNPJ_GO, CNPJ_GO_2, CPF_AL, CPF_AL_DE_OUTRO_OFERTANTE];
 
 let cdCursoDoGo: number;
 let cdCursoDoGo2: number;
-let cdCursoJaComAvaliacao: number;
-let cdCursoParaTesteEscopo: number;
-let cdCursoRN12Alvo: number;
 
 async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
@@ -77,8 +77,12 @@ test.beforeAll(() => {
     uf: "RJ",
   });
   upsertUsuario({ cpf: CPF_AL, tipo: "AL", senha: SENHA, primeiraVez: false });
-  upsertUsuario({ cpf: CPF_AL_JA_MATRICULADO, tipo: "AL", senha: SENHA, primeiraVez: false });
-  upsertUsuario({ cpf: CPF_AL_RN12, tipo: "AL", senha: SENHA, primeiraVez: false });
+  upsertUsuario({
+    cpf: CPF_AL_DE_OUTRO_OFERTANTE,
+    tipo: "AL",
+    senha: SENHA,
+    primeiraVez: false,
+  });
 
   const cdVerba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 10000 }).cdVerba;
   const cdVerba2 = criarVerba({ cdOfertante: CNPJ_GO_2, vlVerba: 10000 }).cdVerba;
@@ -95,28 +99,11 @@ test.beforeAll(() => {
     vlCursoAlocado: 100,
     criadoPor: CNPJ_GO_2,
   }).cdCurso;
-  cdCursoJaComAvaliacao = criarPreCurso({
-    cdOfertante: CNPJ_GO,
-    cdVerba,
-    vlCursoAlocado: 100,
-    criadoPor: CNPJ_GO,
-  }).cdCurso;
-  criarAvaliacao({ cpf: CPF_AL_JA_MATRICULADO, cdCurso: cdCursoJaComAvaliacao });
-
-  cdCursoParaTesteEscopo = criarPreCurso({
-    cdOfertante: CNPJ_GO,
-    cdVerba,
-    vlCursoAlocado: 100,
-    criadoPor: CNPJ_GO,
-  }).cdCurso;
-  cdCursoRN12Alvo = criarPreCurso({
-    cdOfertante: CNPJ_GO,
-    cdVerba,
-    vlCursoAlocado: 100,
-    criadoPor: CNPJ_GO,
-  }).cdCurso;
-  // RN-12: CPF_AL_RN12 já tem uma avaliação EM_ANDAMENTO noutro curso.
-  criarAvaliacao({ cpf: CPF_AL_RN12, cdCurso: cdCursoDoGo2 });
+  // As duas matrículas que as três listagens exigem, semeadas pelo Prisma
+  // (`criarAvaliacao`) e não pela rota - que não existe mais. Antes, a do
+  // CPF_AL era efeito colateral do primeiro teste de POST deste arquivo.
+  criarAvaliacao({ cpf: CPF_AL, cdCurso: cdCursoDoGo });
+  criarAvaliacao({ cpf: CPF_AL_DE_OUTRO_OFERTANTE, cdCurso: cdCursoDoGo2 });
 });
 
 test.afterAll(() => {
@@ -124,133 +111,6 @@ test.afterAll(() => {
   deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
   deleteVerbasPorOfertante([CNPJ_GO, CNPJ_GO_2]);
   deleteUsuarios(CPFS);
-});
-
-test("GO matricula um Aluno num curso do próprio Ofertante -> 201, EM_ANDAMENTO", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
-
-  const cliente = await novoCliente();
-  const res = await cliente.post("/api/avaliacoes", {
-    data: { cpf: CPF_AL, cdCurso: cdCursoDoGo },
-    headers: cabecalhosAutenticados(idSessao, idCsrf),
-  });
-
-  expect(res.status()).toBe(201);
-  const corpo = await res.json();
-  expect(corpo.avaliacao.status).toBe("EM_ANDAMENTO");
-  expect(corpo.avaliacao.parte1Completa).toBe(false);
-  expect(corpo.avaliacao.respostas).toBeNull();
-
-  const persistida = getAvaliacao(CPF_AL, cdCursoDoGo);
-  expect(persistida?.status).toBe("EM_ANDAMENTO");
-  expect(persistida?.parte1Completa).toBe(false);
-  expect(persistida?.respostas).toBeNull();
-
-  await cliente.dispose();
-});
-
-test("AVAL-05 (404): CPF que não corresponde a nenhum usuário", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
-
-  const cliente = await novoCliente();
-  const res = await cliente.post("/api/avaliacoes", {
-    data: { cpf: CPF_INEXISTENTE, cdCurso: cdCursoParaTesteEscopo },
-    headers: cabecalhosAutenticados(idSessao, idCsrf),
-  });
-
-  expect(res.status()).toBe(404);
-  await cliente.dispose();
-});
-
-test("AVAL-02 (400): CPF corresponde a um usuário que não é Aluno", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
-
-  const cliente = await novoCliente();
-  const res = await cliente.post("/api/avaliacoes", {
-    data: { cpf: CPF_GT, cdCurso: cdCursoParaTesteEscopo },
-    headers: cabecalhosAutenticados(idSessao, idCsrf),
-  });
-
-  expect(res.status()).toBe(400);
-  await cliente.dispose();
-});
-
-test("AVAL-03 (409): par (CPF, cdCurso) já matriculado, nenhum novo registro, registro existente inalterado", async () => {
-  const antes = getAvaliacao(CPF_AL_JA_MATRICULADO, cdCursoJaComAvaliacao);
-  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
-
-  const cliente = await novoCliente();
-  const res = await cliente.post("/api/avaliacoes", {
-    data: { cpf: CPF_AL_JA_MATRICULADO, cdCurso: cdCursoJaComAvaliacao },
-    headers: cabecalhosAutenticados(idSessao, idCsrf),
-  });
-
-  expect(res.status()).toBe(409);
-  await cliente.dispose();
-
-  const depois = getAvaliacao(CPF_AL_JA_MATRICULADO, cdCursoJaComAvaliacao);
-  expect(depois).toEqual(antes);
-});
-
-test("AVAL-04/RN-12 (409): Aluno já tem outra avaliação EM_ANDAMENTO noutro curso, nada criado nem alterado", async () => {
-  const antes = getAvaliacao(CPF_AL_RN12, cdCursoDoGo2);
-  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
-
-  const cliente = await novoCliente();
-  const res = await cliente.post("/api/avaliacoes", {
-    data: { cpf: CPF_AL_RN12, cdCurso: cdCursoRN12Alvo },
-    headers: cabecalhosAutenticados(idSessao, idCsrf),
-  });
-
-  expect(res.status()).toBe(409);
-  await cliente.dispose();
-
-  expect(getAvaliacao(CPF_AL_RN12, cdCursoRN12Alvo)).toBeNull();
-
-  const depois = getAvaliacao(CPF_AL_RN12, cdCursoDoGo2);
-  expect(depois).toEqual(antes);
-  expect(depois?.status).toBe("EM_ANDAMENTO");
-});
-
-test("cdCurso inexistente é rejeitado com 404", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
-
-  const cliente = await novoCliente();
-  const res = await cliente.post("/api/avaliacoes", {
-    data: { cpf: CPF_AL, cdCurso: 999999999 },
-    headers: cabecalhosAutenticados(idSessao, idCsrf),
-  });
-
-  expect(res.status()).toBe(404);
-  await cliente.dispose();
-});
-
-test("AVAL-05 (403): curso de outro Ofertante é rejeitado, nenhum registro criado", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO_2);
-
-  const cliente = await novoCliente();
-  const res = await cliente.post("/api/avaliacoes", {
-    data: { cpf: CPF_AL, cdCurso: cdCursoParaTesteEscopo },
-    headers: cabecalhosAutenticados(idSessao, idCsrf),
-  });
-
-  expect(res.status()).toBe(403);
-  await cliente.dispose();
-
-  expect(getAvaliacao(CPF_AL, cdCursoParaTesteEscopo)).toBeNull();
-});
-
-test("AVAL-06 (403): usuário não-GO (Aluno) não pode matricular", async () => {
-  const { idSessao, idCsrf } = await logarComCsrf(CPF_AL);
-
-  const cliente = await novoCliente();
-  const res = await cliente.post("/api/avaliacoes", {
-    data: { cpf: CPF_AL, cdCurso: cdCursoParaTesteEscopo },
-    headers: cabecalhosAutenticados(idSessao, idCsrf),
-  });
-
-  expect(res.status()).toBe(403);
-  await cliente.dispose();
 });
 
 test("AVAL-22: GO só lista avaliações de cursos do próprio Ofertante", async () => {

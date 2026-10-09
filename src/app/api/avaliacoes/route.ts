@@ -1,72 +1,27 @@
-// POST /api/avaliacoes - matrícula de um Aluno num curso (AVAL-01 a 06).
 // GET /api/avaliacoes - listagem escopada (AVAL-22).
+//
+// NÃO existe POST aqui, de propósito (decisão do usuário, 2026-10-09): o Aluno
+// nasce matriculado no ato de criação do usuário, na transação de POST
+// /api/usuarios (AVAL-01), e não há nenhum outro jeito de matricular. Matrícula
+// avulsa deixou de ser um ato possível, do mesmo jeito que a criação avulsa de
+// pós-curso.
+//
+// AVAL-01 a 06 deixaram de ser uma rota: o que elas exigiam é exercido em POST
+// /api/usuarios, que confere curso obrigatório para AL (400), existência do
+// curso (404) e `podeMatricularAluno` sobre o Ofertante do curso (403).
+// AVAL-02/03/04 não têm como ocorrer lá - o documento acaba de ser criado,
+// então não é "não-Aluno", não há par repetido e não há avaliação anterior.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/generated/prisma/client";
-import { podeMatricularAluno } from "@/lib/auth/guards";
-import { matricularAlunoSchema } from "@/lib/validation/schemas/avaliacao.schema";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
-import { exigirMutacao, exigirSessao } from "@/lib/api/guardas";
-import { corpoValidado } from "@/lib/api/requisicao";
-import { erroHttp } from "@/lib/api/erro-http";
+import { exigirSessao } from "@/lib/api/guardas";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import {
   LINHAS_RESPOSTA_ORDENADAS,
   montarRespostas,
   respostasOuNulo,
 } from "@/lib/respostas/repositorio";
-
-async function matricularAluno(request: Request) {
-  const sessao = await exigirMutacao(request);
-  const { cpf, cdCurso } = await corpoValidado(request, matricularAlunoSchema);
-
-  // AVAL-02: CPF precisa corresponder a um usuário do tipo AL já cadastrado.
-  const aluno = await prisma.usuario.findUnique({ where: { documento: cpf } });
-
-  if (!aluno) {
-    throw erroHttp(404, "Aluno não encontrado");
-  }
-
-  if (aluno.tipo !== "AL") {
-    throw erroHttp(400, "CPF informado não é de um Aluno");
-  }
-
-  const curso = await prisma.preCurso.findUnique({ where: { cdCurso } });
-
-  if (!curso) {
-    throw erroHttp(404, "Curso não encontrado");
-  }
-
-  // AVAL-05/06: só o GO vinculado ao Ofertante do curso matricula.
-  if (!podeMatricularAluno(sessao.usuario, curso.cdOfertante)) {
-    throw erroHttp(403, "Acesso negado");
-  }
-
-  // AVAL-03: checagem explícita antes do create para devolver um 409 limpo
-  // em vez de deixar a constraint de PK composta do Prisma estourar como 500.
-  const avaliacaoExistente = await prisma.avaliacaoAluno.findUnique({
-    where: { cpf_cdCurso: { cpf, cdCurso } },
-  });
-
-  if (avaliacaoExistente) {
-    throw erroHttp(409, "Este aluno já tem avaliação para este curso");
-  }
-
-  // AVAL-04/RN-12: um Aluno nunca tem duas avaliações EM_ANDAMENTO simultâneas.
-  const avaliacaoEmAndamento = await prisma.avaliacaoAluno.findFirst({
-    where: { cpf, status: "EM_ANDAMENTO" },
-  });
-
-  if (avaliacaoEmAndamento) {
-    throw erroHttp(409, "Este aluno já tem uma avaliação em andamento noutro curso");
-  }
-
-  const avaliacao = await prisma.avaliacaoAluno.create({ data: { cpf, cdCurso } });
-
-  // Avaliação nasce sem nenhuma linha de resposta - `null`, como a coluna
-  // JSON devolvia.
-  return NextResponse.json({ avaliacao: { ...avaliacao, respostas: null } }, { status: 201 });
-}
 
 async function listarAvaliacoes(request: Request) {
   const sessao = await exigirSessao();
@@ -102,5 +57,4 @@ async function listarAvaliacoes(request: Request) {
   });
 }
 
-export const POST = comTratamentoDeErro(matricularAluno);
 export const GET = comTratamentoDeErro(listarAvaliacoes);

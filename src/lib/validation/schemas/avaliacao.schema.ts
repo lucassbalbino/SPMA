@@ -1,16 +1,4 @@
 import { z } from "zod";
-import { normalizarCPF, validarCPF } from "../cpf";
-
-// Matrícula do Aluno num curso (AVAL-01).
-export const matricularAlunoSchema = z.object({
-  cpf: z
-    .string()
-    .refine(validarCPF, { message: "CPF inválido" })
-    .transform(normalizarCPF),
-  cdCurso: z.number().int().positive({ message: "Curso é obrigatório" }),
-});
-
-export type MatricularAlunoInput = z.infer<typeof matricularAlunoSchema>;
 
 // ---- Constantes de opções ----
 //

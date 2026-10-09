@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CHAVES_DADOS_PESSOAIS } from "./dados-pessoais.schema";
-import {
-  CHAVES_PARTE_1,
-  matricularAlunoSchema,
-  respostasAvaliacaoSchema,
-} from "./avaliacao.schema";
+import { CHAVES_PARTE_1, respostasAvaliacaoSchema } from "./avaliacao.schema";
 
 // Fixture com as 45 chaves do questionário fonte
 // (`docs/Questionario_do_Aluno_1.md`) preenchidas com valores válidos,
@@ -81,35 +77,6 @@ const RESPOSTA_VALIDA = {
   avalGeralRecomendaCurso: "Sim",
   avalGeralComentariosFinais: "Curso excelente, mudou minha perspectiva de carreira",
 };
-
-describe("matricularAlunoSchema", () => {
-  it("aceita CPF válido e cdCurso positivo", () => {
-    const result = matricularAlunoSchema.safeParse({
-      cpf: "111.444.777-35",
-      cdCurso: 1,
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejeita CPF com dígito verificador inválido", () => {
-    const result = matricularAlunoSchema.safeParse({
-      cpf: "111.444.777-36",
-      cdCurso: 1,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejeita cdCurso ausente", () => {
-    const result = matricularAlunoSchema.safeParse({ cpf: "111.444.777-35" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejeita cdCurso não-positivo", () => {
-    expect(
-      matricularAlunoSchema.safeParse({ cpf: "111.444.777-35", cdCurso: 0 }).success,
-    ).toBe(false);
-  });
-});
 
 describe("respostasAvaliacaoSchema", () => {
   it("aceita a resposta válida completa", () => {

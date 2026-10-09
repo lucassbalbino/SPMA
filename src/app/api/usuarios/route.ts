@@ -150,9 +150,10 @@ async function criarUsuario(request: Request) {
   }
 
   // AVAL-05/06: o escopo da matrícula é o Ofertante do curso, não o do Aluno
-  // (AL não tem cdOfertante - AD-012). Reavaliado aqui pelo mesmo motivo de
-  // POST /api/avaliacoes: a tela só oferece cursos do escopo, o servidor é
-  // quem decide.
+  // (AL não tem cdOfertante - AD-012). Esta é a ÚNICA guarda de matrícula que
+  // existe: POST /api/avaliacoes e a tela /avaliacoes/novo foram removidas
+  // (2026-10-09), então matricular só acontece aqui. A tela só oferece cursos
+  // do escopo; o servidor é quem decide (AD-033).
   if (curso && !podeMatricularAluno(criador, curso.cdOfertante)) {
     throw erroHttp(403, "Você não pode matricular alunos neste curso");
   }
