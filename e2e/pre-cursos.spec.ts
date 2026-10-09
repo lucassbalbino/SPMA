@@ -92,6 +92,10 @@ test("GO cria pré-curso com valor dentro do saldo -> 201, EM_ANDAMENTO, respost
   expect(corpo.preCurso.status).toBe("EM_ANDAMENTO");
   expect(corpo.preCurso.respostas).toBeNull();
 
+  // O pós-curso nasce junto do curso, na mesma transação (decisão do usuário,
+  // 2026-10-09): o 201 traz os dois.
+  expect(corpo.posCurso.cdCurso).toBe(corpo.preCurso.cdCurso);
+
   const persistido = getPreCurso(corpo.preCurso.cdCurso);
   expect(persistido?.status).toBe("EM_ANDAMENTO");
   expect(persistido?.respostas).toBeNull();

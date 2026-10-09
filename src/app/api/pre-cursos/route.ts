@@ -43,18 +43,44 @@ async function criarPreCurso(request: Request) {
     });
   }
 
-  const preCurso = await prisma.preCurso.create({
-    data: {
-      cdOfertante: verba.cdOfertante,
-      cdVerba: dados.cdVerba,
-      vlCursoAlocado: dados.vlCursoAlocado,
-      criadoPor: sessao.usuario.documento,
-    },
+  // O PÓS-CURSO NASCE JUNTO DO CURSO (decisão do usuário, 2026-10-09). Não é
+  // duplicação acidental de POST /api/pos-cursos: Pré-Curso e Pós-Curso não
+  // são dois cursos (AD-040 - `PosCurso.CD_Curso` é PK e FK 1:1 para
+  // `PreCurso.CD_Curso`, sem identidade própria), então criar um curso cria os
+  // dois questionários. Numa transação pelo mesmo motivo de POST
+  // /api/usuarios, que já cria usuário + verba + matrícula num passo só: um
+  // erro no meio não pode deixar curso sem pós-curso.
+  //
+  // Consequência aceita junto da decisão: /pos-cursos/novo filtra
+  // `posCurso: null` e portanto nunca lista um curso criado pela UI, e POST
+  // /api/pos-cursos responde 409 para esses cursos. As duas rotas ficam
+  // órfãs de propósito, não quebradas.
+  const { preCurso, posCurso } = await prisma.$transaction(async (tx) => {
+    const preCursoCriado = await tx.preCurso.create({
+      data: {
+        cdOfertante: verba.cdOfertante,
+        cdVerba: dados.cdVerba,
+        vlCursoAlocado: dados.vlCursoAlocado,
+        criadoPor: sessao.usuario.documento,
+      },
+    });
+
+    const posCursoCriado = await tx.posCurso.create({
+      data: { cdCurso: preCursoCriado.cdCurso, criadoPor: sessao.usuario.documento },
+    });
+
+    return { preCurso: preCursoCriado, posCurso: posCursoCriado };
   });
 
-  // Pré-curso nasce sem nenhuma linha de resposta - `null`, como a coluna
+  // Os dois nascem sem nenhuma linha de resposta - `null`, como a coluna
   // JSON devolvia.
-  return NextResponse.json({ preCurso: { ...preCurso, respostas: null } }, { status: 201 });
+  return NextResponse.json(
+    {
+      preCurso: { ...preCurso, respostas: null },
+      posCurso: { ...posCurso, respostas: null },
+    },
+    { status: 201 },
+  );
 }
 
 async function listarPreCursos(request: Request) {
