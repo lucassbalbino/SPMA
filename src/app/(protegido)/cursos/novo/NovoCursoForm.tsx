@@ -1,5 +1,6 @@
-// Formulário de criação de pré-curso (REQ-PC-01/02/03), colocado junto de
-// `page.tsx` (T9). Client Component separado pelo mesmo motivo de
+// Formulário de criação de CURSO (REQ-PC-01/02/03), colocado junto de
+// `page.tsx` (T9). Um envio daqui cria PreCurso e PosCurso na mesma
+// transação - ver POST /api/cursos. Client Component separado pelo mesmo motivo de
 // `NovoUsuarioForm.tsx`: `page.tsx` precisa continuar Server Component para
 // chamar `requireSession()`. Estado simples (2 campos) - useState direto,
 // sem o padrão de `respostas` genérico usado no formulário de 56 campos
@@ -18,12 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { criarPreCursoSchema } from "@/lib/validation/schemas/pre-curso.schema";
+import { criarCursoSchema } from "@/lib/validation/schemas/pre-curso.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
 
 type OpcaoVerba = { cdVerba: number; saldoDisponivel: number; nomeOfertante?: string | null };
 
-export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
+export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
   const router = useRouter();
 
   const [cdVerba, setCdVerba] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] })
     event.preventDefault();
     setErro(null);
 
-    const entrada = criarPreCursoSchema.safeParse({
+    const entrada = criarCursoSchema.safeParse({
       cdVerba: cdVerba ? Number(cdVerba) : undefined,
       vlCursoAlocado: vlCursoAlocado ? Number(vlCursoAlocado) : undefined,
     });
@@ -46,7 +47,7 @@ export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] })
 
     setEnviando(true);
     try {
-      const res = await fetch("/api/pre-cursos", {
+      const res = await fetch("/api/cursos", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...headerCSRF() },
         body: JSON.stringify(entrada.data),
@@ -57,11 +58,13 @@ export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] })
         setErro(
           corpo.saldoDisponivel !== undefined
             ? `${corpo.erro} (saldo disponível: ${corpo.saldoDisponivel})`
-            : (corpo.erro ?? "Não foi possível criar o pré-curso"),
+            : (corpo.erro ?? "Não foi possível criar o curso"),
         );
         return;
       }
 
+      // Leva ao questionário PRÉ do curso recém-criado. O pós-curso já nasceu
+      // junto, na mesma transação, e é preenchido depois em /pos-cursos/[id].
       router.push(`/pre-cursos/${corpo.preCurso.cdCurso}`);
     } finally {
       setEnviando(false);
@@ -111,9 +114,9 @@ export function NovoPreCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] })
             disabled={enviando}
           />
         </Field>
-        {erro && <FieldError data-testid="erro-novo-pre-curso">{erro}</FieldError>}
+        {erro && <FieldError data-testid="erro-novo-curso">{erro}</FieldError>}
         <Button type="submit" disabled={enviando}>
-          Criar pré-curso
+          Criar curso
         </Button>
       </FieldGroup>
     </form>

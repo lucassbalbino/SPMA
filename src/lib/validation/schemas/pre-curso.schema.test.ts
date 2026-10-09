@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  criarPreCursoSchema,
+  criarCursoSchema,
   ordemDatasValida,
   respostasPreCursoSchema,
 } from "./pre-curso.schema";
@@ -80,15 +80,15 @@ const RESPOSTA_VALIDA = {
   suporteEstrategiasOutra: "Empréstimo de uniformes",
 };
 
-describe("criarPreCursoSchema", () => {
+describe("criarCursoSchema", () => {
   it("rejeita cdVerba ausente", () => {
-    const result = criarPreCursoSchema.safeParse({ vlCursoAlocado: 1000 });
+    const result = criarCursoSchema.safeParse({ vlCursoAlocado: 1000 });
 
     expect(result.success).toBe(false);
   });
 
   it("rejeita cdVerba não-positivo", () => {
-    const result = criarPreCursoSchema.safeParse({
+    const result = criarCursoSchema.safeParse({
       cdVerba: 0,
       vlCursoAlocado: 1000,
     });
@@ -97,7 +97,7 @@ describe("criarPreCursoSchema", () => {
   });
 
   it("rejeita vlCursoAlocado não-positivo", () => {
-    const result = criarPreCursoSchema.safeParse({
+    const result = criarCursoSchema.safeParse({
       cdVerba: 1,
       vlCursoAlocado: 0,
     });
@@ -106,7 +106,7 @@ describe("criarPreCursoSchema", () => {
   });
 
   it("aceita payload válido", () => {
-    const result = criarPreCursoSchema.safeParse({
+    const result = criarCursoSchema.safeParse({
       cdVerba: 1,
       vlCursoAlocado: 1000,
     });

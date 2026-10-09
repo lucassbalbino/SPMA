@@ -182,7 +182,7 @@ test.describe("casca comum", () => {
       "/painel",
       "/usuarios/novo",
       "/pre-cursos",
-      "/pre-cursos/novo",
+      "/cursos/novo",
       "/pos-cursos",
       "/avaliacoes",
     ];
@@ -375,10 +375,12 @@ test.describe("menu de navegação por perfil", () => {
 
   test("UI-03: numa sub-rota o item da rota-pai continua marcado", async ({ page }) => {
     await logar(page, CPF_NAV_GT, SENHA);
-    // /pre-cursos/novo existe e NÃO é item de menu do GT (só AM e GO recebem
-    // "Novo curso"), que é exatamente o caso que este teste prova. Era
-    // /avaliacoes/novo, removida com a matrícula avulsa (2026-10-09).
-    await page.goto("/pre-cursos/novo");
+    // Sub-rota dinâmica de um item de menu: /pre-cursos/[id] nunca é item, e
+    // o pai (/pre-cursos) tem de continuar marcado. O id não precisa existir -
+    // o que se mede é a marcação do menu, que vem do pathname. Era
+    // /avaliacoes/novo e depois /pre-cursos/novo, telas que deixaram de existir
+    // em 2026-10-09 (criação avulsa) e na renomeação para /cursos/novo.
+    await page.goto("/pre-cursos/999999999");
 
     const menu = menuDaCasca(page);
     await expect(menu.getByRole("link", { name: "Pré-cursos" })).toHaveAttribute(
@@ -398,7 +400,6 @@ test.describe("menu de navegação por perfil", () => {
       ["/painel", "Painel"],
       ["/usuarios/novo", "Novo usuário"],
       ["/pre-cursos", "Pré-cursos"],
-      ["/pre-cursos/novo", "Pré-cursos"],
       ["/pos-cursos", "Pós-cursos"],
       ["/avaliacoes", "Avaliações"],
     ];

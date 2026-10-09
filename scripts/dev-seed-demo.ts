@@ -171,8 +171,8 @@ Roteiro das telas (http://localhost:3000):
 
   /login
   /painel
+  /cursos/novo                         criação do curso (cria pré + pós)
   /pre-cursos                          lista
-  /pre-cursos/novo                     criação
   /pre-cursos/${curso.cdCurso}${" ".repeat(Math.max(0, 24 - String(curso.cdCurso).length))}formulário de 56 campos
   /pos-cursos                          lista
   /pos-cursos/${curso.cdCurso}${" ".repeat(Math.max(0, 24 - String(curso.cdCurso).length))}formulário de 26 campos

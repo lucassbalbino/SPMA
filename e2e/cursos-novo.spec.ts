@@ -1,4 +1,6 @@
-// e2e de /pre-cursos/novo (T9), pela UI real. Cobre REQ-PC-01/02/03 na
+// e2e de /cursos/novo (T9), pela UI real - O ATO DE CRIAR UM CURSO.
+// Era /pre-cursos/novo; renomeada em 2026-10-09, quando criar um pré-curso
+// isolado deixou de ser um ato que o sistema oferece. Cobre REQ-PC-01/02/03 na
 // camada de tela.
 //
 // UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
@@ -80,7 +82,7 @@ async function login(page: import("@playwright/test").Page, documento: string = 
 
 test("seletor de Verba mostra só as Verbas do Ofertante do GO autenticado", async ({ page }) => {
   await login(page);
-  await page.goto("/pre-cursos/novo");
+  await page.goto("/cursos/novo");
 
   await page.getByTestId("select-verba").click();
   await expect(page.getByTestId(`opcao-verba-${cdVerba}`)).toBeVisible();
@@ -91,7 +93,7 @@ test("AD-040: seletor de Verba do AM mostra as Verbas de TODOS os Ofertantes, co
   page,
 }) => {
   await login(page, CPF_AM);
-  await page.goto("/pre-cursos/novo");
+  await page.goto("/cursos/novo");
 
   await page.getByTestId("select-verba").click();
   const opcaoVerba = page.getByTestId(`opcao-verba-${cdVerba}`);
@@ -105,16 +107,16 @@ test("AD-040: seletor de Verba do AM mostra as Verbas de TODOS os Ofertantes, co
   await expect(opcaoVerbaOutro).toContainText("saldo R$ 1000.00");
 });
 
-test("GO cria pré-curso dentro do saldo e é redirecionado para a tela de preenchimento", async ({
+test("GO cria curso dentro do saldo e é redirecionado para o questionário pré", async ({
   page,
 }) => {
   await login(page);
-  await page.goto("/pre-cursos/novo");
+  await page.goto("/cursos/novo");
 
   await page.getByTestId("select-verba").click();
   await page.getByTestId(`opcao-verba-${cdVerba}`).click();
   await page.getByLabel("Valor alocado ao curso").fill("500");
-  await page.getByRole("button", { name: "Criar pré-curso" }).click();
+  await page.getByRole("button", { name: "Criar curso" }).click();
 
   await expect(page).toHaveURL(/\/pre-cursos\/\d+$/);
 });
@@ -123,30 +125,30 @@ test("valor acima do saldo disponível exibe erro com o saldo informado, sem nav
   page,
 }) => {
   await login(page);
-  await page.goto("/pre-cursos/novo");
+  await page.goto("/cursos/novo");
 
   await page.getByTestId("select-verba").click();
   await page.getByTestId(`opcao-verba-${cdVerba}`).click();
   await page.getByLabel("Valor alocado ao curso").fill("999999");
-  await page.getByRole("button", { name: "Criar pré-curso" }).click();
+  await page.getByRole("button", { name: "Criar curso" }).click();
 
-  await expect(page.getByTestId("erro-novo-pre-curso")).toContainText("saldo disponível");
-  await expect(page).toHaveURL(/\/pre-cursos\/novo$/);
+  await expect(page.getByTestId("erro-novo-curso")).toContainText("saldo disponível");
+  await expect(page).toHaveURL(/\/cursos\/novo$/);
 });
 
-test("GT não pode criar pré-curso: a tela mostra a mensagem de acesso negado, sem seletor", async ({
+test("GT não pode criar curso: a tela mostra a mensagem de acesso negado, sem seletor", async ({
   page,
 }) => {
   await login(page, CPF_GT);
-  await page.goto("/pre-cursos/novo");
+  await page.goto("/cursos/novo");
 
   await expect(page.getByTestId("select-verba")).toHaveCount(0);
-  await expect(page.getByText("Seu perfil não pode criar pré-cursos.")).toBeVisible();
+  await expect(page.getByText("Seu perfil não pode criar cursos.")).toBeVisible();
 });
 
 test("GO sem nenhuma Verba vê a mensagem de lista vazia, sem seletor", async ({ page }) => {
   await login(page, CNPJ_GO_SEM_VERBA);
-  await page.goto("/pre-cursos/novo");
+  await page.goto("/cursos/novo");
 
   await expect(page.getByTestId("select-verba")).toHaveCount(0);
   await expect(page.getByText("Nenhuma verba disponível para criar um curso.")).toBeVisible();

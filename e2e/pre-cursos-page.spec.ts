@@ -85,10 +85,11 @@ test("REQ-PC-14: GO só vê os pré-cursos do próprio Ofertante", async ({ page
   expect(itens).toBe(1);
   await expect(page.getByText(`Pré-curso #${cdCursoDoGo}`)).toBeVisible();
 
-  // A listagem não tem mais atalho de criação: criar curso é só "Novo curso"
-  // na navbar (/pre-cursos/novo). O GO é quem via o botão, então é aqui que a
-  // ausência prova algo.
-  await expect(page.getByText("Novo pré-curso")).toHaveCount(0);
+  // A listagem não tem mais atalho de criação: o ÚNICO link para criar curso
+  // nesta página é o "Novo curso" da navbar. Contar os links para /cursos/novo
+  // é mais forte que procurar um texto - se alguém devolver o botão ao card,
+  // a contagem vai a 2 e este teste cai.
+  await expect(page.locator('a[href="/cursos/novo"]')).toHaveCount(1);
 });
 
 test("REQ-PC-14: GT vê todos os pré-cursos cadastrados", async ({ page }) => {

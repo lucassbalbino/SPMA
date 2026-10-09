@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { multiplaComExclusiva } from "../multipla";
 
-// Criação do pré-curso (REQ-PC-01).
-export const criarPreCursoSchema = z.object({
+// Criação do CURSO (REQ-PC-01): o corpo de POST /api/cursos, que grava
+// PreCurso e PosCurso na mesma transação.
+export const criarCursoSchema = z.object({
   cdVerba: z.number().int().positive({ message: "Verba é obrigatória" }),
   vlCursoAlocado: z.number().positive({ message: "Valor alocado deve ser positivo" }),
 });
 
-export type CriarPreCursoInput = z.infer<typeof criarPreCursoSchema>;
+export type CriarCursoInput = z.infer<typeof criarCursoSchema>;
 
 // Escala das perguntas 23 e 24 do questionário fonte (RN-05, AD-019):
 // 0=Não há disponibilidade, 1=Péssimo, 2=Ruim, 3=Regular, 4=Bom, 5=Ótimo.

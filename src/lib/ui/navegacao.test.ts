@@ -14,7 +14,7 @@ const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
   AM: [
     "/painel",
     "/usuarios/novo",
-    "/pre-cursos/novo",
+    "/cursos/novo",
     "/pre-cursos",
     "/pos-cursos",
     "/avaliacoes",
@@ -24,7 +24,7 @@ const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
   GO: [
     "/painel",
     "/usuarios/novo",
-    "/pre-cursos/novo",
+    "/cursos/novo",
     "/pre-cursos",
     "/pos-cursos",
     "/avaliacoes",
@@ -51,7 +51,7 @@ const ROTAS_IMPLEMENTADAS = [
   "/painel",
   "/usuarios/novo",
   "/pre-cursos",
-  "/pre-cursos/novo",
+  "/cursos/novo",
   "/pre-cursos/[id]",
   "/pos-cursos",
   "/pos-cursos/[cdCurso]",
@@ -86,13 +86,13 @@ describe("navegacaoDoPerfil", () => {
     expect(hrefsDe(TipoUsuario.AL)).not.toContain("/usuarios/novo");
   });
 
-  it("só AM e GO recebem /pre-cursos/novo (AD-040, quem pode criar curso)", () => {
-    expect(hrefsDe(TipoUsuario.AM)).toContain("/pre-cursos/novo");
-    expect(hrefsDe(TipoUsuario.GO)).toContain("/pre-cursos/novo");
-    expect(hrefsDe(TipoUsuario.GT)).not.toContain("/pre-cursos/novo");
-    expect(hrefsDe(TipoUsuario.VT)).not.toContain("/pre-cursos/novo");
-    expect(hrefsDe(TipoUsuario.VO)).not.toContain("/pre-cursos/novo");
-    expect(hrefsDe(TipoUsuario.AL)).not.toContain("/pre-cursos/novo");
+  it("só AM e GO recebem /cursos/novo (AD-040, quem pode criar curso)", () => {
+    expect(hrefsDe(TipoUsuario.AM)).toContain("/cursos/novo");
+    expect(hrefsDe(TipoUsuario.GO)).toContain("/cursos/novo");
+    expect(hrefsDe(TipoUsuario.GT)).not.toContain("/cursos/novo");
+    expect(hrefsDe(TipoUsuario.VT)).not.toContain("/cursos/novo");
+    expect(hrefsDe(TipoUsuario.VO)).not.toContain("/cursos/novo");
+    expect(hrefsDe(TipoUsuario.AL)).not.toContain("/cursos/novo");
   });
 
   it("só AL recebe /meus-dados (PESSOAL-16, PESSOAL-20)", () => {
@@ -141,7 +141,7 @@ describe("hrefAtivo", () => {
     { rotulo: "Usuários", href: "/usuarios" },
     { rotulo: "Novo usuário", href: "/usuarios/novo" },
     { rotulo: "Pré-cursos", href: "/pre-cursos" },
-    { rotulo: "Novo curso", href: "/pre-cursos/novo" },
+    { rotulo: "Novo curso", href: "/cursos/novo" },
     { rotulo: "Avaliações", href: "/avaliacoes" },
   ];
 
@@ -161,10 +161,11 @@ describe("hrefAtivo", () => {
     expect(hrefAtivo("/usuarios/novo", itens)).toBe("/usuarios/novo");
   });
 
-  // AD-040/CURSO-08: "Novo curso" não pode ser ofuscado por "Pré-cursos".
-  it("/pre-cursos/novo casa com 'Novo curso', não com 'Pré-cursos'", () => {
-    expect(hrefAtivo("/pre-cursos/novo", itens)).toBe("/pre-cursos/novo");
-  });
+  // A colisão que a AD-040/CURSO-08 vigiava ("Novo curso" ofuscado por
+  // "Pré-cursos") deixou de existir em 2026-10-09: o ato de criar curso saiu
+  // de `/pre-cursos/novo` para `/cursos/novo`, que não compartilha prefixo com
+  // nenhum outro item. A REGRA do desempate segue coberta pelo caso de
+  // `/usuarios/novo` logo acima - é a mesma linha de código.
 
   it("pathname desconhecido não marca nenhum item", () => {
     expect(hrefAtivo("/relatorios", itens)).toBeNull();

@@ -24,7 +24,11 @@ export interface Modulo {
 
 const PAINEL: ItemNavegacao = { rotulo: "Painel", href: "/painel" };
 const NOVO_USUARIO: ItemNavegacao = { rotulo: "Novo usuário", href: "/usuarios/novo" };
-const NOVO_CURSO: ItemNavegacao = { rotulo: "Novo curso", href: "/pre-cursos/novo" };
+// O ato de criar um curso do zero. Mora em `/cursos/novo`, não em
+// `/pre-cursos/novo`: criar um curso cria os DOIS questionários na mesma
+// transação (POST /api/cursos) e nenhum dos dois tem criação própria, então o
+// nome antigo prometia um ato que o sistema não oferece (2026-10-09).
+const NOVO_CURSO: ItemNavegacao = { rotulo: "Novo curso", href: "/cursos/novo" };
 const PRE_CURSOS: ItemNavegacao = { rotulo: "Pré-cursos", href: "/pre-cursos" };
 const POS_CURSOS: ItemNavegacao = { rotulo: "Pós-cursos", href: "/pos-cursos" };
 const AVALIACOES: ItemNavegacao = { rotulo: "Avaliações", href: "/avaliacoes" };
@@ -35,6 +39,8 @@ const MEUS_DADOS: ItemNavegacao = { rotulo: "Meus dados", href: "/meus-dados" };
 const CURSOS = [PRE_CURSOS, POS_CURSOS, AVALIACOES];
 // AD-040: quem pode criar curso (AM e GO, `podeGerenciarPreCurso`) ganha o
 // atalho de criação junto da lista - GT/VT/VO só enxergam (CURSOS puro).
+// Desde 2026-10-09 este é o ÚNICO caminho de criação de curso na UI: as
+// listagens não têm mais botão próprio.
 const CURSOS_COM_CRIACAO = [NOVO_CURSO, ...CURSOS];
 
 // "Ofertantes", "Verbas" e "Relatórios" só existem como API, ou nem isso:

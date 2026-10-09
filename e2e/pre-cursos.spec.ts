@@ -1,4 +1,4 @@
-// e2e de POST/GET /api/pre-cursos (REQ-PC-01, REQ-PC-02, REQ-PC-03, REQ-PC-14).
+// e2e de POST /api/cursos (o ato de criar curso) e GET /api/pre-cursos (REQ-PC-01, REQ-PC-02, REQ-PC-03, REQ-PC-14).
 //
 // UGO-14/AD-043: sem `model Ofertante` separado, o Ofertante é o próprio GO,
 // identificado por CNPJ - `criarOfertante` (removido em T5) dá lugar a
@@ -78,11 +78,11 @@ test.afterAll(() => {
   deleteUsuarios(CPFS);
 });
 
-test("GO cria pré-curso com valor dentro do saldo -> 201, EM_ANDAMENTO, respostas nulas", async () => {
+test("GO cria curso com valor dentro do saldo -> 201, pré e pós nascem EM_ANDAMENTO com respostas nulas", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/pre-cursos", {
+  const res = await cliente.post("/api/cursos", {
     data: { cdVerba, vlCursoAlocado: 1000 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
@@ -119,7 +119,7 @@ test("REQ-PC-02: valor acima do saldo disponível é rejeitado com 400 e o saldo
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/pre-cursos", {
+  const res = await cliente.post("/api/cursos", {
     data: { cdVerba: cdVerbaPequena, vlCursoAlocado: 999999 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
@@ -135,7 +135,7 @@ test("AD-016: valor exatamente igual ao saldo disponível é aceito", async () =
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/pre-cursos", {
+  const res = await cliente.post("/api/cursos", {
     data: { cdVerba: cdVerbaPequena, vlCursoAlocado: 500 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
@@ -145,11 +145,11 @@ test("AD-016: valor exatamente igual ao saldo disponível é aceito", async () =
   await cliente.dispose();
 });
 
-test("AD-040: AM cria pré-curso para Ofertante ao qual não está vinculado -> 201, curso pertence a esse Ofertante", async () => {
+test("AD-040: AM cria curso para Ofertante ao qual não está vinculado -> 201, curso pertence a esse Ofertante", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CPF_AM);
 
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/pre-cursos", {
+  const res = await cliente.post("/api/cursos", {
     data: { cdVerba: cdVerba2Am, vlCursoAlocado: 100 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
@@ -177,7 +177,7 @@ test("REQ-PC-03: Verba de outro Ofertante é rejeitada com 403, nenhum registro 
 
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO_2);
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/pre-cursos", {
+  const res = await cliente.post("/api/cursos", {
     data: { cdVerba, vlCursoAlocado: 100 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
@@ -196,11 +196,11 @@ test("REQ-PC-03: Verba de outro Ofertante é rejeitada com 403, nenhum registro 
   expect(depois.preCursos.length).toBe(antes.preCursos.length);
 });
 
-test("AL não pode criar pré-curso", async () => {
+test("AL não pode criar curso", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CPF_AL);
 
   const cliente = await novoCliente();
-  const res = await cliente.post("/api/pre-cursos", {
+  const res = await cliente.post("/api/cursos", {
     data: { cdVerba, vlCursoAlocado: 100 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
