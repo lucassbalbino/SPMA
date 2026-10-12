@@ -264,13 +264,15 @@ T8
 
 **Done when**:
 
-- [ ] e2e OGO-09 (de T6) passa a afirmar também: flag `false` e `email`/`responsavel`/`telefone`/`uf`/`municipio` nulos no GO criado (OGO-11)
-- [ ] Gate Full passa com `npx playwright test e2e/usuarios.spec.ts`
+- [x] e2e OGO-09 (de T6) passa a afirmar também: flag `false` e `email`/`responsavel`/`telefone`/`uf`/`municipio` nulos no GO criado (OGO-11)
+- [x] Gate Full passa com `npx playwright test e2e/usuarios.spec.ts`
 
 **Tests**: e2e
 **Gate**: full
 
-**Commit**: `refactor(usuarios): criacao nao grava mais os campos organizacionais`
+**Commit**: `refactor(usuarios): parar de gravar dado organizacional na criacao`
+
+**Status**: ✅ Done — 703 unit / 74 integration / `usuarios.spec.ts` 19/19. As asserções de OGO-11 já passariam antes da limpeza (o schema do T6 garante os nulos); aqui elas são a rede que prova que o refactor não mudou comportamento.
 
 ---
 

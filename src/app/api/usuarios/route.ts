@@ -179,16 +179,13 @@ async function criarUsuario(request: Request) {
         tipo: dados.tipo,
         cdOfertante,
         criadoPor: criador.documento,
-        // UGO-01/08: dados organizacionais só existem para o tipo GO -
-        // `usuarioSchema` já rejeita `responsavel`/`telefone`/`municipio` para
-        // qualquer outro tipo (CAMPOS_SO_GO), então gravar `?? null` aqui
-        // nunca perde dado real de um perfil que não os enviou. `uf` é a
-        // exceção deliberada daquela lista: é aceita fora de GO e, se vier,
-        // é gravada.
-        responsavel: dados.responsavel ?? null,
-        telefone: dados.telefone ?? null,
+        // OGO-11 (AD-044): nenhum dado organizacional nasce na criação - o GO
+        // os declara no 1º acesso, e `dadosOrganizacionaisCompletos` fica no
+        // default `false`. `usuarioSchema` já rejeita `responsavel`/
+        // `telefone`/`municipio` para todo tipo e `email`/`uf` para GO; `uf`
+        // ainda pode vir para os outros tipos (decisão fixada em teste) e,
+        // se vier, é gravada.
         uf: dados.uf ?? null,
-        municipio: dados.municipio ?? null,
       },
     });
 

@@ -442,6 +442,15 @@ test("OGO-09/UGO-07: AM cria GO só com CNPJ válido + nome + verba - 201, verba
   // null (não aponta para outro GO, design.md "Consequência de B1").
   expect(criado?.cdOfertante).toBeNull();
 
+  // OGO-11: nasce pendente, sem nenhum dado organizacional - o GO declara os
+  // 6 no 1º acesso.
+  expect(criado?.dadosOrganizacionaisCompletos).toBe(false);
+  expect(criado?.email).toBeNull();
+  expect(criado?.responsavel).toBeNull();
+  expect(criado?.telefone).toBeNull();
+  expect(criado?.uf).toBeNull();
+  expect(criado?.municipio).toBeNull();
+
   // A verba tem de existir no banco, atrelada ao documento do PRÓPRIO GO
   // recém-criado - não a um Ofertante autônomo (que não existe mais).
   const corpo = await res.json();

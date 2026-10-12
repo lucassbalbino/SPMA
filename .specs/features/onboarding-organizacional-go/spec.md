@@ -150,7 +150,7 @@ Escopo Large: cada dimensão resolve em requisito ou `N/A` explícito.
 | OGO-08 | P1: Coleta no 1º login | Execute | Done (T4, teste existente) |
 | OGO-09 | P1: Criação enxuta | Execute | Done (T6) |
 | OGO-10 | P1: Criação enxuta | Execute | Done (T6) |
-| OGO-11 | P1: Criação enxuta | Design | Pending |
+| OGO-11 | P1: Criação enxuta | Execute | Done (T1, T6, T7) |
 | OGO-12 | P1: Criação enxuta | Execute | Done (T6) |
 | OGO-13 | P1: Criação enxuta | Execute | Done (T6) |
 | OGO-14 | P2: GOs existentes | Execute | Done (T1) |
