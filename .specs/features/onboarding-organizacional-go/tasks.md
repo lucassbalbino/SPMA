@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/onboarding-organizacional-go/design.md`
-**Status**: Approved
+**Status**: In Progress
 
 ---
 
@@ -89,15 +89,17 @@ T8
 
 **Done when**:
 
-- [ ] `npx prisma generate` ok; `Usuario.dadosOrganizacionaisCompletos: boolean` no cliente gerado
-- [ ] Teste de integração novo `prisma/onboarding-organizacional-migracao.integration.test.ts` (ao lado do `seed.integration.test.ts`, já incluído pelo glob da config): remove a coluna, semeia um GO com os 6 campos e um AL, executa o `migration.sql` lido do disco, e afirma (a) flag `false` nos dois, (b) os 6 valores do GO idênticos aos semeados. `afterAll` recria a coluna se o teste falhar no meio
-- [ ] `scripts/e2e-fixture.ts` + `e2e/helpers/db.ts`: `dadosOrganizacionaisCompletos?: boolean` (default `true`), `nome?: string | null` (`null` explícito grava `null`; ausente mantém o default atual), `email?: string`; os três expostos em `UsuarioPersistido`
-- [ ] Gate Full passa; e2e de fumaça: `npx playwright test e2e/protegido-layout.spec.ts e2e/cadastro-ofertante-page.spec.ts` (nada muda de comportamento ainda)
+- [x] `npx prisma generate` ok; `Usuario.dadosOrganizacionaisCompletos: boolean` no cliente gerado
+- [x] Teste de integração novo `prisma/onboarding-organizacional-migracao.integration.test.ts` (ao lado do `seed.integration.test.ts`, já incluído pelo glob da config): remove a coluna, semeia um GO com os 6 campos e um AL, executa o `migration.sql` lido do disco, e afirma (a) flag `false` nos dois, (b) os 6 valores do GO idênticos aos semeados. `afterAll` recria a coluna se o teste falhar no meio
+- [x] `scripts/e2e-fixture.ts` + `e2e/helpers/db.ts`: `dadosOrganizacionaisCompletos?: boolean` (default `true`), `nome?: string | null` (`null` explícito grava `null`; ausente mantém o default atual), `email?: string`; os três expostos em `UsuarioPersistido`
+- [x] Gate Full passa; e2e de fumaça: `npx playwright test e2e/protegido-layout.spec.ts e2e/cadastro-ofertante-page.spec.ts` (nada muda de comportamento ainda)
 
 **Tests**: integration
 **Gate**: full
 
 **Commit**: `feat(usuarios): coluna dadosOrganizacionaisCompletos para o onboarding do GO`
+
+**Status**: ✅ Done — 690 unit / 74 integration (+2) / e2e de fumaça 8/8. Nota de execução: o parser de `migration.sql` copiado do precedente dividia por `;` antes de tirar comentários e quebrava com `;` em prosa no cabeçalho; corrigido no próprio teste (comentários saem primeiro).
 
 ---
 

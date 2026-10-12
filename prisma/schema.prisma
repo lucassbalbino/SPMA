@@ -75,6 +75,13 @@ model Usuario {
   // para conta anterior a esta feature, sem `UPDATE` manual.
   dadosPessoaisCompletos Boolean @default(false) @map("Dados_Pessoais_Completos")
 
+  // Gate de dados organizacionais do GO (OGO-01, AD-044): o próprio GO
+  // declara os 6 campos no 1º acesso. Mesmo padrão de `dadosPessoaisCompletos`.
+  // Ligada só por `PATCH /api/usuarios/me/organizacao` - nunca pela edição
+  // por documento, porque significa "o GO declarou", não "os campos estão
+  // cheios". Ignorada para qualquer tipo que não seja GO.
+  dadosOrganizacionaisCompletos Boolean @default(false) @map("Dados_Organizacionais_Completos")
+
   // Rate limiting de login (AD-028) — contadores por conta
   tentativasFalhas    Int       @default(0) @map("Tentativas_Falhas")
   bloqueadoAte        DateTime? @map("Bloqueado_Ate")

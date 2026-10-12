@@ -40,6 +40,7 @@ const CAMPOS_USUARIO = {
   senhaHash: true,
   primeiraVez: true,
   dadosPessoaisCompletos: true,
+  dadosOrganizacionaisCompletos: true,
   tentativasFalhas: true,
   bloqueadoAte: true,
   criadoPor: true,
@@ -48,12 +49,15 @@ const CAMPOS_USUARIO = {
 
 type UsuarioFixture = {
   cpf: string;
-  nome?: string;
+  // `null` explícito grava nome nulo (OGO-20); ausente mantém o default.
+  nome?: string | null;
+  email?: string;
   tipo: TipoUsuario;
   senha?: string | null;
   primeiraVez?: boolean;
   cdOfertante?: string | null;
   dadosPessoaisCompletos?: boolean;
+  dadosOrganizacionaisCompletos?: boolean;
   // Dados organizacionais (AD-043) - só fazem sentido para tipo "GO", mas
   // aceitos sem checagem de tipo aqui (fixture de teste, não validação de
   // produção).
@@ -107,7 +111,8 @@ async function executar(
       const dados = argumento as UsuarioFixture;
       const senhaHash = dados.senha ? await hashPassword(dados.senha) : null;
       const comum = {
-        nome: dados.nome ?? `Usuário ${dados.cpf}`,
+        nome: dados.nome === undefined ? `Usuário ${dados.cpf}` : dados.nome,
+        email: dados.email ?? null,
         tipo: dados.tipo,
         senhaHash,
         primeiraVez: dados.primeiraVez ?? senhaHash === null,
@@ -118,6 +123,10 @@ async function executar(
         // que testam esse gate passam `dadosPessoaisCompletos: false`
         // explicitamente.
         dadosPessoaisCompletos: dados.dadosPessoaisCompletos ?? true,
+        // Mesmo raciocínio para o GO (AD-044): sem este default, todo fixture
+        // de GO de qualquer outra feature cairia em /cadastro-ofertante. Só
+        // os specs do gate passam `dadosOrganizacionaisCompletos: false`.
+        dadosOrganizacionaisCompletos: dados.dadosOrganizacionaisCompletos ?? true,
         // Zeradas sempre, para que cada spec comece de um estado previsível.
         tentativasFalhas: 0,
         bloqueadoAte: null,

@@ -153,9 +153,9 @@ Escopo Large: cada dimensão resolve em requisito ou `N/A` explícito.
 | OGO-11 | P1: Criação enxuta | Design | Pending |
 | OGO-12 | P1: Criação enxuta | Design | Pending |
 | OGO-13 | P1: Criação enxuta | Design | Pending |
-| OGO-14 | P2: GOs existentes | Design | Pending |
+| OGO-14 | P2: GOs existentes | Execute | Done (T1) |
 | OGO-15 | P2: GOs existentes | Design | Pending |
-| OGO-16 | P2: GOs existentes | Design | Pending |
+| OGO-16 | P2: GOs existentes | Execute | Done (T1) |
 | OGO-17 | Edge case | Design | Pending |
 | OGO-18 | Edge case | Design | Pending |
 | OGO-19 | Edge case | Design | Pending |

@@ -14,12 +14,16 @@ export type TipoUsuarioFixture = "AM" | "GT" | "VT" | "GO" | "VO" | "AL";
 
 export type UsuarioFixture = {
   cpf: string;
-  nome?: string;
+  // `null` explícito grava nome nulo (OGO-20); ausente mantém o default.
+  nome?: string | null;
+  email?: string;
   tipo: TipoUsuarioFixture;
   senha?: string | null;
   primeiraVez?: boolean;
   cdOfertante?: string | null;
   dadosPessoaisCompletos?: boolean;
+  // Default `true` no fixture (AD-044): só os specs do gate passam `false`.
+  dadosOrganizacionaisCompletos?: boolean;
   // Dados organizacionais (AD-043) - fusão do antigo `Ofertante` no próprio
   // GO. Só fazem sentido para `tipo: "GO"`, mas o fixture não valida isso -
   // é uma abstração de teste, não a validação de produção.
@@ -42,6 +46,7 @@ export type UsuarioPersistido = {
   senhaHash: string | null;
   primeiraVez: boolean;
   dadosPessoaisCompletos: boolean;
+  dadosOrganizacionaisCompletos: boolean;
   tentativasFalhas: number;
   bloqueadoAte: string | null;
   criadoPor: string | null;
