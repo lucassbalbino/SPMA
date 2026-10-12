@@ -126,7 +126,15 @@ test("CA-OV-03: GO vinculado edita os próprios dados organizacionais e a altera
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/usuarios/${CNPJ_GO_A}/organizacao`, {
-    data: { nome: "Ofertante A Editado", uf: "SP" },
+    // OGO-04: os 6 campos são obrigatórios também nesta rota (mesmo schema).
+    data: {
+      nome: "Ofertante A Editado",
+      responsavel: "Responsavel A Editado",
+      email: "a-editado@exemplo.dev",
+      telefone: "11 4000-0001",
+      uf: "SP",
+      municipio: "Santos",
+    },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 

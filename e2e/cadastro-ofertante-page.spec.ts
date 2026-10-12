@@ -94,8 +94,13 @@ test("UGO-01/02: GO com dados organizacionais incompletos é barrado, completa p
   // dados organizacionais incompletos e redirecionar para cá.
   expect(getUsuario(CNPJ_GO_INCOMPLETO)?.uf).toBeNull();
 
+  // OGO-04: os 6 campos são obrigatórios.
   await page.getByLabel("Nome").fill(NOME_ORGANIZACAO);
+  await page.getByLabel("Responsável").fill("Responsavel via UI");
+  await page.getByLabel("E-mail").fill("ui@exemplo.dev");
+  await page.getByLabel("Telefone").fill("11 4000-0002");
   await page.getByLabel("UF").fill("SP");
+  await page.getByLabel("Município").fill("Santos");
 
   const [resposta] = await Promise.all([
     page.waitForResponse((res) => res.url().includes("/api/usuarios/me/organizacao")),

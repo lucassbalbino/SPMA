@@ -1,10 +1,12 @@
 // Tradução do corpo validado de `organizacaoSchema` para o `data` do Prisma.
 //
-// Os 6 campos organizacionais do GO eram mapeados à mão, com o mesmo
-// `?? null` em cada opcional, em três lugares: `PATCH /api/usuarios/me/
-// organizacao`, `PATCH /api/usuarios/[documento]/organizacao` e
-// `POST /api/usuarios`. Três cópias de um mapeamento campo-a-campo é onde um
-// campo novo entra em dois lugares e é esquecido no terceiro.
+// Os 6 campos organizacionais do GO são gravados por duas rotas:
+// `PATCH /api/usuarios/me/organizacao` e
+// `PATCH /api/usuarios/[documento]/organizacao`. Um mapeamento só, para que
+// um campo novo não entre numa e seja esquecido na outra.
+//
+// A flag `dadosOrganizacionaisCompletos` NÃO entra aqui de propósito (AD-044):
+// ela significa "o GO declarou", e só a rota `/me` pode ligá-la.
 import type { OrganizacaoInput } from "./organizacao.schema";
 
 /** Os 6 campos organizacionais, nunca `senhaHash` nem contadores de rate-limit. */
@@ -19,18 +21,17 @@ export const CAMPOS_ORGANIZACAO = {
 } as const;
 
 /**
- * `?? null` em todo opcional, de propósito: um campo ausente no corpo LIMPA o
- * valor anterior, em vez de preservá-lo. É o contrato tudo-ou-nada que o
- * `organizacaoSchema` impõe (ele exige `nome`/`uf` no mesmo corpo), não um
- * merge parcial como o das respostas de formulário.
+ * Tudo-ou-nada: `organizacaoSchema` exige os 6 no mesmo corpo (OGO-04), então
+ * toda gravação substitui os 6 valores, nunca um merge parcial como o das
+ * respostas de formulário.
  */
 export function dadosOrganizacao(entrada: OrganizacaoInput) {
   return {
     nome: entrada.nome,
-    responsavel: entrada.responsavel ?? null,
-    email: entrada.email ?? null,
-    telefone: entrada.telefone ?? null,
+    responsavel: entrada.responsavel,
+    email: entrada.email,
+    telefone: entrada.telefone,
     uf: entrada.uf,
-    municipio: entrada.municipio ?? null,
+    municipio: entrada.municipio,
   };
 }

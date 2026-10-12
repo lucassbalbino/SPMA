@@ -118,14 +118,16 @@ T8
 
 **Done when**:
 
-- [ ] `organizacao.schema.test.ts`: aceita os 6 válidos; para cada um dos 5 campos de texto, ausente e `""` rejeitados com a mensagem do campo; email malformado → "Email inválido"; UF fora da lista → "UF inválida"
-- [ ] e2e que mandavam corpo parcial a rotas de organização passam a mandar os 6: `e2e/organizacao-id.spec.ts` (CA-OV-03), `e2e/cadastro-ofertante-page.spec.ts` (preenche os 6 pela UI). Os testes de 400/403 existentes seguem afirmando o mesmo status
-- [ ] Gate Full passa com `npx playwright test e2e/organizacao.spec.ts e2e/organizacao-id.spec.ts e2e/cadastro-ofertante-page.spec.ts`
+- [x] `organizacao.schema.test.ts`: aceita os 6 válidos; para cada um dos 5 campos de texto, ausente e `""` rejeitados com a mensagem do campo; email malformado → "Email inválido"; UF fora da lista → "UF inválida"
+- [x] e2e que mandavam corpo parcial a rotas de organização passam a mandar os 6: `e2e/organizacao-id.spec.ts` (CA-OV-03), `e2e/cadastro-ofertante-page.spec.ts` (preenche os 6 pela UI). Os testes de 400/403 existentes seguem afirmando o mesmo status
+- [x] Gate Full passa com `npx playwright test e2e/organizacao.spec.ts e2e/organizacao-id.spec.ts e2e/cadastro-ofertante-page.spec.ts`
 
 **Tests**: unit
 **Gate**: full
 
-**Commit**: `feat(organizacao)!: os 6 dados organizacionais do GO passam a ser obrigatorios`
+**Commit**: `feat(organizacao)!: exigir os 6 dados organizacionais do GO`
+
+**Status**: ✅ Done — 693 unit (690 − 5 testes do contrato antigo + 8) / 74 integration / e2e 20/20. O teste "aceita payload válido com apenas os campos obrigatórios" (`{nome, uf}`) codificava a regra que a decisão 2 do usuário mudou e foi substituído; os de "ausente" foram reescritos a partir de um payload completo (antes rejeitariam por qualquer campo faltando).
 
 ---
 
