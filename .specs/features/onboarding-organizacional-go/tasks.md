@@ -205,16 +205,18 @@ T8
 
 **Done when**:
 
-- [ ] e2e: GO pendente abre a tela e o campo Nome mostra o nome gravado na criação (OGO-02); envia sem tocar no Nome e o banco grava esse mesmo nome (OGO-19)
-- [ ] e2e: GO pendente com `nome: null` vê o campo vazio; enviar sem preencher mostra "Nome é obrigatório" e não grava nada (OGO-20)
-- [ ] e2e: GO com flag `true` abre `/cadastro-ofertante` pela URL e a tela renderiza (OGO-17, a parte do envio já é T3)
-- [ ] e2e: sem sessão, `/cadastro-ofertante` redireciona para `/login` (OGO-18)
-- [ ] Gate Full passa com `npx playwright test e2e/cadastro-ofertante-page.spec.ts e2e/identidade-visual.spec.ts`
+- [x] e2e: GO pendente abre a tela e o campo Nome mostra o nome gravado na criação (OGO-02); envia sem tocar no Nome e o banco grava esse mesmo nome (OGO-19)
+- [x] e2e: GO pendente com `nome: null` vê o campo vazio; enviar sem preencher mostra "Nome é obrigatório" e não grava nada (OGO-20)
+- [x] e2e: GO com flag `true` abre `/cadastro-ofertante` pela URL e a tela renderiza (OGO-17, a parte do envio já é T3)
+- [x] e2e: sem sessão, `/cadastro-ofertante` redireciona para `/login` (OGO-18)
+- [x] Gate Full passa com `npx playwright test e2e/cadastro-ofertante-page.spec.ts e2e/identidade-visual.spec.ts`
 
 **Tests**: e2e
 **Gate**: full
 
-**Commit**: `feat(organizacao): formulario de onboarding do GO abre com o nome da criacao`
+**Commit**: `feat(organizacao): abrir o onboarding do GO com o nome da criacao`
+
+**Status**: ✅ Done — 697 unit / 74 integration / e2e 34/34 (`cadastro-ofertante-page` +4, `identidade-visual`). Só OGO-02/19 nasceu vermelho; OGO-17, OGO-18 e OGO-20 fixam comportamento que já valia e tem de continuar valendo. Desvio do design.md (item 8): o `campo || undefined` saiu por simplicidade, não pelo motivo citado lá — com `z.string({ message })`, ausente e vazio já dão a mesma mensagem.
 
 ---
 

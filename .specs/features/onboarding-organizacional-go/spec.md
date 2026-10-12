@@ -141,7 +141,7 @@ Escopo Large: cada dimensão resolve em requisito ou `N/A` explícito.
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
 | OGO-01 | P1: Coleta no 1º login | Execute | Done (T4) |
-| OGO-02 | P1: Coleta no 1º login | Design | Pending |
+| OGO-02 | P1: Coleta no 1º login | Execute | Done (T5) |
 | OGO-03 | P1: Coleta no 1º login | Execute | Done (T3) |
 | OGO-04 | P1: Coleta no 1º login | Execute | Done (T2, T3) |
 | OGO-05 | P1: Coleta no 1º login | Execute | Done (T3) |
@@ -156,10 +156,10 @@ Escopo Large: cada dimensão resolve em requisito ou `N/A` explícito.
 | OGO-14 | P2: GOs existentes | Execute | Done (T1) |
 | OGO-15 | P2: GOs existentes | Execute | Done (T1, T4) |
 | OGO-16 | P2: GOs existentes | Execute | Done (T1) |
-| OGO-17 | Edge case | Design | Pending |
-| OGO-18 | Edge case | Design | Pending |
-| OGO-19 | Edge case | Design | Pending |
-| OGO-20 | Edge case | Design | Pending |
+| OGO-17 | Edge case | Execute | Done (T3, T5) |
+| OGO-18 | Edge case | Execute | Done (T5) |
+| OGO-19 | Edge case | Execute | Done (T5) |
+| OGO-20 | Edge case | Execute | Done (T5) |
 
 **Coverage:** 20 total, 0 mapeados em tasks (Tasks ainda não rodou), 20 Pending.
 

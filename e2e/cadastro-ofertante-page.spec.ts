@@ -42,10 +42,20 @@ function gerarCpfValido(indice: number): string {
 const CNPJ_GO_INCOMPLETO = gerarCnpjValido(1);
 const CNPJ_GO_GUARDS = gerarCnpjValido(2);
 const CNPJ_GO_INVALIDO = gerarCnpjValido(3);
+const CNPJ_GO_NOME_DA_CRIACAO = gerarCnpjValido(4);
+const CNPJ_GO_SEM_NOME = gerarCnpjValido(5);
+const NOME_DA_CRIACAO = "Nome Dado Pelo AM";
 const CPF_AM_GUARDS = gerarCpfValido(1);
 const NOME_ORGANIZACAO = "Organizacao via UI";
 
-const DOCUMENTOS = [CNPJ_GO_INCOMPLETO, CNPJ_GO_GUARDS, CNPJ_GO_INVALIDO, CPF_AM_GUARDS];
+const DOCUMENTOS = [
+  CNPJ_GO_INCOMPLETO,
+  CNPJ_GO_GUARDS,
+  CNPJ_GO_INVALIDO,
+  CNPJ_GO_NOME_DA_CRIACAO,
+  CNPJ_GO_SEM_NOME,
+  CPF_AM_GUARDS,
+];
 
 /** Os 6 dados organizacionais e a flag, para comparar antes/depois. */
 function estadoOrganizacional(documento: string) {
@@ -101,7 +111,34 @@ test.beforeAll(() => {
     uf: "SP",
   });
   upsertUsuario({ cpf: CPF_AM_GUARDS, tipo: "AM", senha: SENHA, primeiraVez: false });
+  // OGO-02/OGO-19: o nome que o AM deu na criação.
+  upsertUsuario({
+    cpf: CNPJ_GO_NOME_DA_CRIACAO,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    dadosOrganizacionaisCompletos: false,
+    nome: NOME_DA_CRIACAO,
+  });
+  // OGO-20: GO sem nome no banco.
+  upsertUsuario({
+    cpf: CNPJ_GO_SEM_NOME,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    dadosOrganizacionaisCompletos: false,
+    nome: null,
+  });
 });
+
+/** Preenche os 5 campos que não são o nome. */
+async function preencherOutrosCinco(page: import("@playwright/test").Page): Promise<void> {
+  await page.getByLabel("Responsável").fill("Responsavel Da Organizacao");
+  await page.getByLabel("E-mail").fill("organizacao@exemplo.dev");
+  await page.getByLabel("Telefone").fill("11 4000-0003");
+  await page.getByLabel("UF").fill("RJ");
+  await page.getByLabel("Município").fill("Niteroi");
+}
 
 test.afterAll(() => {
   deleteUsuarios(DOCUMENTOS);
@@ -209,6 +246,67 @@ test("OGO-05/OGO-17: GO que já concluiu e envia de novo recebe 409, os 6 dados 
 
   expect(res.status()).toBe(409);
   expect(estadoOrganizacional(CNPJ_GO_INCOMPLETO)).toEqual(antes);
+});
+
+test("OGO-02/OGO-19: o campo Nome abre com o nome da criação e, enviado sem alteração, é gravado igual", async ({
+  page,
+}) => {
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento: CNPJ_GO_NOME_DA_CRIACAO, senha: SENHA },
+  });
+  expect(login.ok()).toBe(true);
+
+  await page.goto("/cadastro-ofertante");
+  await expect(page.getByLabel("Nome")).toHaveValue(NOME_DA_CRIACAO);
+
+  await preencherOutrosCinco(page);
+  const [resposta] = await Promise.all([
+    page.waitForResponse((res) => res.url().includes("/api/usuarios/me/organizacao")),
+    page.getByRole("button", { name: "Cadastrar" }).click(),
+  ]);
+  expect(resposta.status()).toBe(200);
+
+  const usuario = getUsuario(CNPJ_GO_NOME_DA_CRIACAO);
+  expect(usuario?.nome).toBe(NOME_DA_CRIACAO);
+  expect(usuario?.dadosOrganizacionaisCompletos).toBe(true);
+});
+
+test("OGO-20: GO sem nome no banco vê o campo vazio, e enviar sem preencher mostra o erro e não grava nada", async ({
+  page,
+}) => {
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento: CNPJ_GO_SEM_NOME, senha: SENHA },
+  });
+  expect(login.ok()).toBe(true);
+
+  await page.goto("/cadastro-ofertante");
+  await expect(page.getByLabel("Nome")).toHaveValue("");
+
+  const antes = estadoOrganizacional(CNPJ_GO_SEM_NOME);
+  await preencherOutrosCinco(page);
+  await page.getByRole("button", { name: "Cadastrar" }).click();
+
+  await expect(page.getByText("Nome é obrigatório")).toBeVisible();
+  expect(estadoOrganizacional(CNPJ_GO_SEM_NOME)).toEqual(antes);
+  expect(antes.nome).toBeNull();
+  expect(antes.dadosOrganizacionaisCompletos).toBe(false);
+});
+
+test("OGO-17: GO que já concluiu e digita /cadastro-ofertante na URL vê a tela", async ({ page }) => {
+  expect(getUsuario(CNPJ_GO_GUARDS)?.dadosOrganizacionaisCompletos).toBe(true);
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento: CNPJ_GO_GUARDS, senha: SENHA },
+  });
+  expect(login.ok()).toBe(true);
+
+  await page.goto("/cadastro-ofertante");
+  await expect(page).toHaveURL(/\/cadastro-ofertante$/);
+  await expect(page.getByRole("button", { name: "Cadastrar" })).toBeVisible();
+});
+
+test("OGO-18: sem sessão, /cadastro-ofertante redireciona para /login", async ({ page }) => {
+  await page.goto("/cadastro-ofertante");
+  await expect(page).toHaveURL(/\/login$/);
 });
 
 // Cobertura de guard que `POST /api/ofertantes` (rota substituída, AD-043)
