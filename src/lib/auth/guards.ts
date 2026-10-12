@@ -52,19 +52,17 @@ export function requirePrimeiroAcessoConcluido(usuario: {
 }
 
 /**
- * GO sem dados organizacionais completos cadastra os seus antes de seguir
- * (REQ-AU-09, UGO-01/AD-043). Um GO É o próprio Ofertante (não tem mais
- * `cdOfertante` de terceiro para checar) - a completude passa a ser medida
- * pelos dois campos obrigatórios do cadastro organizacional (`nome`, `uf`).
- * Vale só para GO: AL tem escopo pelo curso e VO nunca cadastra dados
- * organizacionais próprios (AD-012).
+ * GO que ainda não declarou os 6 dados organizacionais preenche o formulário
+ * antes de seguir (OGO-01, AD-044). Decidido só pela flag persistida
+ * `dadosOrganizacionaisCompletos`, nunca por campos preenchidos: um GO
+ * anterior a esta regra tem nome e UF e ainda assim passa pela tela (OGO-15).
+ * Vale só para GO (OGO-06) - mesmo desenho de `requireDadosPessoaisCompletos`.
  */
-export function requireOfertanteVinculado(usuario: {
+export function requireDadosOrganizacionaisCompletos(usuario: {
   tipo: TipoUsuario;
-  nome: string | null;
-  uf: string | null;
+  dadosOrganizacionaisCompletos: boolean;
 }): void {
-  if (usuario.tipo === "GO" && (usuario.nome === null || usuario.uf === null)) {
+  if (usuario.tipo === "GO" && !usuario.dadosOrganizacionaisCompletos) {
     redirect("/cadastro-ofertante");
   }
 }
@@ -78,7 +76,7 @@ export function requireOfertanteVinculado(usuario: {
  * tela principal" (`/painel`). `/painel` vive dentro de `(protegido)`, e este
  * guard roda no layout desse mesmo grupo - redirecionar para `/painel`
  * disparava o próprio guard de novo, em loop, pela mesma razão documentada em
- * `requirePrimeiroAcessoConcluido`/`requireOfertanteVinculado` acima (Server
+ * `requirePrimeiroAcessoConcluido`/`requireDadosOrganizacionaisCompletos` acima (Server
  * Components não expõem o pathname da requisição ao layout). Mesma solução já
  * usada para `/primeiro-acesso` e `/cadastro-ofertante`: rota própria,
  * `/dados-pessoais`, em `src/app/(onboarding)/`. Ver design.md item 7.

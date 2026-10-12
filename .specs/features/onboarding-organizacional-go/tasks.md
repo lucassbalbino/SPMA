@@ -176,15 +176,17 @@ T8
 
 **Done when**:
 
-- [ ] `guards.test.ts`: GO com flag `false` → redirect `/cadastro-ofertante`; GO com flag `true` → não redireciona **mesmo com `nome`/`uf` nulos** (prova que o critério antigo saiu); cada um de AM/GT/VT/VO/AL com flag `false` → não redireciona (OGO-06)
-- [ ] `e2e/protegido-layout.spec.ts`: fixture do GO pendente com flag `false`; caso existente renomeado para o critério novo; caso novo OGO-15: GO com nome **e** UF preenchidos e flag `false` → `/painel` redireciona para `/cadastro-ofertante`
-- [ ] OGO-08 segue provado pelo teste existente "primeiraVez=true redireciona para /primeiro-acesso" (ordem da cadeia não muda) — sem teste novo
-- [ ] Gate Full passa com `npx playwright test e2e/protegido-layout.spec.ts e2e/cadastro-ofertante-page.spec.ts e2e/identidade-visual.spec.ts`
+- [x] `guards.test.ts`: GO com flag `false` → redirect `/cadastro-ofertante`; GO com flag `true` → não redireciona **mesmo com `nome`/`uf` nulos** (prova que o critério antigo saiu); cada um de AM/GT/VT/VO/AL com flag `false` → não redireciona (OGO-06)
+- [x] `e2e/protegido-layout.spec.ts`: fixture do GO pendente com flag `false`; caso existente renomeado para o critério novo; caso novo OGO-15: GO com nome **e** UF preenchidos e flag `false` → `/painel` redireciona para `/cadastro-ofertante`
+- [x] OGO-08 segue provado pelo teste existente "primeiraVez=true redireciona para /primeiro-acesso" (ordem da cadeia não muda) — sem teste novo
+- [x] Gate Full passa com `npx playwright test e2e/protegido-layout.spec.ts e2e/cadastro-ofertante-page.spec.ts e2e/identidade-visual.spec.ts`
 
 **Tests**: unit
 **Gate**: full
 
-**Commit**: `feat(auth)!: gate do GO passa a ser dadosOrganizacionaisCompletos, nao nome/uf`
+**Commit**: `feat(auth)!: decidir o gate do GO pela flag, nao por nome/uf`
+
+**Status**: ✅ Done — 697 unit (693 − 4 testes do critério antigo + 8) / 74 integration / e2e 44/44 (`protegido-layout`, `cadastro-ofertante-page`, `identidade-visual`, `dados-pessoais`, `meus-dados`). A renomeação deixou 4 comentários citando `requireOfertanteVinculado` (`proxy.ts`, 3 specs e2e) — atualizados; o de `usuario.schema.ts` fica para o T6, que reescreve esse trecho. Em `cadastro-ofertante-page.spec.ts`, a pré-condição `uf` nulo virou flag `false`, que é o que mantém o GO pendente agora.
 
 ---
 

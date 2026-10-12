@@ -1,7 +1,7 @@
 // Proxy do Next.js 16 (runtime Node.js por padrão) - nonce + CSP por
 // requisição (REQ-SEC-16) + redirect leve por presença de cookie, só UX. NÃO
 // é a autoridade: não consulta o banco, não valida a sessão. Isso vive em
-// requireSession()/requirePrimeiroAcessoConcluido()/requireOfertanteVinculado()
+// requireSession()/requirePrimeiroAcessoConcluido()/requireDadosOrganizacionaisCompletos()
 // nos layouts `(protegido)` e `(onboarding)`, reavaliados a cada request
 // (REQ-SEC-14, ver design.md).
 //

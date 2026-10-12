@@ -12,9 +12,9 @@ const CPF_AL_NOVO = "70010020039";
 // comportar normalmente, sem o questionário (PESSOAL-27).
 const CPF_AL_COMPLETO = "70020030037";
 // Não-Aluno - confirma que o gate não altera a navegação de nenhum outro
-// perfil (PESSOAL-04), mesmo nunca tendo a flag marcada. AM, não GO: GO sem
-// `cdOfertante` cai no gate (não relacionado) de `requireOfertanteVinculado`,
-// que provaria o teste errado.
+// perfil (PESSOAL-04), mesmo nunca tendo a flag marcada. AM, não GO: um GO
+// pendente cai no gate (não relacionado) de
+// `requireDadosOrganizacionaisCompletos`, que provaria o teste errado.
 const CPF_AM = "70030040035";
 
 const CPFS = [CPF_AL_NOVO, CPF_AL_COMPLETO, CPF_AM];

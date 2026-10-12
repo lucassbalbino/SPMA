@@ -63,9 +63,9 @@ function estadoOrganizacional(documento: string) {
 
 test.beforeAll(() => {
   deleteUsuarios(DOCUMENTOS);
-  // GO recém-criado, ainda sem nome/uf (dados organizacionais pendentes) -
-  // `requireOfertanteVinculado` (T6) barra qualquer rota protegida até isso
-  // ser completado.
+  // GO que ainda não declarou os dados organizacionais (flag false) -
+  // `requireDadosOrganizacionaisCompletos` barra qualquer rota protegida até
+  // ele enviar o formulário (OGO-01).
   upsertUsuario({
     cpf: CNPJ_GO_INCOMPLETO,
     tipo: "GO",
@@ -120,10 +120,8 @@ test("UGO-01/02: GO com dados organizacionais incompletos é barrado, completa p
   // que a própria página de cadastro está acessível para o GO pendente.
   await page.goto("/cadastro-ofertante");
   await expect(page).toHaveURL(/\/cadastro-ofertante$/);
-  // O fixture sempre preenche um `nome` padrão (placeholder de teste); é a
-  // ausência de `uf` que faz `requireOfertanteVinculado` (T6) considerar os
-  // dados organizacionais incompletos e redirecionar para cá.
-  expect(getUsuario(CNPJ_GO_INCOMPLETO)?.uf).toBeNull();
+  // É a flag, e não campo nulo, que mantém o GO pendente (AD-044).
+  expect(getUsuario(CNPJ_GO_INCOMPLETO)?.dadosOrganizacionaisCompletos).toBe(false);
 
   // OGO-04: os 6 campos são obrigatórios.
   await page.getByLabel("Nome").fill(NOME_ORGANIZACAO);

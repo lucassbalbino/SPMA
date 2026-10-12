@@ -1,4 +1,4 @@
-// Testes unitários das guardas de rota (REQ-AU-02, REQ-AU-09, REQ-SEC-14).
+// Testes unitários das guardas de rota (REQ-AU-02, REQ-AU-09, REQ-SEC-14, OGO-01/06/15).
 // `session.ts` e `next/navigation` são mockados: aqui só interessa qual
 // desvio cada guarda dispara, não o acesso ao banco.
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -12,8 +12,8 @@ import {
   podeGerenciarPreCurso,
   podeGerenciarVerba,
   podeMatricularAluno,
+  requireDadosOrganizacionaisCompletos,
   requireDadosPessoaisCompletos,
-  requireOfertanteVinculado,
   requirePrimeiroAcessoConcluido,
   requireSession,
   resolverEscopoOfertante,
@@ -79,38 +79,56 @@ describe("requirePrimeiroAcessoConcluido", () => {
   });
 });
 
-describe("requireOfertanteVinculado", () => {
+describe("requireDadosOrganizacionaisCompletos", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("redireciona para /cadastro-ofertante quando GO está com nome null", () => {
+  // OGO-01
+  it("redireciona para /cadastro-ofertante quando o GO ainda não declarou os dados", () => {
     expect(() =>
-      requireOfertanteVinculado({ tipo: "GO", nome: null, uf: "SP" }),
+      requireDadosOrganizacionaisCompletos({ tipo: "GO", dadosOrganizacionaisCompletos: false }),
     ).toThrow("NEXT_REDIRECT:/cadastro-ofertante");
     expect(redirect).toHaveBeenCalledWith("/cadastro-ofertante");
   });
 
-  it("redireciona para /cadastro-ofertante quando GO está com uf null", () => {
-    expect(() =>
-      requireOfertanteVinculado({ tipo: "GO", nome: "Instituto Exemplo", uf: null }),
-    ).toThrow("NEXT_REDIRECT:/cadastro-ofertante");
-    expect(redirect).toHaveBeenCalledWith("/cadastro-ofertante");
+  // OGO-15: o critério antigo (nome e UF preenchidos) não libera mais.
+  it("redireciona o GO com nome e UF preenchidos enquanto a flag for false", () => {
+    const goPreExistente = {
+      tipo: "GO" as const,
+      nome: "Instituto Exemplo",
+      uf: "SP",
+      dadosOrganizacionaisCompletos: false,
+    };
+
+    expect(() => requireDadosOrganizacionaisCompletos(goPreExistente)).toThrow(
+      "NEXT_REDIRECT:/cadastro-ofertante",
+    );
   });
 
-  it("não redireciona quando GO já tem nome e uf preenchidos", () => {
-    requireOfertanteVinculado({ tipo: "GO", nome: "Instituto Exemplo", uf: "SP" });
+  // OGO-03: só a flag decide - nome/UF nulos não prendem quem já concluiu.
+  it("não redireciona o GO com a flag true, mesmo com nome e UF nulos", () => {
+    const goConcluido = {
+      tipo: "GO" as const,
+      nome: null,
+      uf: null,
+      dadosOrganizacionaisCompletos: true,
+    };
+
+    requireDadosOrganizacionaisCompletos(goConcluido);
 
     expect(redirect).not.toHaveBeenCalled();
   });
 
-  // AD-012: AL tem escopo pelo curso, não pelo Ofertante - nome/uf nulos são
-  // o estado normal dele e não podem prendê-lo no cadastro organizacional.
-  it("não redireciona perfil não-GO com nome/uf null", () => {
-    requireOfertanteVinculado({ tipo: "AL", nome: null, uf: null });
+  // OGO-06: a flag não significa nada fora do GO.
+  it.each(["AM", "GT", "VT", "VO", "AL"] as const)(
+    "não redireciona %s mesmo com a flag false",
+    (tipo) => {
+      requireDadosOrganizacionaisCompletos({ tipo, dadosOrganizacionaisCompletos: false });
 
-    expect(redirect).not.toHaveBeenCalled();
-  });
+      expect(redirect).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("resolverEscopoOfertante", () => {

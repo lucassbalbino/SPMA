@@ -58,9 +58,9 @@ test.beforeAll(() => {
   });
   criarDadosPessoais(CPF_AL_B, RESPOSTAS_B);
 
-  // AM (não GO): não precisa de Ofertante vinculado para chegar a /painel -
-  // um GO sem cdOfertante cairia no gate (não relacionado) de
-  // requireOfertanteVinculado, contaminando o teste de PESSOAL-20.
+  // AM (não GO): não passa pelo onboarding organizacional para chegar a
+  // /painel - um GO pendente cairia no gate (não relacionado) de
+  // requireDadosOrganizacionaisCompletos, contaminando o teste de PESSOAL-20.
   upsertUsuario({ cpf: CPF_GO, tipo: "AM", senha: SENHA, primeiraVez: false });
 });
 

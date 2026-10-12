@@ -1,7 +1,7 @@
 // Layout do grupo de rotas protegido (REQ-AU-02, REQ-AU-09, REQ-SEC-14).
 //
 // Autoridade real de autorização de borda: chama, nesta ordem exata,
-// requireSession() -> requirePrimeiroAcessoConcluido() -> requireOfertanteVinculado()
+// requireSession() -> requirePrimeiroAcessoConcluido() -> requireDadosOrganizacionaisCompletos()
 // -> requireDadosPessoaisCompletos().
 // `proxy.ts` (T30) só redireciona por presença de cookie (UX); é aqui que a
 // sessão é reavaliada contra o banco a cada request (ver design.md).
@@ -9,7 +9,7 @@
 // SPEC_DEVIATION: design.md lista `/primeiro-acesso` e `/cadastro-ofertante`
 // como páginas deste MESMO grupo (protegido). Isso não é possível: as duas
 // são justamente o destino dos redirects de requirePrimeiroAcessoConcluido/
-// requireOfertanteVinculado, e Server Components não têm como saber o
+// requireDadosOrganizacionaisCompletos, e Server Components não têm como saber o
 // pathname da requisição atual (next/headers não expõe isso - só
 // usePathname, que é client-side; ver node_modules/next/dist/docs/.../
 // layout.md, seção "Pathname"). Se essas duas páginas ficassem sob este
@@ -22,8 +22,8 @@
 // (grupos de rota são transparentes), sem o guard que criaria o loop.
 import { CascaProtegida } from "@/components/layout/CascaProtegida";
 import {
+  requireDadosOrganizacionaisCompletos,
   requireDadosPessoaisCompletos,
-  requireOfertanteVinculado,
   requirePrimeiroAcessoConcluido,
   requireSession,
 } from "@/lib/auth/guards";
@@ -35,7 +35,7 @@ export default async function ProtegidoLayout({
 }) {
   const { usuario } = await requireSession();
   requirePrimeiroAcessoConcluido(usuario);
-  requireOfertanteVinculado(usuario);
+  requireDadosOrganizacionaisCompletos(usuario);
   requireDadosPessoaisCompletos(usuario);
 
   return <CascaProtegida usuario={usuario}>{children}</CascaProtegida>;

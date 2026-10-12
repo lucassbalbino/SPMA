@@ -140,21 +140,21 @@ Escopo Large: cada dimensão resolve em requisito ou `N/A` explícito.
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| OGO-01 | P1: Coleta no 1º login | Design | Pending |
+| OGO-01 | P1: Coleta no 1º login | Execute | Done (T4) |
 | OGO-02 | P1: Coleta no 1º login | Design | Pending |
 | OGO-03 | P1: Coleta no 1º login | Execute | Done (T3) |
 | OGO-04 | P1: Coleta no 1º login | Execute | Done (T2, T3) |
 | OGO-05 | P1: Coleta no 1º login | Execute | Done (T3) |
-| OGO-06 | P1: Coleta no 1º login | Design | Pending |
+| OGO-06 | P1: Coleta no 1º login | Execute | Done (T4) |
 | OGO-07 | P1: Coleta no 1º login | Execute | Done (T3) |
-| OGO-08 | P1: Coleta no 1º login | Design | Pending |
+| OGO-08 | P1: Coleta no 1º login | Execute | Done (T4, teste existente) |
 | OGO-09 | P1: Criação enxuta | Design | Pending |
 | OGO-10 | P1: Criação enxuta | Design | Pending |
 | OGO-11 | P1: Criação enxuta | Design | Pending |
 | OGO-12 | P1: Criação enxuta | Design | Pending |
 | OGO-13 | P1: Criação enxuta | Design | Pending |
 | OGO-14 | P2: GOs existentes | Execute | Done (T1) |
-| OGO-15 | P2: GOs existentes | Design | Pending |
+| OGO-15 | P2: GOs existentes | Execute | Done (T1, T4) |
 | OGO-16 | P2: GOs existentes | Execute | Done (T1) |
 | OGO-17 | Edge case | Design | Pending |
 | OGO-18 | Edge case | Design | Pending |
