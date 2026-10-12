@@ -118,7 +118,7 @@ AM cria todos; GT cria GT/VT/GO; GO cria GO/VO/AL; VT/VO/AL não criam ninguém.
 
 ### Ofertante e Verba
 
-**AD-014 — Criação de Ofertante:** três formas — pré-cadastro administrativo, por GT, ou pelo próprio GO no 1º acesso quando ainda não vinculado (nesse caso o sistema força o cadastro antes de liberar o resto). ⚠️ *Superada por AD-043 (2026-09-12): "Ofertante" deixa de ser um cadastro de terceiro — as três formas continuam existindo, mas agora cadastram os dados organizacionais do próprio GO, não um registro separado.*
+**AD-014 — Criação de Ofertante:** três formas — pré-cadastro administrativo, por GT, ou pelo próprio GO no 1º acesso quando ainda não vinculado (nesse caso o sistema força o cadastro antes de liberar o resto). ⚠️ *Superada por AD-043 (2026-09-12): "Ofertante" deixa de ser um cadastro de terceiro — as três formas continuam existindo, mas agora cadastram os dados organizacionais do próprio GO, não um registro separado.* ⚠️ *Atualizada por AD-044 (2026-10-12): AM/GT já não cadastram dado organizacional nenhum — só identificam a organização (CNPJ + nome) e a verba; os 6 campos passam a ser declarados exclusivamente pelo próprio GO no 1º acesso.*
 
 **AD-015 — Verba pertence ao Ofertante, relação 1:N com Curso.**
 Uma verba pode custear vários cursos. A FK fica no Curso (`TB_Pre_Curso.CD_Verba`), com `VL_Curso_Alocado` por curso. TB_Verba NÃO tem CD_Curso. ⚠️ *Parcialmente superada por AD-043 (2026-09-12): a relação 1 Verba : N Curso e a ausência de `CD_Curso` em `TB_Verba` continuam valendo; o que muda é o alvo de `CD_Ofertante` (passa a apontar para o GO, não para uma tabela `Ofertante`).*
@@ -286,3 +286,15 @@ Pedido do usuário, decisão de negócio já tomada e não reaberta: "Ofertante 
 **Achado durante Tasks, não previsto no Design**: `TIPOS_PERMITIDOS.GO` (AD-009) hoje inclui `GO` — um GO pode criar outro GO, herdando o mesmo `cdOfertante` do criador (`cascata.ts`, testado em `cascata.test.ts:36` e `e2e/usuarios.spec.ts:201`). É exatamente o cenário "dois GOs para a mesma organização" que a unificação 1 GO = 1 CNPJ elimina por construção. `GO` sai da lista de tipos que um GO pode criar (`GO: [VO, AL]`, era `[GO, VO, AL]`) — GO continua criando VO e AL normalmente. Registrado como UGO-18 no spec da feature.
 
 Feature em `.specs/features/unificacao-ofertante-go/` (Complex: `spec.md` 18 requisitos em 3 grupos, `design.md`). `tasks.md` e execução ainda pendentes nesta sessão.
+
+----
+**AD-044 (2026-10-12) — Os dados organizacionais do GO são declarados pelo próprio GO, obrigatoriamente, no primeiro acesso. A criação por AM/GT só identifica a organização (CNPJ + nome) e cria a verba. Complementa AD-043 (modelo físico intacto) e atualiza AD-014.**
+
+Pedido do usuário: "no ato de primeiro login do Ofertante, aparecerá obrigatoriamente um formulário" com nome, responsável, email, telefone, UF e município; "o Adm tem que preencher apenas nome, cnpj, e verba". Decisões confirmadas pelo usuário em 2026-10-12 (`.specs/features/onboarding-organizacional-go/context.md`):
+
+1. **Completude medida por flag persistida `Usuario.dadosOrganizacionaisCompletos`** (`Dados_Organizacionais_Completos`, default `false`), não mais por `nome`/`uf` não-nulos. Mesmo desenho de `dadosPessoaisCompletos` (AD-042). O critério antigo tornava a tela inalcançável: a criação já preenchia `nome` e `uf`.
+2. **Os 6 campos são obrigatórios** em `organizacaoSchema` — contrato único, também para a edição por `PATCH /api/usuarios/[documento]/organizacao`.
+3. **A flag só é ligada por `PATCH /api/usuarios/me/organizacao`**, nunca pela rota de edição por documento: ela significa "o GO declarou", não "os campos estão cheios".
+4. **`POST /api/usuarios` rejeita com 400** `email`/`uf` para tipo GO e `responsavel`/`telefone`/`municipio` para qualquer tipo. Os demais tipos seguem informando `email` na criação.
+5. **Sem edição posterior pela tela**: o `409` do `/me` após concluir permanece. A rota por documento continua como estava (AM/GT, e o próprio GO por API, sem tela).
+6. **Todo GO pré-existente passa pela tela** (a migration só adiciona a coluna com default `false`; nenhum dado organizacional é apagado).
