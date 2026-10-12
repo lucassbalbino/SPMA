@@ -62,11 +62,11 @@ describe("usuarioSchema", () => {
 });
 
 describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
-  it("aceita GO com CNPJ válido + nome + uf", () => {
+  // OGO-09: AM/GT identificam a organização (CNPJ + nome); o resto é do GO.
+  it("aceita GO só com CNPJ válido + nome, sem nenhum dado organizacional", () => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",
       documento: cnpjValido,
-      uf: "SP",
       tipo: TipoUsuario.GO,
     });
 
@@ -77,7 +77,6 @@ describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",
       documento: cnpjValido,
-      uf: "SP",
       tipo: TipoUsuario.GO,
     });
 
@@ -91,7 +90,6 @@ describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",
       documento: "11.222.333/0001-82", // dígito verificador alterado
-      uf: "SP",
       tipo: TipoUsuario.GO,
     });
 
@@ -107,7 +105,6 @@ describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
     const result = usuarioSchema.safeParse({
       ...basePayload,
       tipo: TipoUsuario.GO,
-      uf: "SP",
     });
 
     expect(result.success).toBe(false);
@@ -118,35 +115,27 @@ describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
     }
   });
 
-  it("GO sem uf -> issue de campo obrigatório", () => {
+  // OGO-10: o GO declara estes dados no 1º acesso - a criação os rejeita, em
+  // vez de aceitá-los e ignorá-los.
+  it.each([
+    ["email", "contato@exemplo.org", "email não é aceito na criação de Gestor Ofertante"],
+    ["uf", "SP", "uf não é aceito na criação de Gestor Ofertante"],
+    ["responsavel", "Fulano de Tal", "responsavel não é aceito na criação de usuário"],
+    ["telefone", "11999999999", "telefone não é aceito na criação de usuário"],
+    ["municipio", "São Paulo", "municipio não é aceito na criação de usuário"],
+  ] as const)("rejeita GO com %s informado", (campo, valor, mensagem) => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",
       documento: cnpjValido,
       tipo: TipoUsuario.GO,
+      [campo]: valor,
     });
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues.some((issue) => issue.path.includes("uf"))).toBe(true);
-    }
-  });
-
-  it("aceita GO com os 4 campos organizacionais opcionais preenchidos", () => {
-    const result = usuarioSchema.safeParse({
-      nome: "Instituto Exemplo",
-      documento: cnpjValido,
-      uf: "SP",
-      responsavel: "Fulano de Tal",
-      telefone: "11999999999",
-      municipio: "São Paulo",
-      tipo: TipoUsuario.GO,
-    });
-
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.responsavel).toBe("Fulano de Tal");
-      expect(result.data.telefone).toBe("11999999999");
-      expect(result.data.municipio).toBe("São Paulo");
+      expect(result.error.issues).toEqual([
+        expect.objectContaining({ path: [campo], message: mensagem }),
+      ]);
     }
   });
 });
@@ -168,7 +157,7 @@ describe("usuarioSchema - campos organizacionais fora do tipo GO (decisão desta
     },
   );
 
-  it("aceita uf informada para um tipo != GO (não é campo exclusivo de GO, só obrigatório para GO)", () => {
+  it("aceita uf informada para um tipo != GO (decisão fixada: a restrição de UF é só PARA GO)", () => {
     const result = usuarioSchema.safeParse({
       ...basePayload,
       tipo: TipoUsuario.AL,
@@ -177,6 +166,23 @@ describe("usuarioSchema - campos organizacionais fora do tipo GO (decisão desta
 
     expect(result.success).toBe(true);
   });
+
+  // OGO-13: só o GO deixa de ter email informado na criação.
+  it.each([TipoUsuario.AL, TipoUsuario.VO, TipoUsuario.GT])(
+    "aceita email informado na criação de %s",
+    (tipo) => {
+      const result = usuarioSchema.safeParse({
+        ...basePayload,
+        tipo,
+        email: "pessoa@exemplo.org",
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.email).toBe("pessoa@exemplo.org");
+      }
+    },
+  );
 });
 
 describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
@@ -184,7 +190,6 @@ describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",
       documento: cnpjValido,
-      uf: "SP",
       tipo: TipoUsuario.GO,
     });
 
@@ -195,7 +200,6 @@ describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",
       documento: cnpjValido,
-      uf: "SP",
       tipo: TipoUsuario.GO,
       verba: { vlVerba: 5000, dtVerba: "2026-01-15" },
     });
@@ -211,7 +215,6 @@ describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",
       documento: cnpjValido,
-      uf: "SP",
       tipo: TipoUsuario.GO,
       verba: { vlVerba: 0 },
     });
@@ -223,7 +226,6 @@ describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",
       documento: cnpjValido,
-      uf: "SP",
       tipo: TipoUsuario.GO,
       verba: { vlVerba: 5000, cdOfertante: "999" },
     });

@@ -235,15 +235,17 @@ T8
 
 **Done when**:
 
-- [ ] `usuario.schema.test.ts`: GO com CNPJ+nome+verba aceito sem UF; GO com cada um de `email`/`uf`/`responsavel`/`telefone`/`municipio` rejeitado com a mensagem do campo; AL/VO com `email` e com `uf` aceitos (OGO-13, e a decisão fixada "aceita uf para tipo != GO" segue verde); AL com `responsavel` rejeitado
-- [ ] `e2e/usuarios.spec.ts`: tira `uf` dos payloads de GO que não testam isso (UGO-18 403, UGO-10 409, REQ-OV-08 400 — sem isso o 400 de forma mascara o status que cada um afirma); caso UGO-01/07 vira OGO-09 (CNPJ+nome+verba → 201, GO e verba criados); caso novo OGO-10: GO com `email` → 400 e nem usuário nem verba no banco
-- [ ] `e2e/usuarios-novo-page.spec.ts`: AM com GO selecionado não vê E-mail, UF, Responsável, Telefone nem Município (OGO-12) e cria o GO só com CNPJ+nome+verba; o caso "barrado sem UF" é removido (o requisito deixou de existir)
-- [ ] Gate Full passa com `npx playwright test e2e/usuarios.spec.ts e2e/usuarios-novo-page.spec.ts`
+- [x] `usuario.schema.test.ts`: GO com CNPJ+nome+verba aceito sem UF; GO com cada um de `email`/`uf`/`responsavel`/`telefone`/`municipio` rejeitado com a mensagem do campo; AL/VO com `email` e com `uf` aceitos (OGO-13, e a decisão fixada "aceita uf para tipo != GO" segue verde); AL com `responsavel` rejeitado
+- [x] `e2e/usuarios.spec.ts`: tira `uf` dos payloads de GO que não testam isso (UGO-18 403, UGO-10 409, REQ-OV-08 400 — sem isso o 400 de forma mascara o status que cada um afirma); caso UGO-01/07 vira OGO-09 (CNPJ+nome+verba → 201, GO e verba criados); caso novo OGO-10: GO com `email` → 400 e nem usuário nem verba no banco
+- [x] `e2e/usuarios-novo-page.spec.ts`: AM com GO selecionado não vê E-mail, UF, Responsável, Telefone nem Município (OGO-12) e cria o GO só com CNPJ+nome+verba; o caso "barrado sem UF" é removido (o requisito deixou de existir)
+- [x] Gate Full passa com `npx playwright test e2e/usuarios.spec.ts e2e/usuarios-novo-page.spec.ts`
 
 **Tests**: unit
 **Gate**: full
 
-**Commit**: `feat(usuarios)!: AM/GT criam GO so com CNPJ, nome e verba`
+**Commit**: `feat(usuarios)!: criar GO so com CNPJ, nome e verba`
+
+**Status**: ✅ Done — 703 unit (697 − 3 do contrato antigo + 9) / 74 integration / e2e 24/25. **Falha pré-existente, fora desta feature:** `e2e/usuarios-novo-page.spec.ts:80` (CA-AU-05) espera as opções do `<select>` como códigos (`"AL"`, `"VO"`), mas o commit `fe2d383` ("commit Nome ALuno on form", anterior a esta feature) passou a renderizar `NOME_TIPO_USUARIO`. Falha igual no HEAD antes do T6 (verificado com `git stash`). Não alterada: teste alheio, aguarda o usuário. O mesmo commit trocou o rótulo do documento para "CNPJ" com GO, o que já quebrava os dois testes de GO pela UI; o reescrito aqui usa "CNPJ", e o "barrado sem UF" foi removido porque o requisito deixou de existir. Payloads de GO com `uf` incidental (unit de verba, e2e UGO-18/UGO-10/REQ-OV-08) perderam o `uf`, senão o 400 de forma mascararia o status afirmado.
 
 ---
 

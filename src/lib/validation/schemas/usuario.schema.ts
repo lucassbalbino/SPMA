@@ -5,18 +5,18 @@ import { normalizarCPF, validarCPF } from "../cpf";
 import { normalizarCNPJ, validarCNPJ } from "../cnpj";
 import { OPCOES_UF } from "./pre-curso.schema";
 
-// Campos organizacionais (AD-043/UGO-01/UGO-08): só fazem sentido para GO,
-// que passou a SER o próprio Ofertante. `uf` é obrigatória para GO (checado
-// em superRefine, junto do `nome` que a base já exige para todo mundo);
-// `responsavel`/`telefone`/`municipio` continuam opcionais mesmo para GO.
-//
-// `uf` NÃO entra nesta lista por decisão explícita, fixada em teste
-// ("aceita uf informada para um tipo != GO"): ela é obrigatória PARA GO, mas
-// não exclusiva DE GO. Consequência a conhecer: `{ tipo: "AL", uf: "SP" }`
-// valida, e `POST /api/usuarios` grava essa UF num Usuario não-GO. Se um dia
-// a intenção for que só GO tenha UF, mude a decisão e o teste junto - não
-// este array sozinho.
-const CAMPOS_SO_GO = ["responsavel", "telefone", "municipio"] as const;
+// Dados organizacionais na criação (AD-044, OGO-09/OGO-10): AM/GT só
+// identificam o GO (CNPJ + nome) e criam a verba; os 6 dados organizacionais
+// são declarados pelo próprio GO no 1º acesso. Por isso estes três nunca são
+// aceitos na criação, de tipo nenhum.
+const CAMPOS_NUNCA_NA_CRIACAO = ["responsavel", "telefone", "municipio"] as const;
+
+// Estes dois são do GO e também ficam fora da criação dele - mas continuam
+// aceitos para os outros tipos: `email` porque VT/VO/AL não têm onde declarar
+// o próprio (OGO-13), e `uf` por decisão anterior fixada em teste ("aceita uf
+// informada para um tipo != GO"). Se um dia só GO puder ter UF, mude a
+// decisão e o teste junto - não esta lista sozinha.
+const CAMPOS_FORA_DA_CRIACAO_DO_GO = ["email", "uf"] as const;
 
 export const usuarioSchema = z
   .object({
@@ -41,9 +41,8 @@ export const usuarioSchema = z
     responsavel: z.string().optional(),
     telefone: z.string().optional(),
     // Mesma lista canônica de `identifUf`/`avalPessoalEstado`, em vez de uma
-    // string livre: a UF do GO acaba na MESMA coluna `Usuario.uf` que o guard
-    // `requireOfertanteVinculado` consulta, e aceitar "ZZ" aqui enquanto o
-    // questionário exige uma UF real é uma divergência sem motivo.
+    // string livre: aceitar "ZZ" aqui enquanto o questionário exige uma UF
+    // real é uma divergência sem motivo.
     uf: z.enum(OPCOES_UF, { message: "UF inválida" }).optional(),
     municipio: z.string().optional(),
   })
@@ -59,24 +58,27 @@ export const usuarioSchema = z
       });
     }
 
-    if (data.tipo === TipoUsuario.GO && !data.uf) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "UF é obrigatória",
-        path: ["uf"],
-      });
+    // REJEITADOS, não aceitos-e-ignorados (precedente da T8 de
+    // `unificacao-ofertante-go`): campo que não deveria vir é erro de quem
+    // chama, não dado com dois donos. Os campos continuam declarados no
+    // `z.object` justamente para isto - sem eles, o Zod os descartaria em
+    // silêncio e a rejeição não aconteceria.
+    for (const campo of CAMPOS_NUNCA_NA_CRIACAO) {
+      if (data[campo] !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `${campo} não é aceito na criação de usuário`,
+          path: [campo],
+        });
+      }
     }
 
-    // Decisão desta tarefa (T8): campos organizacionais fora do tipo GO são
-    // REJEITADOS, não aceitos-e-ignorados silenciosamente - evita persistir
-    // dado organizacional "fantasma" associado a um tipo que nunca deveria
-    // carregá-lo.
-    if (data.tipo !== TipoUsuario.GO) {
-      for (const campo of CAMPOS_SO_GO) {
+    if (data.tipo === TipoUsuario.GO) {
+      for (const campo of CAMPOS_FORA_DA_CRIACAO_DO_GO) {
         if (data[campo] !== undefined) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: `${campo} só é aceito para o tipo GO`,
+            message: `${campo} não é aceito na criação de Gestor Ofertante`,
             path: [campo],
           });
         }

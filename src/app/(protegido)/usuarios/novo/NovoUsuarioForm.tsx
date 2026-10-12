@@ -53,10 +53,6 @@ export function NovoUsuarioForm({
   // abre os demais campos depois de definido (nenhum tipo pré-selecionado).
   const [tipo, setTipo] = useState<TipoUsuario | "">("");
   const [cdOfertante, setCdOfertante] = useState("");
-  const [uf, setUf] = useState("");
-  const [responsavel, setResponsavel] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [municipio, setMunicipio] = useState("");
   const [vlVerba, setVlVerba] = useState("");
   const [dtVerba, setDtVerba] = useState("");
   const [cdCurso, setCdCurso] = useState("");
@@ -64,14 +60,12 @@ export function NovoUsuarioForm({
   const [enviando, setEnviando] = useState(false);
 
   // VO é o único perfil que se vincula a um GO já existente (AD-012) -
-  // escolhido de uma lista, quando quem cria gerencia verba (AM/GT). O GO
-  // não "escolhe" um Ofertante mais: ele informa os próprios dados
-  // organizacionais (ver `pedeOrganizacional`).
+  // escolhido de uma lista, quando quem cria gerencia verba (AM/GT).
   const pedeGoParaVo = escolheOfertante && tipo === "VO";
-  // UGO-01/08/09: só faz sentido pedir CNPJ+UF+opcionais quando o próprio
-  // usuário sendo criado é um GO - o documento acima já cobre o CNPJ.
-  const pedeOrganizacional = escolheOfertante && tipo === "GO";
+  // OGO-12 (AD-044): o GO é criado só com CNPJ, nome e verba. Email e os
+  // demais dados organizacionais ele mesmo declara no 1º acesso.
   const pedeVerba = escolheOfertante && tipo === "GO";
+  const pedeEmail = tipo !== "GO";
   // AVAL-01: todo Aluno nasce matriculado, então o curso é obrigatório para
   // qualquer perfil que crie um AL (hoje AM e GO - REQ-AU-05/06).
   const pedeCurso = tipo === "AL";
@@ -106,14 +100,10 @@ export function NovoUsuarioForm({
     const entrada = usuarioSchema.safeParse({
       documento,
       nome,
-      email: email || undefined,
+      email: pedeEmail && email ? email : undefined,
       tipo: tipo || undefined,
       cdOfertante: pedeGoParaVo && cdOfertante ? cdOfertante : undefined,
       cdCurso: pedeCurso && cdCurso ? Number(cdCurso) : undefined,
-      uf: pedeOrganizacional && uf ? uf : undefined,
-      responsavel: pedeOrganizacional && responsavel ? responsavel : undefined,
-      telefone: pedeOrganizacional && telefone ? telefone : undefined,
-      municipio: pedeOrganizacional && municipio ? municipio : undefined,
       verba: pedeVerba
         ? { vlVerba: vlVerba ? Number(vlVerba) : undefined, dtVerba: dtVerba || undefined }
         : undefined,
@@ -144,10 +134,6 @@ export function NovoUsuarioForm({
       setEmail("");
       setTipo("");
       setCdOfertante("");
-      setUf("");
-      setResponsavel("");
-      setTelefone("");
-      setMunicipio("");
       setVlVerba("");
       setDtVerba("");
       setCdCurso("");
@@ -205,17 +191,19 @@ export function NovoUsuarioForm({
                 disabled={enviando}
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor="email">E-mail</FieldLabel>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                disabled={enviando}
-              />
-            </Field>
+            {pedeEmail && (
+              <Field>
+                <FieldLabel htmlFor="email">E-mail</FieldLabel>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={enviando}
+                />
+              </Field>
+            )}
             {pedeGoParaVo && (
               <Field data-invalid={!!erro}>
                 <FieldLabel htmlFor="cdOfertante">Ofertante</FieldLabel>
@@ -240,51 +228,6 @@ export function NovoUsuarioForm({
                   </p>
                 )}
               </Field>
-            )}
-            {pedeOrganizacional && (
-              <>
-                <Field data-invalid={!!erro}>
-                  <FieldLabel htmlFor="uf">UF</FieldLabel>
-                  <Input
-                    id="uf"
-                    name="uf"
-                    maxLength={2}
-                    value={uf}
-                    onChange={(event) => setUf(event.target.value.toUpperCase())}
-                    disabled={enviando}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="responsavel">Responsável</FieldLabel>
-                  <Input
-                    id="responsavel"
-                    name="responsavel"
-                    value={responsavel}
-                    onChange={(event) => setResponsavel(event.target.value)}
-                    disabled={enviando}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="telefone">Telefone</FieldLabel>
-                  <Input
-                    id="telefone"
-                    name="telefone"
-                    value={telefone}
-                    onChange={(event) => setTelefone(event.target.value)}
-                    disabled={enviando}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="municipio">Município</FieldLabel>
-                  <Input
-                    id="municipio"
-                    name="municipio"
-                    value={municipio}
-                    onChange={(event) => setMunicipio(event.target.value)}
-                    disabled={enviando}
-                  />
-                </Field>
-              </>
             )}
             {pedeVerba && (
               <>

@@ -121,7 +121,7 @@ test("GO logado não vê os campos de Ofertante/verba (não gere verba)", async 
   await expect(page.locator("#vlVerba")).toHaveCount(0);
 });
 
-test("UGO-01: AM logado cria um GO informando CNPJ+nome+UF (sem escolher Ofertante existente) e a verba no mesmo passo", async ({
+test("OGO-09/OGO-12: AM logado cria um GO só com CNPJ, nome e verba - a tela não pede nenhum dado organizacional", async ({
   page,
 }) => {
   const login = await page.request.post("/api/auth/login", {
@@ -131,16 +131,22 @@ test("UGO-01: AM logado cria um GO informando CNPJ+nome+UF (sem escolher Ofertan
 
   await page.goto("/usuarios/novo");
 
-  // Os campos organizacionais/verba só existem depois de escolher o tipo GO;
-  // não há mais um seletor de "Ofertante existente" para esse tipo.
-  await expect(page.locator("#uf")).toHaveCount(0);
+  // OGO-13: para os outros tipos o E-mail continua sendo pedido.
+  await page.locator("select#tipo").selectOption("VO");
+  await expect(page.locator("#email")).toBeVisible();
+
+  // OGO-12: com GO, só CNPJ, nome e verba. Nada de Ofertante existente, nem
+  // E-mail, UF, Responsável, Telefone ou Município.
   await page.locator("select#tipo").selectOption("GO");
   await expect(page.locator("select#cdOfertante")).toHaveCount(0);
-  await expect(page.locator("#uf")).toBeVisible();
+  for (const campo of ["email", "uf", "responsavel", "telefone", "municipio"]) {
+    await expect(page.locator(`#${campo}`)).toHaveCount(0);
+  }
+  await expect(page.locator("#vlVerba")).toBeVisible();
 
-  await page.getByLabel("CPF").fill(CNPJ_NOVO_GO);
+  // Com GO selecionado o campo de documento é rotulado "CNPJ".
+  await page.getByLabel("CNPJ").fill(CNPJ_NOVO_GO);
   await page.getByLabel("Nome").fill("GO Criado Pela UI");
-  await page.getByLabel("UF").fill("MG");
   await page.getByLabel("Valor da verba").fill("7500");
   await page.getByLabel("Data da verba").fill("2026-04-20");
 
@@ -152,31 +158,13 @@ test("UGO-01: AM logado cria um GO informando CNPJ+nome+UF (sem escolher Ofertan
 
   const criado = getUsuario(CNPJ_NOVO_GO);
   expect(criado?.tipo).toBe("GO");
-  expect(criado?.uf).toBe("MG");
+  expect(criado?.nome).toBe("GO Criado Pela UI");
   expect(criado?.cdOfertante).toBeNull();
   expect(criado?.criadoPor).toBe(CPF_AM_CRIADOR);
 
   const verba = getVerba((await resposta.json()).verba.cdVerba);
   expect(verba?.cdOfertante).toBe(CNPJ_NOVO_GO);
   expect(Number(verba?.vlVerba)).toBe(7500);
-});
-
-test("UGO-01: AM que tenta criar GO sem informar UF é barrado antes do envio", async ({
-  page,
-}) => {
-  const login = await page.request.post("/api/auth/login", {
-    data: { documento: CPF_AM_CRIADOR, senha: SENHA },
-  });
-  expect(login.ok()).toBe(true);
-
-  await page.goto("/usuarios/novo");
-  await page.locator("select#tipo").selectOption("GO");
-  await page.getByLabel("CPF").fill(gerarCnpjValido(3));
-  await page.getByLabel("Nome").fill("GO Sem Uf");
-  await page.getByLabel("Valor da verba").fill("1000");
-  await page.getByRole("button", { name: "Criar usuário" }).click();
-
-  await expect(page.getByText("UF é obrigatória")).toBeVisible();
 });
 
 test("UGO-14: AM logado vincula um VO a um GO existente, escolhido de uma lista", async ({
