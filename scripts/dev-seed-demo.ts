@@ -65,6 +65,7 @@ const USUARIOS: {
     uf: "SP",
     municipio: "Santos",
     responsavel: "Marina Duarte (demo)",
+    telefone: "13 3200-0000",
     email: "contato@exemplo.dev",
   },
   { documento: CPF_VO, nome: "Beatriz Lima (demo)", tipo: "VO", cdOfertante: CNPJ_GO, criadoPor: CNPJ_GO },
@@ -94,6 +95,10 @@ async function semear(prisma: PrismaClient) {
       tipo: usuario.tipo,
       senhaHash,
       primeiraVez: false,
+      // O GO de demo já nasce com os 6 dados organizacionais declarados
+      // (AD-044), senão o ambiente abriria preso em /cadastro-ofertante. A
+      // flag é ignorada para os outros tipos.
+      dadosOrganizacionaisCompletos: true,
       cdOfertante: usuario.cdOfertante,
       criadoPor: usuario.criadoPor,
       tentativasFalhas: 0,
