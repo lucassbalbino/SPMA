@@ -73,6 +73,12 @@ Este arquivo é a fonte de verdade das decisões travadas. Não reabrir uma AD s
   - **Testes no HEAD:** 659 unit / 71 integration / 263 e2e (+1 do fechamento: R3), gate completo verde. Linha de base pré-feature (fim de `dados-pessoais-separados`): 611/70/258.
   - **Lição nova:** `.specs/LESSONS.md` L-039 (candidata) — quando uma entidade absorve a tabela para a qual apontava, a própria cópia dessa FK precisa ser `null` na criação, nunca um valor ainda exigido do payload da requisição.
   - **Arquivos da feature:** `.specs/features/unificacao-ofertante-go/{spec.md,design.md,tasks.md,validation.md}`.
+- **`onboarding-organizacional-go` (2026-10-12): DONE.** 9/9 tarefas (T1-T8 + T9, fix pós-Verifier), inline. `validation.md` = **PASS na iteração 2/3**, `validate_state.py onboarding-organizacional-go` = exit 0, os 20 `OGO-*` `Verified`. Registrada como **AD-044**: o GO declara os 6 dados organizacionais no 1º acesso, gate por flag `dadosOrganizacionaisCompletos` (só `PATCH /api/usuarios/me/organizacao` a liga); AM/GT criam GO só com CNPJ + nome + verba.
+  - **Testes no HEAD:** 703 unit / 74 integration / e2e 244 passed + 1 failed na suíte completa medida no T8 (antes dos +3 do T9). A falha é **pré-existente**: `e2e/usuarios-novo-page.spec.ts:80` (CA-AU-05) espera as opções do `<select>` como códigos, mas `fe2d383` (anterior à feature) passou a renderizar nomes; o Verifier confirmou que falha igual em `6cd0de3`. Não alterada, aguarda o usuário.
+  - **Verifier iteração 1: FAIL**, 18 mutantes, 3 sobreviventes, todos buracos de teste: OGO-08 provado com AL (guard organizacional nunca age sobre AL), rota `[documento]` ligando a flag sem teste que pegasse (fixture nasce com flag `true`), email de não-GO nunca lido no banco. Fechados no T9; iteração 2: 18/18 mortos.
+  - **Pendências do usuário** (`spec.md`, `Confirmed? n`): GO ainda edita os próprios dados por `PATCH /api/usuarios/[documento]/organizacao` (sem tela; não pula o gate); campo só com espaços conta como preenchido; GO com `primeiraVez = true` alcança `/cadastro-ofertante` pela URL.
+  - **Lições não distiladas de propósito:** `lessons.py add`/`list` faz auto-prune de 14 candidatas vencidas (39 → 25) como efeito colateral. Candidatas desta feature estão no `validation.md`; rodar `lessons.py` só com o aval do usuário para o prune.
+  - **Arquivos da feature:** `.specs/features/onboarding-organizacional-go/{context.md,spec.md,design.md,tasks.md,validation.md}`.
 
 ---
 

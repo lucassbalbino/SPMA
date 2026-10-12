@@ -142,28 +142,28 @@ Escopo Large: cada dimensão resolve em requisito ou `N/A` explícito.
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| OGO-01 | P1: Coleta no 1º login | Execute | Done (T4) |
-| OGO-02 | P1: Coleta no 1º login | Execute | Done (T5) |
-| OGO-03 | P1: Coleta no 1º login | Execute | Done (T3) |
-| OGO-04 | P1: Coleta no 1º login | Execute | Done (T2, T3) |
-| OGO-05 | P1: Coleta no 1º login | Execute | Done (T3) |
-| OGO-06 | P1: Coleta no 1º login | Execute | Done (T4) |
-| OGO-07 | P1: Coleta no 1º login | Execute | Done (T3) |
-| OGO-08 | P1: Coleta no 1º login | Execute | Done (T4, T9) |
-| OGO-09 | P1: Criação enxuta | Execute | Done (T6) |
-| OGO-10 | P1: Criação enxuta | Execute | Done (T6) |
-| OGO-11 | P1: Criação enxuta | Execute | Done (T1, T6, T7) |
-| OGO-12 | P1: Criação enxuta | Execute | Done (T6) |
-| OGO-13 | P1: Criação enxuta | Execute | Done (T6, T9) |
-| OGO-14 | P2: GOs existentes | Execute | Done (T1) |
-| OGO-15 | P2: GOs existentes | Execute | Done (T1, T4) |
-| OGO-16 | P2: GOs existentes | Execute | Done (T1) |
-| OGO-17 | Edge case | Execute | Done (T3, T5) |
-| OGO-18 | Edge case | Execute | Done (T5) |
-| OGO-19 | Edge case | Execute | Done (T5) |
-| OGO-20 | Edge case | Execute | Done (T5) |
+| OGO-01 | P1: Coleta no 1º login | Execute | Verified (T4) |
+| OGO-02 | P1: Coleta no 1º login | Execute | Verified (T5) |
+| OGO-03 | P1: Coleta no 1º login | Execute | Verified (T3) |
+| OGO-04 | P1: Coleta no 1º login | Execute | Verified (T2, T3) |
+| OGO-05 | P1: Coleta no 1º login | Execute | Verified (T3) |
+| OGO-06 | P1: Coleta no 1º login | Execute | Verified (T4) |
+| OGO-07 | P1: Coleta no 1º login | Execute | Verified (T3) |
+| OGO-08 | P1: Coleta no 1º login | Execute | Verified (T4, T9) |
+| OGO-09 | P1: Criação enxuta | Execute | Verified (T6) |
+| OGO-10 | P1: Criação enxuta | Execute | Verified (T6) |
+| OGO-11 | P1: Criação enxuta | Execute | Verified (T1, T6, T7) |
+| OGO-12 | P1: Criação enxuta | Execute | Verified (T6) |
+| OGO-13 | P1: Criação enxuta | Execute | Verified (T6, T9) |
+| OGO-14 | P2: GOs existentes | Execute | Verified (T1) |
+| OGO-15 | P2: GOs existentes | Execute | Verified (T1, T4) |
+| OGO-16 | P2: GOs existentes | Execute | Verified (T1) |
+| OGO-17 | Edge case | Execute | Verified (T3, T5) |
+| OGO-18 | Edge case | Execute | Verified (T5) |
+| OGO-19 | Edge case | Execute | Verified (T5) |
+| OGO-20 | Edge case | Execute | Verified (T5) |
 
-**Coverage:** 20 total, 0 mapeados em tasks (Tasks ainda não rodou), 20 Pending.
+**Coverage:** 20 total, 20 mapeados em tasks (T1-T9), 20 Verified (`validation.md`, PASS na iteração 2/3).
 
 ---
 

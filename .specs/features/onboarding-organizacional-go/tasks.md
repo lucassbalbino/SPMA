@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/onboarding-organizacional-go/design.md`
-**Status**: Done (aguardando Verifier)
+**Status**: Done
 
 ---
 
