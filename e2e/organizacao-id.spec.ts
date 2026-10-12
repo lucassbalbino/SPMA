@@ -15,11 +15,14 @@ const gerarCnpjValido = geradorDeCnpj("23");
 
 const CNPJ_GO_A = gerarCnpjValido(1);
 const CNPJ_GO_B = gerarCnpjValido(2);
+// GO que ainda não declarou os dados (AD-044): a edição por AM não pode
+// concluir o onboarding em nome dele.
+const CNPJ_GO_PENDENTE = gerarCnpjValido(3);
 const CPF_AM = "40307008029";
 const CPF_VT = "40408009071";
 const CPF_VO_A = "40509000177";
 
-const CPFS = [CNPJ_GO_A, CNPJ_GO_B, CPF_AM, CPF_VT, CPF_VO_A];
+const CPFS = [CNPJ_GO_A, CNPJ_GO_B, CNPJ_GO_PENDENTE, CPF_AM, CPF_VT, CPF_VO_A];
 
 async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
@@ -50,6 +53,13 @@ test.beforeAll(() => {
     primeiraVez: false,
     nome: "Ofertante B (por-documento)",
     uf: "RJ",
+  });
+  upsertUsuario({
+    cpf: CNPJ_GO_PENDENTE,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    dadosOrganizacionaisCompletos: false,
   });
   upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_VT, tipo: "VT", senha: SENHA, primeiraVez: false });
@@ -210,4 +220,36 @@ test("edição sem token CSRF válido é rejeitada com 403", async () => {
   expect(getUsuario(CNPJ_GO_A)?.nome).toBe(nomeOriginal);
 
   await cliente.dispose();
+});
+
+test("AD-044: AM editando os dados de um GO pendente não conclui o onboarding dele - a flag segue false e o gate segue valendo", async ({
+  page,
+}) => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AM);
+
+  const cliente = await novoCliente();
+  const res = await cliente.patch(`/api/usuarios/${CNPJ_GO_PENDENTE}/organizacao`, {
+    data: {
+      nome: "Pendente Editado Pelo AM",
+      responsavel: "Responsavel Pelo AM",
+      email: "pelo-am@exemplo.dev",
+      telefone: "11 4000-0009",
+      uf: "SP",
+      municipio: "Santos",
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  await cliente.dispose();
+
+  expect(res.status()).toBe(200);
+  const go = getUsuario(CNPJ_GO_PENDENTE);
+  expect(go?.nome).toBe("Pendente Editado Pelo AM");
+  expect(go?.dadosOrganizacionaisCompletos).toBe(false);
+
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento: CNPJ_GO_PENDENTE, senha: SENHA },
+  });
+  expect(login.ok()).toBe(true);
+  await page.goto("/painel");
+  await expect(page).toHaveURL(/\/cadastro-ofertante$/);
 });

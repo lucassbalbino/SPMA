@@ -560,6 +560,8 @@ test("AVAL-01: AM cria Aluno já matriculado num curso de qualquer Ofertante", a
       documento: CPF_NOVO_AL_PELO_AM,
       nome: "Aluno Criado Pelo AM",
       tipo: "AL",
+      // OGO-13: fora do GO, o email continua vindo do criador.
+      email: "aluno-pelo-am@exemplo.dev",
       // Curso de um Ofertante que não é o do AM (que não tem nenhum, AD-012).
       cdCurso: cdCursoAlheio,
     },
@@ -568,6 +570,7 @@ test("AVAL-01: AM cria Aluno já matriculado num curso de qualquer Ofertante", a
 
   expect(res.status()).toBe(201);
   expect(getUsuario(CPF_NOVO_AL_PELO_AM)?.tipo).toBe("AL");
+  expect(getUsuario(CPF_NOVO_AL_PELO_AM)?.email).toBe("aluno-pelo-am@exemplo.dev");
   expect(getAvaliacao(CPF_NOVO_AL_PELO_AM, cdCursoAlheio)?.status).toBe("EM_ANDAMENTO");
 
   await cliente.dispose();

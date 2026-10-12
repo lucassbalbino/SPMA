@@ -70,6 +70,12 @@ T6 → T7
 T8
 ```
 
+### Phase 5: Fix pós-Verifier
+
+```
+T9
+```
+
 ---
 
 ## Task Breakdown
@@ -303,6 +309,35 @@ T8
 
 ---
 
+### T9: Fix pós-Verifier (iteração 1) — três buracos de teste
+
+**What**: Fechar os 3 mutantes sobreviventes do sensor (M9, M11, M12), todos lacunas de teste, nenhum defeito de produção.
+**Where**: `e2e/protegido-layout.spec.ts` (+ `e2e/organizacao-id.spec.ts`, `e2e/usuarios.spec.ts`, um caso cada)
+**Depends on**: T8
+**Reuses**: fixtures com `dadosOrganizacionaisCompletos: false`
+**Requirement**: OGO-08, OGO-13, AD-044 (rota `[documento]` nunca liga a flag)
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] OGO-08 provado com um **GO** (`primeiraVez: true`, flag `false`) indo primeiro para `/primeiro-acesso` — o teste herdado usava um AL, sobre o qual o guard organizacional nunca age (mata M9: ordem dos guards invertida no layout)
+- [x] AM editando um GO pendente por `PATCH /api/usuarios/[documento]/organizacao` → 200, flag continua `false` no banco e `/painel` do GO segue indo para `/cadastro-ofertante` (mata M11)
+- [x] OGO-13: AL criado pelo AM com `email` tem esse email gravado no banco (mata M12)
+- [x] Gate Full passa com `npx playwright test e2e/protegido-layout.spec.ts e2e/organizacao-id.spec.ts e2e/usuarios.spec.ts`
+
+**Tests**: e2e
+**Gate**: full
+
+**Commit**: `test(organizacao): fechar os mutantes que sobreviveram ao Verifier`
+
+**Status**: ✅ Done — e2e 34/34. Os dois gaps de precisão da spec que o Verifier levantou (só espaços conta como vazio? acesso direto a `/cadastro-ofertante` com `primeiraVez = true`?) ficaram registrados em Assumptions como decisão pendente do usuário, sem mudança de código.
+
+---
+
 ## Phase Execution Map
 
 ```
@@ -313,7 +348,10 @@ Phase 2:  T2 ------→ T3 ------→ T4 ------→ T5
 Phase 3:  T6 ------→ T7
 Phase 4:  T8
 
+Phase 5:  T9
+
 Dependência entre fases: T1 ---------------------------------------→ T8
+Dependência entre fases: T8 ---------------------------------------→ T9
 ```
 
 8 tarefas → um lote só: execução inline, sem sub-agente de batch. O Verifier roda como sub-agente ao fim, como sempre.

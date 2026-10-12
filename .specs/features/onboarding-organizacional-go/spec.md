@@ -46,6 +46,8 @@ Hoje o AM/GT digita os 6 dados organizacionais do Ofertante (nome, responsável,
 | GO com a flag já `true` que abre `/cadastro-ofertante` pela URL | A tela abre e o envio responde 409; nada é alterado | `(onboarding)` é guardado só por `requireSession` por construção (evitar loop de redirect, ver `(protegido)/layout.tsx`), e nenhuma navegação linka para lá depois de concluída (`ROTAS_ONBOARDING`). Blindar a tela exigiria um guard novo por fora do padrão existente | y (decisão do agente, risco baixo: só alcançável digitando a URL) |
 | Dados organizacionais de GOs pré-existentes | Preservados no banco pela migration; sobrescritos pelo que o GO digitar no envio | A migration só adiciona a coluna. Apagar dado existente seria perda sem ganho — o envio vai sobrescrever de qualquer forma | y (consequência, não escolha) |
 | GO editando os próprios dados por `PATCH /api/usuarios/[documento]/organizacao` | Continua possível por API (sem tela), como hoje; essa rota **nunca** liga a flag, então não serve de atalho para pular o onboarding | Achado no Design: `podeEditarOfertante` (`src/lib/auth/permissoes.ts:95`) autoriza o GO no próprio CNPJ — a pergunta da decisão 6 descreveu a rota só como "AM/GT". "Manter como está" preserva isso; restringir é mudança de REQ-OV-03 e fica para o usuário decidir | n (a confirmar com o usuário ao fim da feature) |
+| Campo preenchido só com espaços (achado do Verifier) | Aceito como preenchido: `min(1)` sem `trim`, mesma regra que `nome` já seguia antes desta feature | A spec diz "ausente, vazio ou inválido" sem definir se `"   "` é vazio. Mudar para `trim()` é uma linha por campo, mas muda também a edição por AM/GT | n (decisão pendente do usuário) |
+| GO com `primeiraVez = true` acessando `/cadastro-ofertante` ou `PATCH /me/organizacao` diretamente (achado do Verifier) | Permitido, como hoje: OGO-08 vale para a navegação de `(protegido)`, provada em `e2e/protegido-layout.spec.ts` | `(onboarding)` só exige sessão por construção, padrão anterior a esta feature (vale também para `/dados-pessoais`). Bloquear exigiria checar `primeiraVez` na página e na rota | n (decisão pendente do usuário) |
 | Fixtures e seed de demonstração | `scripts/dev-seed-demo.ts` cria o GO de demo já com a flag `true` e os 6 campos preenchidos | O seed existe para dar um ambiente navegável; nascer preso no onboarding tornaria o GO de demo inútil para as outras features | y (decisão do agente, só afeta dev) |
 
 **Open questions:** none — todas resolvidas com o usuário (decisões 1-7 em `context.md`) ou registradas acima com o custo.
@@ -147,12 +149,12 @@ Escopo Large: cada dimensão resolve em requisito ou `N/A` explícito.
 | OGO-05 | P1: Coleta no 1º login | Execute | Done (T3) |
 | OGO-06 | P1: Coleta no 1º login | Execute | Done (T4) |
 | OGO-07 | P1: Coleta no 1º login | Execute | Done (T3) |
-| OGO-08 | P1: Coleta no 1º login | Execute | Done (T4, teste existente) |
+| OGO-08 | P1: Coleta no 1º login | Execute | Done (T4, T9) |
 | OGO-09 | P1: Criação enxuta | Execute | Done (T6) |
 | OGO-10 | P1: Criação enxuta | Execute | Done (T6) |
 | OGO-11 | P1: Criação enxuta | Execute | Done (T1, T6, T7) |
 | OGO-12 | P1: Criação enxuta | Execute | Done (T6) |
-| OGO-13 | P1: Criação enxuta | Execute | Done (T6) |
+| OGO-13 | P1: Criação enxuta | Execute | Done (T6, T9) |
 | OGO-14 | P2: GOs existentes | Execute | Done (T1) |
 | OGO-15 | P2: GOs existentes | Execute | Done (T1, T4) |
 | OGO-16 | P2: GOs existentes | Execute | Done (T1) |

@@ -15,8 +15,11 @@ const CPF_PRIMEIRA_VEZ = "40050060007";
 const CPF_GO_SEM_OFERTANTE = "40060070005";
 // OGO-15: GO anterior à feature, com nome e UF preenchidos.
 const CNPJ_GO_PRE_EXISTENTE = geradorDeCnpj("47")(1);
+// OGO-08: GO que ainda não criou a senha E não declarou os dados - os dois
+// guards se aplicam, e a senha tem de vir primeiro.
+const CNPJ_GO_SEM_SENHA = geradorDeCnpj("47")(2);
 
-const CPFS = [CPF_PRIMEIRA_VEZ, CPF_GO_SEM_OFERTANTE, CNPJ_GO_PRE_EXISTENTE];
+const CPFS = [CPF_PRIMEIRA_VEZ, CPF_GO_SEM_OFERTANTE, CNPJ_GO_PRE_EXISTENTE, CNPJ_GO_SEM_SENHA];
 
 test.beforeAll(() => {
   deleteUsuarios(CPFS);
@@ -36,6 +39,13 @@ test.beforeAll(() => {
     primeiraVez: false,
     nome: "Ofertante Pre-Existente",
     uf: "SP",
+    dadosOrganizacionaisCompletos: false,
+  });
+  upsertUsuario({
+    cpf: CNPJ_GO_SEM_SENHA,
+    tipo: "GO",
+    senha: null,
+    primeiraVez: true,
     dadosOrganizacionaisCompletos: false,
   });
 });
@@ -83,4 +93,16 @@ test("OGO-15: GO com nome e UF já preenchidos, mas sem ter declarado os dados, 
 
   await page.goto("/painel");
   await expect(page).toHaveURL(/\/cadastro-ofertante$/);
+});
+
+test("OGO-08: GO sem senha e sem dados organizacionais vai primeiro para /primeiro-acesso", async ({
+  page,
+}) => {
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento: CNPJ_GO_SEM_SENHA, senha: "qualquer" },
+  });
+  expect(login.ok()).toBe(true);
+
+  await page.goto("/painel");
+  await expect(page).toHaveURL(/\/primeiro-acesso$/);
 });
