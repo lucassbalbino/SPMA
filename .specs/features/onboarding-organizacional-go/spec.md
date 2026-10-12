@@ -142,11 +142,11 @@ Escopo Large: cada dimensão resolve em requisito ou `N/A` explícito.
 | --- | --- | --- | --- |
 | OGO-01 | P1: Coleta no 1º login | Design | Pending |
 | OGO-02 | P1: Coleta no 1º login | Design | Pending |
-| OGO-03 | P1: Coleta no 1º login | Design | Pending |
-| OGO-04 | P1: Coleta no 1º login | Design | Pending |
-| OGO-05 | P1: Coleta no 1º login | Design | Pending |
+| OGO-03 | P1: Coleta no 1º login | Execute | Done (T3) |
+| OGO-04 | P1: Coleta no 1º login | Execute | Done (T2, T3) |
+| OGO-05 | P1: Coleta no 1º login | Execute | Done (T3) |
 | OGO-06 | P1: Coleta no 1º login | Design | Pending |
-| OGO-07 | P1: Coleta no 1º login | Design | Pending |
+| OGO-07 | P1: Coleta no 1º login | Execute | Done (T3) |
 | OGO-08 | P1: Coleta no 1º login | Design | Pending |
 | OGO-09 | P1: Criação enxuta | Design | Pending |
 | OGO-10 | P1: Criação enxuta | Design | Pending |

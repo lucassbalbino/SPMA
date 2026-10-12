@@ -41,10 +41,25 @@ function gerarCpfValido(indice: number): string {
 
 const CNPJ_GO_INCOMPLETO = gerarCnpjValido(1);
 const CNPJ_GO_GUARDS = gerarCnpjValido(2);
+const CNPJ_GO_INVALIDO = gerarCnpjValido(3);
 const CPF_AM_GUARDS = gerarCpfValido(1);
 const NOME_ORGANIZACAO = "Organizacao via UI";
 
-const DOCUMENTOS = [CNPJ_GO_INCOMPLETO, CNPJ_GO_GUARDS, CPF_AM_GUARDS];
+const DOCUMENTOS = [CNPJ_GO_INCOMPLETO, CNPJ_GO_GUARDS, CNPJ_GO_INVALIDO, CPF_AM_GUARDS];
+
+/** Os 6 dados organizacionais e a flag, para comparar antes/depois. */
+function estadoOrganizacional(documento: string) {
+  const usuario = getUsuario(documento);
+  return {
+    nome: usuario?.nome,
+    responsavel: usuario?.responsavel,
+    email: usuario?.email,
+    telefone: usuario?.telefone,
+    uf: usuario?.uf,
+    municipio: usuario?.municipio,
+    dadosOrganizacionaisCompletos: usuario?.dadosOrganizacionaisCompletos,
+  };
+}
 
 test.beforeAll(() => {
   deleteUsuarios(DOCUMENTOS);
@@ -56,6 +71,22 @@ test.beforeAll(() => {
     tipo: "GO",
     senha: SENHA,
     primeiraVez: false,
+    dadosOrganizacionaisCompletos: false,
+  });
+  // GO pendente com dados antigos, para provar que um envio inválido não
+  // toca em nenhum deles (OGO-04).
+  upsertUsuario({
+    cpf: CNPJ_GO_INVALIDO,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    dadosOrganizacionaisCompletos: false,
+    nome: "Ofertante pendente (invalido)",
+    email: "antigo@exemplo.dev",
+    responsavel: "Responsavel antigo",
+    telefone: "11 1111-1111",
+    uf: "MG",
+    municipio: "Uberaba",
   });
   // Fixtures dos testes de guard abaixo (401/403/403-CSRF) - a rota
   // substituída (`POST /api/ofertantes`) tinha essa cobertura; a nova
@@ -108,9 +139,17 @@ test("UGO-01/02: GO com dados organizacionais incompletos é barrado, completa p
   ]);
   expect(resposta.ok()).toBe(true);
 
-  const usuario = getUsuario(CNPJ_GO_INCOMPLETO);
-  expect(usuario?.nome).toBe(NOME_ORGANIZACAO);
-  expect(usuario?.uf).toBe("SP");
+  // OGO-03: os 6 valores gravados E a flag ligada - o 200 sozinho não prova
+  // o estado resultante (L-014).
+  expect(estadoOrganizacional(CNPJ_GO_INCOMPLETO)).toEqual({
+    nome: NOME_ORGANIZACAO,
+    responsavel: "Responsavel via UI",
+    email: "ui@exemplo.dev",
+    telefone: "11 4000-0002",
+    uf: "SP",
+    municipio: "Santos",
+    dadosOrganizacionaisCompletos: true,
+  });
 
   // Liberado: o guard de ofertante não barra mais - /painel deixa de
   // redirecionar para /cadastro-ofertante.
@@ -118,7 +157,35 @@ test("UGO-01/02: GO com dados organizacionais incompletos é barrado, completa p
   await expect(page).toHaveURL(/\/painel$/);
 });
 
-test("UGO-01 AC4: GO com dados já completos que tenta submeter de novo recebe 409, dados inalterados", async ({
+test("OGO-04: GO pendente que envia um dos 6 campos vazio recebe 400 e nada é gravado, nem a flag", async ({
+  page,
+}) => {
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento: CNPJ_GO_INVALIDO, senha: SENHA },
+  });
+  expect(login.ok()).toBe(true);
+
+  const antes = estadoOrganizacional(CNPJ_GO_INVALIDO);
+
+  const res = await page.request.patch("/api/usuarios/me/organizacao", {
+    data: {
+      nome: "Nome Novo",
+      responsavel: "Responsavel Novo",
+      email: "novo@exemplo.dev",
+      telefone: "",
+      uf: "RJ",
+      municipio: "Niteroi",
+    },
+    headers: { "x-csrf-token": await lerCsrfDoContexto(page) },
+  });
+
+  expect(res.status()).toBe(400);
+  expect((await res.json()).erro).toBe("Telefone é obrigatório");
+  expect(estadoOrganizacional(CNPJ_GO_INVALIDO)).toEqual(antes);
+  expect(antes.dadosOrganizacionaisCompletos).toBe(false);
+});
+
+test("OGO-05/OGO-17: GO que já concluiu e envia de novo recebe 409, os 6 dados e a flag inalterados", async ({
   page,
 }) => {
   const login = await page.request.post("/api/auth/login", {
@@ -126,18 +193,24 @@ test("UGO-01 AC4: GO com dados já completos que tenta submeter de novo recebe 4
   });
   expect(login.ok()).toBe(true);
 
-  const antes = getUsuario(CNPJ_GO_INCOMPLETO);
-  expect(antes?.nome).toBe(NOME_ORGANIZACAO);
+  const antes = estadoOrganizacional(CNPJ_GO_INCOMPLETO);
+  expect(antes.dadosOrganizacionaisCompletos).toBe(true);
 
+  // Corpo completo e válido: o 409 tem de vir de "já concluiu", não da forma.
   const res = await page.request.patch("/api/usuarios/me/organizacao", {
-    data: { nome: "Tentativa De Recadastro", uf: "RJ" },
+    data: {
+      nome: "Tentativa De Recadastro",
+      responsavel: "Outro Responsavel",
+      email: "outro@exemplo.dev",
+      telefone: "21 5000-0000",
+      uf: "RJ",
+      municipio: "Niteroi",
+    },
     headers: { "x-csrf-token": await lerCsrfDoContexto(page) },
   });
 
   expect(res.status()).toBe(409);
-  const depois = getUsuario(CNPJ_GO_INCOMPLETO);
-  expect(depois?.nome).toBe(NOME_ORGANIZACAO);
-  expect(depois?.uf).toBe("SP");
+  expect(estadoOrganizacional(CNPJ_GO_INCOMPLETO)).toEqual(antes);
 });
 
 // Cobertura de guard que `POST /api/ofertantes` (rota substituída, AD-043)

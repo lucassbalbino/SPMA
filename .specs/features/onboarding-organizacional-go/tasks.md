@@ -146,16 +146,18 @@ T8
 
 **Done when**:
 
-- [ ] `e2e/cadastro-ofertante-page.spec.ts`: o fixture do GO pendente passa `dadosOrganizacionaisCompletos: false`; após o envio pela UI, afirma os 6 valores gravados **e** a flag `true` (L-014: o estado resultante, não só o 200)
-- [ ] Novo: GO pendente envia corpo com `telefone` vazio → 400, e o banco segue com os 6 campos e a flag exatamente como antes (OGO-04)
-- [ ] Teste existente do 409 afirma também que email, responsável, telefone e município não mudaram (OGO-05/17), lidos antes e depois
-- [ ] Teste existente de 403 para não-GO segue verde (OGO-07)
-- [ ] Gate Full passa com `npx playwright test e2e/cadastro-ofertante-page.spec.ts`
+- [x] `e2e/cadastro-ofertante-page.spec.ts`: o fixture do GO pendente passa `dadosOrganizacionaisCompletos: false`; após o envio pela UI, afirma os 6 valores gravados **e** a flag `true` (L-014: o estado resultante, não só o 200)
+- [x] Novo: GO pendente envia corpo com `telefone` vazio → 400, e o banco segue com os 6 campos e a flag exatamente como antes (OGO-04)
+- [x] Teste existente do 409 afirma também que email, responsável, telefone e município não mudaram (OGO-05/17), lidos antes e depois
+- [x] Teste existente de 403 para não-GO segue verde (OGO-07)
+- [x] Gate Full passa com `npx playwright test e2e/cadastro-ofertante-page.spec.ts`
 
 **Tests**: e2e
 **Gate**: full
 
-**Commit**: `feat(organizacao): onboarding do GO grava e respeita dadosOrganizacionaisCompletos`
+**Commit**: `feat(organizacao): ligar a flag do GO no envio do onboarding`
+
+**Status**: ✅ Done — 693 unit / 74 integration / `cadastro-ofertante-page.spec.ts` 6/6 (+1: OGO-04). O 409 passou a ser provado com corpo completo e válido, para não poder vir da validação.
 
 ---
 
