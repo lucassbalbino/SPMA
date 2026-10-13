@@ -53,7 +53,7 @@ const CPFS = [
 async function abrirSessaoDePrimeiroAcesso(cpf: string): Promise<string> {
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { documento: cpf, senha: "irrelevante" },
+    data: { documento: cpf, senha: "" },
   });
   const idSessao = idSessaoDaResposta(res);
   await cliente.dispose();
@@ -75,7 +75,7 @@ async function abrirSessaoDePrimeiroAcessoComCsrf(
 ): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { documento: cpf, senha: "irrelevante" },
+    data: { documento: cpf, senha: "" },
   });
   const idSessao = idSessaoDaResposta(res);
   const idCsrf = idCsrfDaResposta(res);

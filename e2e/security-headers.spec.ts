@@ -76,7 +76,6 @@ test("CA-SEC-16/CA-SEC-13/CA-SEC-10: headers de segurança presentes, nenhum dad
   expect(headersLogin["referrer-policy"]).toBeTruthy();
 
   await page.getByLabel("CPF").fill(CPF_FLUXO);
-  await page.getByLabel("Senha").fill("irrelevante");
   await Promise.all([
     page.waitForURL(/\/primeiro-acesso$/),
     page.getByRole("button", { name: "Entrar" }).click(),

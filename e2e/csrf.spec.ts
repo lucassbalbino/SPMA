@@ -27,7 +27,7 @@ async function abrirSessaoDePrimeiroAcesso(
 ): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { documento: cpf, senha: "irrelevante" },
+    data: { documento: cpf, senha: "" },
   });
   const idSessao = idSessaoDaResposta(res);
   const idCsrf = idCsrfDaResposta(res);

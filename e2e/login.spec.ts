@@ -161,13 +161,23 @@ test("UGO-10: GO com CNPJ válido faz login com sucesso, resposta expõe `docume
   await cliente.dispose();
 });
 
-test("CA-AU-02 (gatilho): conta sem senha definida cria sessão e sinaliza 1º acesso", async () => {
+test("CA-AU-02 (gatilho) / PASB-01: conta sem senha entra com a senha em branco, cria sessão, sinaliza 1º acesso e zera o contador", async () => {
+  // Uma senha digitada antes conta como falha (PASB-02) - é o que deixa o
+  // contador acima de zero para provar que a entrada em branco o zera.
+  const falha = await novoCliente();
+  await falha.post("/api/auth/login", {
+    data: { documento: CPF_PRIMEIRO_ACESSO, senha: "qualquer" },
+  });
+  await falha.dispose();
+  expect(getUsuario(CPF_PRIMEIRO_ACESSO)?.tentativasFalhas).toBe(1);
+
   const cliente = await novoCliente();
   const res = await cliente.post("/api/auth/login", {
-    data: { documento: CPF_PRIMEIRO_ACESSO, senha: "qualquer" },
+    data: { documento: CPF_PRIMEIRO_ACESSO, senha: "" },
   });
 
   expect(res.status()).toBe(200);
+  expect(getUsuario(CPF_PRIMEIRO_ACESSO)?.tentativasFalhas).toBe(0);
 
   const corpo = await res.json();
   expect(corpo.primeiroAcesso).toBe(true);

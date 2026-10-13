@@ -269,7 +269,7 @@ test.describe("casca comum", () => {
     // /primeiro-acesso e /cadastro-ofertante são o destino dos redirects do
     // layout protegido, então vivem em (onboarding) e por definição não têm
     // cabeçalho (edge case da spec).
-    await logar(page, CPF_PRIMEIRA_VEZ, "qualquer");
+    await logar(page, CPF_PRIMEIRA_VEZ, "");
     await page.goto("/primeiro-acesso");
     await expect(page).toHaveURL(/\/primeiro-acesso$/);
     await expect(page.getByTestId("casca-cabecalho")).toHaveCount(0);

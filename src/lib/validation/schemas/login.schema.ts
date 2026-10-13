@@ -30,7 +30,10 @@ export const loginSchema = z.object({
           : validarDocumento(documento).valido,
       { message: "Documento inválido" },
     ),
-  senha: z.string().min(1, { message: "Senha é obrigatória" }),
+  // Senha vazia é o pedido de 1º acesso (PASB-01/PASB-07). Se ela vale, quem
+  // decide é `POST /api/auth/login`, que conhece a conta; aqui só exige o
+  // campo presente.
+  senha: z.string(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

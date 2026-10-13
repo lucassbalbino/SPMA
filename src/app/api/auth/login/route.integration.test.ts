@@ -123,3 +123,117 @@ describe("POST /api/auth/login (integration) - REQ-SEC-04 mecanismo de normaliza
     expect(corpo.erro).toBe("CPF ou senha inválidos");
   });
 });
+
+// primeiro-acesso-senha-em-branco: a senha vazia é o pedido de 1º acesso e
+// só vale para conta sem senha. Os caminhos de falha (PASB-02 a PASB-05)
+// respondem antes de qualquer cookie, então cabem aqui; o caminho de sucesso
+// (PASB-01) emite sessão via `next/headers` e é provado em e2e/login.spec.ts.
+describe("POST /api/auth/login (integration) - 1º acesso com a senha em branco", () => {
+  const CPF_SEM_SENHA = "70080090036";
+  const CPF_COM_SENHA_VAZIA = "70080090117";
+  const CPF_INEXISTENTE_VAZIA = "70080090206";
+  const IP_SEM_SENHA = "198.51.100.70";
+  const IP_COM_SENHA = "198.51.100.71";
+  const IP_INEXISTENTE_VAZIA = "198.51.100.72";
+
+  async function limpar() {
+    await prisma.usuario.deleteMany({
+      where: {
+        documento: {
+          in: [CPF_SEM_SENHA, CPF_COM_SENHA_VAZIA, CPF_INEXISTENTE_VAZIA],
+        },
+      },
+    });
+    await prisma.tentativaLoginIp.deleteMany({
+      where: { ip: { in: [IP_SEM_SENHA, IP_COM_SENHA, IP_INEXISTENTE_VAZIA] } },
+    });
+  }
+
+  async function tentativasFalhas(documento: string): Promise<number> {
+    const usuario = await prisma.usuario.findUniqueOrThrow({
+      where: { documento },
+    });
+    return usuario.tentativasFalhas;
+  }
+
+  beforeAll(async () => {
+    await limpar();
+    await prisma.usuario.createMany({
+      data: [
+        {
+          documento: CPF_SEM_SENHA,
+          nome: "Conta sem senha (PASB)",
+          tipo: "AL",
+          senhaHash: null,
+          primeiraVez: true,
+        },
+        {
+          documento: CPF_COM_SENHA_VAZIA,
+          nome: "Conta com senha (PASB)",
+          tipo: "AL",
+          senhaHash: await hashPassword(SENHA_REAL),
+        },
+      ],
+    });
+  });
+
+  afterAll(async () => {
+    await limpar();
+  });
+
+  // PASB-02 + edge case "só espaços conta como senha digitada".
+  it.each(["qualquerSenha1", "   "])(
+    "PASB-02: conta sem senha com senha digitada (%j) - 401 genérico, sem sessão, falha contada no CPF",
+    async (senha) => {
+      const antes = await tentativasFalhas(CPF_SEM_SENHA);
+
+      const res = await POST(requisicaoLogin(CPF_SEM_SENHA, senha, IP_SEM_SENHA));
+
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({ erro: "CPF ou senha inválidos" });
+      expect(res.headers.get("set-cookie")).toBeNull();
+      expect(await tentativasFalhas(CPF_SEM_SENHA)).toBe(antes + 1);
+    },
+  );
+
+  it("PASB-03: conta com senha e senha vazia - 401 genérico, sem sessão, falha contada no CPF", async () => {
+    const antes = await tentativasFalhas(CPF_COM_SENHA_VAZIA);
+
+    const res = await POST(requisicaoLogin(CPF_COM_SENHA_VAZIA, "", IP_COM_SENHA));
+
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ erro: "CPF ou senha inválidos" });
+    expect(res.headers.get("set-cookie")).toBeNull();
+    expect(await tentativasFalhas(CPF_COM_SENHA_VAZIA)).toBe(antes + 1);
+  });
+
+  it("PASB-04: documento sem conta e senha vazia - 401 genérico", async () => {
+    const res = await POST(
+      requisicaoLogin(CPF_INEXISTENTE_VAZIA, "", IP_INEXISTENTE_VAZIA),
+    );
+
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ erro: "CPF ou senha inválidos" });
+  });
+
+  it("PASB-05: senha vazia em conta com senha - verifyPassword roda contra o hash real", async () => {
+    verifyPasswordSpy.mockClear();
+    const usuario = await prisma.usuario.findUniqueOrThrow({
+      where: { documento: CPF_COM_SENHA_VAZIA },
+    });
+
+    await POST(requisicaoLogin(CPF_COM_SENHA_VAZIA, "", IP_COM_SENHA));
+
+    expect(verifyPasswordSpy).toHaveBeenCalledTimes(1);
+    expect(verifyPasswordSpy).toHaveBeenCalledWith(usuario.senhaHash, "");
+  });
+
+  it("PASB-05: senha vazia em documento sem conta - verifyPassword roda contra DUMMY_HASH", async () => {
+    verifyPasswordSpy.mockClear();
+
+    await POST(requisicaoLogin(CPF_INEXISTENTE_VAZIA, "", IP_INEXISTENTE_VAZIA));
+
+    expect(verifyPasswordSpy).toHaveBeenCalledTimes(1);
+    expect(verifyPasswordSpy).toHaveBeenCalledWith(DUMMY_HASH, "");
+  });
+});

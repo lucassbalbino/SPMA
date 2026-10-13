@@ -63,7 +63,7 @@ test("primeiraVez=true redireciona para /primeiro-acesso mesmo acessando outra r
   page,
 }) => {
   const login = await page.request.post("/api/auth/login", {
-    data: { documento: CPF_PRIMEIRA_VEZ, senha: "qualquer" },
+    data: { documento: CPF_PRIMEIRA_VEZ, senha: "" },
   });
   expect(login.ok()).toBe(true);
 
@@ -99,7 +99,7 @@ test("OGO-08: GO sem senha e sem dados organizacionais vai primeiro para /primei
   page,
 }) => {
   const login = await page.request.post("/api/auth/login", {
-    data: { documento: CNPJ_GO_SEM_SENHA, senha: "qualquer" },
+    data: { documento: CNPJ_GO_SEM_SENHA, senha: "" },
   });
   expect(login.ok()).toBe(true);
 

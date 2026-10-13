@@ -15,11 +15,22 @@ describe("loginSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejeita senha vazia", () => {
+  // PASB-07: senha vazia é o pedido de 1º acesso - quem decide se vale é a
+  // rota, que conhece a conta. O schema só deixa passar.
+  it("aceita senha vazia (pedido de 1º acesso)", () => {
     const result = loginSchema.safeParse({
       documento: "111.444.777-35",
       senha: "",
     });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.senha).toBe("");
+    }
+  });
+
+  it("rejeita corpo sem o campo senha", () => {
+    const result = loginSchema.safeParse({ documento: "111.444.777-35" });
 
     expect(result.success).toBe(false);
   });

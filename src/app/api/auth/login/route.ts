@@ -64,20 +64,22 @@ async function login(request: Request) {
     return erroCredenciais();
   }
 
-  // Conta ainda sem senha: o login abre a sessão que autoriza definir a
-  // senha em /primeiro-acesso (REQ-AU-02). Nenhum outro módulo abre até lá -
-  // quem barra é `requirePrimeiroAcessoConcluido` no layout protegido.
+  // Conta ainda sem senha entra com a senha em branco, e só assim: o login
+  // abre a sessão que autoriza definir a senha em /primeiro-acesso
+  // (REQ-AU-02, PASB-01). Nenhum outro módulo abre até lá - quem barra é
+  // `requirePrimeiroAcessoConcluido` no layout protegido. Senha digitada em
+  // conta sem senha, ou senha vazia em conta com senha, é credencial errada
+  // como qualquer outra (PASB-02, PASB-03).
   const primeiroAcesso = usuario.senhaHash === null;
+  const credencialConfere = primeiroAcesso ? senha === "" : senhaConfere;
 
-  if (!primeiroAcesso) {
-    if (!senhaConfere) {
-      await registrarFalha(documento);
-      await registrarFalhaIp(ip);
-      return erroCredenciais();
-    }
-
-    await resetarTentativas(documento);
+  if (!credencialConfere) {
+    await registrarFalha(documento);
+    await registrarFalhaIp(ip);
+    return erroCredenciais();
   }
+
+  await resetarTentativas(documento);
 
   // Rotação do identificador de sessão no login (CA-AU-09).
   const idAnterior = (await cookies()).get(COOKIE_SESSAO)?.value;

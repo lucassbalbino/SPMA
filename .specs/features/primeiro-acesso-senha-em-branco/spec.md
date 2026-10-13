@@ -89,13 +89,13 @@ Hoje a conta sem senha (`senhaHash = null`) entra no 1º acesso com qualquer tex
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| PASB-01 | P1: Entrar com a senha em branco | Execute | Pending |
-| PASB-02 | P1: Entrar com a senha em branco | Execute | Pending |
-| PASB-03 | P1: Entrar com a senha em branco | Execute | Pending |
-| PASB-04 | P1: Entrar com a senha em branco | Execute | Pending |
-| PASB-05 | P1: Entrar com a senha em branco | Execute | Pending |
+| PASB-01 | P1: Entrar com a senha em branco | Execute | Implementing |
+| PASB-02 | P1: Entrar com a senha em branco | Execute | Implementing |
+| PASB-03 | P1: Entrar com a senha em branco | Execute | Implementing |
+| PASB-04 | P1: Entrar com a senha em branco | Execute | Implementing |
+| PASB-05 | P1: Entrar com a senha em branco | Execute | Implementing |
 | PASB-06 | P1: Tela de login orienta o 1º acesso | Execute | Pending |
-| PASB-07 | P1: Tela de login orienta o 1º acesso | Execute | Pending |
+| PASB-07 | P1: Tela de login orienta o 1º acesso | Execute | Implementing |
 
 **Coverage:** 7 total, 7 mapped to tasks, 0 unmapped
 
