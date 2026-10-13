@@ -201,7 +201,7 @@ Escopo Large: cada dimensão vira requisito ou recebe `N/A` explícito.
 | GV-13 | P1: Listagem escopada | Design | Pending |
 | GV-14 | P1: Listagem escopada | Design | Pending |
 | GV-15 | P1: Listagem escopada | Design | Pending |
-| GV-16 | P1: Listagem escopada | Design | Pending |
+| GV-16 | P1: Listagem escopada | Tasks | Implementing |
 | GV-17 | P1: Listagem escopada | Design | Pending |
 | GV-34 | P1: Listagem escopada | Design | Pending |
 | GV-18 | P2: Edição | Design | Pending |

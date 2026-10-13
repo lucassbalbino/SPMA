@@ -139,13 +139,15 @@ T11
 
 **Done when**:
 
-- [ ] `consulta.integration.test.ts`, com 2 GOs (A com 2 verbas, uma delas com um curso alocado; B com 1 verba) e um VO de A: AM vê as 3 verbas dos dois GOs (afirma os `cdVerba`) com `nomeOfertante` correto; GO A vê só as 2 dele; VO de A vê as mesmas 2; GO B vê só a dele; a verba com curso tem `saldoDisponivel = vlVerba - vlCursoAlocado` (valor exato) e a sem curso, `saldo = vlVerba`; AL recebe lista vazia (falha fechada)
-- [ ] Gate Full passa (sem e2e nesta tarefa)
+- [x] `consulta.integration.test.ts`, com 2 GOs (A com 2 verbas, uma delas com um curso alocado; B com 1 verba) e um VO de A: AM vê as 3 verbas dos dois GOs (afirma os `cdVerba`) com `nomeOfertante` correto; GO A vê só as 2 dele; VO de A vê as mesmas 2; GO B vê só a dele; a verba com curso tem `saldoDisponivel = vlVerba - vlCursoAlocado` (valor exato) e a sem curso, `saldo = vlVerba`; AL recebe lista vazia (falha fechada)
+- [x] Gate Full passa (sem e2e nesta tarefa)
 
 **Tests**: integration
 **Gate**: full
 
 **Commit**: `feat(verbas): consulta escopada de verbas com saldo`
+
+**Status**: ✅ Done — 798 unit / 121 integration (+7) / typecheck limpo.
 
 ---
 
