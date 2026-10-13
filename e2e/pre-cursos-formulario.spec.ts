@@ -95,7 +95,7 @@ async function salvarRascunho(page: Page) {
     page.waitForResponse(
       (res) => res.url().includes("/api/pre-cursos/") && res.request().method() === "PATCH",
     ),
-    page.getByRole("button", { name: "Salvar rascunho" }).click(),
+    page.getByRole("button", { name: "Salvar" }).click(),
   ]);
   return resposta;
 }
@@ -325,7 +325,7 @@ test("GO preenche os 56 campos e encerra o pré-curso de forma irreversível", a
 
   await expect(page.getByTestId("status-pre-curso")).toHaveText("Encerrado");
   await expect(page.getByTestId("lista-pendencias")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 
   await abrirBloco(page, 1);
@@ -345,7 +345,7 @@ test("pré-curso encerrado é somente leitura, sem botões de ação", async ({ 
   await page.goto(`/pre-cursos/${cdCurso}`);
 
   await expect(page.getByTestId("status-pre-curso")).toHaveText("Encerrado");
-  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 
   await abrirBloco(page, 1);
@@ -364,7 +364,7 @@ test("VO visualiza os dados sem controles de edição", async ({ page }) => {
   await page.goto(`/pre-cursos/${cdCurso}`);
 
   await expect(page.getByTestId("form-pre-curso")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 });
 

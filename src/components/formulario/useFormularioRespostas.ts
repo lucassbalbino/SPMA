@@ -1,6 +1,6 @@
 "use client";
 
-// O estado e as duas ações ("Salvar rascunho", "Encerrar") que os três
+// O estado e as duas ações ("Salvar", "Encerrar") que os três
 // formulários de questionário repetiam palavra por palavra.
 //
 // As três cópias tinham os mesmos 7 `useState`, o mesmo `setCampo`, o mesmo
@@ -47,7 +47,7 @@ export function useFormularioRespostas<C extends string, R extends Record<string
   const router = useRouter();
 
   const [respostas, setRespostas] = useState<R>(respostasIniciais);
-  // Só as chaves tocadas desde o último "Salvar rascunho": é o que faz o
+  // Só as chaves tocadas desde o último "Salvar": é o que faz o
   // PATCH enviar apenas o bloco alterado, não o questionário inteiro.
   const [alterados, setAlterados] = useState<Set<C>>(new Set());
   const [erro, setErro] = useState<string | null>(null);

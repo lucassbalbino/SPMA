@@ -131,7 +131,7 @@ async function salvarRascunho(page: Page) {
     page.waitForResponse(
       (res) => res.url().includes("/api/pos-cursos/") && res.request().method() === "PATCH",
     ),
-    page.getByRole("button", { name: "Salvar rascunho" }).click(),
+    page.getByRole("button", { name: "Salvar" }).click(),
   ]);
   return resposta;
 }
@@ -263,7 +263,7 @@ test("GO preenche os 26 campos e encerra o pós-curso de forma irreversível", a
 
   await expect(page.getByTestId("status-pos-curso")).toHaveText("Encerrado");
   await expect(page.getByTestId("lista-pendencias")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 
   await abrirBloco(page, 2);
@@ -278,7 +278,7 @@ test("pós-curso encerrado é somente leitura, sem botões de ação", async ({ 
   await page.goto(`/pos-cursos/${cdCurso}`);
 
   await expect(page.getByTestId("status-pos-curso")).toHaveText("Encerrado");
-  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 
   await abrirBloco(page, 2);
@@ -292,7 +292,7 @@ test("VO visualiza os dados sem controles de edição", async ({ page }) => {
   await page.goto(`/pos-cursos/${cdCurso}`);
 
   await expect(page.getByTestId("form-pos-curso")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 });
 

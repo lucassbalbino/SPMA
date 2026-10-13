@@ -116,7 +116,7 @@ async function salvarRascunho(page: Page) {
     page.waitForResponse(
       (res) => res.url().includes("/api/avaliacoes/") && res.request().method() === "PATCH",
     ),
-    page.getByRole("button", { name: "Salvar rascunho" }).click(),
+    page.getByRole("button", { name: "Salvar" }).click(),
   ]);
   return resposta;
 }
@@ -375,7 +375,7 @@ test("Parte 1 completa + Parte 2 completa (Concluiu='Sim') encerra de forma irre
 
   await expect(page.getByTestId("status-avaliacao")).toHaveText("Encerrado");
   await expect(page.getByTestId("lista-pendencias")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 
   await abrirBloco(blocoParte1(page, 1), "bloco-parte1-1");
@@ -396,7 +396,7 @@ test("avaliação encerrada é somente leitura, sem botões de ação", async ({
   await page.reload();
 
   await expect(page.getByTestId("status-avaliacao")).toHaveText("Encerrado");
-  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 });
 
@@ -409,7 +409,7 @@ test("um GO do Ofertante do curso abre a tela -> vê os dados, sem controles de 
   await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
 
   await expect(page.getByTestId("form-avaliacao")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 });
 

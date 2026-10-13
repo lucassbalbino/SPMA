@@ -77,7 +77,7 @@ export function CascaFormulario({
         {!somenteLeitura && (
           <div className="flex gap-2">
             <Button type="button" onClick={aoSalvar} disabled={salvando || encerrando}>
-              Salvar rascunho
+              Salvar
             </Button>
             <Button
               type="button"
