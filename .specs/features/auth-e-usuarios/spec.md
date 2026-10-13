@@ -17,6 +17,7 @@ Quando um usuário submete CPF e senha válidos de uma conta que já definiu sen
 
 **REQ-AU-02 — Definição de senha no 1º acesso.**
 Quando um usuário cujo indicador de primeiro acesso está ativo se autentica pela primeira vez, o sistema deve exigir a definição de uma nova senha antes de liberar qualquer módulo, e ao concluir deve desativar o indicador de primeiro acesso.
+_Gatilho revisto em `primeiro-acesso-senha-em-branco` (PASB-01 a PASB-07): a conta sem senha entra no 1º acesso só com a senha em branco._
 
 **REQ-AU-03 — Validação de CPF.**
 Onde um CPF é informado (login ou cadastro), o sistema deve validá-lo pelo algoritmo módulo 11 e rejeitar CPFs com dígito verificador inválido.
