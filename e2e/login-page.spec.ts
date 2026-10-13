@@ -1,5 +1,6 @@
 // e2e de /login (T24), pela UI real (não a API diretamente). Cobre
-// CA-AU-01, CA-AU-03 e CA-AU-04.
+// CA-AU-01, CA-AU-03, CA-AU-04 e o 1º acesso com a senha em branco
+// (PASB-06, PASB-07).
 import { expect, test } from "@playwright/test";
 import { deleteUsuarios, upsertUsuario } from "./helpers/db";
 
@@ -8,18 +9,20 @@ const SENHA_ERRADA = "SenhaErrada123";
 
 const CPF_COM_SENHA = "40010020004";
 const CPF_SENHA_ERRADA = "40020030002";
+const CPF_PRIMEIRO_ACESSO = "70080090389";
 
 // Válido por módulo 11, mas sem conta no banco (CA-AU-04).
 const CPF_INEXISTENTE = "70780890906";
 // Dígito verificador inválido (CA-AU-03).
 const CPF_INVALIDO = "12345678901";
 
-const CPFS = [CPF_COM_SENHA, CPF_SENHA_ERRADA];
+const CPFS = [CPF_COM_SENHA, CPF_SENHA_ERRADA, CPF_PRIMEIRO_ACESSO];
 
 test.beforeAll(() => {
   deleteUsuarios(CPFS);
   upsertUsuario({ cpf: CPF_COM_SENHA, tipo: "AL", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_SENHA_ERRADA, tipo: "AL", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_PRIMEIRO_ACESSO, tipo: "AL", senha: null, primeiraVez: true });
 });
 
 test.afterAll(() => {
@@ -97,4 +100,17 @@ test("CA-AU-04: CPF inexistente e senha errada mostram a mesma mensagem genéric
 
   const cookies = await page.context().cookies();
   expect(cookies.find((c) => c.name === "spma_sessao")).toBeUndefined();
+});
+
+test("PASB-06/PASB-07: a tela orienta o 1º acesso e a senha em branco leva a /primeiro-acesso", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await expect(page.getByText("Primeiro acesso? Deixe a senha em branco.")).toBeVisible();
+
+  await page.getByLabel("CPF").fill(CPF_PRIMEIRO_ACESSO);
+  await Promise.all([
+    page.waitForURL(/\/primeiro-acesso$/),
+    page.getByRole("button", { name: "Entrar" }).click(),
+  ]);
 });

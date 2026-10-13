@@ -12,7 +12,13 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { loginSchema } from "@/lib/validation/schemas/login.schema";
 
@@ -77,7 +83,12 @@ export function LoginForm() {
             value={senha}
             onChange={(event) => setSenha(event.target.value)}
             disabled={enviando}
+            aria-describedby="senha-dica"
           />
+          {/* PASB-06: a senha em branco é o pedido de 1º acesso. */}
+          <FieldDescription id="senha-dica">
+            Primeiro acesso? Deixe a senha em branco.
+          </FieldDescription>
         </Field>
         {erro && <FieldError>{erro}</FieldError>}
         <Button type="submit" disabled={enviando}>
