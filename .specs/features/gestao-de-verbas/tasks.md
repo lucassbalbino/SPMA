@@ -312,16 +312,18 @@ T11
 
 **Done when**:
 
-- [ ] `e2e/verbas-page.spec.ts`, GT sobre uma verba de 1000 com curso alocado de 400:
+- [x] `e2e/verbas-page.spec.ts`, GT sobre uma verba de 1000 com curso alocado de 400:
   - a edição não tem campo de GO (GV-22)
   - valor 300 → "Novo valor não pode ser menor que o já alocado a cursos desta verba", e o banco segue com 1000 (GV-19)
   - valor 400 e data nova → a linha mostra "R$ 400.00", saldo "R$ 0.00" e a data nova; o banco tem 400 e a data (GV-18, GV-20)
-- [ ] Gate Full passa com `npx playwright test e2e/verbas-page.spec.ts`
+- [x] Gate Full passa com `npx playwright test e2e/verbas-page.spec.ts`
 
 **Tests**: e2e
 **Gate**: full
 
 **Commit**: `feat(verbas): editar valor e data da verba na lista`
+
+**Status**: ✅ Done — 791 unit / 121 integration / e2e verbas-page 7/7.
 
 ---
 

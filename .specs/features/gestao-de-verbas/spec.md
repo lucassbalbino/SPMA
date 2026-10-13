@@ -204,11 +204,11 @@ Escopo Large: cada dimensão vira requisito ou recebe `N/A` explícito.
 | GV-16 | P1: Listagem escopada | Tasks | Implementing |
 | GV-17 | P1: Listagem escopada | Tasks | Implementing |
 | GV-34 | P1: Listagem escopada | Tasks | Implementing |
-| GV-18 | P2: Edição | Design | Pending |
-| GV-19 | P2: Edição | Design | Pending |
-| GV-20 | P2: Edição | Design | Pending |
+| GV-18 | P2: Edição | Tasks | Implementing |
+| GV-19 | P2: Edição | Tasks | Implementing |
+| GV-20 | P2: Edição | Tasks | Implementing |
 | GV-21 | P2: Edição | Tasks | Implementing |
-| GV-22 | P2: Edição | Design | Pending |
+| GV-22 | P2: Edição | Tasks | Implementing |
 | GV-23 | P1: GO nasce sem verba | Tasks | Implementing |
 | GV-24 | P1: GO nasce sem verba | Tasks | Implementing |
 | GV-25 | P1: GO nasce sem verba | Design | Pending |

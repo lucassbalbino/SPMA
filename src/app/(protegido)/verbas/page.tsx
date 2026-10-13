@@ -64,6 +64,7 @@ export default async function VerbasPage() {
         </CardHeader>
         <CardContent>
           <ListaVerbas
+            podeEditar={gerencia}
             verbas={verbas.map((verba) => ({
               cdVerba: verba.cdVerba,
               cdOfertante: verba.cdOfertante,

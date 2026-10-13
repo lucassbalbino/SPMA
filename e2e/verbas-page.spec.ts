@@ -10,6 +10,7 @@ import {
   deletePreCursosPorOfertante,
   deleteUsuarios,
   deleteVerbasPorOfertante,
+  getVerba,
   getVerbasPorOfertante,
   upsertUsuario,
 } from "./helpers/db";
@@ -19,20 +20,23 @@ const SENHA = "SenhaValida123";
 
 const gerarCnpjValido = geradorDeCnpj("55");
 
-// GO_A tem 1 verba com curso alocado; GO_B tem 1 verba; GO_C não tem nenhuma.
+// GO_A tem 1 verba com curso alocado; GO_B tem 1 verba; GO_C não tem nenhuma;
+// GO_D tem 1 verba de 1000 com 400 alocados, usada só pela edição.
 const CNPJ_GO_A = gerarCnpjValido(1);
 const CNPJ_GO_B = gerarCnpjValido(2);
 const CNPJ_GO_C = gerarCnpjValido(3);
+const CNPJ_GO_D = gerarCnpjValido(4);
 const CPF_VO_DE_C = "70101001010";
 const CPF_VT = "70101002092";
 const CPF_AM = "70101003064";
 const CPF_GT = "70101004036";
 
-const CNPJS = [CNPJ_GO_A, CNPJ_GO_B, CNPJ_GO_C];
+const CNPJS = [CNPJ_GO_A, CNPJ_GO_B, CNPJ_GO_C, CNPJ_GO_D];
 const DOCUMENTOS = [CPF_VO_DE_C, CPF_VT, CPF_AM, CPF_GT, ...CNPJS];
 
 let cdVerbaA: number;
 let cdVerbaB: number;
+let cdVerbaD: number;
 
 async function logar(page: Page, documento: string) {
   const res = await page.request.post("/api/auth/login", { data: { documento, senha: SENHA } });
@@ -47,6 +51,7 @@ test.beforeAll(() => {
   upsertUsuario({ cpf: CNPJ_GO_A, tipo: "GO", senha: SENHA, primeiraVez: false, nome: "GO Verbas Página A" });
   upsertUsuario({ cpf: CNPJ_GO_B, tipo: "GO", senha: SENHA, primeiraVez: false, nome: "GO Verbas Página B" });
   upsertUsuario({ cpf: CNPJ_GO_C, tipo: "GO", senha: SENHA, primeiraVez: false, nome: "GO Verbas Página C" });
+  upsertUsuario({ cpf: CNPJ_GO_D, tipo: "GO", senha: SENHA, primeiraVez: false, nome: "GO Verbas Página D" });
   upsertUsuario({
     cpf: CPF_VO_DE_C,
     tipo: "VO",
@@ -61,6 +66,8 @@ test.beforeAll(() => {
   cdVerbaA = criarVerba({ cdOfertante: CNPJ_GO_A, vlVerba: 5000, dtVerba: "2026-03-10" }).cdVerba;
   criarPreCurso({ cdOfertante: CNPJ_GO_A, cdVerba: cdVerbaA, vlCursoAlocado: 1200, criadoPor: CNPJ_GO_A });
   cdVerbaB = criarVerba({ cdOfertante: CNPJ_GO_B, vlVerba: 700 }).cdVerba;
+  cdVerbaD = criarVerba({ cdOfertante: CNPJ_GO_D, vlVerba: 1000, dtVerba: "2026-03-10" }).cdVerba;
+  criarPreCurso({ cdOfertante: CNPJ_GO_D, cdVerba: cdVerbaD, vlCursoAlocado: 400, criadoPor: CNPJ_GO_D });
 });
 
 test.afterAll(() => {
@@ -194,5 +201,43 @@ test("GV-09: o botão 'Criar verba' fica desabilitado enquanto o envio está em 
 
   liberar();
   await expect(criar).toBeEnabled();
+});
+
+test("GV-18/GV-19/GV-20/GV-22: GT edita valor e data na linha - abaixo do alocado é recusado, igual ao alocado zera o saldo", async ({
+  page,
+}) => {
+  await logar(page, CPF_GT);
+  await page.goto("/verbas");
+
+  const linha = page.getByTestId(`verba-${cdVerbaD}`);
+  await linha.getByRole("button", { name: "Editar" }).click();
+
+  // GV-22: a edição não oferece trocar o GO.
+  await expect(linha.getByLabel("Valor da verba")).toBeVisible();
+  await expect(linha.getByLabel("Data de liberação")).toBeVisible();
+  await expect(linha.locator("select")).toHaveCount(0);
+  await expect(linha.getByLabel("GO", { exact: true })).toHaveCount(0);
+
+  // GV-19: 300 < 400 alocados - recusado, o valor no banco não muda.
+  await linha.getByLabel("Valor da verba").fill("300");
+  await linha.getByRole("button", { name: "Salvar" }).click();
+  await expect(
+    linha.getByText("Novo valor não pode ser menor que o já alocado a cursos desta verba"),
+  ).toBeVisible();
+  expect(Number(getVerba(cdVerbaD)?.vlVerba)).toBe(1000);
+
+  // GV-18 + GV-20: 400 = alocado é aceito; a linha mostra os valores novos.
+  await linha.getByLabel("Valor da verba").fill("400");
+  await linha.getByLabel("Data de liberação").fill("2026-07-15");
+  await linha.getByRole("button", { name: "Salvar" }).click();
+
+  await expect(linha).toContainText("Valor R$ 400.00");
+  await expect(linha).toContainText("Saldo R$ 0.00");
+  await expect(linha).toContainText("15/07/2026");
+  await expect(linha.getByLabel("Valor da verba")).toHaveCount(0);
+
+  const editada = getVerba(cdVerbaD);
+  expect(Number(editada?.vlVerba)).toBe(400);
+  expect(editada?.dtVerba).toMatch(/^2026-07-15/);
 });
 
