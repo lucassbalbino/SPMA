@@ -145,10 +145,10 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] `gestao-usuario.schema.test.ts`, consulta: aceita `{ pagina: 1 }`; rejeita `pagina` 0, -1, 1.5 e `"1"`; rejeita `tipo: "XX"`; aceita busca com 100 caracteres e rejeita com 101; rejeita chave extra (`cpf`)
-- [ ] edição: aceita só `nome`; `email: ""` sai `null`; rejeita nome `""`, `"   "` e 256 caracteres; rejeita e-mail `"x@"`; rejeita sem `documentoAtual`; rejeita só com `documentoAtual` ("Nada para alterar"); rejeita `senha`, `tipo` e `cdOfertante` como chave extra; `documentoAtual: "529.982.247-25"` sai `"52998224725"`
-- [ ] reset: aceita `{ documento }` com pontuação (sai só dígitos); rejeita corpo vazio e chave extra `senha`
-- [ ] Gate Quick passa
+- [x] `gestao-usuario.schema.test.ts`, consulta: aceita `{ pagina: 1 }`; rejeita `pagina` 0, -1, 1.5 e `"1"`; rejeita `tipo: "XX"`; aceita busca com 100 caracteres e rejeita com 101; rejeita chave extra (`cpf`)
+- [x] edição: aceita só `nome`; `email: ""` sai `null`; rejeita nome `""`, `"   "` e 256 caracteres; rejeita e-mail `"x@"`; rejeita sem `documentoAtual`; rejeita só com `documentoAtual` ("Nada para alterar"); rejeita `senha`, `tipo` e `cdOfertante` como chave extra; `documentoAtual: "529.982.247-25"` sai `"52998224725"`
+- [x] reset: aceita `{ documento }` com pontuação (sai só dígitos); rejeita corpo vazio e chave extra `senha`
+- [x] Gate Quick passa
 
 **Tests**: unit
 **Gate**: quick

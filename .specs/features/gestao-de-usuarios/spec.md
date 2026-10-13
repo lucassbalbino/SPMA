@@ -238,7 +238,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-14 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-15 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-16 | P1: Paginar/filtrar | Execute | Implemented |
-| GU-17 | P1: Paginar/filtrar | Tasks | In Tasks |
+| GU-17 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-18 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-19 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-20 | P1: Paginar/filtrar | Tasks | In Tasks |
@@ -246,12 +246,12 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-22 | P1: Nome e e-mail | Tasks | In Tasks |
 | GU-23 | P1: Nome e e-mail | Tasks | In Tasks |
 | GU-24 | P1: Nome e e-mail | Tasks | In Tasks |
-| GU-25 | P1: Nome e e-mail | Tasks | In Tasks |
-| GU-26 | P1: Nome e e-mail | Tasks | In Tasks |
+| GU-25 | P1: Nome e e-mail | Execute | Implemented |
+| GU-26 | P1: Nome e e-mail | Execute | Implemented |
 | GU-27 | P1: Nome e e-mail | Tasks | In Tasks |
 | GU-28 | P1: Nome e e-mail | Tasks | In Tasks |
 | GU-29 | P1: Nome e e-mail | Tasks | In Tasks |
-| GU-30 | P1: Nome e e-mail | Tasks | In Tasks |
+| GU-30 | P1: Nome e e-mail | Execute | Implemented |
 | GU-31 | P1: Nome e e-mail | Tasks | In Tasks |
 | GU-32 | P1: CPF/CNPJ | Tasks | In Tasks |
 | GU-33 | P1: CPF/CNPJ | Tasks | In Tasks |
@@ -265,10 +265,10 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-41 | P1: Senha | Tasks | In Tasks |
 | GU-42 | P1: Senha | Tasks | In Tasks |
 | GU-43 | P1: Senha | Tasks | In Tasks |
-| GU-44 | P1: Senha | Tasks | In Tasks |
+| GU-44 | P1: Senha | Execute | Implemented |
 | GU-45 | P1: Senha | Tasks | In Tasks |
 | GU-46 | P1: Senha | Tasks | In Tasks |
-| GU-47 | P1: Senha | Tasks | In Tasks |
+| GU-47 | P1: Senha | Execute | Implemented |
 | GU-48 | P1: Documento fora da URL | Tasks | In Tasks |
 | GU-49 | P1: Documento fora da URL | Tasks | In Tasks |
 
