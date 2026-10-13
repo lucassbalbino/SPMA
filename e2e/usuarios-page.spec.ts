@@ -98,11 +98,13 @@ test("CA-AU-05: GO logado só vê VO/AL como opções e consegue criar um AL pel
   await expect(page).toHaveURL(/\/usuarios$/);
 
   const opcoes = await page.locator("select#tipo option").allTextContents();
-  expect(opcoes.sort()).toEqual(["AL", "VO"]);
+  // As opções mostram o tipo por extenso, depois do "Selecione" inicial.
+  expect(opcoes).toEqual(["Selecione", "Visualizador Ofertante", "Aluno"]);
 
+  // O campo de documento só aparece depois de escolher o tipo.
+  await page.locator("select#tipo").selectOption("AL");
   await page.getByLabel("CPF").fill(CPF_NOVO_AL);
   await page.getByLabel("Nome").fill("Aluno Criado Pela UI");
-  await page.locator("select#tipo").selectOption("AL");
   await page.locator("select#cdCurso").selectOption(String(cdCursoDoGo));
 
   const [resposta] = await Promise.all([
