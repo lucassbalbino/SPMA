@@ -186,42 +186,42 @@ Escopo Large: cada dimensão vira requisito ou recebe `N/A` explícito.
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| GV-01 | P1: AM/GT criam verba | Tasks | Implementing |
-| GV-02 | P1: AM/GT criam verba | Tasks | Implementing |
-| GV-03 | P1: AM/GT criam verba | Tasks | Implementing |
-| GV-04 | P1: AM/GT criam verba | Tasks | Implementing |
-| GV-05 | P1: AM/GT criam verba | Tasks | Implementing |
-| GV-06 | P1: AM/GT criam verba | Tasks | Implementing |
-| GV-07 | P1: AM/GT criam verba | Tasks | Implementing |
-| GV-08 | P1: AM/GT criam verba | Design | Pending |
-| GV-09 | P1: AM/GT criam verba | Tasks | Implementing |
-| GV-10 | P1: AM/GT criam verba | Tasks | Implementing |
-| GV-11 | P1: Listagem escopada | Tasks | Implementing |
-| GV-12 | P1: Listagem escopada | Tasks | Implementing |
-| GV-13 | P1: Listagem escopada | Tasks | Implementing |
-| GV-14 | P1: Listagem escopada | Tasks | Implementing |
-| GV-15 | P1: Listagem escopada | Tasks | Implementing |
-| GV-16 | P1: Listagem escopada | Tasks | Implementing |
-| GV-17 | P1: Listagem escopada | Tasks | Implementing |
-| GV-34 | P1: Listagem escopada | Tasks | Implementing |
-| GV-18 | P2: Edição | Tasks | Implementing |
-| GV-19 | P2: Edição | Tasks | Implementing |
-| GV-20 | P2: Edição | Tasks | Implementing |
-| GV-21 | P2: Edição | Tasks | Implementing |
-| GV-22 | P2: Edição | Tasks | Implementing |
-| GV-23 | P1: GO nasce sem verba | Tasks | Implementing |
-| GV-24 | P1: GO nasce sem verba | Tasks | Implementing |
-| GV-25 | P1: GO nasce sem verba | Design | Pending |
-| GV-26 | P1: GO nasce sem verba | Tasks | Implementing |
-| GV-27 | P1: Navegação | Tasks | Implementing |
-| GV-28 | P1: Navegação | Tasks | Implementing |
-| GV-29 | P1: Navegação | Tasks | Implementing |
-| GV-30 | P1: Navegação | Tasks | Implementing |
-| GV-31 | Edge case | Design | Pending |
-| GV-32 | Edge case | Tasks | Implementing |
-| GV-33 | Edge case | Tasks | Implementing |
+| GV-01 | P1: AM/GT criam verba | Tasks | Verified |
+| GV-02 | P1: AM/GT criam verba | Tasks | Verified |
+| GV-03 | P1: AM/GT criam verba | Tasks | Verified |
+| GV-04 | P1: AM/GT criam verba | Tasks | Verified |
+| GV-05 | P1: AM/GT criam verba | Tasks | Verified |
+| GV-06 | P1: AM/GT criam verba | Tasks | Verified |
+| GV-07 | P1: AM/GT criam verba | Tasks | Verified |
+| GV-08 | P1: AM/GT criam verba | Tasks | Verified |
+| GV-09 | P1: AM/GT criam verba | Tasks | Verified |
+| GV-10 | P1: AM/GT criam verba | Tasks | Verified |
+| GV-11 | P1: Listagem escopada | Tasks | Verified |
+| GV-12 | P1: Listagem escopada | Tasks | Verified |
+| GV-13 | P1: Listagem escopada | Tasks | Verified |
+| GV-14 | P1: Listagem escopada | Tasks | Verified |
+| GV-15 | P1: Listagem escopada | Tasks | Verified |
+| GV-16 | P1: Listagem escopada | Tasks | Verified |
+| GV-17 | P1: Listagem escopada | Tasks | Verified |
+| GV-34 | P1: Listagem escopada | Tasks | Verified |
+| GV-18 | P2: Edição | Tasks | Verified |
+| GV-19 | P2: Edição | Tasks | Verified |
+| GV-20 | P2: Edição | Tasks | Verified |
+| GV-21 | P2: Edição | Tasks | Verified |
+| GV-22 | P2: Edição | Tasks | Verified |
+| GV-23 | P1: GO nasce sem verba | Tasks | Verified |
+| GV-24 | P1: GO nasce sem verba | Tasks | Verified |
+| GV-25 | P1: GO nasce sem verba | Tasks | Verified |
+| GV-26 | P1: GO nasce sem verba | Tasks | Verified |
+| GV-27 | P1: Navegação | Tasks | Verified |
+| GV-28 | P1: Navegação | Tasks | Verified |
+| GV-29 | P1: Navegação | Tasks | Verified |
+| GV-30 | P1: Navegação | Tasks | Verified |
+| GV-31 | Edge case | Tasks | Verified |
+| GV-32 | Edge case | Tasks | Verified |
+| GV-33 | Edge case | Tasks | Verified |
 
-**Coverage:** 34 total, 0 mapped to tasks, 34 unmapped (tasks ainda não criadas).
+**Coverage:** 34 total, 34 Verified (`validation.md`, iteração 2, PASS). GV-08, GV-25 e GV-31 têm cobertura anterior à feature, conferida pelo Verifier.
 
 ---
 

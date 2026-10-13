@@ -79,6 +79,12 @@ Este arquivo é a fonte de verdade das decisões travadas. Não reabrir uma AD s
   - **Pendências do usuário** (`spec.md`, `Confirmed? n`): GO ainda edita os próprios dados por `PATCH /api/usuarios/[documento]/organizacao` (sem tela; não pula o gate); campo só com espaços conta como preenchido; GO com `primeiraVez = true` alcança `/cadastro-ofertante` pela URL.
   - **Lições não distiladas de propósito:** `lessons.py add`/`list` faz auto-prune de 14 candidatas vencidas (39 → 25) como efeito colateral. Candidatas desta feature estão no `validation.md`; rodar `lessons.py` só com o aval do usuário para o prune.
   - **Arquivos da feature:** `.specs/features/onboarding-organizacional-go/{context.md,spec.md,design.md,tasks.md,validation.md}`.
+- **`gestao-de-verbas` (2026-10-13): DONE.** 12/12 tarefas (T1-T11 + T12, fix pós-Verifier), inline. `validation.md` = **PASS na iteração 2/3**, `validate_state.py gestao-de-verbas` = exit 0, os 34 `GV-*` `Verified`. Registrada como **AD-046**: a verba sai da criação do GO e ganha a tela `/verbas` (AM/GT criam e editam; GO/VO leem as próprias; VT e AL não leem verba, guarda `podeLerVerba`). Teto de `vlVerba` em 99.999.999,99, com no máximo 2 casas.
+  - **Testes no HEAD:** 794 unit / 121 integration / 288 e2e, gate completo verde. Linha de base pré-feature: 781 / 114 / 275.
+  - **Verifier iteração 1: FAIL**, 19 mutantes e 3 sobreviventes, todos lacuna de teste: `PATCH /api/verbas/[id]` sem teste de valor inválido (a tela valida com o mesmo schema antes de enviar, então o e2e de tela nunca chegava à rota) e os fallbacks da linha da lista ("—" sem data, CNPJ sem nome) sem fixture que os acionasse. Fechados na T12; na iteração 2, 22/22 mutantes distintos morrem.
+  - **Residuais Minor aceitos** (em `validation.md`): AL provado por composição em GV-17/GV-34, GV-30 indireto (`ROTAS_COM_SESSAO`), GV-14 do VO sem linhas.
+  - **Lições não distiladas** (mesmo motivo de `onboarding-organizacional-go`: `lessons.py` faz auto-prune): candidatas listadas no `validation.md`.
+  - **Arquivos da feature:** `.specs/features/gestao-de-verbas/{context.md,spec.md,design.md,tasks.md,validation.md}`.
 
 ---
 

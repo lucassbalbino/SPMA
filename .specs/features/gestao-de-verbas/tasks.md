@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/gestao-de-verbas/design.md`
-**Status**: Done (aguardando Verifier, iteração 2)
+**Status**: Done
 
 ---
 
