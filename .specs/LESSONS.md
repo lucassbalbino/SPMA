@@ -246,6 +246,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: src/app/api/usuarios/route.ts:113 (SPEC_DEVIATION: cdOfertante do proprio GO criado fica sempre null) (routes)
 - last seen: 2026-09-12T23:51:04Z
 
+### L-040 - Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: primeiro-acesso-senha-em-branco
+- evidence: validation.md M8 (route.ts:78, Assumption CPF e IP) (tests)
+- last seen: 2026-10-13T09:45:28Z
+
+### L-041 - When a criterion says a check runs on every path, assert it once per distinct entry state; covering two of three states leaves the third free to skip it.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `auth` · harmful: 0
+- features: primeiro-acesso-senha-em-branco
+- evidence: validation.md PASB-05 / M7 (route.ts:57) (auth)
+- last seen: 2026-10-13T09:45:29Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

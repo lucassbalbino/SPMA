@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 40,
+  "next_id": 42,
   "lessons": [
     {
       "id": "L-001",
@@ -708,6 +708,42 @@
       ],
       "created": "2026-09-12T23:51:04Z",
       "last_seen": "2026-09-12T23:51:04Z"
+    },
+    {
+      "id": "L-040",
+      "key": "surviving_mutant::assert every conjunct of a multi part criterion proving the action succeeded leaves the resulting state half unverified",
+      "text": "Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "primeiro-acesso-senha-em-branco"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "validation.md M8 (route.ts:78, Assumption CPF e IP) (tests)"
+      ],
+      "created": "2026-10-13T09:45:28Z",
+      "last_seen": "2026-10-13T09:45:28Z"
+    },
+    {
+      "id": "L-041",
+      "key": "ac_gap::when a criterion says a check runs on every path assert it once per distinct entry state covering two of three states leaves the third free to skip it",
+      "text": "When a criterion says a check runs on every path, assert it once per distinct entry state; covering two of three states leaves the third free to skip it.",
+      "signal": "ac_gap",
+      "scope": "auth",
+      "status": "candidate",
+      "features": [
+        "primeiro-acesso-senha-em-branco"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "validation.md PASB-05 / M7 (route.ts:57) (auth)"
+      ],
+      "created": "2026-10-13T09:45:29Z",
+      "last_seen": "2026-10-13T09:45:29Z"
     }
   ]
 }
