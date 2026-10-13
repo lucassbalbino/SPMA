@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/gestao-de-verbas/design.md`
-**Status**: In Progress
+**Status**: Done (aguardando Verifier)
 
 ---
 
@@ -369,13 +369,15 @@ T11
 
 **Done when**:
 
-- [ ] Uma segunda verba para o GO do spec; o seletor do GO mostra as duas opções (`opcao-verba-{cd}`), cada uma com o próprio saldo
-- [ ] Gate Full-feature passa (última tarefa)
+- [x] Uma segunda verba para o GO do spec; o seletor do GO mostra as duas opções (`opcao-verba-{cd}`), cada uma com o próprio saldo
+- [x] Gate Full-feature passa (última tarefa)
 
 **Tests**: e2e
 **Gate**: full
 
 **Commit**: `test(cursos): seletor de curso com várias verbas do mesmo GO`
+
+**Status**: ✅ Done — Gate Full-feature: lint 0 erros (35 avisos, mesma linha de base), build ok, typecheck limpo, 794 unit / 121 integration / 285 e2e (suíte completa, 7.8 min, `.last-run.json` = passed).
 
 ---
 

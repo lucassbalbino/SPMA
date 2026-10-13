@@ -153,3 +153,18 @@ test("GO sem nenhuma Verba vê a mensagem de lista vazia, sem seletor", async ({
   await expect(page.getByTestId("select-verba")).toHaveCount(0);
   await expect(page.getByText("Nenhuma verba disponível para criar um curso.")).toBeVisible();
 });
+
+// GV-32 (gestao-de-verbas, AD-046): um GO pode ter várias verbas, e o seletor
+// oferece todas, cada uma com o próprio saldo.
+test("GV-32: GO com duas verbas vê as duas no seletor, cada uma com o próprio saldo", async ({
+  page,
+}) => {
+  const cdSegundaVerba = criarVerba({ cdOfertante: CNPJ_GO_OUTRO, vlVerba: 250 }).cdVerba;
+
+  await login(page, CNPJ_GO_OUTRO);
+  await page.goto("/cursos/novo");
+
+  await page.getByTestId("select-verba").click();
+  await expect(page.getByTestId(`opcao-verba-${cdVerbaOutro}`)).toContainText("saldo R$ 1000.00");
+  await expect(page.getByTestId(`opcao-verba-${cdSegundaVerba}`)).toContainText("saldo R$ 250.00");
+});

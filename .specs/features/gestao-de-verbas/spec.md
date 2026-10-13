@@ -218,7 +218,7 @@ Escopo Large: cada dimensão vira requisito ou recebe `N/A` explícito.
 | GV-29 | P1: Navegação | Tasks | Implementing |
 | GV-30 | P1: Navegação | Tasks | Implementing |
 | GV-31 | Edge case | Design | Pending |
-| GV-32 | Edge case | Design | Pending |
+| GV-32 | Edge case | Tasks | Implementing |
 | GV-33 | Edge case | Tasks | Implementing |
 
 **Coverage:** 34 total, 0 mapped to tasks, 34 unmapped (tasks ainda não criadas).
