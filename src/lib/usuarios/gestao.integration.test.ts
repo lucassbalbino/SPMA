@@ -1,5 +1,5 @@
 // Testes de integração das escritas da gestão de usuários (GU-24, GU-32 a
-// GU-39), contra o banco real `spma_test`.
+// GU-39, GU-41/42), contra o banco real `spma_test`.
 //
 // A troca de documento é provada tabela a tabela (L-014): cada registro
 // filho aponta para o documento novo E não sobra nenhuma linha com o antigo.
@@ -8,7 +8,7 @@ import { prisma } from "@/lib/db/prisma";
 import { ErroHttp } from "@/lib/api/erro-http";
 import { Prisma } from "@/generated/prisma/client";
 import { geradorDeCnpj } from "../../../e2e/helpers/cnpj";
-import { atualizarCadastro, validarDocumentoDoTipo } from "./gestao";
+import { atualizarCadastro, resetarSenha, validarDocumentoDoTipo } from "./gestao";
 
 // Prefixo "49": espaço de numeração deste arquivo (ver `e2e/helpers/cnpj.ts`).
 const cnpj = geradorDeCnpj("49");
@@ -97,6 +97,10 @@ async function criarGoComFilhos(documentoGo: string, documentoVo: string) {
   return { cdVerba: verba.cdVerba, cdCurso: curso.cdCurso };
 }
 
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+
 describe("atualizarCadastro (integration)", () => {
   beforeAll(limpar);
 
@@ -104,10 +108,7 @@ describe("atualizarCadastro (integration)", () => {
     vi.restoreAllMocks();
   });
 
-  afterAll(async () => {
-    await limpar();
-    await prisma.$disconnect();
-  });
+  afterAll(limpar);
 
   it("GU-24: só nome e e-mail são gravados, e a sessão do alvo continua", async () => {
     const documento = cpf(1);
@@ -322,5 +323,42 @@ describe("atualizarCadastro (integration)", () => {
     expect(await prisma.usuario.count({ where: { documento: antigo } })).toBe(1);
     expect(await prisma.usuario.count({ where: { documento: novo } })).toBe(0);
     expect(await prisma.sessao.count({ where: { cpfUsuario: antigo } })).toBe(1);
+  });
+});
+
+describe("resetarSenha (integration)", () => {
+  const documento = cpf(9);
+
+  beforeAll(async () => {
+    await prisma.usuario.deleteMany({ where: { documento } });
+  });
+
+  afterAll(async () => {
+    await prisma.usuario.deleteMany({ where: { documento } });
+  });
+
+  it("GU-41/42: volta ao 1º acesso, destrava a conta e encerra as sessões", async () => {
+    await prisma.usuario.create({
+      data: {
+        documento,
+        nome: "GU-T VT RESET",
+        tipo: "VT",
+        senhaHash: "hash-de-teste",
+        primeiraVez: false,
+        tentativasFalhas: 3,
+        bloqueadoAte: new Date(Date.now() + 15 * 60 * 1000),
+      },
+    });
+    await novaSessao(documento);
+    await novaSessao(documento);
+
+    await resetarSenha(documento);
+
+    const depois = await prisma.usuario.findUniqueOrThrow({ where: { documento } });
+    expect(depois.senhaHash).toBeNull();
+    expect(depois.primeiraVez).toBe(true);
+    expect(depois.tentativasFalhas).toBe(0);
+    expect(depois.bloqueadoAte).toBeNull();
+    expect(await prisma.sessao.count({ where: { cpfUsuario: documento } })).toBe(0);
   });
 });

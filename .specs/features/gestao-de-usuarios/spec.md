@@ -262,8 +262,8 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-38 | P1: CPF/CNPJ | Execute | Implemented |
 | GU-39 | P1: CPF/CNPJ | Execute | Implemented |
 | GU-40 | P1: CPF/CNPJ | Tasks | In Tasks |
-| GU-41 | P1: Senha | Tasks | In Tasks |
-| GU-42 | P1: Senha | Tasks | In Tasks |
+| GU-41 | P1: Senha | Execute | Implemented |
+| GU-42 | P1: Senha | Execute | Implemented |
 | GU-43 | P1: Senha | Execute | Implemented |
 | GU-44 | P1: Senha | Execute | Implemented |
 | GU-45 | P1: Senha | Tasks | In Tasks |

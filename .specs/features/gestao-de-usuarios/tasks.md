@@ -262,8 +262,8 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Em `gestao.integration.test.ts`: usuário com senha, `primeiraVez: false`, 3 tentativas, `bloqueadoAte` no futuro e 2 sessões → depois do reset: `senhaHash` null, `primeiraVez` true, `tentativasFalhas` 0, `bloqueadoAte` null, zero sessões (os 5 conjuntos afirmados)
-- [ ] Gate Full passa
+- [x] Em `gestao.integration.test.ts`: usuário com senha, `primeiraVez: false`, 3 tentativas, `bloqueadoAte` no futuro e 2 sessões → depois do reset: `senhaHash` null, `primeiraVez` true, `tentativasFalhas` 0, `bloqueadoAte` null, zero sessões (os 5 conjuntos afirmados)
+- [x] Gate Full passa
 
 **Tests**: integration
 **Gate**: full

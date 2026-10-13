@@ -1,5 +1,5 @@
 // Escritas da gestão de usuários: corrigir o cadastro (nome, e-mail e
-// documento) e, na T7, resetar a senha (design.md, "Serviço de escrita").
+// documento) e resetar a senha (design.md, "Serviço de escrita").
 //
 // Quem chama já passou pela guarda de alvo (`exigirAlvoEditavel`): aqui não
 // se reavalia escopo nem matriz, só se grava.
@@ -127,4 +127,22 @@ export async function atualizarCadastro(
 
     throw erro;
   }
+}
+
+/**
+ * Volta o alvo ao estado de 1º acesso (GU-41): sem senha, com o 1º acesso
+ * pendente, e destravado (sem isso o reset não liberaria uma conta bloqueada
+ * por tentativas). No próximo login ele entra com a senha em branco (PASB-01)
+ * e escolhe a própria; o gestor nunca conhece nem define senha (GU-47).
+ *
+ * As sessões abertas caem junto, na mesma transação (GU-42).
+ */
+export async function resetarSenha(documento: string): Promise<void> {
+  await prisma.$transaction([
+    prisma.usuario.update({
+      where: { documento },
+      data: { senhaHash: null, primeiraVez: true, tentativasFalhas: 0, bloqueadoAte: null },
+    }),
+    prisma.sessao.deleteMany({ where: { cpfUsuario: documento } }),
+  ]);
 }
