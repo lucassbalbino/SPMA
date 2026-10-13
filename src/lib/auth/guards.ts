@@ -22,6 +22,7 @@ export {
   podeAcessarAvaliacao,
   podeAcessarOfertante,
   podeEditarOfertante,
+  podeEditarUsuario,
   podeGerenciarAvaliacao,
   podeGerenciarPosCurso,
   podeGerenciarPreCurso,

@@ -95,8 +95,8 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] `guards.test.ts` ganha um `describe("podeEditarUsuario")`: para cada um dos 6 tipos de editor x 6 tipos de alvo, o resultado é igual a `TIPOS_PERMITIDOS[editor].includes(alvo)` (tabela escrita à mão no teste, não derivada da constante); AM editando o próprio documento → `false`; AM editando outro AM → `true`
-- [ ] Gate Quick passa; nenhum teste existente removido
+- [x] `guards.test.ts` ganha um `describe("podeEditarUsuario")`: para cada um dos 6 tipos de editor x 6 tipos de alvo, o resultado é igual a `TIPOS_PERMITIDOS[editor].includes(alvo)` (tabela escrita à mão no teste, não derivada da constante); AM editando o próprio documento → `false`; AM editando outro AM → `true`
+- [x] Gate Quick passa; nenhum teste existente removido
 
 **Tests**: unit
 **Gate**: quick

@@ -13,6 +13,7 @@
 // `guards.ts` reexporta tudo daqui, então nenhum ponto de import existente
 // mudou.
 import type { TipoUsuario } from "../../generated/prisma/enums";
+import { podeCriar } from "./cascata";
 
 /** O que toda regra de escopo por Ofertante precisa saber do usuário. */
 export type UsuarioComEscopo = {
@@ -198,4 +199,23 @@ export function exigeOfertanteEVerba(
   alvoTipo: TipoUsuario,
 ): boolean {
   return alvoTipo === "GO" && podeGerenciarVerba(criadorTipo);
+}
+
+/**
+ * Matriz de EDIÇÃO da gestão de usuários (GU-21): quem pode criar um tipo
+ * pode corrigir o cadastro e resetar a senha dele, menos a própria conta
+ * (trocar o próprio documento ou resetar a própria senha derrubaria a
+ * sessão em uso).
+ *
+ * ATENÇÃO: o escopo NÃO entra aqui. GU-21 também exige o alvo no escopo do
+ * editor (GU-04/GU-05), e isso é garantido por quem entrega o alvo: só chame
+ * esta função com um alvo que saiu de uma consulta escopada
+ * (`consultarUsuarios` / `buscarUsuarioVisivel`, em `lib/usuarios/consulta.ts`).
+ * Um alvo montado à mão pularia o escopo.
+ */
+export function podeEditarUsuario(
+  editor: { tipo: TipoUsuario; documento: string },
+  alvo: { tipo: TipoUsuario; documento: string },
+): boolean {
+  return podeCriar(editor.tipo, alvo.tipo) && alvo.documento !== editor.documento;
 }

@@ -242,7 +242,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-18 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-19 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-20 | P1: Paginar/filtrar | Tasks | In Tasks |
-| GU-21 | P1: Nome e e-mail | Tasks | In Tasks |
+| GU-21 | P1: Nome e e-mail | Execute | Implemented |
 | GU-22 | P1: Nome e e-mail | Tasks | In Tasks |
 | GU-23 | P1: Nome e e-mail | Tasks | In Tasks |
 | GU-24 | P1: Nome e e-mail | Tasks | In Tasks |

@@ -7,6 +7,7 @@ import {
   podeAcessarAvaliacao,
   podeAcessarOfertante,
   podeEditarOfertante,
+  podeEditarUsuario,
   podeGerenciarAvaliacao,
   podeGerenciarPosCurso,
   podeGerenciarPreCurso,
@@ -20,6 +21,7 @@ import {
 } from "./guards";
 import { obterSessao, type SessaoComUsuario } from "./session";
 import { redirect } from "next/navigation";
+import type { TipoUsuario } from "../../generated/prisma/enums";
 
 // O `redirect` real do Next interrompe a execução lançando; o mock imita
 // isso para que o fluxo testado seja o mesmo de produção.
@@ -598,4 +600,49 @@ describe("exigeOfertanteEVerba", () => {
       expect(exigeOfertanteEVerba("AM", alvo)).toBe(false);
     },
   );
+});
+
+describe("podeEditarUsuario", () => {
+  // GU-21: a matriz de edição é a de criação (REQ-AU-05/06). Tabela escrita
+  // à mão, de propósito: derivá-la de `TIPOS_PERMITIDOS` faria o teste
+  // concordar com qualquer mudança na constante.
+  const MATRIZ: Record<TipoUsuario, Record<TipoUsuario, boolean>> = {
+    AM: { AM: true, GT: true, VT: true, GO: true, VO: true, AL: true },
+    GT: { AM: false, GT: true, VT: true, GO: true, VO: false, AL: false },
+    VT: { AM: false, GT: false, VT: false, GO: false, VO: false, AL: false },
+    GO: { AM: false, GT: false, VT: false, GO: false, VO: true, AL: true },
+    VO: { AM: false, GT: false, VT: false, GO: false, VO: false, AL: false },
+    AL: { AM: false, GT: false, VT: false, GO: false, VO: false, AL: false },
+  };
+  const TIPOS = ["AM", "GT", "VT", "GO", "VO", "AL"] as const;
+  const casos = TIPOS.flatMap((editor) =>
+    TIPOS.map((alvo) => [editor, alvo, MATRIZ[editor][alvo]] as const),
+  );
+
+  it.each(casos)("%s editando %s (outro documento) → %s", (editor, alvo, esperado) => {
+    expect(
+      podeEditarUsuario(
+        { tipo: editor, documento: "11111111111" },
+        { tipo: alvo, documento: "22222222222" },
+      ),
+    ).toBe(esperado);
+  });
+
+  it("AM não edita o próprio documento", () => {
+    expect(
+      podeEditarUsuario(
+        { tipo: "AM", documento: "52998224725" },
+        { tipo: "AM", documento: "52998224725" },
+      ),
+    ).toBe(false);
+  });
+
+  it("AM edita outro AM", () => {
+    expect(
+      podeEditarUsuario(
+        { tipo: "AM", documento: "52998224725" },
+        { tipo: "AM", documento: "11144477735" },
+      ),
+    ).toBe(true);
+  });
 });
