@@ -257,7 +257,7 @@ test.describe("casca comum", () => {
     const links = linksDoMenu(pagina);
     await expect(links).toHaveText([
       "Painel",
-      "Novo usuário",
+      "Gestão de usuários",
       "Pré-cursos",
       "Pós-cursos",
       "Avaliações",
@@ -322,7 +322,7 @@ test.describe("menu de navegação por perfil", () => {
 
     await expect(linksDoMenu(page)).toHaveText([
       "Painel",
-      "Novo usuário",
+      "Gestão de usuários",
       "Pré-cursos",
       "Pós-cursos",
       "Avaliações",
@@ -349,12 +349,12 @@ test.describe("menu de navegação por perfil", () => {
     await expect(menu.getByRole("link", { name: "Pós-cursos" })).toHaveCount(0);
   });
 
-  test("UI-02: VT não vê Novo usuário", async ({ page }) => {
+  test("UI-02: VT não vê Gestão de usuários", async ({ page }) => {
     await logar(page, CPF_NAV_VT, SENHA);
     await page.goto("/painel");
 
     const menu = menuDaCasca(page);
-    await expect(menu.getByRole("link", { name: "Novo usuário" })).toHaveCount(0);
+    await expect(menu.getByRole("link", { name: "Gestão de usuários" })).toHaveCount(0);
     // O menu renderizou: a ausência acima é do item, não do menu inteiro.
     await expect(menu.getByRole("link", { name: "Painel" })).toHaveCount(1);
   });
@@ -398,7 +398,7 @@ test.describe("menu de navegação por perfil", () => {
     // Inclui as rotas-filhas, onde quem deve ficar marcado e o item pai.
     const esperado: Array<[string, string]> = [
       ["/painel", "Painel"],
-      ["/usuarios/novo", "Novo usuário"],
+      ["/usuarios", "Gestão de usuários"],
       ["/pre-cursos", "Pré-cursos"],
       ["/pos-cursos", "Pós-cursos"],
       ["/avaliacoes", "Avaliações"],

@@ -1,4 +1,6 @@
-// e2e de /usuarios/novo (T29), pela UI real. Cobre CA-AU-05 (GO logado só vê
+// e2e de /usuarios, a "Gestão de usuários", pela UI real. Era o e2e de
+// /usuarios/novo (T29); a criação mudou de endereço (GU-01/GU-03) e o antigo
+// redireciona (GU-02). Cobre CA-AU-05 (GO logado só vê
 // GO/VO/AL como opções de tipo e cria um AL já matriculado), REQ-OV-08 (AM
 // logado informa os dados organizacionais do GO e a verba no mesmo
 // formulário) e AVAL-01 (curso obrigatório na criação do Aluno).
@@ -85,8 +87,8 @@ test("CA-AU-05: GO logado só vê VO/AL como opções e consegue criar um AL pel
   });
   expect(login.ok()).toBe(true);
 
-  await page.goto("/usuarios/novo");
-  await expect(page).toHaveURL(/\/usuarios\/novo$/);
+  await page.goto("/usuarios");
+  await expect(page).toHaveURL(/\/usuarios$/);
 
   const opcoes = await page.locator("select#tipo option").allTextContents();
   expect(opcoes.sort()).toEqual(["AL", "VO"]);
@@ -114,7 +116,7 @@ test("GO logado não vê os campos de Ofertante/verba (não gere verba)", async 
   });
   expect(login.ok()).toBe(true);
 
-  await page.goto("/usuarios/novo");
+  await page.goto("/usuarios");
   await page.locator("select#tipo").selectOption("VO");
 
   await expect(page.locator("select#cdOfertante")).toHaveCount(0);
@@ -129,7 +131,7 @@ test("OGO-09/OGO-12: AM logado cria um GO só com CNPJ, nome e verba - a tela n�
   });
   expect(login.ok()).toBe(true);
 
-  await page.goto("/usuarios/novo");
+  await page.goto("/usuarios");
 
   // OGO-13: para os outros tipos o E-mail continua sendo pedido.
   await page.locator("select#tipo").selectOption("VO");
@@ -175,7 +177,7 @@ test("UGO-14: AM logado vincula um VO a um GO existente, escolhido de uma lista"
   });
   expect(login.ok()).toBe(true);
 
-  await page.goto("/usuarios/novo");
+  await page.goto("/usuarios");
 
   // O seletor de Ofertante só existe depois de escolher o tipo VO.
   await expect(page.locator("select#cdOfertante")).toHaveCount(0);
@@ -206,7 +208,7 @@ test("REQ-OV-08 (equivalente/UGO-14): AM que tenta criar VO sem escolher o Ofert
   });
   expect(login.ok()).toBe(true);
 
-  await page.goto("/usuarios/novo");
+  await page.goto("/usuarios");
   await page.locator("select#tipo").selectOption("VO");
   await page.getByLabel("CPF").fill("40360046037");
   await page.getByLabel("Nome").fill("VO Sem Ofertante");
@@ -223,7 +225,7 @@ test("AVAL-01: o GO só vê no seletor os cursos do próprio Ofertante e não en
   });
   expect(login.ok()).toBe(true);
 
-  await page.goto("/usuarios/novo");
+  await page.goto("/usuarios");
 
   // O seletor de curso só existe para o tipo AL.
   await page.locator("select#tipo").selectOption("VO");
@@ -239,4 +241,19 @@ test("AVAL-01: o GO só vê no seletor os cursos do próprio Ofertante e não en
 
   await expect(page.getByText("Curso é obrigatório")).toBeVisible();
   expect(getUsuario(CPF_NOVO_AL_SEM_CURSO)).toBeNull();
+});
+
+test("GU-02: abrir /usuarios/novo termina em /usuarios com o formulário de criação", async ({
+  page,
+}) => {
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento: CPF_AM_CRIADOR, senha: SENHA },
+  });
+  expect(login.ok()).toBe(true);
+
+  await page.goto("/usuarios/novo");
+
+  await expect(page).toHaveURL(/\/usuarios$/);
+  await expect(page.locator("select#tipo")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Criar usuário" })).toBeVisible();
 });

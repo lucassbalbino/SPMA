@@ -365,10 +365,10 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] `navegacao.test.ts`: AM, GT e GO têm o item "Gestão de usuários" com href `/usuarios`; VT, VO e AL não têm; nenhuma ocorrência de `/usuarios/novo` na tabela
-- [ ] `git mv e2e/usuarios-novo-page.spec.ts e2e/usuarios-page.spec.ts`; os testes existentes passam a navegar para `/usuarios`; um teste novo: abrir `/usuarios/novo` termina em `/usuarios` com o formulário visível
-- [ ] Specs que conferem o href `/usuarios/novo` (`proxy.spec.ts`, `identidade-visual.spec.ts`, `organizacao.spec.ts`) ajustados só onde quebrarem
-- [ ] Gate Full passa com `npx playwright test e2e/usuarios-page.spec.ts e2e/proxy.spec.ts e2e/identidade-visual.spec.ts e2e/organizacao.spec.ts e2e/painel.spec.ts`
+- [x] `navegacao.test.ts`: AM, GT e GO têm o item "Gestão de usuários" com href `/usuarios`; VT, VO e AL não têm; nenhuma ocorrência de `/usuarios/novo` na tabela
+- [x] `git mv e2e/usuarios-novo-page.spec.ts e2e/usuarios-page.spec.ts`; os testes existentes passam a navegar para `/usuarios`; um teste novo: abrir `/usuarios/novo` termina em `/usuarios` com o formulário visível
+- [x] Specs que conferem o href `/usuarios/novo` (`proxy.spec.ts`, `identidade-visual.spec.ts`, `organizacao.spec.ts`) ajustados só onde quebrarem
+- [x] Gate Full passa com `npx playwright test e2e/usuarios-page.spec.ts e2e/proxy.spec.ts e2e/identidade-visual.spec.ts e2e/organizacao.spec.ts e2e/painel.spec.ts`
 
 **Tests**: e2e
 **Gate**: full

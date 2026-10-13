@@ -23,7 +23,9 @@ export interface Modulo {
 }
 
 const PAINEL: ItemNavegacao = { rotulo: "Painel", href: "/painel" };
-const NOVO_USUARIO: ItemNavegacao = { rotulo: "Novo usuário", href: "/usuarios/novo" };
+// GU-01: criar e consultar usuários moram na mesma página. O endereço
+// antigo (`/usuarios/novo`) só redireciona para cá.
+const GESTAO_USUARIOS: ItemNavegacao = { rotulo: "Gestão de usuários", href: "/usuarios" };
 // O ato de criar um curso do zero. Mora em `/cursos/novo`, não em
 // `/pre-cursos/novo`: criar um curso cria os DOIS questionários na mesma
 // transação (POST /api/cursos) e nenhum dos dois tem criação própria, então o
@@ -47,14 +49,14 @@ const CURSOS_COM_CRIACAO = [NOVO_CURSO, ...CURSOS];
 // ficam listados no painel com o texto de hoje e não viram link.
 export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
   [TipoUsuario.AM]: [
-    { rotulo: "Gestão de usuários", itens: [NOVO_USUARIO] },
+    { rotulo: "Gestão de usuários", itens: [GESTAO_USUARIOS] },
     { rotulo: "Ofertantes", itens: [] },
     { rotulo: "Verbas", itens: [] },
     { rotulo: "Cursos", itens: CURSOS_COM_CRIACAO },
     { rotulo: "Relatórios", itens: [] },
   ],
   [TipoUsuario.GT]: [
-    { rotulo: "Gestão de usuários", itens: [NOVO_USUARIO] },
+    { rotulo: "Gestão de usuários", itens: [GESTAO_USUARIOS] },
     { rotulo: "Ofertantes", itens: [] },
     { rotulo: "Verbas", itens: [] },
     { rotulo: "Cursos", itens: CURSOS },
@@ -64,7 +66,7 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
     { rotulo: "Relatórios", itens: [] },
   ],
   [TipoUsuario.GO]: [
-    { rotulo: "Gestão de usuários", itens: [NOVO_USUARIO] },
+    { rotulo: "Gestão de usuários", itens: [GESTAO_USUARIOS] },
     { rotulo: "Meus cursos", itens: CURSOS_COM_CRIACAO },
   ],
   [TipoUsuario.VO]: [{ rotulo: "Meus cursos", itens: CURSOS }],

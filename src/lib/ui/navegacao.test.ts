@@ -13,17 +13,17 @@ import {
 const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
   AM: [
     "/painel",
-    "/usuarios/novo",
+    "/usuarios",
     "/cursos/novo",
     "/pre-cursos",
     "/pos-cursos",
     "/avaliacoes",
   ],
-  GT: ["/painel", "/usuarios/novo", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
+  GT: ["/painel", "/usuarios", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
   VT: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
   GO: [
     "/painel",
-    "/usuarios/novo",
+    "/usuarios",
     "/cursos/novo",
     "/pre-cursos",
     "/pos-cursos",
@@ -49,7 +49,7 @@ const MODULOS_ESPERADOS: Record<TipoUsuario, string[]> = {
 // Rotas realmente implementadas em src/app/(protegido) (uma page.tsx cada).
 const ROTAS_IMPLEMENTADAS = [
   "/painel",
-  "/usuarios/novo",
+  "/usuarios",
   "/pre-cursos",
   "/cursos/novo",
   "/pre-cursos/[id]",
@@ -80,10 +80,22 @@ describe("navegacaoDoPerfil", () => {
     expect(hrefs).not.toContain("/pos-cursos");
   });
 
-  it("VT, VO e AL não recebem /usuarios/novo", () => {
-    expect(hrefsDe(TipoUsuario.VT)).not.toContain("/usuarios/novo");
-    expect(hrefsDe(TipoUsuario.VO)).not.toContain("/usuarios/novo");
-    expect(hrefsDe(TipoUsuario.AL)).not.toContain("/usuarios/novo");
+  it("GU-01: AM, GT e GO recebem 'Gestão de usuários' apontando para /usuarios", () => {
+    for (const tipo of [TipoUsuario.AM, TipoUsuario.GT, TipoUsuario.GO]) {
+      expect(rotuloDe(tipo, "/usuarios")).toBe("Gestão de usuários");
+    }
+  });
+
+  it("GU-01: VT, VO e AL não recebem /usuarios", () => {
+    expect(hrefsDe(TipoUsuario.VT)).not.toContain("/usuarios");
+    expect(hrefsDe(TipoUsuario.VO)).not.toContain("/usuarios");
+    expect(hrefsDe(TipoUsuario.AL)).not.toContain("/usuarios");
+  });
+
+  it("GU-02: nenhum perfil recebe o endereço antigo /usuarios/novo", () => {
+    for (const tipo of TODOS_OS_TIPOS) {
+      expect(hrefsDe(tipo)).not.toContain("/usuarios/novo");
+    }
   });
 
   it("só AM e GO recebem /cursos/novo (AD-040, quem pode criar curso)", () => {

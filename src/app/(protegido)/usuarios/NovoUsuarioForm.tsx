@@ -13,6 +13,10 @@
 // organizacionais dele (UF obrigatória, demais opcionais) em vez de
 // selecionar um Ofertante já existente. A lista de GOs (`gos`) serve só para
 // vincular um VO a um deles.
+//
+// Na "Gestão de usuários" o formulário fica acima da lista (GU-03). Depois
+// de criar, avisa quem o usa por `aoCriar`, para a lista recarregar sem
+// recarregar a página (GU-08).
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -37,11 +41,13 @@ export function NovoUsuarioForm({
   escolheOfertante,
   gos,
   cursosDisponiveis,
+  aoCriar,
 }: {
   tipoCriador: TipoUsuario;
   escolheOfertante: boolean;
   gos: OpcaoGo[];
   cursosDisponiveis: OpcaoCurso[];
+  aoCriar?: () => void;
 }) {
   const router = useRouter();
   const tiposPermitidos = TIPOS_PERMITIDOS[tipoCriador];
@@ -127,7 +133,7 @@ export function NovoUsuarioForm({
         return;
       }
 
-      router.push("/usuarios/novo");
+      aoCriar?.();
       router.refresh();
       setDocumento("");
       setNome("");

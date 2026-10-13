@@ -222,9 +222,9 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| GU-01 | P1: Página | Tasks | In Tasks |
-| GU-02 | P1: Página | Tasks | In Tasks |
-| GU-03 | P1: Página | Tasks | In Tasks |
+| GU-01 | P1: Página | Execute | Implemented |
+| GU-02 | P1: Página | Execute | Implemented |
+| GU-03 | P1: Página | Execute | Implemented |
 | GU-04 | P1: Página | Execute | Implemented |
 | GU-05 | P1: Página | Execute | Implemented |
 | GU-06 | P1: Página | Execute | Implemented |
