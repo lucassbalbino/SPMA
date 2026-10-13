@@ -9,6 +9,7 @@ import {
   deleteUsuarios,
   deleteVerbasPorOfertante,
   getVerba,
+  getVerbasPorOfertante,
   upsertUsuario,
 } from "./helpers/db";
 import { geradorDeCnpj } from "./helpers/cnpj";
@@ -208,6 +209,32 @@ test("GV-34: VT recebe 403 na listagem de verbas, sem nenhuma verba no corpo", a
 
   expect(res.status()).toBe(403);
   expect(await res.json()).not.toHaveProperty("verbas");
+
+  await cliente.dispose();
+});
+
+// GV-06/GV-33 (gestao-de-verbas): o teto de DECIMAL(10,2) provado na rota,
+// lendo o banco - não só no schema.
+test("GV-06/GV-33: POST acima do teto ou com 3 casas é 400 sem criar verba; exatamente 99999999.99 é 201 com o valor gravado", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GT);
+  const quantidadeAntes = getVerbasPorOfertante(CNPJ_GO).length;
+
+  const cliente = await novoCliente();
+  for (const vlVerba of [100000000, 10.123]) {
+    const res = await cliente.post("/api/verbas", {
+      data: { cdOfertante: CNPJ_GO, vlVerba },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+    expect(res.status(), `vlVerba=${vlVerba}`).toBe(400);
+  }
+  expect(getVerbasPorOfertante(CNPJ_GO)).toHaveLength(quantidadeAntes);
+
+  const res = await cliente.post("/api/verbas", {
+    data: { cdOfertante: CNPJ_GO, vlVerba: 99999999.99 },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect(res.status()).toBe(201);
+  expect(getVerba((await res.json()).verba.cdVerba)?.vlVerba).toBe("99999999.99");
 
   await cliente.dispose();
 });

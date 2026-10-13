@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/gestao-de-verbas/design.md`
-**Status**: Done (aguardando Verifier)
+**Status**: Done (aguardando Verifier, iteração 2)
 
 ---
 
@@ -63,6 +63,14 @@ T7 → T8
 T7 → T9
 T7 → T10
 T11
+```
+
+### Phase 3: Fix pós-Verifier
+
+Lacunas de teste apontadas pela validação 1 (`validation.md`, FAIL, 3 mutantes sobreviventes). Nenhum defeito de código.
+
+```
+T12
 ```
 
 ---
@@ -381,6 +389,35 @@ T11
 
 ---
 
+### T12: Testes das lacunas da validação 1
+
+**What**: Fechar os 3 gaps ranqueados do Verifier, só com teste: limites do `PATCH /api/verbas/[id]` (GV-21), fallbacks da linha da lista (GV-11) e teto do `POST /api/verbas` provado no banco (GV-06, GV-33).
+**Where**: `e2e/verbas-id.spec.ts` (e os casos de GV-11 e GV-06/33 em `e2e/verbas-page.spec.ts` e `e2e/verbas.spec.ts`, mesmos gaps do mesmo relatório)
+**Depends on**: None
+**Reuses**: fixtures existentes dos três specs
+**Requirement**: GV-06, GV-11, GV-21, GV-33
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] `e2e/verbas-id.spec.ts`: GT manda `PATCH` com `0`, `-1`, `100000000` e `10.123` → 400 cada, e `getVerba` mostra o valor inalterado (mata o mutante i)
+- [x] `e2e/verbas-page.spec.ts`: a linha de uma verba sem data mostra "—"; a linha de um GO sem nome mostra o CNPJ no lugar do nome (mata os mutantes k e m)
+- [x] `e2e/verbas.spec.ts`: `POST` com `100000000` e com `10.123` → 400, e a quantidade de verbas do GO não muda; `POST` com `99999999.99` → 201, com esse valor gravado
+- [x] Gate Full-feature passa
+
+**Tests**: e2e
+**Gate**: full
+
+**Commit**: `test(verbas): fechar as lacunas da validacao 1`
+
+**Status**: ✅ Done — lint 0 erros (35 avisos, linha de base) / 794 unit / 121 integration / 288 e2e (suíte completa, +3: GV-21 no PATCH, GV-06/33 no POST, GV-11 na lista).
+
+---
+
 ## Task Granularity Check
 
 | Task | Scope | Status |
@@ -396,6 +433,7 @@ T11
 | T9: edição na linha | 1 componente | ✅ Granular |
 | T10: navegação | 1 tabela | ✅ Granular |
 | T11: teste do seletor | 1 spec | ✅ Granular |
+| T12: testes das lacunas | 3 specs, um relatório | ⚠️ OK, coeso |
 
 ## Diagram-Definition Cross-Check
 
@@ -412,6 +450,7 @@ T11
 | T9 | T7 | T7 → T9 | ✅ Match |
 | T10 | T7 | T7 → T10 | ✅ Match |
 | T11 | None | nenhuma seta | ✅ Match |
+| T12 | None | nenhuma seta | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -428,3 +467,4 @@ T11
 | T9 | Página | e2e | e2e | ✅ OK |
 | T10 | Navegação | unit | unit | ✅ OK |
 | T11 | Página existente | e2e | e2e | ✅ OK |
+| T12 | Rotas de API + página | e2e | e2e | ✅ OK |

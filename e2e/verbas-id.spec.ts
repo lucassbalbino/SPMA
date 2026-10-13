@@ -166,6 +166,27 @@ test("CA-OV-14: edição abaixo do já alocado é rejeitada com 409, valor origi
   await cliente.dispose();
 });
 
+// GV-21 (gestao-de-verbas): a tela valida com o mesmo schema antes de enviar,
+// então só uma chamada direta à rota prova que o PATCH barra sozinho.
+test("GV-21: PATCH com valor zero, negativo, acima do teto ou com 3 casas é rejeitado com 400, valor original preservado", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GT);
+  const valorOriginal = getVerba(cdVerbaSemCurso)?.vlVerba;
+  expect(Number(valorOriginal)).toBe(8000);
+
+  const cliente = await novoCliente();
+  for (const vlVerba of [0, -1, 100000000, 10.123]) {
+    const res = await cliente.patch(`/api/verbas/${cdVerbaSemCurso}`, {
+      data: { vlVerba },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+
+    expect(res.status(), `vlVerba=${vlVerba}`).toBe(400);
+    expect(getVerba(cdVerbaSemCurso)?.vlVerba, `vlVerba=${vlVerba}`).toBe(valorOriginal);
+  }
+
+  await cliente.dispose();
+});
+
 test("GO não pode editar Verba (só AM/GT gerenciam)", async () => {
   const valorOriginal = getVerba(cdVerbaSemCurso)?.vlVerba;
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO_A);

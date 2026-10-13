@@ -26,17 +26,20 @@ const CNPJ_GO_A = gerarCnpjValido(1);
 const CNPJ_GO_B = gerarCnpjValido(2);
 const CNPJ_GO_C = gerarCnpjValido(3);
 const CNPJ_GO_D = gerarCnpjValido(4);
+// GO_E não tem nome: a lista mostra o CNPJ no lugar dele (GV-11).
+const CNPJ_GO_E = gerarCnpjValido(5);
 const CPF_VO_DE_C = "70101001010";
 const CPF_VT = "70101002092";
 const CPF_AM = "70101003064";
 const CPF_GT = "70101004036";
 
-const CNPJS = [CNPJ_GO_A, CNPJ_GO_B, CNPJ_GO_C, CNPJ_GO_D];
+const CNPJS = [CNPJ_GO_A, CNPJ_GO_B, CNPJ_GO_C, CNPJ_GO_D, CNPJ_GO_E];
 const DOCUMENTOS = [CPF_VO_DE_C, CPF_VT, CPF_AM, CPF_GT, ...CNPJS];
 
 let cdVerbaA: number;
 let cdVerbaB: number;
 let cdVerbaD: number;
+let cdVerbaE: number;
 
 async function logar(page: Page, documento: string) {
   const res = await page.request.post("/api/auth/login", { data: { documento, senha: SENHA } });
@@ -52,6 +55,7 @@ test.beforeAll(() => {
   upsertUsuario({ cpf: CNPJ_GO_B, tipo: "GO", senha: SENHA, primeiraVez: false, nome: "GO Verbas Página B" });
   upsertUsuario({ cpf: CNPJ_GO_C, tipo: "GO", senha: SENHA, primeiraVez: false, nome: "GO Verbas Página C" });
   upsertUsuario({ cpf: CNPJ_GO_D, tipo: "GO", senha: SENHA, primeiraVez: false, nome: "GO Verbas Página D" });
+  upsertUsuario({ cpf: CNPJ_GO_E, tipo: "GO", senha: SENHA, primeiraVez: false, nome: null });
   upsertUsuario({
     cpf: CPF_VO_DE_C,
     tipo: "VO",
@@ -68,6 +72,7 @@ test.beforeAll(() => {
   cdVerbaB = criarVerba({ cdOfertante: CNPJ_GO_B, vlVerba: 700 }).cdVerba;
   cdVerbaD = criarVerba({ cdOfertante: CNPJ_GO_D, vlVerba: 1000, dtVerba: "2026-03-10" }).cdVerba;
   criarPreCurso({ cdOfertante: CNPJ_GO_D, cdVerba: cdVerbaD, vlCursoAlocado: 400, criadoPor: CNPJ_GO_D });
+  cdVerbaE = criarVerba({ cdOfertante: CNPJ_GO_E, vlVerba: 300, dtVerba: "2026-02-01" }).cdVerba;
 });
 
 test.afterAll(() => {
@@ -116,6 +121,21 @@ test("GV-17: VT abre /verbas e vê 'Seu perfil não tem acesso a verbas.', sem n
   await expect(page.getByText("Seu perfil não tem acesso a verbas.")).toBeVisible();
   await expect(page.locator('[data-testid^="verba-"]')).toHaveCount(0);
   await expect(page.getByText("Nenhuma verba cadastrada.")).toHaveCount(0);
+});
+
+test("GV-11: verba sem data mostra '—', e GO sem nome aparece pelo CNPJ no lugar do nome", async ({
+  page,
+}) => {
+  await logar(page, CPF_AM);
+  await page.goto("/verbas");
+
+  // `cdVerbaB` foi criada sem data de liberação.
+  await expect(page.getByTestId(`verba-${cdVerbaB}`)).toContainText("—");
+
+  // O primeiro campo da linha é o nome do GO; sem nome, é o CNPJ.
+  const linhaSemNome = page.getByTestId(`verba-${cdVerbaE}`);
+  await expect(linhaSemNome.locator("span").first()).toHaveText(CNPJ_GO_E);
+  await expect(linhaSemNome).toContainText("01/02/2026");
 });
 
 test("GV-03/GV-04/GV-05: AM envia o formulário incompleto e vê a mensagem de cada falta, sem criar verba", async ({
