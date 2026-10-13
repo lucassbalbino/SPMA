@@ -21,10 +21,12 @@ const SENHA = "SenhaValida123";
 const gerarCnpjValido = geradorDeCnpj("26");
 
 const CPF_GT = "60105006050";
+// GV-34 (AD-046): o VT perdeu a leitura de verba.
+const CPF_VT = "60107008092";
 const CNPJ_GO_A = gerarCnpjValido(1);
 const CNPJ_GO_B = gerarCnpjValido(2);
 
-const CPFS = [CPF_GT, CNPJ_GO_A, CNPJ_GO_B];
+const CPFS = [CPF_GT, CPF_VT, CNPJ_GO_A, CNPJ_GO_B];
 
 let cdVerbaSemCurso: number;
 let cdVerbaComCurso: number;
@@ -46,6 +48,7 @@ test.beforeAll(() => {
   deleteUsuarios(CPFS);
 
   upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_VT, tipo: "VT", senha: SENHA, primeiraVez: false });
   upsertUsuario({
     cpf: CNPJ_GO_A,
     tipo: "GO",
@@ -108,6 +111,20 @@ test("GO de outro Ofertante recebe 403 ao consultar a Verba", async () => {
   });
 
   expect(res.status()).toBe(403);
+
+  await cliente.dispose();
+});
+
+test("GV-34: VT recebe 403 ao consultar uma Verba existente, sem a verba no corpo", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_VT);
+
+  const cliente = await novoCliente();
+  const res = await cliente.get(`/api/verbas/${cdVerbaSemCurso}`, {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(403);
+  expect(await res.json()).not.toHaveProperty("verba");
 
   await cliente.dispose();
 });

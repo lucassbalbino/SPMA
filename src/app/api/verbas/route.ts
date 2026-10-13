@@ -2,14 +2,13 @@
 // GET /api/verbas - listagem escopada com saldo disponível (REQ-OV-10/11).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { podeGerenciarVerba } from "@/lib/auth/guards";
+import { podeGerenciarVerba, podeLerVerba } from "@/lib/auth/guards";
 import { verbaSchema } from "@/lib/validation/schemas/verba.schema";
-import { saldosDasVerbas } from "@/lib/verba/saldo";
+import { listarVerbasDoEscopo } from "@/lib/verba/consulta";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
 import { exigirMutacao, exigirSessao } from "@/lib/api/guardas";
 import { corpoValidado } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
-import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 
 async function criarVerba(request: Request) {
   const sessao = await exigirMutacao(request);
@@ -48,29 +47,17 @@ async function listarVerbas(request: Request) {
   const sessao = await exigirSessao();
   const filtro = new URL(request.url).searchParams.get("cdOfertante");
 
-  // REQ-OV-10: escopo resolvido por `escopoDeLeitura` - GO/VO nunca confiam
-  // no filtro do cliente (ver `lib/api/escopo.ts`).
-  const escopo = escopoDeLeitura(sessao.usuario, filtro);
-
-  if (escopo.tipo === "proprioAluno") {
+  // GV-34 (AD-046): VT e AL não leem verba. Antes desta guarda o AL já caía
+  // em 403 pelo escopo; o VT, com alcance nacional, via todas.
+  if (!podeLerVerba(sessao.usuario.tipo)) {
     throw erroHttp(403, "Acesso negado");
   }
 
-  const where = whereDeEscopo(
-    escopo,
-    (cdOfertante) => ({ cdOfertante }),
-    () => ({ cdOfertante: "" }),
-  );
+  // REQ-OV-10: escopo e saldo vêm da mesma consulta que a tela /verbas usa -
+  // GO/VO nunca confiam no filtro do cliente (ver `lib/api/escopo.ts`).
+  const verbas = await listarVerbasDoEscopo(sessao.usuario, filtro);
 
-  const verbas = await prisma.verba.findMany({ where, orderBy: { cdVerba: "asc" } });
-  const saldos = await saldosDasVerbas(verbas.map((verba) => verba.cdVerba));
-
-  return NextResponse.json({
-    verbas: verbas.map((verba) => ({
-      ...verba,
-      saldoDisponivel: verba.vlVerba.minus(saldos.get(verba.cdVerba) ?? 0),
-    })),
-  });
+  return NextResponse.json({ verbas });
 }
 
 export const POST = comTratamentoDeErro(criarVerba);

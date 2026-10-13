@@ -2,7 +2,7 @@
 // (REQ-OV-09, REQ-OV-10, REQ-OV-11, REQ-OV-12).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { podeAcessarOfertante, podeGerenciarVerba } from "@/lib/auth/guards";
+import { podeAcessarOfertante, podeGerenciarVerba, podeLerVerba } from "@/lib/auth/guards";
 import { edicaoVerbaSchema } from "@/lib/validation/schemas/verba.schema";
 import { calcularSaldoVerba, validarNovoValorTotal } from "@/lib/verba/saldo";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
@@ -14,6 +14,14 @@ type Contexto = { params: Promise<{ id: string }> };
 
 async function consultarVerba(_request: Request, { params }: Contexto) {
   const sessao = await exigirSessao();
+
+  // GV-34 (AD-046): o VT perdeu a leitura de verba, mas `podeAcessarOfertante`
+  // abaixo segue `true` para ele porque também guarda a leitura de cursos.
+  // Checado antes da busca, para o 403 não revelar se a verba existe.
+  if (!podeLerVerba(sessao.usuario.tipo)) {
+    throw erroHttp(403, "Acesso negado");
+  }
+
   const cdVerba = idPositivo((await params).id);
 
   const verba = await prisma.verba.findUnique({ where: { cdVerba } });

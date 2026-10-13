@@ -20,11 +20,13 @@ const gerarCnpjValido = geradorDeCnpj("25");
 
 const CPF_GT = "50105006041";
 const CPF_AM = "50206007094";
+// GV-34 (AD-046): o VT perdeu a leitura de verba.
+const CPF_VT = "50107008084";
 const CNPJ_GO = gerarCnpjValido(1);
 const CNPJ_GO_2 = gerarCnpjValido(2);
 const CNPJ_INEXISTENTE = gerarCnpjValido(999);
 
-const CPFS = [CPF_GT, CPF_AM, CNPJ_GO, CNPJ_GO_2];
+const CPFS = [CPF_GT, CPF_AM, CPF_VT, CNPJ_GO, CNPJ_GO_2];
 
 let cdVerbaExistente: number;
 
@@ -45,6 +47,7 @@ test.beforeAll(() => {
 
   upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_VT, tipo: "VT", senha: SENHA, primeiraVez: false });
   upsertUsuario({
     cpf: CNPJ_GO,
     tipo: "GO",
@@ -191,6 +194,20 @@ test("CA-OV-10: Verba recém-criada sem curso vinculado tem saldoDisponivel igua
   const corpo = await res.json();
   const verba = corpo.verbas.find((v: { cdVerba: number }) => v.cdVerba === cdVerbaExistente);
   expect(Number(verba.saldoDisponivel)).toBe(5000);
+
+  await cliente.dispose();
+});
+
+test("GV-34: VT recebe 403 na listagem de verbas, sem nenhuma verba no corpo", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_VT);
+
+  const cliente = await novoCliente();
+  const res = await cliente.get("/api/verbas", {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(403);
+  expect(await res.json()).not.toHaveProperty("verbas");
 
   await cliente.dispose();
 });

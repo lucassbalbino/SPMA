@@ -166,15 +166,17 @@ T11
 
 **Done when**:
 
-- [ ] `e2e/verbas.spec.ts`: VT em `GET /api/verbas` → 403, sem `verbas` no corpo
-- [ ] `e2e/verbas-id.spec.ts`: VT em `GET /api/verbas/[id]` de uma verba existente → 403, sem `verba` no corpo
-- [ ] Os testes existentes de listagem e escopo (`verbas.spec.ts:148-200`) continuam verdes sem alteração
-- [ ] Gate Full passa com `npx playwright test e2e/verbas.spec.ts e2e/verbas-id.spec.ts`
+- [x] `e2e/verbas.spec.ts`: VT em `GET /api/verbas` → 403, sem `verbas` no corpo
+- [x] `e2e/verbas-id.spec.ts`: VT em `GET /api/verbas/[id]` de uma verba existente → 403, sem `verba` no corpo
+- [x] Os testes existentes de listagem e escopo (`verbas.spec.ts:148-200`) continuam verdes sem alteração
+- [x] Gate Full passa com `npx playwright test e2e/verbas.spec.ts e2e/verbas-id.spec.ts`
 
 **Tests**: e2e
 **Gate**: full
 
 **Commit**: `feat(verbas)!: negar ao VT a leitura de verbas`
+
+**Status**: ✅ Done — 798 unit / 121 integration / e2e verbas + verbas-id 15/15 (+2). A guarda do [id] roda antes da busca, para o 403 do VT não revelar se a verba existe.
 
 ---
 
