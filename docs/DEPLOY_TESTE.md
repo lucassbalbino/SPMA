@@ -115,8 +115,9 @@ no Next para isso.
 
 - A URL `https://....trycloudflare.com` (válida só enquanto o túnel estiver no
   ar).
-- O CPF do Administrador Master e o aviso de que o **primeiro acesso pede o
-  cadastro da senha** (mínimo 8 caracteres).
+- O CPF do Administrador Master e o aviso de que, no **primeiro acesso, a
+  senha fica em branco**: o login leva ao cadastro da senha (mínimo 8
+  caracteres).
 - Aviso: **5 tentativas de login erradas bloqueiam o CPF por 15 minutos**
   (REQ-SEC-01) — é comportamento esperado, não defeito.
 - A janela combinada: a URL morre quando você fecha o túnel.
