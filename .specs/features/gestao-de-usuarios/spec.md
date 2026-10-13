@@ -57,6 +57,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | CPF fora da URL | Documento-alvo e busca trafegam só no corpo de requisições `POST`/`PATCH`; a página não usa query string | Decisão do usuário (revisão 2), alinhada a AD-029. | y |
 | Paginação | No servidor, 20 itens por página, ordem nome ↑ e depois documento ↑; navegação "Anterior"/"Próxima" com "Página X de Y" | Decisão do usuário (revisão 2): escalar. Tamanho fixo impede pedir a base inteira de uma vez; ordem com desempate por documento (único) torna as páginas estáveis. | y |
 | Busca | Nome contém o texto (sem diferenciar maiúsculas, conforme a collation do banco) OU documento contém os dígitos digitados; até 100 caracteres | Busca precisa ir ao servidor com a paginação. O limite barra entrada abusiva. | y |
+| Busca por documento | Só quando a busca não tem letra: dígitos, pontos, traço, barra e espaços, com ao menos um dígito. Com qualquer letra, compara só o nome | Decisão do usuário (2026-10-13). Refina a linha "Busca": sem isso, um nome com dígito ("GU-T 4") trazia todo usuário cujo documento tem um 4. | y |
 | Estado da lista na URL | Não guardado: recarregar a página volta à página 1, sem filtro | Guardar na URL exigiria a busca (que pode ser um CPF) na query string. | y |
 
 **Open questions:** none - all resolved or logged above.
@@ -96,7 +97,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 
 1. **GU-09** - The system SHALL exibir acima da lista um chip "Todos" e um chip por tipo que o perfil enxerga: os seis tipos para AM e GT, e só "Visualizador Ofertante" e "Aluno" para GO.
 2. **GU-10** - WHEN o usuário seleciona o chip de um tipo THEN o sistema SHALL listar só os usuários do escopo com esse tipo; WHEN seleciona "Todos" THEN SHALL listar todos os do escopo.
-3. **GU-11** - WHEN o usuário digita na busca THEN o sistema SHALL listar só os usuários do escopo cujo nome contém o texto (sem diferenciar maiúsculas de minúsculas) ou cujo documento contém os dígitos digitados, combinando com o chip selecionado.
+3. **GU-11** - WHEN o usuário digita na busca THEN o sistema SHALL listar só os usuários do escopo cujo nome contém o texto (sem diferenciar maiúsculas de minúsculas), combinando com o chip selecionado; IF o texto não contém nenhuma letra, contém ao menos um dígito e só tem dígitos, pontos, traço, barra e espaços THEN o sistema SHALL listar também os usuários do escopo cujo documento contém os dígitos digitados. Um texto com qualquer letra é comparado só com o nome.
 4. **GU-12** - IF nenhum usuário atende ao filtro e à busca THEN o sistema SHALL exibir "Nenhum usuário encontrado.".
 5. **GU-13** - The system SHALL entregar a lista em páginas de no máximo 20 usuários, ordenados por nome crescente e, no empate, por documento crescente.
 6. **GU-14** - The system SHALL exibir abaixo da lista os botões "Anterior" e "Próxima" e o texto "Página X de Y", com "Anterior" desabilitado na página 1 e "Próxima" desabilitado na última página.

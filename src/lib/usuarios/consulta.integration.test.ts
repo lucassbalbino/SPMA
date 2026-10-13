@@ -38,8 +38,10 @@ const GT = cpf(6);
 const AM = cpf(7);
 // Nunca criado: o alvo inexistente de GU-28.
 const INEXISTENTE = cpf(8);
+// Nome com dígito, para a busca mista de GU-11 ("GU-T 4").
+const VT_MISTO = cpf(9);
 
-const DOCUMENTOS = [GO_A, GO_B, VO_A, VO_B, AL_A, AL_B, AL_SEM, GT, AM];
+const DOCUMENTOS = [GO_A, GO_B, VO_A, VO_B, AL_A, AL_B, AL_SEM, GT, AM, VT_MISTO];
 
 const editorGoA: UsuarioComEscopo = { tipo: "GO", documento: GO_A, cdOfertante: null };
 const editorGt: UsuarioComEscopo = { tipo: "GT", documento: GT, cdOfertante: null };
@@ -99,6 +101,7 @@ describe("consulta de usuários (integration)", () => {
         { documento: AL_A, nome: "GU-T AL A", tipo: "AL" },
         { documento: AL_B, nome: "GU-T AL B", tipo: "AL" },
         { documento: AL_SEM, nome: "GU-T AL SEM MATRICULA", tipo: "AL" },
+        { documento: VT_MISTO, nome: "GU-T 4 BUSCA MISTA", tipo: "VT" },
       ],
     });
     await prisma.usuario.createMany({
@@ -152,6 +155,17 @@ describe("consulta de usuários (integration)", () => {
     const pagina = await consultarUsuarios(editorGt, { pagina: 1, busca: formatado });
 
     expect(documentosDe(pagina)).toEqual([AL_B]);
+    expect(pagina.total).toBe(1);
+  });
+
+  it("GU-11: uma busca com letra compara só o nome, nunca os dígitos do documento", async () => {
+    // Todo documento deste arquivo começa com "48": se o "4" de "GU-T 4" fosse
+    // comparado com o documento, todos os fixtures voltariam.
+    expect(VO_A).toContain("4");
+
+    const pagina = await consultarUsuarios(editorGt, { pagina: 1, busca: "GU-T 4" });
+
+    expect(documentosDe(pagina)).toEqual([VT_MISTO]);
     expect(pagina.total).toBe(1);
   });
 

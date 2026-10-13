@@ -272,9 +272,8 @@ test("GU-02: abrir /usuarios/novo termina em /usuarios com o formulário de cria
 // Prefixo "54" para CPFs e CNPJs: espaço de numeração próprio desta lista
 // (`e2e/usuarios-gestao.spec.ts` usa "53", a integração "48"/"49").
 //
-// Os nomes buscados não têm dígito de propósito: a busca casa o nome OU os
-// dígitos do documento (GU-11), então um texto como "GU-E2E" também casaria
-// todo documento com um "2".
+// Os nomes buscados não têm dígito. Desde a regra nova de GU-11 (busca com
+// letra compara só o nome) isso deixou de ser necessário, mas não muda nada.
 
 function calcularDigitoVerificadorCpf(digitos: number[]): number {
   const pesoInicial = digitos.length + 1;

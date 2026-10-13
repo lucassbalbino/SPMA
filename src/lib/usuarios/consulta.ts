@@ -77,9 +77,17 @@ export function whereUsuariosVisiveis(
   }
 }
 
+// Um documento digitado como o gestor o escreveria: dígitos com pontuação de
+// CPF/CNPJ (`529.982.247-25`, `11.222.333/0001-81`) e espaços, sem letra.
+const PARECE_DOCUMENTO = /^[\d.\-/\s]+$/;
+
 /**
- * Nome contém o texto OU documento contém os dígitos digitados (GU-11). O
- * `contains` não diferencia maiúsculas pela collation default do MySQL 8.4
+ * Nome contém o texto; e, só quando o texto parece um documento, também o
+ * documento contém os dígitos digitados (GU-11). Um texto com qualquer letra
+ * é só nome: sem essa regra, "GU-T 4" traria todo usuário cujo documento
+ * tem um 4.
+ *
+ * O `contains` não diferencia maiúsculas pela collation default do MySQL 8.4
  * (`utf8mb4_0900_ai_ci`), provado no teste de integração.
  */
 function whereDaBusca(busca: string | undefined): Prisma.UsuarioWhereInput {
@@ -87,7 +95,7 @@ function whereDaBusca(busca: string | undefined): Prisma.UsuarioWhereInput {
     return {};
   }
 
-  const digitos = normalizarDocumento(busca);
+  const digitos = PARECE_DOCUMENTO.test(busca) ? normalizarDocumento(busca) : "";
 
   return {
     OR: [
