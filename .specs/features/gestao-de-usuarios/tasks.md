@@ -340,8 +340,8 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Em `e2e/usuarios-gestao.spec.ts`: AM reseta um VT com senha → 200, o banco tem `senhaHash` null e `primeiraVez` true, e o VT entra com a senha em branco e cai em `/primeiro-acesso`; GT reseta um AM → 403; sem CSRF → 403; corpo com `senha` → 400
-- [ ] Gate Full passa com `npx playwright test e2e/usuarios-gestao.spec.ts`
+- [x] Em `e2e/usuarios-gestao.spec.ts`: AM reseta um VT com senha → 200, o banco tem `senhaHash` null e `primeiraVez` true, e o VT entra com a senha em branco e cai em `/primeiro-acesso`; GT reseta um AM → 403; sem CSRF → 403; corpo com `senha` → 400
+- [x] Gate Full passa com `npx playwright test e2e/usuarios-gestao.spec.ts`
 
 **Tests**: e2e
 **Gate**: full

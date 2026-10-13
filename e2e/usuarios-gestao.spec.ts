@@ -53,6 +53,8 @@ const CPF_VT = gerarCpfValido(2);
 const CPF_VT_BUSCADO = gerarCpfValido(3);
 const CPF_VO_DO_GO_A = gerarCpfValido(4);
 const CPF_VO_DO_GO_B = gerarCpfValido(5);
+const CPF_AM = gerarCpfValido(6);
+const CPF_VT_RESETADO = gerarCpfValido(7);
 
 const gerarCnpjValido = geradorDeCnpj("53");
 const CNPJ_GO_A = gerarCnpjValido(1);
@@ -68,6 +70,8 @@ const DOCUMENTOS = [
   CPF_VO_DO_GO_B,
   CNPJ_GO_A,
   CNPJ_GO_B,
+  CPF_AM,
+  CPF_VT_RESETADO,
 ];
 
 async function login(documento: string): Promise<{ idSessao: string; idCsrf: string }> {
@@ -104,6 +108,9 @@ test.beforeAll(() => {
     cdOfertante: CNPJ_GO_B,
     nome: NOME_VO_DO_GO_B,
   });
+
+  upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_VT_RESETADO, tipo: "VT", senha: SENHA, primeiraVez: false });
 });
 
 test.afterAll(() => {
@@ -282,6 +289,83 @@ test.describe("PATCH /api/usuarios", () => {
     const persistido = getUsuario(CPF_VO_DO_GO_B);
     expect(persistido?.nome).toBe(NOME_VO_DO_GO_B);
     expect(persistido?.tipo).toBe("VO");
+
+    await cliente.dispose();
+  });
+});
+
+test.describe("POST /api/usuarios/resetar-senha", () => {
+  test("GU-41: AM reseta um VT, que volta a entrar com a senha em branco", async () => {
+    const { idSessao, idCsrf } = await login(CPF_AM);
+    const cliente = await novoCliente();
+
+    const res = await cliente.post("/api/usuarios/resetar-senha", {
+      data: { documento: comPontuacao(CPF_VT_RESETADO) },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+
+    expect(res.url()).toBe(`${BASE_URL}/api/usuarios/resetar-senha`);
+    expect(res.status()).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
+
+    const resetado = getUsuario(CPF_VT_RESETADO);
+    expect(resetado?.senhaHash).toBeNull();
+    expect(resetado?.primeiraVez).toBe(true);
+
+    // PASB-01: sem senha, o login aceita a senha em branco e leva ao 1º acesso.
+    const resLogin = await cliente.post("/api/auth/login", {
+      data: { documento: CPF_VT_RESETADO, senha: "" },
+    });
+    expect(resLogin.status()).toBe(200);
+    expect((await resLogin.json()).proximaRota).toBe("/primeiro-acesso");
+
+    await cliente.dispose();
+  });
+
+  test("GU-43: GT resetando um AM recebe 403, e a senha do AM continua", async () => {
+    const { idSessao, idCsrf } = await login(CPF_GT);
+    const cliente = await novoCliente();
+
+    const res = await cliente.post("/api/usuarios/resetar-senha", {
+      data: { documento: CPF_AM },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+
+    expect(res.status()).toBe(403);
+    expect(await res.json()).toEqual({
+      erro: "Você não tem permissão para editar este usuário",
+    });
+    expect(getUsuario(CPF_AM)?.senhaHash).not.toBeNull();
+
+    await cliente.dispose();
+  });
+
+  test("GU-44: sem o token CSRF responde 403, e a senha do alvo continua", async () => {
+    const { idSessao } = await login(CPF_AM);
+    const cliente = await novoCliente();
+
+    const res = await cliente.post("/api/usuarios/resetar-senha", {
+      data: { documento: CPF_GT },
+      headers: cabecalhoCookie(idSessao),
+    });
+
+    expect(res.status()).toBe(403);
+    expect(getUsuario(CPF_GT)?.senhaHash).not.toBeNull();
+
+    await cliente.dispose();
+  });
+
+  test("GU-44/GU-47: corpo com senha responde 400, e a senha do alvo continua", async () => {
+    const { idSessao, idCsrf } = await login(CPF_AM);
+    const cliente = await novoCliente();
+
+    const res = await cliente.post("/api/usuarios/resetar-senha", {
+      data: { documento: CPF_GT, senha: "SenhaDoGestor123" },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+
+    expect(res.status()).toBe(400);
+    expect(getUsuario(CPF_GT)?.senhaHash).not.toBeNull();
 
     await cliente.dispose();
   });
