@@ -16,7 +16,6 @@ const CPF_AM = "91094000404";
 const CPF_AL = "91094000505";
 
 const CNPJS = [CNPJ_GO_A, CNPJ_GO_B];
-const DOCUMENTOS = [CPF_VO_A, CPF_AM, CPF_AL, ...CNPJS];
 
 let cdVerbaAComCurso: number;
 let cdVerbaASemCurso: number;
