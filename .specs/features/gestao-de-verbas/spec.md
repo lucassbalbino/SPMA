@@ -186,16 +186,16 @@ Escopo Large: cada dimensão vira requisito ou recebe `N/A` explícito.
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| GV-01 | P1: AM/GT criam verba | Design | Pending |
-| GV-02 | P1: AM/GT criam verba | Design | Pending |
+| GV-01 | P1: AM/GT criam verba | Tasks | Implementing |
+| GV-02 | P1: AM/GT criam verba | Tasks | Implementing |
 | GV-03 | P1: AM/GT criam verba | Tasks | Implementing |
 | GV-04 | P1: AM/GT criam verba | Tasks | Implementing |
 | GV-05 | P1: AM/GT criam verba | Tasks | Implementing |
 | GV-06 | P1: AM/GT criam verba | Tasks | Implementing |
-| GV-07 | P1: AM/GT criam verba | Design | Pending |
+| GV-07 | P1: AM/GT criam verba | Tasks | Implementing |
 | GV-08 | P1: AM/GT criam verba | Design | Pending |
-| GV-09 | P1: AM/GT criam verba | Design | Pending |
-| GV-10 | P1: AM/GT criam verba | Design | Pending |
+| GV-09 | P1: AM/GT criam verba | Tasks | Implementing |
+| GV-10 | P1: AM/GT criam verba | Tasks | Implementing |
 | GV-11 | P1: Listagem escopada | Tasks | Implementing |
 | GV-12 | P1: Listagem escopada | Tasks | Implementing |
 | GV-13 | P1: Listagem escopada | Tasks | Implementing |

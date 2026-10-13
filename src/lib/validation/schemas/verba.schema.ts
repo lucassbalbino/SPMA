@@ -32,10 +32,15 @@ export const camposVerbaSchema = z.object({
 
 // UGO-14/AD-043: o Ofertante É o GO - `cdOfertante` passa a ser o `documento`
 // (CNPJ) do próprio GO, não mais um id numérico de uma tabela à parte.
-export const verbaSchema = camposVerbaSchema.extend({
+//
+// `cdOfertante` vem PRIMEIRO de propósito: o Zod reporta os erros na ordem das
+// chaves, e a tela /verbas mostra o primeiro. Com o formulário vazio, a falta
+// do GO (o primeiro campo da tela) é a que aparece (GV-03).
+export const verbaSchema = z.object({
   cdOfertante: z
     .string({ error: "Ofertante é obrigatório" })
     .min(1, { message: "Ofertante é obrigatório" }),
+  ...camposVerbaSchema.shape,
 });
 
 export type VerbaInput = z.infer<typeof verbaSchema>;

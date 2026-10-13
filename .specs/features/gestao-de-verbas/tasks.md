@@ -281,17 +281,19 @@ T11
 
 **Done when**:
 
-- [ ] `e2e/verbas-page.spec.ts`:
+- [x] `e2e/verbas-page.spec.ts`:
   - AM: envia vazio → "Ofertante é obrigatório"; escolhe o GO sem valor → "Valor da verba é obrigatório"; valor `0` → "Valor da verba deve ser positivo"; contagem de verbas do GO no banco igual à anterior (GV-03..05)
   - AM cria uma verba para um GO que já tem uma: 201, o banco tem 2 verbas para o CNPJ, a nova com `vlVerba` e `dtVerba` informados, e as duas linhas aparecem na lista sem recarregar (GV-01, GV-02, GV-07)
   - GT com o `POST` atrasado via `page.route`: o botão "Criar verba" fica desabilitado durante o envio (GV-09)
-- [ ] `src/app/(protegido)/verbas/NovaVerbaForm.test.ts`: `renderToStaticMarkup` com `gos=[]` contém "Nenhum Ofertante cadastrado - cadastre um GO antes de criar uma verba." e o botão `disabled` (GV-10)
-- [ ] Gate Full passa com `npx playwright test e2e/verbas-page.spec.ts`
+- [x] `src/app/(protegido)/verbas/NovaVerbaForm.test.ts`: `renderToStaticMarkup` com `gos=[]` contém "Nenhum Ofertante cadastrado - cadastre um GO antes de criar uma verba." e o botão `disabled` (GV-10)
+- [x] Gate Full passa com `npx playwright test e2e/verbas-page.spec.ts`
 
 **Tests**: e2e
 **Gate**: full
 
 **Commit**: `feat(verbas): criar verba para um GO pela tela`
+
+**Status**: ✅ Done — 791 unit (+3 de renderização do GV-10) / 121 integration / e2e verbas-page 6/6 + verbas 9/9. Nota de execução: com o formulário vazio, o Zod reportava o valor antes do GO porque o `.extend()` põe `cdOfertante` depois dos campos herdados. O `verbaSchema` passou a declarar `cdOfertante` primeiro, na mesma ordem da tela.
 
 ---
 
