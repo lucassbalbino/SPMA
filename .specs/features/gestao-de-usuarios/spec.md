@@ -230,14 +230,14 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-06 | P1: Página | Tasks | In Tasks |
 | GU-07 | P1: Página | Tasks | In Tasks |
 | GU-08 | P1: Página | Tasks | In Tasks |
-| GU-09 | P1: Paginar/filtrar | Tasks | In Tasks |
+| GU-09 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-10 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-11 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-12 | P1: Paginar/filtrar | Tasks | In Tasks |
-| GU-13 | P1: Paginar/filtrar | Tasks | In Tasks |
+| GU-13 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-14 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-15 | P1: Paginar/filtrar | Tasks | In Tasks |
-| GU-16 | P1: Paginar/filtrar | Tasks | In Tasks |
+| GU-16 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-17 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-18 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-19 | P1: Paginar/filtrar | Tasks | In Tasks |

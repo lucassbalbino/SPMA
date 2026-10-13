@@ -120,8 +120,8 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] `paginacao.test.ts`: `totalPaginas(0) = 1`, `(1) = 1`, `(20) = 1`, `(21) = 2`, `(40) = 2`, `(41) = 3`; `tiposVisiveis` → AM e GT: os 6 na ordem AM, GT, VT, GO, VO, AL; GO: `[VO, AL]`; VT, VO, AL: `[]`
-- [ ] Gate Quick passa
+- [x] `paginacao.test.ts`: `totalPaginas(0) = 1`, `(1) = 1`, `(20) = 1`, `(21) = 2`, `(40) = 2`, `(41) = 3`; `tiposVisiveis` → AM e GT: os 6 na ordem AM, GT, VT, GO, VO, AL; GO: `[VO, AL]`; VT, VO, AL: `[]`
+- [x] Gate Quick passa
 
 **Tests**: unit
 **Gate**: quick
