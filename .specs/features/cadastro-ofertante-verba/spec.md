@@ -63,6 +63,7 @@ Onde uma requisição de leitura ou escrita de Ofertante ou Verba chega ao backe
 **REQ-OV-08 — Criação de Verba.**
 Quando um AM ou GT cria uma Verba, o sistema deve vinculá-la a exatamente um Ofertante existente (nunca mais de um), exigir um valor total (`vlVerba`) positivo, e rejeitar a criação se o Ofertante informado não existir.
 > **Válido sem alteração de regra** (AD-043): `cdOfertante` passou de `Int` (FK para `Ofertante`) para `String @db.VarChar(14)` (FK para `Usuario.documento`, tipo GO) - `POST /api/verbas` (T14) checa a mesma existência, agora contra `Usuario`.
+> ⚠️ **Atualizado por AD-046 (2026-10-13, `gestao-de-verbas`):** a verba deixou de ser criada junto do GO em `POST /api/usuarios`. A única criação é `POST /api/verbas`, pela tela `/verbas`, e um GO pode receber várias. O valor passa a ter teto de 99.999.999,99, com no máximo 2 casas decimais.
 
 **REQ-OV-09 — Edição do valor total da Verba.**
 Onde um AM ou GT edita o valor total de uma Verba, o sistema deve rejeitar a alteração se o novo valor total for menor que a soma já alocada aos cursos dessa Verba (REQ-OV-11).
@@ -71,6 +72,7 @@ Onde um AM ou GT edita o valor total de uma Verba, o sistema deve rejeitar a alt
 **REQ-OV-10 — Consulta e listagem de Verba escopada.**
 Onde um usuário consulta Verbas de um Ofertante, o sistema deve aplicar o mesmo escopo de REQ-OV-05/06.
 > **Válido sem alteração de regra** (AD-043) - o escopo de GO/VO passou a ser resolvido por `resolverEscopoOfertante` (T6) em vez de ler `usuario.cdOfertante` direto (o do próprio GO é sempre `null` agora), mas o resultado observável é o mesmo.
+> ⚠️ **Restringido por AD-046 (2026-10-13, `gestao-de-verbas`):** o VT deixou de ler verba (403 em `GET /api/verbas` e `GET /api/verbas/[id]`). AM/GT continuam com alcance nacional, e GO/VO com o próprio escopo.
 
 ### Grupo 5 — Saldo e teto da Verba (RN-10, AD-015, AD-016)
 

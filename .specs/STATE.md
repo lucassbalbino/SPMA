@@ -305,6 +305,18 @@ Pedido do usuário: "no ato de primeiro login do Ofertante, aparecerá obrigator
 5. **Sem edição posterior pela tela**: o `409` do `/me` após concluir permanece. A rota por documento continua como estava (AM/GT, e o próprio GO por API, sem tela).
 6. **Todo GO pré-existente passa pela tela** (a migration só adiciona a coluna com default `false`; nenhum dado organizacional é apagado).
 
+⚠️ *Atualizada por AD-046 (2026-10-13): AM/GT criam o GO só com CNPJ + nome; a verba deixou de fazer parte da criação e é vinculada depois, em `/verbas`.*
+
 **AD-045 (2026-10-13) — Trocar o `documento` (CPF/CNPJ, chave primária) de um usuário propaga pelas FKs `ON UPDATE CASCADE` já existentes; as FKs auto-referentes de `TB_Usuario` (`Criado_Por`, `CD_Ofertante`) são soltas e religadas à mão, na mesma transação. Sem migração e sem chave substituta.**
 Pedido do usuário em `gestao-de-usuarios`: corrigir CPF/CNPJ pela tela, com propagação em cascata. Investigado antes de decidir (`gestao-de-usuarios/design.md`, "Approach"): todas as 9 FKs para `TB_Usuario` já nasceram `ON UPDATE CASCADE` (default do Prisma), mas o MySQL trata como `RESTRICT` uma cascata que volta para a própria tabela. Isso foi provado no `spma-mysql` 8.4 (`ERROR 1451`), e o contorno soltar → trocar → religar também foi provado lá.
 **Regra para o futuro:** uma FK nova de outra tabela para `Usuario.documento` não exige nada, desde que fique com o `onUpdate` default (`Cascade`). Uma FK nova **auto-referente** em `Usuario` precisa entrar no soltar/religar de `atualizarCadastro` (`src/lib/usuarios/gestao.ts`); senão, trocar o documento de quem tem filho nela falha com 500. Chave substituta (`id`) foi considerada e rejeitada: reescreveria as 9 FKs e contradiz a escolha de PK por documento da AD-043.
+
+**AD-046 (2026-10-13) — A verba deixa de nascer junto do GO e passa a ser criada à parte, em `/verbas`, por AM ou GT, sempre vinculada a um GO. Um GO pode ter quantas verbas forem criadas para ele (1 GO : N verbas). O VT perde a leitura de verba. Supera a parte de REQ-OV-08 que cria a verba na criação do GO, restringe REQ-OV-10 e atualiza AD-044.**
+Pedido do usuário em `gestao-de-verbas`: "preciso que um ofertante possa ser vinculado a mais de uma verba"; "o GO não será criado vinculado a uma verba"; "o VT não poderá ver as verbas". Decisões confirmadas em 2026-10-13 (`.specs/features/gestao-de-verbas/context.md`):
+
+1. **Cardinalidade 1 GO : N verbas, sem migração.** `Verba.cdOfertante → Usuario.documento` já era 1:N; o limite era só a interface. Verba compartilhada entre GOs (N:N) foi considerada e recusada pelo usuário.
+2. **`POST /api/usuarios` rejeita `verba` com 400** e nunca cria verba. Mesmo precedente de AD-044 (campo que não deveria vir é erro de quem chama). `exigeOfertanteEVerba` foi removida. Todo GO criado depois desta decisão começa sem verba e vê o estado vazio de `/cursos/novo` até AM/GT vincularem uma.
+3. **O VT não lê verba**, nem pela tela nem pela API: guarda nova `podeLerVerba` (AM/GT/GO/VO) em `GET /api/verbas` e `GET /api/verbas/[id]`. `podeAcessarOfertante` não muda, porque guarda também a leitura de cursos, onde o alcance nacional do VT (AD-012) continua valendo.
+4. **Teto do valor**: `vlVerba` aceita até 99.999.999,99, com no máximo 2 casas decimais, validado no Zod. Era o limite físico de `DECIMAL(10,2)`, que antes chegava ao MySQL e virava 500.
+
+**Regra para o futuro:** qualquer tela ou rota nova que leia verba usa `podeLerVerba`, não `podeAcessarOfertante`. A lista escopada com saldo mora em `src/lib/verba/consulta.ts` (`listarVerbasDoEscopo`), compartilhada pela tela e pela API.
