@@ -506,6 +506,7 @@ const CPF_VT_EDICAO = gerarCpfLista(301);
 const CPF_AM_EDICAO = gerarCpfLista(302);
 const CPF_VT_OCUPADO = gerarCpfLista(303);
 const CNPJ_GO_EDICAO = geradorDeCnpj("54")(2);
+const CPF_VT_SEM_NOME = gerarCpfLista(304);
 
 const DOCUMENTOS_EDICAO = [
   CPF_GT_EDICAO,
@@ -513,6 +514,7 @@ const DOCUMENTOS_EDICAO = [
   CPF_AM_EDICAO,
   CPF_VT_OCUPADO,
   CNPJ_GO_EDICAO,
+  CPF_VT_SEM_NOME,
 ];
 
 test.describe("edição na linha da Gestão de usuários", () => {
@@ -538,6 +540,7 @@ test.describe("edição na linha da Gestão de usuários", () => {
     upsertUsuario({ cpf: CPF_AM_EDICAO, tipo: "AM", nome: "GU-E2E Edicao AM" });
     upsertUsuario({ cpf: CPF_VT_OCUPADO, tipo: "VT", nome: "GU-E2E Edicao Ocupado" });
     upsertUsuario({ cpf: CNPJ_GO_EDICAO, tipo: "GO", nome: "GU-E2E Edicao GO" });
+    upsertUsuario({ cpf: CPF_VT_SEM_NOME, tipo: "VT", nome: null });
   });
 
   test.afterAll(() => {
@@ -628,6 +631,26 @@ test.describe("edição na linha da Gestão de usuários", () => {
     await vt.getByLabel("CPF").pressSequentially("123.456.789-0123");
     await expect(vt.getByLabel("CPF")).toHaveValue("12345678901");
     await expect(vt.getByLabel("CPF")).toHaveAttribute("maxlength", "11");
+  });
+
+  test("edge case: corrigir só o e-mail de um usuário sem nome grava o e-mail sem exigir nome", async ({
+    page,
+  }) => {
+    await entrar(page, CPF_GT_EDICAO);
+    await page.goto("/usuarios");
+    await page.getByLabel("Buscar usuários").fill(CPF_VT_SEM_NOME);
+    await expect(linhas(page)).toHaveCount(1);
+    const linha = linhaDe(page, CPF_VT_SEM_NOME);
+
+    await linha.getByRole("button", { name: "Editar" }).click();
+    await linha.getByLabel("E-mail").fill("sem.nome@exemplo.com");
+    await linha.getByRole("button", { name: "Salvar" }).click();
+
+    await expect(linha).toContainText("sem.nome@exemplo.com");
+    await expect(linha.getByRole("button", { name: "Salvar" })).toHaveCount(0);
+    const persistido = getUsuario(CPF_VT_SEM_NOME);
+    expect(persistido?.email).toBe("sem.nome@exemplo.com");
+    expect(persistido?.nome).toBeNull();
   });
 
   test("GU-45/GU-46: resetar a senha pede confirmação na linha e depois avisa", async ({

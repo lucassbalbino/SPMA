@@ -110,12 +110,23 @@ function EdicaoUsuario({
   async function salvar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    // Só vai o que o gestor alterou. Reenviar um campo intocado faria a rota
+    // validá-lo de novo: um usuário sem nome não teria o e-mail corrigido
+    // ("Nome é obrigatório"), e o mesmo documento não é troca (GU-39).
+    const alteracoes = {
+      nome: nome !== (usuario.nome ?? "") ? nome : undefined,
+      email: email !== (usuario.email ?? "") ? email : undefined,
+      documentoNovo: documento !== usuario.documento ? documento : undefined,
+    };
+
+    if (Object.values(alteracoes).every((valor) => valor === undefined)) {
+      aoFechar();
+      return;
+    }
+
     const ok = await enviar("/api/usuarios", "PATCH", {
       documentoAtual: usuario.documento,
-      nome,
-      email,
-      // Reenviar o mesmo documento não é troca (GU-39); só vai se mudou.
-      documentoNovo: documento !== usuario.documento ? documento : undefined,
+      ...alteracoes,
     });
 
     if (ok) aoSalvar();
