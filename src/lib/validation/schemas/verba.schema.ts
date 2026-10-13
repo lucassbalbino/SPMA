@@ -4,15 +4,38 @@ import { z } from "zod";
 // não vem no payload: na edição (AD-015: a verba pertence a exatamente um
 // Ofertante desde a criação, não se transfere) e na criação junto do Gestor
 // Ofertante, onde ele é o mesmo `cdOfertante` do usuário sendo criado.
+// GV-06 (AD-046): `VL_Verba` é DECIMAL(10,2). Sem este teto, um valor maior
+// chegava ao MySQL e virava 500; com 3+ casas, o MySQL arredondava em
+// silêncio e gravava um valor diferente do digitado.
+const VALOR_MAXIMO_VERBA = 99999999.99;
+
+/**
+ * No máximo 2 casas decimais. Compara com tolerância, não com igualdade
+ * exata: `0.29 * 100` é `28.999999999999996` em ponto flutuante, e uma
+ * comparação exata rejeitaria um valor válido.
+ */
+function temNoMaximoDuasCasas(valor: number): boolean {
+  const centavos = valor * 100;
+  return Math.abs(centavos - Math.round(centavos)) < 1e-6;
+}
+
 export const camposVerbaSchema = z.object({
-  vlVerba: z.number().positive({ message: "Valor da verba deve ser positivo" }),
+  vlVerba: z
+    .number({ error: "Valor da verba é obrigatório" })
+    .positive({ message: "Valor da verba deve ser positivo" })
+    .max(VALOR_MAXIMO_VERBA, { message: "Valor da verba excede o máximo permitido" })
+    .refine(temNoMaximoDuasCasas, {
+      message: "Valor da verba aceita no máximo 2 casas decimais",
+    }),
   dtVerba: z.coerce.date().optional(),
 });
 
 // UGO-14/AD-043: o Ofertante É o GO - `cdOfertante` passa a ser o `documento`
 // (CNPJ) do próprio GO, não mais um id numérico de uma tabela à parte.
 export const verbaSchema = camposVerbaSchema.extend({
-  cdOfertante: z.string().min(1, { message: "Ofertante é obrigatório" }),
+  cdOfertante: z
+    .string({ error: "Ofertante é obrigatório" })
+    .min(1, { message: "Ofertante é obrigatório" }),
 });
 
 export type VerbaInput = z.infer<typeof verbaSchema>;

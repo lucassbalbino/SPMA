@@ -188,10 +188,10 @@ Escopo Large: cada dimensão vira requisito ou recebe `N/A` explícito.
 | --- | --- | --- | --- |
 | GV-01 | P1: AM/GT criam verba | Design | Pending |
 | GV-02 | P1: AM/GT criam verba | Design | Pending |
-| GV-03 | P1: AM/GT criam verba | Design | Pending |
-| GV-04 | P1: AM/GT criam verba | Design | Pending |
-| GV-05 | P1: AM/GT criam verba | Design | Pending |
-| GV-06 | P1: AM/GT criam verba | Design | Pending |
+| GV-03 | P1: AM/GT criam verba | Tasks | Implementing |
+| GV-04 | P1: AM/GT criam verba | Tasks | Implementing |
+| GV-05 | P1: AM/GT criam verba | Tasks | Implementing |
+| GV-06 | P1: AM/GT criam verba | Tasks | Implementing |
 | GV-07 | P1: AM/GT criam verba | Design | Pending |
 | GV-08 | P1: AM/GT criam verba | Design | Pending |
 | GV-09 | P1: AM/GT criam verba | Design | Pending |
@@ -207,7 +207,7 @@ Escopo Large: cada dimensão vira requisito ou recebe `N/A` explícito.
 | GV-18 | P2: Edição | Design | Pending |
 | GV-19 | P2: Edição | Design | Pending |
 | GV-20 | P2: Edição | Design | Pending |
-| GV-21 | P2: Edição | Design | Pending |
+| GV-21 | P2: Edição | Tasks | Implementing |
 | GV-22 | P2: Edição | Design | Pending |
 | GV-23 | P1: GO nasce sem verba | Design | Pending |
 | GV-24 | P1: GO nasce sem verba | Design | Pending |
@@ -219,7 +219,7 @@ Escopo Large: cada dimensão vira requisito ou recebe `N/A` explícito.
 | GV-30 | P1: Navegação | Design | Pending |
 | GV-31 | Edge case | Design | Pending |
 | GV-32 | Edge case | Design | Pending |
-| GV-33 | Edge case | Design | Pending |
+| GV-33 | Edge case | Tasks | Implementing |
 
 **Coverage:** 34 total, 0 mapped to tasks, 34 unmapped (tasks ainda não criadas).
 

@@ -84,14 +84,16 @@ T11
 
 **Done when**:
 
-- [ ] `verba.schema.test.ts`: `verbaSchema` sem `cdOfertante` e com `""` → "Ofertante é obrigatório"; sem `vlVerba` → "Valor da verba é obrigatório"; `0` e `-1` → "Valor da verba deve ser positivo"; `100000000` → "Valor da verba excede o máximo permitido"; `99999999.99` aceito (GV-33); `10.123` → "Valor da verba aceita no máximo 2 casas decimais"; `0.29` e `12500.5` aceitos (ponto flutuante)
-- [ ] `edicaoVerbaSchema` rejeita `100000000` e `10.123` com as mesmas mensagens (GV-21)
-- [ ] Gate Quick passa
+- [x] `verba.schema.test.ts`: `verbaSchema` sem `cdOfertante` e com `""` → "Ofertante é obrigatório"; sem `vlVerba` → "Valor da verba é obrigatório"; `0` e `-1` → "Valor da verba deve ser positivo"; `100000000` → "Valor da verba excede o máximo permitido"; `99999999.99` aceito (GV-33); `10.123` → "Valor da verba aceita no máximo 2 casas decimais"; `0.29` e `12500.5` aceitos (ponto flutuante)
+- [x] `edicaoVerbaSchema` rejeita `100000000` e `10.123` com as mesmas mensagens (GV-21)
+- [x] Gate Quick passa
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(verbas): validar teto e casas decimais do valor da verba`
+
+**Status**: ✅ Done — 792 unit (+11) / typecheck limpo.
 
 ---
 
