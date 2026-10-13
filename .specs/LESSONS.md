@@ -9,10 +9,10 @@
 Corroborated across multiple features. Safe to apply as guidance.
 
 ### L-014 - Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.
-- signal: `spec_precision_gap` · recurrence: 2 feature(s) · scope: `tests` · harmful: 0
+- signal: `spec_precision_gap` · recurrence: 2 feature(s) · scope: `tests` · harmful: 1
 - features: cadastro-ofertante-verba, avaliacao-aluno
 - evidence: CA-OV-12 - e2e/verbas-id.spec.ts:96-115 (tests) (+1 more)
-- last seen: 2026-08-28T17:17:04Z
+- last seen: 2026-10-13T13:02:07Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -155,6 +155,48 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: primeiro-acesso-senha-em-branco
 - evidence: validation.md PASB-05 / M7 (route.ts:57) (auth)
 - last seen: 2026-10-13T09:45:29Z
+
+### L-042 - Seed every field a preservation criterion names with a non-default value; a whole-row equality over null columns cannot detect them being cleared.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: gestao-de-usuarios
+- evidence: M10 src/lib/usuarios/gestao.ts:103 / GU-35 gestao.integration.test.ts:217 (tests)
+- last seen: 2026-10-13T13:02:03Z
+
+### L-043 - Assert a schema-transformed value on the persisted row, not only on the schema output.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: gestao-de-usuarios
+- evidence: M9 src/lib/usuarios/gestao.ts:72 / GU-25 gestao-usuario.schema.test.ts:59 (tests)
+- last seen: 2026-10-13T13:02:04Z
+
+### L-044 - Prove a no-data-in-URL criterion by asserting the URLs of the requests the UI actually sends, not the URL the test itself built.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: gestao-de-usuarios
+- evidence: GU-48 e2e/usuarios-gestao.spec.ts:157 (UI requests unobserved) (e2e)
+- last seen: 2026-10-13T13:02:05Z
+
+### L-045 - Give each spec edge case its own row in the Test Coverage Matrix; unmapped edge cases ship untested.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: gestao-de-usuarios
+- evidence: spec.md Edge Cases: last row emptied after edit; empty GO list (tests)
+- last seen: 2026-10-13T13:02:05Z
+
+### L-046 - When an AC states a layout order, assert the order, not just that both elements render.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: gestao-de-usuarios
+- evidence: GU-03 acima da lista (no order assertion) (e2e)
+- last seen: 2026-10-13T13:02:06Z
+
+### L-047 - Name the exact error message for every validation branch an AC lists.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: gestao-de-usuarios
+- evidence: GU-26 nome > 255 message (spec)
+- last seen: 2026-10-13T13:02:06Z
+
+### L-048 - State one final state per record across ACs; never list a record as both moved and deleted.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: gestao-de-usuarios
+- evidence: GU-33 x GU-34 sessoes (spec)
+- last seen: 2026-10-13T13:02:07Z
 
 ## Quarantined (failed when applied - ignore)
 

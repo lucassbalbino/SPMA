@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 42,
+  "next_id": 49,
   "lessons": [
     {
       "id": "L-014",
@@ -17,13 +17,13 @@
         "avaliacao-aluno"
       ],
       "recurrence": 2,
-      "harmful": 0,
+      "harmful": 1,
       "evidence": [
         "CA-OV-12 - e2e/verbas-id.spec.ts:96-115 (tests)",
         "AVAL-04 - e2e/avaliacoes.spec.ts:177-190 (tests)"
       ],
       "created": "2026-08-26T20:34:16Z",
-      "last_seen": "2026-08-28T17:17:04Z"
+      "last_seen": "2026-10-13T13:02:07Z"
     },
     {
       "id": "L-019",
@@ -438,6 +438,132 @@
       ],
       "created": "2026-10-13T09:45:29Z",
       "last_seen": "2026-10-13T09:45:29Z"
+    },
+    {
+      "id": "L-042",
+      "key": "surviving_mutant::seed every field a preservation criterion names with a non default value a whole row equality over null columns cannot detect them being cleared",
+      "text": "Seed every field a preservation criterion names with a non-default value; a whole-row equality over null columns cannot detect them being cleared.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "gestao-de-usuarios"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M10 src/lib/usuarios/gestao.ts:103 / GU-35 gestao.integration.test.ts:217 (tests)"
+      ],
+      "created": "2026-10-13T13:02:03Z",
+      "last_seen": "2026-10-13T13:02:03Z"
+    },
+    {
+      "id": "L-043",
+      "key": "surviving_mutant::assert a schema transformed value on the persisted row not only on the schema output",
+      "text": "Assert a schema-transformed value on the persisted row, not only on the schema output.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "gestao-de-usuarios"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M9 src/lib/usuarios/gestao.ts:72 / GU-25 gestao-usuario.schema.test.ts:59 (tests)"
+      ],
+      "created": "2026-10-13T13:02:04Z",
+      "last_seen": "2026-10-13T13:02:04Z"
+    },
+    {
+      "id": "L-044",
+      "key": "ac_gap::prove a no data in url criterion by asserting the urls of the requests the ui actually sends not the url the test itself built",
+      "text": "Prove a no-data-in-URL criterion by asserting the URLs of the requests the UI actually sends, not the URL the test itself built.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "gestao-de-usuarios"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "GU-48 e2e/usuarios-gestao.spec.ts:157 (UI requests unobserved) (e2e)"
+      ],
+      "created": "2026-10-13T13:02:05Z",
+      "last_seen": "2026-10-13T13:02:05Z"
+    },
+    {
+      "id": "L-045",
+      "key": "ac_gap::give each spec edge case its own row in the test coverage matrix unmapped edge cases ship untested",
+      "text": "Give each spec edge case its own row in the Test Coverage Matrix; unmapped edge cases ship untested.",
+      "signal": "ac_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "gestao-de-usuarios"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec.md Edge Cases: last row emptied after edit; empty GO list (tests)"
+      ],
+      "created": "2026-10-13T13:02:05Z",
+      "last_seen": "2026-10-13T13:02:05Z"
+    },
+    {
+      "id": "L-046",
+      "key": "ac_gap::when an ac states a layout order assert the order not just that both elements render",
+      "text": "When an AC states a layout order, assert the order, not just that both elements render.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "gestao-de-usuarios"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "GU-03 acima da lista (no order assertion) (e2e)"
+      ],
+      "created": "2026-10-13T13:02:06Z",
+      "last_seen": "2026-10-13T13:02:06Z"
+    },
+    {
+      "id": "L-047",
+      "key": "spec_precision_gap::name the exact error message for every validation branch an ac lists",
+      "text": "Name the exact error message for every validation branch an AC lists.",
+      "signal": "spec_precision_gap",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "gestao-de-usuarios"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "GU-26 nome > 255 message (spec)"
+      ],
+      "created": "2026-10-13T13:02:06Z",
+      "last_seen": "2026-10-13T13:02:06Z"
+    },
+    {
+      "id": "L-048",
+      "key": "spec_precision_gap::state one final state per record across acs never list a record as both moved and deleted",
+      "text": "State one final state per record across ACs; never list a record as both moved and deleted.",
+      "signal": "spec_precision_gap",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "gestao-de-usuarios"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "GU-33 x GU-34 sessoes (spec)"
+      ],
+      "created": "2026-10-13T13:02:07Z",
+      "last_seen": "2026-10-13T13:02:07Z"
     }
   ]
 }
