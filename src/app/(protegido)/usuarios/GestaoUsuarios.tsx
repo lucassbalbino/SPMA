@@ -18,6 +18,7 @@ import { headerCSRF } from "@/lib/security/csrf-client";
 import { NOME_TIPO_USUARIO } from "@/lib/ui/tipos-usuario";
 import type { PaginaUsuarios } from "@/lib/usuarios/consulta";
 import type { TipoUsuario } from "@/generated/prisma/enums";
+import { LinhaUsuario } from "./LinhaUsuario";
 import { NovoUsuarioForm } from "./NovoUsuarioForm";
 
 type Filtro = { pagina: number; tipo?: TipoUsuario; busca: string };
@@ -41,6 +42,8 @@ export function GestaoUsuarios({
   const [resultado, setResultado] = useState(paginaInicial);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  // Uma linha aberta para edição por vez.
+  const [editando, setEditando] = useState<string | null>(null);
   // Só a resposta do pedido mais recente vale: uma resposta lenta de um
   // filtro antigo não pode sobrescrever a de um filtro mais novo.
   const ultimoPedido = useRef(0);
@@ -157,15 +160,17 @@ export function GestaoUsuarios({
                 className="flex flex-col gap-2"
               >
                 {resultado.usuarios.map((usuario) => (
-                  <li
+                  <LinhaUsuario
                     key={usuario.documento}
-                    className="grid gap-1 rounded-lg border border-border px-3 py-2 text-sm sm:grid-cols-4"
-                  >
-                    <span className="font-medium">{usuario.nome ?? "—"}</span>
-                    <span>{usuario.documento}</span>
-                    <span>{NOME_TIPO_USUARIO[usuario.tipo]}</span>
-                    <span className="text-muted-foreground">{usuario.email ?? "—"}</span>
-                  </li>
+                    usuario={usuario}
+                    editando={editando === usuario.documento}
+                    aoEditar={() => setEditando(usuario.documento)}
+                    aoFechar={() => setEditando(null)}
+                    aoSalvar={() => {
+                      setEditando(null);
+                      recarregar();
+                    }}
+                  />
                 ))}
               </ul>
             )}

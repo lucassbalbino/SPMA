@@ -243,8 +243,8 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-19 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-20 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-21 | P1: Nome e e-mail | Execute | Implemented |
-| GU-22 | P1: Nome e e-mail | Tasks | In Tasks |
-| GU-23 | P1: Nome e e-mail | Tasks | In Tasks |
+| GU-22 | P1: Nome e e-mail | Execute | Implemented |
+| GU-23 | P1: Nome e e-mail | Execute | Implemented |
 | GU-24 | P1: Nome e e-mail | Execute | Implemented |
 | GU-25 | P1: Nome e e-mail | Execute | Implemented |
 | GU-26 | P1: Nome e e-mail | Execute | Implemented |
@@ -252,7 +252,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-28 | P1: Nome e e-mail | Execute | Implemented |
 | GU-29 | P1: Nome e e-mail | Execute | Implemented |
 | GU-30 | P1: Nome e e-mail | Execute | Implemented |
-| GU-31 | P1: Nome e e-mail | Tasks | In Tasks |
+| GU-31 | P1: Nome e e-mail | Execute | Implemented |
 | GU-32 | P1: CPF/CNPJ | Execute | Implemented |
 | GU-33 | P1: CPF/CNPJ | Execute | Implemented |
 | GU-34 | P1: CPF/CNPJ | Execute | Implemented |
@@ -261,13 +261,13 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-37 | P1: CPF/CNPJ | Execute | Implemented |
 | GU-38 | P1: CPF/CNPJ | Execute | Implemented |
 | GU-39 | P1: CPF/CNPJ | Execute | Implemented |
-| GU-40 | P1: CPF/CNPJ | Tasks | In Tasks |
+| GU-40 | P1: CPF/CNPJ | Execute | Implemented |
 | GU-41 | P1: Senha | Execute | Implemented |
 | GU-42 | P1: Senha | Execute | Implemented |
 | GU-43 | P1: Senha | Execute | Implemented |
 | GU-44 | P1: Senha | Execute | Implemented |
-| GU-45 | P1: Senha | Tasks | In Tasks |
-| GU-46 | P1: Senha | Tasks | In Tasks |
+| GU-45 | P1: Senha | Execute | Implemented |
+| GU-46 | P1: Senha | Execute | Implemented |
 | GU-47 | P1: Senha | Execute | Implemented |
 | GU-48 | P1: Documento fora da URL | Execute | Implemented |
 | GU-49 | P1: Documento fora da URL | Execute | Implemented |

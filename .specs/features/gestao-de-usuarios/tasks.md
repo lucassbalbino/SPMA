@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/gestao-de-usuarios/design.md`
-**Status**: Approved
+**Status**: Done
 
 ---
 
@@ -419,8 +419,8 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Em `e2e/usuarios-page.spec.ts`: GT vê "Editar" na linha de um VT e não na de um AM nem na própria; editar o nome do VT → a linha fecha e mostra o nome novo; trocar o CPF para um já existente → "Documento já cadastrado" na linha, que segue aberta; o campo do documento de um GO se chama "CNPJ" e aceita 14 dígitos, e o de um VT se chama "CPF" e aceita 11; "Resetar senha" → "Confirmar reset" → mensagem de GU-46, e o banco tem `senhaHash` null
-- [ ] Gate **Full-feature** passa (lint, build, typecheck, unit, integration, e2e completo, com `test-results/.last-run.json` conferido)
+- [x] Em `e2e/usuarios-page.spec.ts`: GT vê "Editar" na linha de um VT e não na de um AM nem na própria; editar o nome do VT → a linha fecha e mostra o nome novo; trocar o CPF para um já existente → "Documento já cadastrado" na linha, que segue aberta; o campo do documento de um GO se chama "CNPJ" e aceita 14 dígitos, e o de um VT se chama "CPF" e aceita 11; "Resetar senha" → "Confirmar reset" → mensagem de GU-46, e o banco tem `senhaHash` null
+- [x] Gate **Full-feature** passa (lint, build, typecheck, unit, integration, e2e completo, com `test-results/.last-run.json` conferido)
 
 **Tests**: e2e
 **Gate**: full

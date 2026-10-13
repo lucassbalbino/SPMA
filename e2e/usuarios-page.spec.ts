@@ -497,3 +497,164 @@ test.describe("lista da Gestão de usuários", () => {
     await expect(page.getByText("Nenhum usuário encontrado.")).toHaveCount(0);
   });
 });
+
+// --- Edição na própria linha (GU-22, GU-23, GU-31, GU-40, GU-45, GU-46) -----
+
+const CPF_GT_EDICAO = gerarCpfLista(300);
+const CPF_VT_EDICAO = gerarCpfLista(301);
+const CPF_AM_EDICAO = gerarCpfLista(302);
+const CPF_VT_OCUPADO = gerarCpfLista(303);
+const CNPJ_GO_EDICAO = geradorDeCnpj("54")(2);
+
+const DOCUMENTOS_EDICAO = [
+  CPF_GT_EDICAO,
+  CPF_VT_EDICAO,
+  CPF_AM_EDICAO,
+  CPF_VT_OCUPADO,
+  CNPJ_GO_EDICAO,
+];
+
+test.describe("edição na linha da Gestão de usuários", () => {
+  test.beforeAll(async () => {
+    test.setTimeout(60_000);
+
+    deleteUsuarios(DOCUMENTOS_EDICAO);
+    upsertUsuario({
+      cpf: CPF_GT_EDICAO,
+      tipo: "GT",
+      senha: SENHA,
+      primeiraVez: false,
+      nome: "GU-E2E Edicao GT",
+    });
+    upsertUsuario({
+      cpf: CPF_VT_EDICAO,
+      tipo: "VT",
+      senha: SENHA,
+      primeiraVez: false,
+      nome: "GU-E2E Edicao VT",
+      email: "vt.edicao@exemplo.com",
+    });
+    upsertUsuario({ cpf: CPF_AM_EDICAO, tipo: "AM", nome: "GU-E2E Edicao AM" });
+    upsertUsuario({ cpf: CPF_VT_OCUPADO, tipo: "VT", nome: "GU-E2E Edicao Ocupado" });
+    upsertUsuario({ cpf: CNPJ_GO_EDICAO, tipo: "GO", nome: "GU-E2E Edicao GO" });
+  });
+
+  test.afterAll(() => {
+    deleteUsuarios(DOCUMENTOS_EDICAO);
+  });
+
+  /** GT logado, com a lista já filtrada pelos fixtures desta seção. */
+  async function abrirListaDoGT(page: Page) {
+    await entrar(page, CPF_GT_EDICAO);
+    await page.goto("/usuarios");
+    await page.getByLabel("Buscar usuários").fill("Edicao");
+    await expect(linhas(page)).toHaveCount(5);
+  }
+
+  // A linha sai pelo documento, que aparece nela mesmo em edição.
+  const linhaDe = (page: Page, documento: string) =>
+    linhas(page).filter({ hasText: documento });
+
+  test("GU-22: GT vê Editar na linha de um VT, e não na de um AM nem na própria", async ({
+    page,
+  }) => {
+    await abrirListaDoGT(page);
+
+    const editar = { name: "Editar" };
+    await expect(linhaDe(page, CPF_VT_EDICAO).getByRole("button", editar)).toHaveCount(1);
+    await expect(linhaDe(page, CPF_AM_EDICAO).getByRole("button", editar)).toHaveCount(0);
+    await expect(linhaDe(page, CPF_GT_EDICAO).getByRole("button", editar)).toHaveCount(0);
+  });
+
+  test("GU-23/GU-31: editar o nome do VT fecha a linha e mostra o nome novo", async ({
+    page,
+  }) => {
+    await abrirListaDoGT(page);
+    const linha = linhaDe(page, CPF_VT_EDICAO);
+
+    await linha.getByRole("button", { name: "Editar" }).click();
+    await expect(linha.getByLabel("Nome")).toHaveValue("GU-E2E Edicao VT");
+    await expect(linha.getByLabel("E-mail")).toHaveValue("vt.edicao@exemplo.com");
+    await expect(linha.getByLabel("CPF")).toHaveValue(CPF_VT_EDICAO);
+    await expect(linha.getByRole("button", { name: "Cancelar" })).toBeVisible();
+    await expect(linha.getByRole("button", { name: "Resetar senha" })).toBeVisible();
+
+    await linha.getByLabel("Nome").fill("GU-E2E Edicao VT Renomeado");
+    await linha.getByRole("button", { name: "Salvar" }).click();
+
+    await expect(linha).toContainText("GU-E2E Edicao VT Renomeado");
+    await expect(linha.getByRole("button", { name: "Salvar" })).toHaveCount(0);
+    await expect(linha.getByRole("textbox")).toHaveCount(0);
+    expect(getUsuario(CPF_VT_EDICAO)?.nome).toBe("GU-E2E Edicao VT Renomeado");
+  });
+
+  test("GU-31: trocar o CPF por um já cadastrado mostra o erro na linha, que segue aberta", async ({
+    page,
+  }) => {
+    await abrirListaDoGT(page);
+    const linha = linhaDe(page, CPF_VT_EDICAO);
+
+    await linha.getByRole("button", { name: "Editar" }).click();
+    await linha.getByLabel("CPF").fill(CPF_VT_OCUPADO);
+    await linha.getByRole("button", { name: "Salvar" }).click();
+
+    await expect(linha).toContainText("Documento já cadastrado");
+    await expect(linha.getByRole("button", { name: "Salvar" })).toBeVisible();
+    await expect(linha.getByLabel("CPF")).toHaveValue(CPF_VT_OCUPADO);
+    expect(getUsuario(CPF_VT_EDICAO)?.tipo).toBe("VT");
+    expect(getUsuario(CPF_VT_OCUPADO)?.nome).toBe("GU-E2E Edicao Ocupado");
+  });
+
+  test("GU-40: o documento é CNPJ de 14 dígitos para GO e CPF de 11 para VT, só dígitos", async ({
+    page,
+  }) => {
+    await abrirListaDoGT(page);
+
+    const go = linhaDe(page, CNPJ_GO_EDICAO);
+    await go.getByRole("button", { name: "Editar" }).click();
+    await expect(go.getByLabel("CPF")).toHaveCount(0);
+    // Digitado tecla a tecla, como o gestor faria: pontuação e excesso caem.
+    await go.getByLabel("CNPJ").fill("");
+    await go.getByLabel("CNPJ").pressSequentially("11.222.333/0001-8199");
+    await expect(go.getByLabel("CNPJ")).toHaveValue("11222333000181");
+    await expect(go.getByLabel("CNPJ")).toHaveAttribute("maxlength", "14");
+    await go.getByRole("button", { name: "Cancelar" }).click();
+
+    const vt = linhaDe(page, CPF_VT_EDICAO);
+    await vt.getByRole("button", { name: "Editar" }).click();
+    await expect(vt.getByLabel("CNPJ")).toHaveCount(0);
+    await vt.getByLabel("CPF").fill("");
+    await vt.getByLabel("CPF").pressSequentially("123.456.789-0123");
+    await expect(vt.getByLabel("CPF")).toHaveValue("12345678901");
+    await expect(vt.getByLabel("CPF")).toHaveAttribute("maxlength", "11");
+  });
+
+  test("GU-45/GU-46: resetar a senha pede confirmação na linha e depois avisa", async ({
+    page,
+  }) => {
+    await abrirListaDoGT(page);
+    const linha = linhaDe(page, CPF_VT_EDICAO);
+
+    await linha.getByRole("button", { name: "Editar" }).click();
+    await linha.getByRole("button", { name: "Resetar senha" }).click();
+
+    // GU-45: até confirmar, nada foi enviado.
+    await expect(linha.getByRole("button", { name: "Confirmar reset" })).toBeVisible();
+    await expect(linha.getByRole("button", { name: "Cancelar" })).toBeVisible();
+    expect(getUsuario(CPF_VT_EDICAO)?.senhaHash).not.toBeNull();
+
+    await linha.getByRole("button", { name: "Confirmar reset" }).click();
+
+    await expect(
+      linha.getByText(
+        "Senha resetada. No próximo acesso, o usuário entra com a senha em branco.",
+        { exact: true },
+      ),
+    ).toBeVisible();
+    const resetado = getUsuario(CPF_VT_EDICAO);
+    expect(resetado?.senhaHash).toBeNull();
+    expect(resetado?.primeiraVez).toBe(true);
+    // GU-49: editar e resetar também não tocam a URL.
+    expect(page.url()).toMatch(/\/usuarios$/);
+  });
+});
