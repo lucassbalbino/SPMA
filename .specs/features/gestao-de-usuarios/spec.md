@@ -225,21 +225,21 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-01 | P1: Página | Tasks | In Tasks |
 | GU-02 | P1: Página | Tasks | In Tasks |
 | GU-03 | P1: Página | Tasks | In Tasks |
-| GU-04 | P1: Página | Tasks | In Tasks |
-| GU-05 | P1: Página | Tasks | In Tasks |
-| GU-06 | P1: Página | Tasks | In Tasks |
+| GU-04 | P1: Página | Execute | Implemented |
+| GU-05 | P1: Página | Execute | Implemented |
+| GU-06 | P1: Página | Execute | Implemented |
 | GU-07 | P1: Página | Tasks | In Tasks |
 | GU-08 | P1: Página | Tasks | In Tasks |
 | GU-09 | P1: Paginar/filtrar | Execute | Implemented |
-| GU-10 | P1: Paginar/filtrar | Tasks | In Tasks |
-| GU-11 | P1: Paginar/filtrar | Tasks | In Tasks |
+| GU-10 | P1: Paginar/filtrar | Execute | Implemented |
+| GU-11 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-12 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-13 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-14 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-15 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-16 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-17 | P1: Paginar/filtrar | Execute | Implemented |
-| GU-18 | P1: Paginar/filtrar | Tasks | In Tasks |
+| GU-18 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-19 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-20 | P1: Paginar/filtrar | Tasks | In Tasks |
 | GU-21 | P1: Nome e e-mail | Execute | Implemented |

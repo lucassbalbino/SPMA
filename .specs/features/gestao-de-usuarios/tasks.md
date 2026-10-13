@@ -172,14 +172,14 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] `consulta.integration.test.ts` com fixtures de nome prefixado `GU-T`: dois GOs (A e B), cada um com 1 VO e 1 AL matriculado em curso seu, mais 1 AL sem matrícula e 1 GT
-- [ ] GO A, sem filtro e com `busca: "GU-T"` → exatamente o VO de A e o AL de A (não vê B, o AL sem matrícula nem a si mesmo)
-- [ ] GT com `busca: "GU-T"` → todos os fixtures; com `tipo: "AL"` → só os 3 ALs
-- [ ] `whereUsuariosVisiveis` devolve `null` para VT, VO e AL
-- [ ] Busca `"gu-t vo"` (minúsculas) acha os VOs; busca pelo CPF de um AL com pontuação acha só ele
-- [ ] 25 fixtures `GU-T PAG nn` no escopo do GT: página 1 → 20 itens, página 2 → 5, `total` 25, `totalPaginas` 2; dois fixtures com o mesmo nome saem na ordem do documento; página 3 → `usuarios: []` com `total` 25
-- [ ] `editavel` é `true` para um VO visto pelo GO A e `false` para a linha do próprio GT visto por ele mesmo
-- [ ] Gate Full passa (sem e2e nesta tarefa)
+- [x] `consulta.integration.test.ts` com fixtures de nome prefixado `GU-T`: dois GOs (A e B), cada um com 1 VO e 1 AL matriculado em curso seu, mais 1 AL sem matrícula e 1 GT
+- [x] GO A, sem filtro e com `busca: "GU-T"` → exatamente o VO de A e o AL de A (não vê B, o AL sem matrícula nem a si mesmo)
+- [x] GT com `busca: "GU-T"` → todos os fixtures; com `tipo: "AL"` → só os 3 ALs
+- [x] `whereUsuariosVisiveis` devolve `null` para VT, VO e AL
+- [x] Busca `"gu-t vo"` (minúsculas) acha os VOs; busca pelo CPF de um AL com pontuação acha só ele
+- [x] 25 fixtures `GU-T PAG nn` no escopo do GT: página 1 → 20 itens, página 2 → 5, `total` 25, `totalPaginas` 2; dois fixtures com o mesmo nome saem na ordem do documento; página 3 → `usuarios: []` com `total` 25
+- [x] `editavel` é `true` para um VO visto pelo GO A e `false` para a linha do próprio GT visto por ele mesmo
+- [x] Gate Full passa (sem e2e nesta tarefa)
 
 **Tests**: integration
 **Gate**: full
