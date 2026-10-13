@@ -11,7 +11,8 @@
 // (os arquivos rodam em paralelo contra o mesmo `spma_test`, ver
 // `playwright.config.ts`). A integração usa "48"/"49".
 import { expect, test } from "@playwright/test";
-import { deleteUsuarios, upsertUsuario } from "./helpers/db";
+import { deleteUsuarios, getUsuario, upsertUsuario } from "./helpers/db";
+import { geradorDeCnpj } from "./helpers/cnpj";
 import {
   BASE_URL,
   cabecalhoCookie,
@@ -50,8 +51,24 @@ function comPontuacao(cpf: string): string {
 const CPF_GT = gerarCpfValido(1);
 const CPF_VT = gerarCpfValido(2);
 const CPF_VT_BUSCADO = gerarCpfValido(3);
+const CPF_VO_DO_GO_A = gerarCpfValido(4);
+const CPF_VO_DO_GO_B = gerarCpfValido(5);
 
-const DOCUMENTOS = [CPF_GT, CPF_VT, CPF_VT_BUSCADO];
+const gerarCnpjValido = geradorDeCnpj("53");
+const CNPJ_GO_A = gerarCnpjValido(1);
+const CNPJ_GO_B = gerarCnpjValido(2);
+
+const NOME_VO_DO_GO_B = "GU-E2E API VO do GO B";
+
+const DOCUMENTOS = [
+  CPF_GT,
+  CPF_VT,
+  CPF_VT_BUSCADO,
+  CPF_VO_DO_GO_A,
+  CPF_VO_DO_GO_B,
+  CNPJ_GO_A,
+  CNPJ_GO_B,
+];
 
 async function login(documento: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
@@ -72,6 +89,21 @@ test.beforeAll(() => {
   upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_VT, tipo: "VT", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_VT_BUSCADO, tipo: "VT", nome: "GU-E2E API VT Buscado" });
+
+  upsertUsuario({ cpf: CNPJ_GO_A, tipo: "GO", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CNPJ_GO_B, tipo: "GO", senha: SENHA, primeiraVez: false });
+  upsertUsuario({
+    cpf: CPF_VO_DO_GO_A,
+    tipo: "VO",
+    cdOfertante: CNPJ_GO_A,
+    nome: "GU-E2E API VO do GO A",
+  });
+  upsertUsuario({
+    cpf: CPF_VO_DO_GO_B,
+    tipo: "VO",
+    cdOfertante: CNPJ_GO_B,
+    nome: NOME_VO_DO_GO_B,
+  });
 });
 
 test.afterAll(() => {
@@ -174,6 +206,82 @@ test.describe("POST /api/usuarios/consulta", () => {
     });
 
     expect(res.status()).toBe(400);
+
+    await cliente.dispose();
+  });
+});
+
+test.describe("PATCH /api/usuarios", () => {
+  test("GU-24: GO corrige o nome do próprio VO, e o banco grava", async () => {
+    const { idSessao, idCsrf } = await login(CNPJ_GO_A);
+    const cliente = await novoCliente();
+
+    const res = await cliente.patch("/api/usuarios", {
+      data: { documentoAtual: comPontuacao(CPF_VO_DO_GO_A), nome: "GU-E2E API VO Corrigido" },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+
+    expect(res.url()).toBe(`${BASE_URL}/api/usuarios`);
+    expect(res.status()).toBe(200);
+    expect(await res.json()).toEqual({
+      usuario: {
+        documento: CPF_VO_DO_GO_A,
+        nome: "GU-E2E API VO Corrigido",
+        email: null,
+        tipo: "VO",
+      },
+    });
+    expect(getUsuario(CPF_VO_DO_GO_A)?.nome).toBe("GU-E2E API VO Corrigido");
+
+    await cliente.dispose();
+  });
+
+  test("GU-27: GO editando o VO de outro GO recebe 403, e o banco não muda", async () => {
+    const { idSessao, idCsrf } = await login(CNPJ_GO_A);
+    const cliente = await novoCliente();
+
+    const res = await cliente.patch("/api/usuarios", {
+      data: { documentoAtual: CPF_VO_DO_GO_B, nome: "GU-E2E API Forjado" },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+
+    expect(res.status()).toBe(403);
+    expect(await res.json()).toEqual({
+      erro: "Você não tem permissão para editar este usuário",
+    });
+    expect(getUsuario(CPF_VO_DO_GO_B)?.nome).toBe(NOME_VO_DO_GO_B);
+
+    await cliente.dispose();
+  });
+
+  test("GU-29: sem o token CSRF responde 403, e o banco não muda", async () => {
+    const { idSessao } = await login(CNPJ_GO_B);
+    const cliente = await novoCliente();
+
+    const res = await cliente.patch("/api/usuarios", {
+      data: { documentoAtual: CPF_VO_DO_GO_B, nome: "GU-E2E API Sem CSRF" },
+      headers: cabecalhoCookie(idSessao),
+    });
+
+    expect(res.status()).toBe(403);
+    expect(getUsuario(CPF_VO_DO_GO_B)?.nome).toBe(NOME_VO_DO_GO_B);
+
+    await cliente.dispose();
+  });
+
+  test("GU-30: chave fora do contrato (tipo) responde 400, e o banco não muda", async () => {
+    const { idSessao, idCsrf } = await login(CNPJ_GO_B);
+    const cliente = await novoCliente();
+
+    const res = await cliente.patch("/api/usuarios", {
+      data: { documentoAtual: CPF_VO_DO_GO_B, nome: "GU-E2E API Com Tipo", tipo: "AL" },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+
+    expect(res.status()).toBe(400);
+    const persistido = getUsuario(CPF_VO_DO_GO_B);
+    expect(persistido?.nome).toBe(NOME_VO_DO_GO_B);
+    expect(persistido?.tipo).toBe("VO");
 
     await cliente.dispose();
   });

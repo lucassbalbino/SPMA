@@ -1,6 +1,10 @@
 // POST /api/usuarios - criação em cascata (REQ-AU-05, REQ-AU-06, REQ-AU-07,
 // REQ-AU-08, REQ-SEC-15, REQ-SEC-11, REQ-OV-04, REQ-OV-08).
 //
+// PATCH /api/usuarios - correção de cadastro da gestão de usuários: nome,
+// e-mail e documento (GU-24, GU-27, GU-29, GU-30, GU-32). O alvo vai no
+// corpo (`documentoAtual`), nunca no caminho (GU-48, AD-029).
+//
 // Criar um Gestor Ofertante cria também a verba do Ofertante dele, na mesma
 // transação: AM/GT informam `cdOfertante` + `verba` no próprio payload do
 // usuário (ver `exigeOfertanteEVerba` em lib/auth/guards.ts).
@@ -13,10 +17,13 @@
 // o que a interface mostra ou deixa de mostrar não vale como autorização.
 //
 // SPEC_DEVIATION: REQ-OV-04 também cita "atualiza" um usuário com
-// `cdOfertante`, mas não existe rota de edição de `Usuario` na base hoje -
-// nenhuma feature construiu isso ainda. A checagem de existência do
-// Ofertante abaixo cobre só o caminho de criação, que é o único que existe.
-// Se uma rota de edição for criada no futuro, ela precisa da mesma checagem.
+// `cdOfertante`. A rota de edição de `Usuario` agora existe (o `PATCH`
+// abaixo, da gestão de usuários), mas ela não edita `cdOfertante`: trocar o
+// vínculo está fora do escopo daquela feature, e `edicaoUsuarioSchema`
+// (`.strict()`) recusa a chave com 400. Por isso a checagem de existência do
+// Ofertante abaixo segue cobrindo só o caminho de criação, o único que grava
+// `cdOfertante`. Se uma edição de vínculo for criada no futuro, ela precisa
+// da mesma checagem.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { podeCriar, resolverOfertante } from "@/lib/auth/cascata";
@@ -31,6 +38,9 @@ import { comTratamentoDeErro } from "@/lib/errors/api-error";
 import { exigirMutacao } from "@/lib/api/guardas";
 import { corpoValidado } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
+import { edicaoUsuarioSchema } from "@/lib/validation/schemas/gestao-usuario.schema";
+import { exigirAlvoEditavel } from "@/lib/usuarios/consulta";
+import { atualizarCadastro, validarDocumentoDoTipo } from "@/lib/usuarios/gestao";
 
 async function criarUsuario(request: Request) {
   const sessao = await exigirMutacao(request);
@@ -235,4 +245,32 @@ async function criarUsuario(request: Request) {
   );
 }
 
+/**
+ * Corrige nome, e-mail e documento de um usuário que o editor poderia criar,
+ * dentro do escopo dele (GU-21). A forma é validada antes de buscar o alvo,
+ * como nas demais rotas: um 400 de forma não revela nada sobre o alvo.
+ *
+ * O documento novo só é validado depois de achar o alvo, porque o algoritmo
+ * depende do tipo dele: CNPJ para GO, CPF para os demais (GU-37/GU-38).
+ */
+async function editarUsuario(request: Request) {
+  const sessao = await exigirMutacao(request);
+  const { documentoAtual, nome, email, documentoNovo } = await corpoValidado(
+    request,
+    edicaoUsuarioSchema,
+  );
+
+  const alvo = await exigirAlvoEditavel(sessao.usuario, documentoAtual);
+
+  const usuario = await atualizarCadastro(alvo, {
+    nome,
+    email,
+    documentoNovo:
+      documentoNovo === undefined ? undefined : validarDocumentoDoTipo(alvo.tipo, documentoNovo),
+  });
+
+  return NextResponse.json({ usuario });
+}
+
 export const POST = comTratamentoDeErro(criarUsuario);
+export const PATCH = comTratamentoDeErro(editarUsuario);

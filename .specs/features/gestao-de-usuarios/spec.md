@@ -250,7 +250,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-26 | P1: Nome e e-mail | Execute | Implemented |
 | GU-27 | P1: Nome e e-mail | Execute | Implemented |
 | GU-28 | P1: Nome e e-mail | Execute | Implemented |
-| GU-29 | P1: Nome e e-mail | Tasks | In Tasks |
+| GU-29 | P1: Nome e e-mail | Execute | Implemented |
 | GU-30 | P1: Nome e e-mail | Execute | Implemented |
 | GU-31 | P1: Nome e e-mail | Tasks | In Tasks |
 | GU-32 | P1: CPF/CNPJ | Execute | Implemented |

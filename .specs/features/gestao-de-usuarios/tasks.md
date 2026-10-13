@@ -313,10 +313,10 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Em `e2e/usuarios-gestao.spec.ts`: GO troca o nome do próprio VO → 200 com `{ usuario }` e o banco tem o nome novo; GO tenta o VO de outro GO → 403 e o banco não mudou; sem CSRF → 403; chave `tipo` → 400
-- [ ] O comentário SPEC_DEVIATION do topo de `route.ts` (sobre "não existe rota de edição de `Usuario`") é atualizado: a rota agora existe e não edita `cdOfertante`
-- [ ] Os testes existentes de `POST /api/usuarios` em `e2e/usuarios.spec.ts` continuam passando
-- [ ] Gate Full passa com `npx playwright test e2e/usuarios-gestao.spec.ts e2e/usuarios.spec.ts`
+- [x] Em `e2e/usuarios-gestao.spec.ts`: GO troca o nome do próprio VO → 200 com `{ usuario }` e o banco tem o nome novo; GO tenta o VO de outro GO → 403 e o banco não mudou; sem CSRF → 403; chave `tipo` → 400
+- [x] O comentário SPEC_DEVIATION do topo de `route.ts` (sobre "não existe rota de edição de `Usuario`") é atualizado: a rota agora existe e não edita `cdOfertante`
+- [x] Os testes existentes de `POST /api/usuarios` em `e2e/usuarios.spec.ts` continuam passando
+- [x] Gate Full passa com `npx playwright test e2e/usuarios-gestao.spec.ts e2e/usuarios.spec.ts`
 
 **Tests**: e2e
 **Gate**: full
