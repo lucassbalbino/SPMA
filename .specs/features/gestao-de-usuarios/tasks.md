@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/gestao-de-usuarios/design.md`
-**Status**: Done
+**Status**: In Progress (revisão 3)
 
 ---
 
@@ -74,6 +74,14 @@ Rota renomeada, lista paginada com filtros, edição inline.
 
 ```
 T11 → T12 → T13
+```
+
+### Phase 5: Revisão 3 - regras do GT
+
+Pedido do usuário depois da entrega: o GT não vê o AM e edita todos os usuários que vê.
+
+```
+T14 → T15
 ```
 
 ---
@@ -429,6 +437,58 @@ T11 → T12 → T13
 
 ---
 
+### T14: GT edita todos os usuários do escopo
+
+**What**: `podeEditarUsuario` passa a liberar ao GT qualquer alvo que não seja AM (o escopo cuida do resto), mantendo a exclusão da própria conta; AM e GO seguem com a matriz de criação.
+**Where**: `src/lib/auth/permissoes.ts`
+**Depends on**: None
+**Reuses**: `podeCriar`
+**Requirement**: GU-21
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] A linha GT da matriz escrita à mão em `guards.test.ts` passa a ser `{ AM: false, GT: true, VT: true, GO: true, VO: true, AL: true }`; as outras linhas não mudam; o GT editando o próprio documento → `false`
+- [x] Gate Quick passa
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(auth): liberar ao GT a edicao de todos os usuarios que enxerga`
+
+---
+
+### T15: GT não vê o AM
+
+**What**: `whereUsuariosVisiveis` do GT exclui o tipo AM, `tiposVisiveis(GT)` perde o chip "Administrador Master" e `exigirAlvoEditavel` passa a dar 404 só ao AM.
+**Where**: `src/lib/usuarios/consulta.ts` (o chip é uma linha em `paginacao.ts`)
+**Depends on**: T14
+**Reuses**: `consulta.integration.test.ts`, `paginacao.test.ts`, `e2e/usuarios-page.spec.ts`
+**Requirement**: GU-04, GU-09, GU-28
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] `consulta.integration.test.ts`: o GT, buscando `GU-T`, recebe todos os fixtures exceto o AM (afirmar a ausência do AM, não só a contagem); o AM continua vendo o AM; GT diante de um AM existente → 403; GT diante de documento inexistente → 403 (era 404); AM diante de documento inexistente → 404
+- [ ] `paginacao.test.ts`: `tiposVisiveis("GT")` = `["GT", "VT", "GO", "VO", "AL"]`; AM segue com os 6
+- [ ] `e2e/usuarios-page.spec.ts`: o GT não vê a linha do AM fixture e vê "Editar" na linha de um AL do escopo; ajustar só os testes existentes que quebrarem
+- [ ] Gate Full passa com `npx playwright test e2e/usuarios-page.spec.ts e2e/usuarios-gestao.spec.ts`; depois, gate **Full-feature** completo (inclui lint e build, que não rodaram depois de `6af41ff`)
+
+**Tests**: integration
+**Gate**: full
+
+**Commit**: `feat(usuarios): tirar o administrador master do escopo do GT`
+
+---
+
 ## Phase Execution Map
 
 ```
@@ -439,6 +499,7 @@ Phase 2:  T4 ------→ T5
           T4 ------→ T6 ------→ T7
 Phase 3:  T8 ------→ T9 ------→ T10
 Phase 4:  T11 -----→ T12 -----→ T13
+Phase 5:  T14 -----→ T15
 ```
 
 13 tarefas → 2 lotes de ~7 (Lote A: Fases 1+2, T1–T7; Lote B: Fases 3+4, T8–T13).

@@ -603,12 +603,13 @@ describe("exigeOfertanteEVerba", () => {
 });
 
 describe("podeEditarUsuario", () => {
-  // GU-21: a matriz de edição é a de criação (REQ-AU-05/06). Tabela escrita
-  // à mão, de propósito: derivá-la de `TIPOS_PERMITIDOS` faria o teste
-  // concordar com qualquer mudança na constante.
+  // GU-21: a matriz de edição é a de criação (REQ-AU-05/06), exceto a do GT,
+  // que edita todo tipo que enxerga - todos menos o AM (revisão 3). Tabela
+  // escrita à mão, de propósito: derivá-la de `TIPOS_PERMITIDOS` faria o
+  // teste concordar com qualquer mudança na constante.
   const MATRIZ: Record<TipoUsuario, Record<TipoUsuario, boolean>> = {
     AM: { AM: true, GT: true, VT: true, GO: true, VO: true, AL: true },
-    GT: { AM: false, GT: true, VT: true, GO: true, VO: false, AL: false },
+    GT: { AM: false, GT: true, VT: true, GO: true, VO: true, AL: true },
     VT: { AM: false, GT: false, VT: false, GO: false, VO: false, AL: false },
     GO: { AM: false, GT: false, VT: false, GO: false, VO: true, AL: true },
     VO: { AM: false, GT: false, VT: false, GO: false, VO: false, AL: false },
@@ -633,6 +634,15 @@ describe("podeEditarUsuario", () => {
       podeEditarUsuario(
         { tipo: "AM", documento: "52998224725" },
         { tipo: "AM", documento: "52998224725" },
+      ),
+    ).toBe(false);
+  });
+
+  it("GT não edita o próprio documento", () => {
+    expect(
+      podeEditarUsuario(
+        { tipo: "GT", documento: "52998224725" },
+        { tipo: "GT", documento: "52998224725" },
       ),
     ).toBe(false);
   });

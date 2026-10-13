@@ -2,7 +2,7 @@
 
 **Escopo:** Large (rota de tela renomeada, listagem escopada e paginada no servidor, três rotas de API novas, troca da chave primária de `Usuario` com propagação). Sem migração: as FKs para `TB_Usuario` já são `ON UPDATE CASCADE` (ver design.md).
 
-**Fonte funcional:** pedido do usuário nesta sessão (2026-10-13) e as decisões tomadas com ele (ver Assumptions). Revisão 2 (mesma data): o CPF sai de toda URL e a lista passa a ser paginada.
+**Fonte funcional:** pedido do usuário nesta sessão (2026-10-13) e as decisões tomadas com ele (ver Assumptions). Revisão 2 (mesma data): o CPF sai de toda URL e a lista passa a ser paginada. Revisão 3 (mesma data, depois da entrega): o GT deixa de ver o AM e passa a editar todos os usuários que vê.
 
 **Decisões que esta feature herda:** REQ-AU-05/06 e `TIPOS_PERMITIDOS` (matriz de cascata, reavaliada no servidor - AD-033), AD-012 (escopo por Ofertante), AD-043 (GO é o Ofertante, identificado pelo CNPJ), REQ-AU-03 / UGO-07 (CPF para AM/GT/VT/VO/AL, CNPJ para GO), UGO-10 (409 claro para documento duplicado), PASB-01 (conta sem senha entra no 1º acesso com a senha em branco), AD-029 (CPF nunca em URL), AD-039 (navegação em fonte única, tokens visuais), AD-045 (troca de documento).
 
@@ -39,16 +39,16 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --- | --- | --- | --- |
 | Rota da página | `/usuarios`; `/usuarios/novo` redireciona para `/usuarios`. Item de menu "Gestão de usuários" | Decisão do usuário. | y |
-| Quem vê quem | AM e GT: todos os usuários. GO: VOs com `cdOfertante` = seu CNPJ e Alunos com ao menos uma matrícula em curso seu. VT, VO e AL: nenhuma lista | Decisão do usuário. VT/VO/AL não têm o item no menu hoje. | y |
+| Quem vê quem | AM: todos os usuários. GT: todos, exceto os de tipo AM. GO: VOs com `cdOfertante` = seu CNPJ e Alunos com ao menos uma matrícula em curso seu. VT, VO e AL: nenhuma lista | Decisão do usuário; a exclusão do AM para o GT é da revisão 3. VT/VO/AL não têm o item no menu hoje. | y |
 | Filtro | Chips "Todos" + um por tipo visível ao perfil, e busca por nome ou documento | Decisão do usuário. | y |
 | Onde edita | O formulário de edição abre dentro da linha, na própria lista | Decisão do usuário. | y |
-| Quem edita quem | `podeCriar(editor.tipo, alvo.tipo)` E alvo no escopo do editor. Linhas visíveis fora disso ficam só leitura | Decisão do usuário: mesma matriz da criação. | y |
+| Quem edita quem | AM e GO: `podeCriar(editor.tipo, alvo.tipo)` E alvo no escopo. GT: todo alvo do seu escopo (GT, VT, GO, VO, AL), mais amplo que a matriz de criação dele (GT/VT/GO). Ninguém edita a própria conta. Linhas visíveis fora disso ficam só leitura | Decisão do usuário; a ampliação do GT é da revisão 3. A exclusão da própria conta segue a linha "Editar a si mesmo". | y |
 | Troca de CPF/CNPJ | Propaga para toda referência ao documento numa operação atômica, para CPF e CNPJ | Decisão do usuário. | y |
 | Senha | Só "resetar para o 1º acesso": senha em branco no próximo login | Decisão do usuário. O gestor nunca conhece a senha. | y |
 | Campos editáveis | Nome, e-mail e documento, mais o reset de senha | Decisão do usuário. | y |
 | E-mail do GO | Editável aqui como para os demais tipos | O GO declara o e-mail no 1º acesso, mas AM/GT já editam esse campo por `PATCH /api/usuarios/[documento]/organizacao`; vetar aqui seria só mais uma regra sem ganho. Editar o e-mail não liga `dadosOrganizacionaisCompletos`. | y |
 | Editar a si mesmo | A linha do próprio usuário (visível só a AM/GT) é só leitura e a rota responde 403 | Trocar o próprio documento ou resetar a própria senha derrubaria a sessão em uso. | y |
-| Alvo inexistente | AM/GT recebem 404 "Usuário não encontrado". GO recebe 403, igual a alvo fora do escopo | Mesmo princípio de REQ-OV-05: o escopo é checado antes de revelar existência. | y |
+| Alvo inexistente | Só o AM recebe 404 "Usuário não encontrado". GT e GO recebem 403, igual a alvo fora do escopo | Mesmo princípio de REQ-OV-05: o escopo é checado antes de revelar existência. Desde a revisão 3 só o AM enxerga todos; se o GT recebesse 404 para inexistente e 403 para um AM, poderia descobrir quais documentos são de AM. | n |
 | Reset de senha e bloqueio | O reset também zera `tentativasFalhas` e limpa `bloqueadoAte` | Sem isso, o reset não destrava uma conta bloqueada por 15 min. | y |
 | Sessões após trocar documento | Todas as sessões do alvo são encerradas | Decisão do usuário. | y |
 | Documento novo igual ao atual | Tratado como "sem troca" | Reenviar o mesmo valor não é uma troca. | y |
@@ -77,7 +77,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 1. **GU-01** - The system SHALL apresentar o item de navegação "Gestão de usuários" apontando para `/usuarios` aos perfis AM, GT e GO, e a nenhum outro.
 2. **GU-02** - WHEN um usuário autenticado abre `/usuarios/novo` THEN o sistema SHALL redirecioná-lo para `/usuarios`.
 3. **GU-03** - The system SHALL exibir em `/usuarios` o formulário de criação de usuário existente (mesmos campos e regras de hoje) acima da lista de usuários.
-4. **GU-04** - WHILE o usuário logado é AM ou GT, the system SHALL incluir no escopo da lista todos os usuários cadastrados, de todos os tipos.
+4. **GU-04** - WHILE o usuário logado é AM, the system SHALL incluir no escopo da lista todos os usuários cadastrados, de todos os tipos; WHILE é GT, SHALL incluir todos os usuários cujo tipo não é AM.
 5. **GU-05** - WHILE o usuário logado é GO, the system SHALL incluir no escopo da lista exatamente os VOs com `cdOfertante` igual ao seu CNPJ e os Alunos com ao menos uma `AvaliacaoAluno` em curso cujo `cdOfertante` é o seu CNPJ.
 6. **GU-06** - WHILE o usuário logado é VT, VO ou AL, the system SHALL não exibir lista em `/usuarios`.
 7. **GU-07** - The system SHALL mostrar em cada linha da lista o nome, o documento, o tipo por extenso (`NOME_TIPO_USUARIO`) e o e-mail do usuário.
@@ -95,7 +95,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 
 **Acceptance Criteria**:
 
-1. **GU-09** - The system SHALL exibir acima da lista um chip "Todos" e um chip por tipo que o perfil enxerga: os seis tipos para AM e GT, e só "Visualizador Ofertante" e "Aluno" para GO.
+1. **GU-09** - The system SHALL exibir acima da lista um chip "Todos" e um chip por tipo que o perfil enxerga: os seis tipos para AM, todos exceto "Administrador Master" para GT, e só "Visualizador Ofertante" e "Aluno" para GO.
 2. **GU-10** - WHEN o usuário seleciona o chip de um tipo THEN o sistema SHALL listar só os usuários do escopo com esse tipo; WHEN seleciona "Todos" THEN SHALL listar todos os do escopo.
 3. **GU-11** - WHEN o usuário digita na busca THEN o sistema SHALL listar só os usuários do escopo cujo nome contém o texto (sem diferenciar maiúsculas de minúsculas), combinando com o chip selecionado; IF o texto não contém nenhuma letra, contém ao menos um dígito e só tem dígitos, pontos, traço, barra e espaços THEN o sistema SHALL listar também os usuários do escopo cujo documento contém os dígitos digitados. Um texto com qualquer letra é comparado só com o nome.
 4. **GU-12** - IF nenhum usuário atende ao filtro e à busca THEN o sistema SHALL exibir "Nenhum usuário encontrado.".
@@ -120,14 +120,14 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 
 **Acceptance Criteria**:
 
-1. **GU-21** - The system SHALL considerar o alvo editável pelo editor se e somente se `podeCriar(editor.tipo, alvo.tipo)` é verdadeiro, o alvo está no escopo do editor (GU-04/GU-05) e o alvo não é o próprio editor.
+1. **GU-21** - The system SHALL considerar o alvo editável pelo editor se e somente se o alvo está no escopo do editor (GU-04/GU-05), o alvo não é o próprio editor e, quando o editor não é GT, `podeCriar(editor.tipo, alvo.tipo)` é verdadeiro (o GT edita qualquer alvo do seu escopo).
 2. **GU-22** - The system SHALL exibir o botão "Editar" só nas linhas com `editavel: true` (GU-21).
 3. **GU-23** - WHEN o usuário clica "Editar" THEN o sistema SHALL abrir, dentro da própria linha, um formulário com nome, e-mail e documento preenchidos com os valores atuais, os botões "Salvar" e "Cancelar", e o botão "Resetar senha".
 4. **GU-24** - WHEN um editor autorizado envia `PATCH /api/usuarios` com `{ documentoAtual, nome, email }` válidos THEN o sistema SHALL gravar nome e e-mail do usuário `documentoAtual` e responder 200 com `{ usuario: { documento, nome, email, tipo } }`.
 5. **GU-25** - WHEN o editor envia `email` vazio THEN o sistema SHALL gravar `email` como `null`.
 6. **GU-26** - IF o editor envia `nome` vazio ou só com espaços (`{ "erro": "Nome é obrigatório" }`), `nome` com mais de 255 caracteres (`{ "erro": "Nome deve ter no máximo 255 caracteres" }`) ou `email` em formato inválido (`{ "erro": "Email inválido" }`) THEN o sistema SHALL responder 400 com essa mensagem e não alterar o usuário.
 7. **GU-27** - IF o alvo existe mas não é editável pelo editor (GU-21) THEN `PATCH /api/usuarios` SHALL responder 403 com `{ "erro": "Você não tem permissão para editar este usuário" }` e não alterar o usuário.
-8. **GU-28** - IF `documentoAtual` não corresponde a nenhum usuário THEN `PATCH /api/usuarios` SHALL responder 404 `{ "erro": "Usuário não encontrado" }` quando o editor é AM ou GT, e 403 com a mensagem de GU-27 quando o editor é GO.
+8. **GU-28** - IF `documentoAtual` não corresponde a nenhum usuário THEN `PATCH /api/usuarios` SHALL responder 404 `{ "erro": "Usuário não encontrado" }` quando o editor é AM, e 403 com a mensagem de GU-27 quando o editor é GT ou GO.
 9. **GU-29** - The system SHALL exigir sessão válida e o token CSRF em `PATCH /api/usuarios` (`exigirMutacao`).
 10. **GU-30** - IF o corpo de `PATCH /api/usuarios` não traz `documentoAtual`, não traz nenhum de `nome`/`email`/`documentoNovo`, ou traz qualquer outra chave THEN o sistema SHALL responder 400 e não alterar nada.
 11. **GU-31** - WHEN a edição salva com sucesso THEN o sistema SHALL fechar o formulário da linha e recarregar a página atual da lista; IF a rota responde erro THEN SHALL manter o formulário aberto e exibir a mensagem `erro` da resposta dentro da linha.

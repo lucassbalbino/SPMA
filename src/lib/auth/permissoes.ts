@@ -207,6 +207,11 @@ export function exigeOfertanteEVerba(
  * (trocar o próprio documento ou resetar a própria senha derrubaria a
  * sessão em uso).
  *
+ * Exceção do GT (revisão 3 do spec): ele cria só GT/VT/GO, mas edita todo
+ * usuário que enxerga - todos menos o AM, que nem entra no escopo dele.
+ * O `!== "AM"` repete aqui o que o escopo já garante, para que a regra
+ * pura não dependa do chamador nesse ponto.
+ *
  * ATENÇÃO: o escopo NÃO entra aqui. GU-21 também exige o alvo no escopo do
  * editor (GU-04/GU-05), e isso é garantido por quem entrega o alvo: só chame
  * esta função com um alvo que saiu de uma consulta escopada
@@ -217,5 +222,13 @@ export function podeEditarUsuario(
   editor: { tipo: TipoUsuario; documento: string },
   alvo: { tipo: TipoUsuario; documento: string },
 ): boolean {
-  return podeCriar(editor.tipo, alvo.tipo) && alvo.documento !== editor.documento;
+  if (alvo.documento === editor.documento) {
+    return false;
+  }
+
+  if (editor.tipo === "GT") {
+    return alvo.tipo !== "AM";
+  }
+
+  return podeCriar(editor.tipo, alvo.tipo);
 }
