@@ -126,11 +126,20 @@ describe("consulta de usuários (integration)", () => {
     expect(pagina.total).toBe(2);
   });
 
-  it("GU-04: o GT vê todos os usuários, de todos os tipos", async () => {
-    const pagina = await consultarUsuarios(editorGt, { pagina: 1, busca: "GU-T" });
+  it("GU-04: o AM vê todos os usuários, de todos os tipos", async () => {
+    const pagina = await consultarUsuarios(editorAm, { pagina: 1, busca: "GU-T" });
 
     expect(documentosDe(pagina).sort()).toEqual([...DOCUMENTOS].sort());
     expect(pagina.total).toBe(DOCUMENTOS.length);
+  });
+
+  it("GU-04: o GT vê todos os usuários, menos os de tipo AM", async () => {
+    const pagina = await consultarUsuarios(editorGt, { pagina: 1, busca: "GU-T" });
+    const semAm = DOCUMENTOS.filter((documento) => documento !== AM);
+
+    expect(documentosDe(pagina)).not.toContain(AM);
+    expect(documentosDe(pagina).sort()).toEqual([...semAm].sort());
+    expect(pagina.total).toBe(semAm.length);
   });
 
   it("GU-10: o filtro por tipo deixa só os usuários do escopo com aquele tipo", async () => {
@@ -199,16 +208,27 @@ describe("consulta de usuários (integration)", () => {
       await esperarRecusa(exigirAlvoEditavel(editorGoA, INEXISTENTE), 403, SEM_PERMISSAO);
     });
 
-    it("GU-27: o GT diante de um AM existente (fora da matriz) dá 403", async () => {
+    it("GU-27: o GT diante de um AM existente (fora do escopo) dá 403", async () => {
       await esperarRecusa(exigirAlvoEditavel(editorGt, AM), 403, SEM_PERMISSAO);
     });
 
-    it("GU-28: para o GT, um documento inexistente dá 404", async () => {
+    it("GU-28: para o GT, um documento inexistente dá 403, igual a um AM existente", async () => {
+      await esperarRecusa(exigirAlvoEditavel(editorGt, INEXISTENTE), 403, SEM_PERMISSAO);
+    });
+
+    it("GU-28: para o AM, um documento inexistente dá 404", async () => {
       await esperarRecusa(
-        exigirAlvoEditavel(editorGt, INEXISTENTE),
+        exigirAlvoEditavel(editorAm, INEXISTENTE),
         404,
         "Usuário não encontrado",
       );
+    });
+
+    it("GU-21: o GT recebe um AL (fora da matriz de criação dele, dentro do escopo)", async () => {
+      await expect(exigirAlvoEditavel(editorGt, AL_SEM)).resolves.toMatchObject({
+        documento: AL_SEM,
+        tipo: "AL",
+      });
     });
 
     it("GU-21: o GT diante de si mesmo dá 403", async () => {

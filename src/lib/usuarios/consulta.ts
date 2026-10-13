@@ -50,15 +50,17 @@ export const COLUNAS_LISTADAS = { documento: true, nome: true, email: true, tipo
  * próprio Ofertante, e aqui nenhum dos dois tem lista. O Aluno também entra
  * por outro caminho: pela matrícula em curso do GO, não por `cdOfertante`.
  *
- * `null` = sem acesso (VT, VO, AL). `{}` = todos (AM, GT).
+ * `null` = sem acesso (VT, VO, AL). `{}` = todos (AM). O GT vê todos menos
+ * os de tipo AM (revisão 3 do spec).
  */
 export function whereUsuariosVisiveis(
   editor: UsuarioComEscopo,
 ): Prisma.UsuarioWhereInput | null {
   switch (editor.tipo) {
     case "AM":
-    case "GT":
       return {};
+    case "GT":
+      return { tipo: { not: "AM" } };
     case "GO": {
       // Para um GO, `resolverEscopoOfertante` é sempre o próprio CNPJ
       // (AD-043), nunca null: o tipo `string | null` vale para os 6 perfis.
@@ -174,11 +176,11 @@ const SEM_PERMISSAO = "Você não tem permissão para editar este usuário";
  * request (AD-033). Fecha o GU-21 por inteiro: o escopo vem de
  * `buscarUsuarioVisivel`, a matriz e a auto-edição de `podeEditarUsuario`.
  *
- * Alvo inexistente (GU-28/GU-43): AM e GT veem todos os usuários, então
- * "não achei" só pode ser "não existe" e sai 404. Para o GO, "não achei"
- * também cobre "existe, mas é de outro Ofertante"; responder 404 só quando
- * não existe revelaria a existência de quem está fora do escopo, por isso
- * sai o mesmo 403 (mesmo princípio de REQ-OV-05).
+ * Alvo inexistente (GU-28/GU-43): só o AM vê todos os usuários, então só
+ * para ele "não achei" quer dizer "não existe" e sai 404. Para o GT ("não
+ * achei" também cobre "é um AM") e para o GO ("é de outro Ofertante"),
+ * responder 404 só quando não existe revelaria quem está fora do escopo,
+ * por isso sai o mesmo 403 (mesmo princípio de REQ-OV-05).
  */
 export async function exigirAlvoEditavel(
   editor: UsuarioComEscopo,
@@ -187,7 +189,7 @@ export async function exigirAlvoEditavel(
   const alvo = await buscarUsuarioVisivel(editor, documento);
 
   if (alvo === null) {
-    if (editor.tipo === "AM" || editor.tipo === "GT") {
+    if (editor.tipo === "AM") {
       throw erroHttp(404, "Usuário não encontrado");
     }
 

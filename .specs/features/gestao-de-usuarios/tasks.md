@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/gestao-de-usuarios/design.md`
-**Status**: In Progress (revisão 3)
+**Status**: Done (revisão 3)
 
 ---
 
@@ -477,10 +477,10 @@ T14 → T15
 
 **Done when**:
 
-- [ ] `consulta.integration.test.ts`: o GT, buscando `GU-T`, recebe todos os fixtures exceto o AM (afirmar a ausência do AM, não só a contagem); o AM continua vendo o AM; GT diante de um AM existente → 403; GT diante de documento inexistente → 403 (era 404); AM diante de documento inexistente → 404
-- [ ] `paginacao.test.ts`: `tiposVisiveis("GT")` = `["GT", "VT", "GO", "VO", "AL"]`; AM segue com os 6
-- [ ] `e2e/usuarios-page.spec.ts`: o GT não vê a linha do AM fixture e vê "Editar" na linha de um AL do escopo; ajustar só os testes existentes que quebrarem
-- [ ] Gate Full passa com `npx playwright test e2e/usuarios-page.spec.ts e2e/usuarios-gestao.spec.ts`; depois, gate **Full-feature** completo (inclui lint e build, que não rodaram depois de `6af41ff`)
+- [x] `consulta.integration.test.ts`: o GT, buscando `GU-T`, recebe todos os fixtures exceto o AM (afirmar a ausência do AM, não só a contagem); o AM continua vendo o AM; GT diante de um AM existente → 403; GT diante de documento inexistente → 403 (era 404); AM diante de documento inexistente → 404
+- [x] `paginacao.test.ts`: `tiposVisiveis("GT")` = `["GT", "VT", "GO", "VO", "AL"]`; AM segue com os 6
+- [x] `e2e/usuarios-page.spec.ts`: o GT não vê a linha do AM fixture e vê "Editar" na linha de um AL do escopo; ajustar só os testes existentes que quebrarem
+- [x] Gate Full passa com `npx playwright test e2e/usuarios-page.spec.ts e2e/usuarios-gestao.spec.ts`; depois, gate **Full-feature** completo (inclui lint e build, que não rodaram depois de `6af41ff`)
 
 **Tests**: integration
 **Gate**: full

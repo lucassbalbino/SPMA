@@ -647,6 +647,7 @@ const CPF_AM_EDICAO = gerarCpfLista(302);
 const CPF_VT_OCUPADO = gerarCpfLista(303);
 const CNPJ_GO_EDICAO = geradorDeCnpj("54")(2);
 const CPF_VT_SEM_NOME = gerarCpfLista(304);
+const CPF_AL_EDICAO = gerarCpfLista(305);
 
 const DOCUMENTOS_EDICAO = [
   CPF_GT_EDICAO,
@@ -655,6 +656,7 @@ const DOCUMENTOS_EDICAO = [
   CPF_VT_OCUPADO,
   CNPJ_GO_EDICAO,
   CPF_VT_SEM_NOME,
+  CPF_AL_EDICAO,
 ];
 
 test.describe("edição na linha da Gestão de usuários", () => {
@@ -681,6 +683,7 @@ test.describe("edição na linha da Gestão de usuários", () => {
     upsertUsuario({ cpf: CPF_VT_OCUPADO, tipo: "VT", nome: "GU-E2E Edicao Ocupado" });
     upsertUsuario({ cpf: CNPJ_GO_EDICAO, tipo: "GO", nome: "GU-E2E Edicao GO" });
     upsertUsuario({ cpf: CPF_VT_SEM_NOME, tipo: "VT", nome: null });
+    upsertUsuario({ cpf: CPF_AL_EDICAO, tipo: "AL", nome: "GU-E2E Edicao AL" });
   });
 
   test.afterAll(() => {
@@ -699,14 +702,16 @@ test.describe("edição na linha da Gestão de usuários", () => {
   const linhaDe = (page: Page, documento: string) =>
     linhas(page).filter({ hasText: documento });
 
-  test("GU-22: GT vê Editar na linha de um VT, e não na de um AM nem na própria", async ({
+  test("GU-04/GU-22: GT vê Editar no VT e no AL, não vê a linha do AM e não edita a própria", async ({
     page,
   }) => {
     await abrirListaDoGT(page);
 
     const editar = { name: "Editar" };
     await expect(linhaDe(page, CPF_VT_EDICAO).getByRole("button", editar)).toHaveCount(1);
-    await expect(linhaDe(page, CPF_AM_EDICAO).getByRole("button", editar)).toHaveCount(0);
+    // AL: fora da matriz de criação do GT, dentro da de edição (revisão 3).
+    await expect(linhaDe(page, CPF_AL_EDICAO).getByRole("button", editar)).toHaveCount(1);
+    await expect(linhaDe(page, CPF_AM_EDICAO)).toHaveCount(0);
     await expect(linhaDe(page, CPF_GT_EDICAO).getByRole("button", editar)).toHaveCount(0);
   });
 

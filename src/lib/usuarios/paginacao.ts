@@ -18,15 +18,16 @@ export function totalPaginas(total: number): number {
 }
 
 /**
- * Tipos com chip próprio acima da lista (GU-09): AM e GT enxergam os seis,
- * o GO só os que entram no escopo dele (VO e AL, GU-05), e VT/VO/AL não têm
+ * Tipos com chip próprio acima da lista (GU-09): o AM enxerga os seis, o GT
+ * todos menos o AM (revisão 3), o GO só os que entram no escopo dele (VO e AL, GU-05), e VT/VO/AL não têm
  * lista (GU-06).
  */
 export function tiposVisiveis(tipo: TipoUsuario): TipoUsuario[] {
   switch (tipo) {
     case "AM":
-    case "GT":
       return Object.values(TipoUsuario);
+    case "GT":
+      return Object.values(TipoUsuario).filter((tipo) => tipo !== TipoUsuario.AM);
     case "GO":
       return [TipoUsuario.VO, TipoUsuario.AL];
     case "VT":

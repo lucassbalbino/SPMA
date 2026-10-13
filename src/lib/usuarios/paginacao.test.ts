@@ -21,8 +21,12 @@ describe("totalPaginas", () => {
 
 describe("tiposVisiveis", () => {
   // GU-09: valores escritos à mão, na ordem do enum.
-  it.each(["AM", "GT"] as const)("%s vê os seis tipos", (tipo) => {
-    expect(tiposVisiveis(tipo)).toEqual(["AM", "GT", "VT", "GO", "VO", "AL"]);
+  it("AM vê os seis tipos", () => {
+    expect(tiposVisiveis("AM")).toEqual(["AM", "GT", "VT", "GO", "VO", "AL"]);
+  });
+
+  it("GT vê todos os tipos menos o AM (revisão 3)", () => {
+    expect(tiposVisiveis("GT")).toEqual(["GT", "VT", "GO", "VO", "AL"]);
   });
 
   it("GO vê só Visualizador Ofertante e Aluno", () => {
