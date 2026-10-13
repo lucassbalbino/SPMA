@@ -70,10 +70,11 @@ describe("edicaoUsuarioSchema", () => {
     );
   });
 
-  it("rejeita nome com 256 caracteres (GU-26)", () => {
-    expect(
-      edicaoUsuarioSchema.safeParse({ documentoAtual, nome: "a".repeat(256) }).success,
-    ).toBe(false);
+  it("rejeita nome com 256 caracteres com 'Nome deve ter no máximo 255 caracteres' (GU-26)", () => {
+    const resultado = edicaoUsuarioSchema.safeParse({ documentoAtual, nome: "a".repeat(256) });
+
+    expect(resultado.success).toBe(false);
+    expect(primeiraIssue(resultado).message).toBe("Nome deve ter no máximo 255 caracteres");
   });
 
   it("rejeita e-mail em formato inválido (GU-26)", () => {

@@ -125,7 +125,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 3. **GU-23** - WHEN o usuário clica "Editar" THEN o sistema SHALL abrir, dentro da própria linha, um formulário com nome, e-mail e documento preenchidos com os valores atuais, os botões "Salvar" e "Cancelar", e o botão "Resetar senha".
 4. **GU-24** - WHEN um editor autorizado envia `PATCH /api/usuarios` com `{ documentoAtual, nome, email }` válidos THEN o sistema SHALL gravar nome e e-mail do usuário `documentoAtual` e responder 200 com `{ usuario: { documento, nome, email, tipo } }`.
 5. **GU-25** - WHEN o editor envia `email` vazio THEN o sistema SHALL gravar `email` como `null`.
-6. **GU-26** - IF o editor envia `nome` vazio, só com espaços ou com mais de 255 caracteres, ou `email` em formato inválido THEN o sistema SHALL responder 400 com a mensagem de validação e não alterar o usuário.
+6. **GU-26** - IF o editor envia `nome` vazio ou só com espaços (`{ "erro": "Nome é obrigatório" }`), `nome` com mais de 255 caracteres (`{ "erro": "Nome deve ter no máximo 255 caracteres" }`) ou `email` em formato inválido (`{ "erro": "Email inválido" }`) THEN o sistema SHALL responder 400 com essa mensagem e não alterar o usuário.
 7. **GU-27** - IF o alvo existe mas não é editável pelo editor (GU-21) THEN `PATCH /api/usuarios` SHALL responder 403 com `{ "erro": "Você não tem permissão para editar este usuário" }` e não alterar o usuário.
 8. **GU-28** - IF `documentoAtual` não corresponde a nenhum usuário THEN `PATCH /api/usuarios` SHALL responder 404 `{ "erro": "Usuário não encontrado" }` quando o editor é AM ou GT, e 403 com a mensagem de GU-27 quando o editor é GO.
 9. **GU-29** - The system SHALL exigir sessão válida e o token CSRF em `PATCH /api/usuarios` (`exigirMutacao`).
@@ -145,8 +145,8 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 **Acceptance Criteria**:
 
 1. **GU-32** - WHEN um editor autorizado envia `PATCH /api/usuarios` com `documentoNovo` válido e livre THEN o sistema SHALL trocar o documento do usuário e responder 200 com o documento novo.
-2. **GU-33** - WHEN o documento é trocado THEN o sistema SHALL fazer toda referência ao documento antigo apontar para o novo, na mesma operação atômica: sessões, avaliações do Aluno (e suas respostas), dados pessoais do Aluno, pré-cursos (ofertante e autor), pós-cursos (autor), verbas, VOs vinculados (`cdOfertante`) e usuários criados por ele (`criadoPor`).
-3. **GU-34** - WHEN o documento é trocado THEN o sistema SHALL encerrar todas as sessões do usuário alvo.
+2. **GU-33** - WHEN o documento é trocado THEN o sistema SHALL fazer toda referência ao documento antigo apontar para o novo, na mesma operação atômica: avaliações do Aluno (e suas respostas), dados pessoais do Aluno, pré-cursos (ofertante e autor), pós-cursos (autor), verbas, VOs vinculados (`cdOfertante`) e usuários criados por ele (`criadoPor`). As sessões não migram para o documento novo: o destino delas é o de GU-34.
+3. **GU-34** - WHEN o documento é trocado THEN o sistema SHALL encerrar todas as sessões do usuário alvo, na mesma operação atômica, e nenhuma sessão SHALL restar nem com o documento antigo nem com o novo.
 4. **GU-35** - WHEN o documento é trocado THEN o sistema SHALL preservar `senhaHash`, `primeiraVez`, `tipo`, `criadoPor`, `dataCriacao` e os dados organizacionais/pessoais do usuário.
 5. **GU-36** - IF o documento novo já pertence a outro usuário THEN o sistema SHALL responder 409 com `{ "erro": "Documento já cadastrado" }` e não alterar nada, inclusive quando a colisão só aparece na gravação (corrida entre dois pedidos).
 6. **GU-37** - IF o alvo é GO e `documentoNovo` não é um CNPJ válido (`validarCNPJ`) THEN o sistema SHALL responder 400 `{ "erro": "CNPJ inválido" }` e não alterar nada.
