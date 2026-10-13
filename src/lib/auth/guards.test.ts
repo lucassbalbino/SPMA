@@ -12,6 +12,7 @@ import {
   podeGerenciarPosCurso,
   podeGerenciarPreCurso,
   podeGerenciarVerba,
+  podeLerVerba,
   podeMatricularAluno,
   requireDadosOrganizacionaisCompletos,
   requireDadosPessoaisCompletos,
@@ -301,6 +302,34 @@ describe("podeEditarOfertante", () => {
     expect(
       podeEditarOfertante({ tipo: "AL", documento: "11144477735", cdOfertante: null }, "1"),
     ).toBe(false);
+  });
+});
+
+// GV-17/GV-34 (AD-046): leitura de verba. Separada de `podeAcessarOfertante`,
+// que continua dando ao VT a leitura de cursos.
+describe("podeLerVerba", () => {
+  it("AM lê verbas", () => {
+    expect(podeLerVerba("AM")).toBe(true);
+  });
+
+  it("GT lê verbas", () => {
+    expect(podeLerVerba("GT")).toBe(true);
+  });
+
+  it("GO lê verbas (as do próprio escopo)", () => {
+    expect(podeLerVerba("GO")).toBe(true);
+  });
+
+  it("VO lê verbas (as do GO ao qual está vinculado)", () => {
+    expect(podeLerVerba("VO")).toBe(true);
+  });
+
+  it("VT não lê verbas", () => {
+    expect(podeLerVerba("VT")).toBe(false);
+  });
+
+  it("AL não lê verbas", () => {
+    expect(podeLerVerba("AL")).toBe(false);
   });
 });
 

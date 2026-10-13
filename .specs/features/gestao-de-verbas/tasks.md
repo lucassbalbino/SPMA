@@ -112,13 +112,15 @@ T11
 
 **Done when**:
 
-- [ ] `guards.test.ts`: um caso por tipo (6), cada um afirmando o booleano exato
-- [ ] Gate Quick passa
+- [x] `guards.test.ts`: um caso por tipo (6), cada um afirmando o booleano exato
+- [x] Gate Quick passa
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(auth): guarda de leitura de verba sem o VT`
+
+**Status**: ✅ Done — 798 unit (+6) / typecheck limpo. As rotas passam a usar a guarda na T4.
 
 ---
 

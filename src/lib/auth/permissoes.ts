@@ -112,6 +112,19 @@ export function podeGerenciarVerba(tipo: TipoUsuario): boolean {
 }
 
 /**
+ * Guarda de LEITURA de Verba (GV-17/GV-34, AD-046). AM/GT leem todas; GO/VO
+ * leem as do próprio escopo (quem decide o escopo é `escopoDeLeitura`, não
+ * esta função). VT e AL não leem verba nenhuma.
+ *
+ * Deliberadamente separada de `podeAcessarOfertante`: aquela devolve `true`
+ * para o VT porque também guarda a leitura de cursos, onde o alcance nacional
+ * dele (AD-012) continua valendo.
+ */
+export function podeLerVerba(tipo: TipoUsuario): boolean {
+  return tipo === "AM" || tipo === "GT" || tipo === "GO" || tipo === "VO";
+}
+
+/**
  * Guarda de ESCRITA sobre PreCurso (REQ-PC-15). A seção 4 do documento fonte
  * atribui o preenchimento do pré-curso ao Gestor Ofertante vinculado; AD-040
  * abriu exceção administrativa para o AM (autoridade nacional, AD-012),

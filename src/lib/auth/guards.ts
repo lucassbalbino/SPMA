@@ -27,6 +27,7 @@ export {
   podeGerenciarPosCurso,
   podeGerenciarPreCurso,
   podeGerenciarVerba,
+  podeLerVerba,
   podeMatricularAluno,
   resolverEscopoOfertante,
   type UsuarioComEscopo,
