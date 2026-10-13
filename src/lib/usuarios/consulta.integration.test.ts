@@ -8,7 +8,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db/prisma";
 import type { UsuarioComEscopo } from "@/lib/auth/permissoes";
 import { geradorDeCnpj } from "../../../e2e/helpers/cnpj";
-import { consultarUsuarios, whereUsuariosVisiveis } from "./consulta";
+import { ErroHttp } from "@/lib/api/erro-http";
+import { consultarUsuarios, exigirAlvoEditavel, whereUsuariosVisiveis } from "./consulta";
 
 // Prefixo "48": espaço de numeração deste arquivo (ver `e2e/helpers/cnpj.ts`).
 const cnpj = geradorDeCnpj("48");
@@ -34,11 +35,15 @@ const AL_A = cpf(3);
 const AL_B = cpf(4);
 const AL_SEM = cpf(5);
 const GT = cpf(6);
+const AM = cpf(7);
+// Nunca criado: o alvo inexistente de GU-28.
+const INEXISTENTE = cpf(8);
 
-const DOCUMENTOS = [GO_A, GO_B, VO_A, VO_B, AL_A, AL_B, AL_SEM, GT];
+const DOCUMENTOS = [GO_A, GO_B, VO_A, VO_B, AL_A, AL_B, AL_SEM, GT, AM];
 
 const editorGoA: UsuarioComEscopo = { tipo: "GO", documento: GO_A, cdOfertante: null };
 const editorGt: UsuarioComEscopo = { tipo: "GT", documento: GT, cdOfertante: null };
+const editorAm: UsuarioComEscopo = { tipo: "AM", documento: AM, cdOfertante: null };
 
 /** Apaga filhos antes dos pais, e VOs antes do GO a que se vinculam. */
 async function limpar(documentos: string[]) {
@@ -63,6 +68,20 @@ async function matricular(cpfAluno: string, cnpjGo: string) {
   await prisma.avaliacaoAluno.create({ data: { cpf: cpfAluno, cdCurso: curso.cdCurso } });
 }
 
+/** A recusa precisa ser um `ErroHttp` com o status E a mensagem do spec. */
+async function esperarRecusa(promessa: Promise<unknown>, status: number, erro: string) {
+  const recusa = await promessa.then(
+    () => null,
+    (e: unknown) => e,
+  );
+
+  expect(recusa).toBeInstanceOf(ErroHttp);
+  expect((recusa as ErroHttp).status).toBe(status);
+  expect((recusa as ErroHttp).corpo).toEqual({ erro });
+}
+
+const SEM_PERMISSAO = "Você não tem permissão para editar este usuário";
+
 function documentosDe(pagina: { usuarios: { documento: string }[] }): string[] {
   return pagina.usuarios.map((u) => u.documento);
 }
@@ -76,6 +95,7 @@ describe("consulta de usuários (integration)", () => {
         { documento: GO_A, nome: "GU-T GO A", tipo: "GO" },
         { documento: GO_B, nome: "GU-T GO B", tipo: "GO" },
         { documento: GT, nome: "GU-T GT", tipo: "GT" },
+        { documento: AM, nome: "GU-T AM", tipo: "AM" },
         { documento: AL_A, nome: "GU-T AL A", tipo: "AL" },
         { documento: AL_B, nome: "GU-T AL B", tipo: "AL" },
         { documento: AL_SEM, nome: "GU-T AL SEM MATRICULA", tipo: "AL" },
@@ -145,6 +165,50 @@ describe("consulta de usuários (integration)", () => {
     expect(doGt.usuarios).toEqual([
       { documento: GT, nome: "GU-T GT", email: null, tipo: "GT", editavel: false },
     ]);
+  });
+
+  describe("exigirAlvoEditavel (GU-21/27/28/43)", () => {
+    it("o GO recebe o VO vinculado a ele", async () => {
+      await expect(exigirAlvoEditavel(editorGoA, VO_A)).resolves.toEqual({
+        documento: VO_A,
+        nome: "GU-T VO A",
+        email: null,
+        tipo: "VO",
+      });
+    });
+
+    it("GU-27: o VO de outro GO dá 403", async () => {
+      await esperarRecusa(exigirAlvoEditavel(editorGoA, VO_B), 403, SEM_PERMISSAO);
+    });
+
+    it("GU-28: para o GO, um documento inexistente dá 403, não 404", async () => {
+      await esperarRecusa(exigirAlvoEditavel(editorGoA, INEXISTENTE), 403, SEM_PERMISSAO);
+    });
+
+    it("GU-27: o GT diante de um AM existente (fora da matriz) dá 403", async () => {
+      await esperarRecusa(exigirAlvoEditavel(editorGt, AM), 403, SEM_PERMISSAO);
+    });
+
+    it("GU-28: para o GT, um documento inexistente dá 404", async () => {
+      await esperarRecusa(
+        exigirAlvoEditavel(editorGt, INEXISTENTE),
+        404,
+        "Usuário não encontrado",
+      );
+    });
+
+    it("GU-21: o GT diante de si mesmo dá 403", async () => {
+      await esperarRecusa(exigirAlvoEditavel(editorGt, GT), 403, SEM_PERMISSAO);
+    });
+
+    it("o AM recebe o GT", async () => {
+      await expect(exigirAlvoEditavel(editorAm, GT)).resolves.toEqual({
+        documento: GT,
+        nome: "GU-T GT",
+        email: null,
+        tipo: "GT",
+      });
+    });
   });
 
   describe("paginação (GU-13/16/18)", () => {

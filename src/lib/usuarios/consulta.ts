@@ -8,6 +8,7 @@
 import { Prisma } from "../../generated/prisma/client";
 import type { TipoUsuario } from "../../generated/prisma/enums";
 import { prisma } from "../db/prisma";
+import { erroHttp } from "../api/erro-http";
 import {
   podeEditarUsuario,
   resolverEscopoOfertante,
@@ -135,4 +136,59 @@ export async function consultarUsuarios(
     pagina: filtro.pagina,
     totalPaginas: totalPaginas(total),
   };
+}
+
+/**
+ * O alvo de uma mutação, se ele estiver no escopo do editor; `null` tanto
+ * para "não existe" quanto para "fora do escopo". Mesmo `where` da lista, então
+ * só se edita quem se vê.
+ */
+export async function buscarUsuarioVisivel(
+  editor: UsuarioComEscopo,
+  documento: string,
+): Promise<UsuarioListado | null> {
+  const escopo = whereUsuariosVisiveis(editor);
+
+  if (escopo === null) {
+    return null;
+  }
+
+  return prisma.usuario.findFirst({
+    where: { AND: [{ documento }, escopo] },
+    select: COLUNAS_LISTADAS,
+  });
+}
+
+const SEM_PERMISSAO = "Você não tem permissão para editar este usuário";
+
+/**
+ * Guarda de alvo das duas mutações (PATCH e reset), reavaliada a cada
+ * request (AD-033). Fecha o GU-21 por inteiro: o escopo vem de
+ * `buscarUsuarioVisivel`, a matriz e a auto-edição de `podeEditarUsuario`.
+ *
+ * Alvo inexistente (GU-28/GU-43): AM e GT veem todos os usuários, então
+ * "não achei" só pode ser "não existe" e sai 404. Para o GO, "não achei"
+ * também cobre "existe, mas é de outro Ofertante"; responder 404 só quando
+ * não existe revelaria a existência de quem está fora do escopo, por isso
+ * sai o mesmo 403 (mesmo princípio de REQ-OV-05).
+ */
+export async function exigirAlvoEditavel(
+  editor: UsuarioComEscopo,
+  documento: string,
+): Promise<UsuarioListado> {
+  const alvo = await buscarUsuarioVisivel(editor, documento);
+
+  if (alvo === null) {
+    if (editor.tipo === "AM" || editor.tipo === "GT") {
+      throw erroHttp(404, "Usuário não encontrado");
+    }
+
+    throw erroHttp(403, SEM_PERMISSAO);
+  }
+
+  if (!podeEditarUsuario(editor, alvo)) {
+    throw erroHttp(403, SEM_PERMISSAO);
+  }
+
+  return alvo;
 }

@@ -203,11 +203,11 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Em `consulta.integration.test.ts`: GO A → VO de A devolve o alvo; VO de B lança 403 com a mensagem de GU-27; documento inexistente lança 403 (não 404)
-- [ ] GT → AM existente lança 403 (fora da matriz); inexistente lança 404 "Usuário não encontrado"; o próprio GT lança 403
-- [ ] AM → GT devolve o alvo
-- [ ] Cada asserção de erro confere status **e** mensagem
-- [ ] Gate Full passa
+- [x] Em `consulta.integration.test.ts`: GO A → VO de A devolve o alvo; VO de B lança 403 com a mensagem de GU-27; documento inexistente lança 403 (não 404)
+- [x] GT → AM existente lança 403 (fora da matriz); inexistente lança 404 "Usuário não encontrado"; o próprio GT lança 403
+- [x] AM → GT devolve o alvo
+- [x] Cada asserção de erro confere status **e** mensagem
+- [x] Gate Full passa
 
 **Tests**: integration
 **Gate**: full
