@@ -1,16 +1,114 @@
 # Gestão de Usuários Validation
 
 **Date**: 2026-10-13
-**Spec**: `.specs/features/gestao-de-usuarios/spec.md` (revisado em `b40f258`: GU-26, GU-33, GU-34 e o edge case "esvaziar a última linha")
-**Diff range**: `3c46d53..b40f258` (código `280284a`..`b40f258`, 19 commits)
+**Spec**: `.specs/features/gestao-de-usuarios/spec.md` (revisão 3: GU-04, GU-09, GU-21, GU-28 e as linhas "Quem vê quem", "Quem edita quem" e "Alvo inexistente" das Assumptions)
+**Diff range**: feature `3c46d53..5e3fb76`; delta verificado nesta iteração: `aa15787..5e3fb76` (`d2cf941` T14, `5e3fb76` T15)
 **Verifier**: independent sub-agent (author ≠ verifier)
-**Iteração**: 2 de 3 (a iteração 1, FAIL, está no histórico abaixo)
+**Iteração**: 3 (revisão 3 do spec, depois do PASS da iteração 2). As iterações 2 (PASS) e 1 (FAIL) estão no histórico abaixo
 
-**Result**: PASS ✅. Todos os 49 ACs e os 6 edge cases têm evidência, nenhum spec-precision gap ficou aberto, o sensor matou 13/13 e os gates estão verdes.
+**Result**: PASS ✅. Os 4 GU alterados batem com o spec revisado. Nenhum teste ou AC ainda pressupõe a regra antiga do GT. Os 6 mutantes do delta morreram e os gates estão verdes.
 
 ---
 
-## Iteração 2 (HEAD `b40f258`)
+## Iteração 3 (revisão 3, HEAD `5e3fb76`)
+
+### Delta
+
+Produção (`git diff aa15787..5e3fb76`):
+
+- `src/lib/usuarios/consulta.ts:63`: o GT passa de `{}` para `{ tipo: { not: "AM" } }`.
+- `src/lib/usuarios/consulta.ts:192`: só o AM recebe 404 para um alvo inexistente.
+- `src/lib/usuarios/paginacao.ts:30`: os chips do GT são os 6 tipos menos o AM.
+- `src/lib/auth/permissoes.ts:225-230`: a auto-edição é recusada primeiro, e então o GT edita todo tipo `!== "AM"`. AM e GO seguem `podeCriar`.
+
+Testes: `guards.test.ts`, `paginacao.test.ts`, `consulta.integration.test.ts`, `e2e/usuarios-page.spec.ts`. Docs: `spec.md` e `tasks.md` (T14, T15).
+
+### Spec-anchored check dos 4 GU alterados
+
+Abreviações: `G` = `src/lib/auth/guards.test.ts`, `P` = `src/lib/usuarios/paginacao.test.ts`, `CI` = `src/lib/usuarios/consulta.integration.test.ts`, `EU` = `e2e/usuarios-page.spec.ts`. Linhas de `5e3fb76`.
+
+| AC | Spec-defined outcome (revisão 3) | `file:line` + asserção | Result |
+| -- | -------------------------------- | ---------------------- | ------ |
+| GU-04 | AM: todos, de todos os tipos. GT: todos cujo tipo não é AM | AM: `CI:129-134` `toEqual([...DOCUMENTOS].sort())` + `total toBe(DOCUMENTOS.length)` (os 6 tipos nos fixtures). GT: `CI:136-143` `not.toContain(AM)`, `toEqual([...semAm].sort())`, `total toBe(semAm.length)`. Na tela: `EU:714` `expect(linhaDe(page, CPF_AM_EDICAO)).toHaveCount(0)` | ✅ PASS |
+| GU-09 | Chips: os 6 para o AM, todos menos "Administrador Master" para o GT, só VO e AL para o GO | `P:24-26` AM `toEqual(["AM","GT","VT","GO","VO","AL"])`; `P:28-29` GT `toEqual(["GT","VT","GO","VO","AL"])`; GO inalterado (`P` "GO vê só…"; na tela `EU:401` da iteração 1). A página passa `tiposVisiveis(usuario.tipo)` aos chips (`page.tsx`), como antes | ✅ PASS |
+| GU-21 | Editável ⇔ no escopo ∧ não é o próprio ∧ (`podeCriar`, quando o editor não é GT) | Matriz 6×6 escrita à mão, `G:610-616`, com a linha GT `{ AM: false, GT: true, VT: true, GO: true, VO: true, AL: true }` (`G:612`), conferida por `G:623-629` `toBe(esperado)`. Auto-edição: AM `G:632-639` e GT `G:641-648` `toBe(false)`. Escopo e guarda: `CI:227-232`, o GT recebe um AL (`resolves.toMatchObject({ tipo: "AL" })`); `CI:234-236`, o GT diante de si mesmo dá 403. Na tela: `EU:711` (VT) e `EU:713` (AL) `toHaveCount(1)` para "Editar"; `EU:715`, a linha do próprio GT `toHaveCount(0)` | ✅ PASS |
+| GU-28 | Inexistente: 404 `{"erro":"Usuário não encontrado"}` só para o AM; 403 com a mensagem de GU-27 para GT e GO | AM: `CI:219-225` `404`, `"Usuário não encontrado"`. GT: `CI:215-217` `403`, `SEM_PERMISSAO`, com AM existente → mesmo 403 em `CI:211-213`, então o GT não distingue um AM de um inexistente. GO: `CI:207-209` `403`. `esperarRecusa` confere status **e** corpo (`CI:74-83`) | ✅ PASS |
+| GU-43 (por referência) | Reset responde como GU-27/28 | Mesma `exigirAlvoEditavel` (`src/app/api/usuarios/resetar-senha/route.ts`); a regra nova do GT está coberta por `CI:211-217`. `e2e/usuarios-gestao.spec.ts` "GU-43: GT resetando um AM recebe 403" continua correto (agora por escopo, antes por matriz) | ✅ PASS |
+
+### Algum teste ou AC ainda pressupõe a regra antiga?
+
+Busquei `404`, `editavel: false`, `AM e GT` e `AM/GT` em `src/lib/usuarios/*.test.ts`, `src/lib/auth/guards.test.ts`, `e2e/usuarios-gestao.spec.ts` e `e2e/usuarios-page.spec.ts`:
+
+- **Testes**: nenhum pressupõe a regra antiga.
+  - O único `404` restante é o do AM (`CI:219-222`).
+  - O único `editavel: false` é a linha do próprio GT (`CI:189`), que continua correto.
+  - O teste de UI que exigia "sem Editar" na linha do AM foi trocado por "linha do AM ausente" (`EU:714`).
+  - `abrirListaDoGT` segue com `toHaveCount(5)` (`EU:698`): o AM saiu da lista e o AL entrou.
+  - `G:215`/`G:558` ("AM/GT/VT") tratam de outra regra (`escopoDeLeitura`, avaliações), fora desta feature.
+- **ACs do spec**: GU-04, GU-09, GU-21 e GU-28 foram reescritos, e GU-27/GU-43 continuam consistentes por referência. Restam "AM/GT" em `spec.md:49` (e-mail do GO pela rota `/organizacao`, outra rota) e `spec.md:50` ("visível só a AM/GT", a própria linha, ainda verdadeiro), sem conflito.
+- **Não bloqueante, deriva de documentação**: `design.md` ainda descreve a regra anterior em `:95` (`AM/GT → {}`), `:103` (`podeEditarUsuario = podeCriar && …`), `:112` (`AM/GT → os 6`), `:136` e `:180` (404 para AM/GT) e `:210`. O spec é a fonte da verdade e o código segue o spec. Recomendo atualizar o `design.md` numa tarefa de docs.
+- **Decisão em aberto no spec**: a linha "Alvo inexistente" das Assumptions está com `Confirmed? = n` (`spec.md:51`). O código e os testes seguem o texto do spec (403 para o GT). Falta só a confirmação do usuário.
+
+### Discrimination Sensor (delta)
+
+Scratch: `git worktree` de `5e3fb76` em `<scratchpad>/wt` (fora do repo), com `src/generated` copiado e `node_modules` por junction (removida, só o link, antes do `worktree remove`). Baseline do worktree: unit (`guards` + `paginacao`) 139/139, `consulta.integration` 23/23.
+
+| # | File:line | Description | Teste que mata | Killed? |
+| - | --------- | ----------- | -------------- | ------- |
+| R1 | `src/lib/usuarios/consulta.ts:63` | O GT volta a ver o AM (`return {}`) | `CI:136` "GU-04: o GT vê todos os usuários, menos os de tipo AM" | ✅ Killed |
+| R2 | `src/lib/usuarios/paginacao.ts:30` | `tiposVisiveis(GT)` volta a incluir o AM | `P:28` "GT vê todos os tipos menos o AM" | ✅ Killed |
+| R3 | `src/lib/usuarios/consulta.ts:192` | O GT volta a receber 404 para alvo ausente | `CI:211` (GT diante de AM existente) e `CI:215` (GT diante de inexistente) | ✅ Killed |
+| R4 | `src/lib/auth/permissoes.ts:230` | `podeEditarUsuario` do GT libera o AM (`return true`) | `G:623` "GT editando AM (outro documento) → false" | ✅ Killed |
+| R5 | `src/lib/auth/permissoes.ts:225-227` | Sem a recusa da própria conta | `G:632` (AM) e `G:641` (GT) "não edita o próprio documento" | ✅ Killed |
+| R6 | `src/lib/auth/permissoes.ts:230` | O GT volta à matriz de criação (`podeCriar`) | `G:623` "GT editando VO → true" e "GT editando AL → true" | ✅ Killed |
+
+R4 só é morto pelo teste unitário: na integração, o AM nunca chega a `podeEditarUsuario` do GT, porque o escopo (`R1`) o barra antes. A redundância está documentada no JSDoc (`permissoes.ts`) e as duas camadas são discriminadas.
+
+Os 13 mutantes das iterações 1 e 2 cobrem código que o delta não tocou, ou que tocou sem mudar o comportamento verificado:
+
+- M1 (auto-edição): a regra continua e foi reverificada como R5.
+- M6 (404 do GO): continua morto por `CI:207`, que segue no gate.
+- M11 (escopo em `buscarUsuarioVisivel`): inalterado.
+
+**Sensor depth**: P0 (autorização)
+**Resultado do sensor (iteração 3)**: 6/6 killed no delta — PASS ✅
+
+**Isolamento**: o `git status --porcelain` da árvore real estava vazio antes e depois do sensor (idêntico); `git worktree list` mostra só a árvore principal.
+
+### Gate Check (iteração 3)
+
+- **Gate command** (árvore real, só leitura): `npm run typecheck && npm run test:unit && npm run test:integration`
+- **Resultado**: typecheck exit 0; unit **781 passed** (35 arquivos), integration **114 passed** (13 arquivos), 0 failed
+- **e2e**: a suíte completa não foi repetida (o orquestrador informou 275/275).
+  - `.last-run.json` estava `passed`/`[]`, mas foi gravado às 15:26:15, 15 s antes do commit `5e3fb76` (15:26:30). Isso não prova que a execução foi sobre o conteúdo commitado.
+  - Por isso rodei `npx playwright test e2e/usuarios-page.spec.ts` (porta 3000 livre antes): **20 passed** (3,7 min), exit 0, incluindo `EU:705` "GU-04/GU-22". `.last-run.json` depois: `{"status":"passed","failedTests":[]}`.
+- **Skipped**: nenhum. **Testes removidos/enfraquecidos**: nenhum. O `it.each(["AM","GT"])` de `P` virou dois testes mais específicos, e o "GU-22 sem Editar no AM" virou "linha do AM ausente", que é a regra nova.
+
+### Requirement Traceability Update (iteração 3)
+
+| Requirement | Previous Status | New Status |
+| ----------- | --------------- | ---------- |
+| GU-04, GU-09, GU-21, GU-28 (revisão 3) | ✅ Verified (regra anterior) | ✅ Verified (revisão 3) |
+| Demais GU | ✅ Verified | ✅ Verified (sem mudança) |
+
+### Summary (iteração 3)
+
+**Overall**: ✅ Ready
+
+**Spec-anchored check**: 4/4 GU alterados batem com o spec (49/49 no total) | 0 spec-precision gaps
+**Sensor**: 6/6 mutações do delta mortas
+**Gate**: typecheck ok; unit 781, integration 114, e2e (`usuarios-page.spec.ts`) 20 passed, 0 failed
+**Observações não bloqueantes**: `design.md` desatualizado sobre o GT; "Alvo inexistente" com `Confirmed? = n` no spec.
+**Lessons**: nenhuma (PASS limpo).
+
+---
+
+## Histórico: iteração 2 (HEAD `b40f258`), PASS ✅
+
+**Spec**: revisão 2 (`b40f258`: GU-26, GU-33, GU-34 e o edge case "esvaziar a última linha")
+**Diff range**: `3c46d53..b40f258` (código `280284a`..`b40f258`, 19 commits)
+
+**Resultado (iteração 2)**: PASS ✅. Todos os 49 ACs e os 6 edge cases têm evidência, nenhum spec-precision gap ficou aberto, o sensor matou 13/13 e os gates estão verdes.
 
 ### O que mudou desde a iteração 1
 

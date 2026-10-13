@@ -1,7 +1,7 @@
 # Gestão de Usuários Design
 
 **Spec**: `.specs/features/gestao-de-usuarios/spec.md`
-**Status**: Approved (revisão 2, 2026-10-13: documento fora da URL + paginação no servidor)
+**Status**: Approved (revisão 2, 2026-10-13: documento fora da URL + paginação no servidor; revisão 3, mesma data: GT sem o AM no escopo e editando todo o escopo)
 
 ---
 
@@ -92,7 +92,8 @@ graph TD
 - **Location**: `src/lib/usuarios/consulta.ts` (junto de quem o executa: a tela e as rotas importam dali)
 - **Interfaces**:
   - `whereUsuariosVisiveis(editor: UsuarioComEscopo): Prisma.UsuarioWhereInput | null`
-    - AM/GT → `{}`
+    - AM → `{}`
+    - GT → `{ tipo: { not: "AM" } }` (revisão 3: o GT não vê o AM)
     - GO → `{ OR: [ { tipo: "VO", cdOfertante: cnpj }, { tipo: "AL", avaliacoes: { some: { curso: { cdOfertante: cnpj } } } } ] }`, com `cnpj = resolverEscopoOfertante(editor)`
     - VT/VO/AL → `null` (sem acesso)
 - **Por que não `escopoDeLeitura`**: aquele dá escopo nacional ao VT e escopo por Ofertante ao VO. Aqui os dois não têm acesso, e o Aluno entra pela matrícula, não por `cdOfertante`.
@@ -100,7 +101,7 @@ graph TD
 ### `podeEditarUsuario` - matriz de edição
 
 - **Location**: `src/lib/auth/permissoes.ts` (reexportada por `guards.ts`)
-- **Interface**: `podeEditarUsuario(editor: { tipo; documento }, alvo: { tipo; documento }): boolean` = `podeCriar(editor.tipo, alvo.tipo) && alvo.documento !== editor.documento`
+- **Interface**: `podeEditarUsuario(editor: { tipo; documento }, alvo: { tipo; documento }): boolean` = nunca a própria conta; GT → `alvo.tipo !== "AM"` (revisão 3: edita todo o seu escopo); AM e GO → `podeCriar(editor.tipo, alvo.tipo)`
 - **Nota (JSDoc)**: o escopo não entra aqui. Quem chama só tem o alvo em mãos se ele saiu de uma consulta escopada (`consultarUsuarios` / `buscarUsuarioVisivel`).
 
 ### Paginação e chips (puros)
@@ -109,7 +110,7 @@ graph TD
 - **Interfaces**:
   - `TAMANHO_PAGINA = 20`
   - `totalPaginas(total: number): number` = `Math.max(1, Math.ceil(total / TAMANHO_PAGINA))`
-  - `tiposVisiveis(tipo: TipoUsuario): TipoUsuario[]`: AM/GT → os 6 (ordem do enum); GO → `[VO, AL]`; demais → `[]` (GU-09)
+  - `tiposVisiveis(tipo: TipoUsuario): TipoUsuario[]`: AM → os 6 (ordem do enum); GT → os 5 sem o AM (revisão 3); GO → `[VO, AL]`; demais → `[]` (GU-09)
 
 ### Schemas das três rotas
 
@@ -133,7 +134,7 @@ type PaginaUsuarios = { usuarios: LinhaGestao[]; total: number; pagina: number; 
   - `prisma.$transaction([count({ where }), findMany({ where, select 4 colunas, orderBy: [{ nome: "asc" }, { documento: "asc" }], skip: (pagina-1)*20, take: 20 })])`
   - `editavel = podeEditarUsuario(editor, linha)`
 - `buscarUsuarioVisivel(editor, documento): Promise<UsuarioListado | null>`: `findFirst({ where: { AND: [{ documento }, escopo] } })`.
-- `exigirAlvoEditavel(editor, documento): Promise<UsuarioListado>`: `null` → 404 "Usuário não encontrado" para AM/GT, 403 "Você não tem permissão para editar este usuário" para os demais; `!podeEditarUsuario` → 403, mesma mensagem.
+- `exigirAlvoEditavel(editor, documento): Promise<UsuarioListado>`: `null` → 404 "Usuário não encontrado" só para o AM (único que vê todos; revisão 3), 403 "Você não tem permissão para editar este usuário" para os demais; `!podeEditarUsuario` → 403, mesma mensagem.
 
 ### Serviço de escrita - `src/lib/usuarios/gestao.ts`
 
@@ -177,7 +178,7 @@ A forma é validada antes de buscar o alvo, como nas demais rotas: um 400 de for
 | Documento novo inválido para o tipo | `validarDocumentoDoTipo` → 400 | Idem |
 | VT/VO/AL consultando | 403 "Acesso negado" | Não acontece pela tela (sem lista) |
 | Alvo fora do escopo, fora da matriz ou o próprio editor | `exigirAlvoEditavel` → 403 | Não acontece pela tela (sem botão) |
-| Alvo inexistente | 404 para AM/GT, 403 para GO | Idem |
+| Alvo inexistente | 404 para o AM, 403 para GT e GO (revisão 3) | Idem |
 | Documento novo já existe | Checagem prévia → 409; `P2002` na transação → 409 | "Documento já cadastrado" na linha |
 | Falha no meio da troca | `$transaction` desfaz tudo → 500 genérico de `comTratamentoDeErro` | Nada parcialmente trocado |
 | Falha de rede na consulta | O cliente mantém a última página exibida e mostra "Não foi possível carregar os usuários" | Lista anterior continua visível |
@@ -207,7 +208,7 @@ Convenção do repositório: rotas de API são provadas por e2e, sem um `*.integ
 | --- | --- | --- |
 | Unit | `podeEditarUsuario` (matriz completa + auto-edição), `tiposVisiveis`, `totalPaginas`, os três schemas, `navegacao` | GU-01, GU-09, GU-17, GU-21, GU-25, GU-26, GU-30, GU-44, GU-47 |
 | Integração | `consultarUsuarios`: escopo GO/GT, tipo, busca por nome (maiúsculas) e documento (com pontuação), 25 → 20 + 5, desempate, página além do fim | GU-04, GU-05, GU-10, GU-11, GU-13, GU-16, GU-18 |
-| Integração | `exigirAlvoEditavel`: 403 fora do escopo, fora da matriz e auto-edição; 404 AM/GT x 403 GO para inexistente | GU-27, GU-28, GU-43 |
+| Integração | `exigirAlvoEditavel`: 403 fora do escopo, fora da matriz e auto-edição; 404 AM x 403 GT/GO para inexistente | GU-27, GU-28, GU-43 |
 | Integração | `atualizarCadastro` / `resetarSenha`: cada tabela no doc novo e zero no antigo (L-014: todo conjunto), sessões apagadas, campos preservados, 409 prévio, mesmo documento, reset completo | GU-24, GU-32–GU-39, GU-41, GU-42 |
 | e2e API (`e2e/usuarios-gestao.spec.ts`) | Ligação das três rotas: 200 do contrato, 403 sem CSRF, 403 VT na consulta, 400 de chave extra, documento só no corpo | GU-16, GU-19, GU-20, GU-29, GU-44, GU-48 |
 | e2e UI (`e2e/usuarios-page.spec.ts`, substitui `usuarios-novo-page.spec.ts`) | Redirect; criar → aparece na lista; chips; busca; "Página X de Y"; editar inline + erro na linha; reset com confirmação; sem "Editar" em linha só-leitura; URL sem query | GU-02, GU-03, GU-06–GU-08, GU-12, GU-14, GU-15, GU-22, GU-23, GU-31, GU-40, GU-45, GU-46, GU-49 |
