@@ -3,7 +3,6 @@
 // desvio cada guarda dispara, não o acesso ao banco.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  exigeOfertanteEVerba,
   podeAcessarAvaliacao,
   podeAcessarOfertante,
   podeEditarOfertante,
@@ -604,31 +603,6 @@ describe("podeAcessarAvaliacao", () => {
       ),
     ).toBe(true);
   });
-});
-
-describe("exigeOfertanteEVerba", () => {
-  it("AM criando GO informa Ofertante e verba no mesmo passo", () => {
-    expect(exigeOfertanteEVerba("AM", "GO")).toBe(true);
-  });
-
-  it("GT criando GO informa Ofertante e verba no mesmo passo", () => {
-    expect(exigeOfertanteEVerba("GT", "GO")).toBe(true);
-  });
-
-  it("GO criando GO não informa verba (herda o Ofertante e não gere verba)", () => {
-    expect(exigeOfertanteEVerba("GO", "GO")).toBe(false);
-  });
-
-  it.each(["AM", "GT"] as const)("%s criando VO não precisa de verba", (criador) => {
-    expect(exigeOfertanteEVerba(criador, "VO")).toBe(false);
-  });
-
-  it.each(["AM", "GT", "VT", "AL"] as const)(
-    "criar um %s nunca envolve verba",
-    (alvo) => {
-      expect(exigeOfertanteEVerba("AM", alvo)).toBe(false);
-    },
-  );
 });
 
 describe("podeEditarUsuario", () => {

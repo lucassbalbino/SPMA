@@ -18,7 +18,6 @@ import { obterSessao, type SessaoComUsuario } from "./session";
 import type { TipoUsuario } from "../../generated/prisma/enums";
 
 export {
-  exigeOfertanteEVerba,
   podeAcessarAvaliacao,
   podeAcessarOfertante,
   podeEditarOfertante,

@@ -5,9 +5,9 @@
 // e-mail e documento (GU-24, GU-27, GU-29, GU-30, GU-32). O alvo vai no
 // corpo (`documentoAtual`), nunca no caminho (GU-48, AD-029).
 //
-// Criar um Gestor Ofertante cria também a verba do Ofertante dele, na mesma
-// transação: AM/GT informam `cdOfertante` + `verba` no próprio payload do
-// usuário (ver `exigeOfertanteEVerba` em lib/auth/guards.ts).
+// Criar um Gestor Ofertante NÃO cria verba (GV-24, AD-046): AM/GT a vinculam
+// depois, em /verbas (`POST /api/verbas`). `usuarioSchema` rejeita `verba`
+// no payload com 400 (GV-26).
 //
 // Criar um Aluno cria também a matrícula dele (AvaliacaoAluno, AVAL-01): o
 // `cdCurso` é obrigatório e o criador precisa poder matricular naquele curso
@@ -27,12 +27,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { podeCriar, resolverOfertante } from "@/lib/auth/cascata";
-import {
-  exigeOfertanteEVerba,
-  podeGerenciarVerba,
-  podeMatricularAluno,
-  resolverEscopoOfertante,
-} from "@/lib/auth/guards";
+import { podeMatricularAluno, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { usuarioSchema } from "@/lib/validation/schemas/usuario.schema";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
 import { exigirMutacao } from "@/lib/api/guardas";
@@ -123,22 +118,6 @@ async function criarUsuario(request: Request) {
     }
   }
 
-  // REQ-OV-08: quem não gere verba não cria verba, nem de carona na criação
-  // de um usuário.
-  if (dados.verba && !podeGerenciarVerba(criador.tipo)) {
-    throw erroHttp(403, "Você não tem permissão para criar verba");
-  }
-
-  // Um GO criado por AM/GT nasce com a verba dele no mesmo passo (REQ-OV-08).
-  // A verba passa a mirar o documento do próprio GO recém-criado (dentro da
-  // transação abaixo), não mais um `cdOfertante` informado à parte - a única
-  // exigência que sobra aqui é a presença da verba em si.
-  const comVerba = exigeOfertanteEVerba(criador.tipo, dados.tipo);
-
-  if (comVerba && !dados.verba) {
-    throw erroHttp(400, "Gestor Ofertante exige um Ofertante e o valor da verba");
-  }
-
   // AVAL-01: todo Aluno nasce matriculado - o curso é obrigatório e é
   // conferido aqui, não só no formulário.
   if (dados.tipo === "AL" && !dados.cdCurso) {
@@ -168,9 +147,8 @@ async function criarUsuario(request: Request) {
     throw erroHttp(403, "Você não pode matricular alunos neste curso");
   }
 
-  // Usuário, verba e matrícula são um passo só: um erro no meio não pode deixar uma
-  // verba órfã nem um GO sem orçamento (mesmo motivo da transação do
-  // auto-cadastro em POST /api/ofertantes).
+  // Usuário e matrícula são um passo só: um erro no meio não pode deixar um
+  // Aluno sem a matrícula com que ele nasce (AVAL-01).
   //
   // Documento duplicado já foi barrado acima com 409 claro (UGO-10) - a
   // checagem prévia elimina a corrida óbvia (checa-então-cria não é atômico),
@@ -178,9 +156,8 @@ async function criarUsuario(request: Request) {
   // sob concorrência; nesse caso raro, a violação de unicidade do Prisma
   // segue sem tratamento explícito aqui e cai no 500 genérico de
   // `comTratamentoDeErro` (REQ-SEC-11), nunca no erro cru do Prisma no corpo
-  // da resposta. Dentro da transação, ela também desfaz a verba que
-  // porventura já tenha sido criada.
-  const { usuario, verba, avaliacao } = await prisma.$transaction(async (tx) => {
+  // da resposta.
+  const { usuario, avaliacao } = await prisma.$transaction(async (tx) => {
     const usuarioCriado = await tx.usuario.create({
       data: {
         documento: dados.documento,
@@ -209,22 +186,7 @@ async function criarUsuario(request: Request) {
         })
       : null;
 
-    // Fora do caso GO (único que exige verba, ver `comVerba` acima), um
-    // `cdOfertante` nulo significa que não há para onde apontar a verba -
-    // mesma rede de segurança de antes desta tarefa.
-    if (!dados.verba || (!alvoEhGO && cdOfertante === null)) {
-      return { usuario: usuarioCriado, verba: null, avaliacao: avaliacaoCriada };
-    }
-
-    const verbaCriada = await tx.verba.create({
-      data: {
-        cdOfertante: alvoEhGO ? usuarioCriado.documento : (cdOfertante as string),
-        vlVerba: dados.verba.vlVerba,
-        dtVerba: dados.verba.dtVerba,
-      },
-    });
-
-    return { usuario: usuarioCriado, verba: verbaCriada, avaliacao: avaliacaoCriada };
+    return { usuario: usuarioCriado, avaliacao: avaliacaoCriada };
   });
 
   return NextResponse.json(
@@ -238,7 +200,6 @@ async function criarUsuario(request: Request) {
         criadoPor: usuario.criadoPor,
         dataCriacao: usuario.dataCriacao,
       },
-      verba,
       avaliacao,
     },
     { status: 201 },

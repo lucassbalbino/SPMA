@@ -1,15 +1,17 @@
 import { z } from "zod";
 import { TipoUsuario } from "../../../generated/prisma/enums";
-import { camposVerbaSchema } from "./verba.schema";
 import { normalizarCPF, validarCPF } from "../cpf";
 import { normalizarCNPJ, validarCNPJ } from "../cnpj";
 import { OPCOES_UF } from "./pre-curso.schema";
 
 // Dados organizacionais na criação (AD-044, OGO-09/OGO-10): AM/GT só
-// identificam o GO (CNPJ + nome) e criam a verba; os 6 dados organizacionais
-// são declarados pelo próprio GO no 1º acesso. Por isso estes três nunca são
-// aceitos na criação, de tipo nenhum.
-const CAMPOS_NUNCA_NA_CRIACAO = ["responsavel", "telefone", "municipio"] as const;
+// identificam o GO (CNPJ + nome); os 6 dados organizacionais são declarados
+// pelo próprio GO no 1º acesso. Por isso estes três nunca são aceitos na
+// criação, de tipo nenhum.
+//
+// `verba` (GV-26, AD-046): a verba deixou de nascer junto do usuário - é
+// criada à parte, em /verbas, por AM/GT.
+const CAMPOS_NUNCA_NA_CRIACAO = ["responsavel", "telefone", "municipio", "verba"] as const;
 
 // Estes dois são do GO e também ficam fora da criação dele - mas continuam
 // aceitos para os outros tipos: `email` porque VT/VO/AL não têm onde declarar
@@ -30,14 +32,11 @@ export const usuarioSchema = z
     // (UGO-14) - não é mais um código substituto de Ofertante.
     cdOfertante: z.string().optional(),
     // Curso em que o Aluno é matriculado no mesmo passo em que é criado
-    // (AVAL-01): todo AL nasce com uma AvaliacaoAluno. Opcional aqui pelo mesmo
-    // motivo de `verba` - a rota é quem exige, sabendo o tipo criado.
+    // (AVAL-01): todo AL nasce com uma AvaliacaoAluno. Opcional aqui porque a
+    // obrigatoriedade depende do tipo criado - a rota é quem exige.
     cdCurso: z.number().int().positive({ message: "Curso é obrigatório" }).optional(),
-    // Verba criada no mesmo passo que o usuário (REQ-OV-08). Sem `cdOfertante`
-    // próprio: é sempre o do usuário sendo criado. Opcional aqui porque a
-    // obrigatoriedade depende de quem cria e do tipo criado - regra que o
-    // schema não tem como enxergar, avaliada em POST /api/usuarios.
-    verba: camposVerbaSchema.optional(),
+    // Declarado só para ser REJEITADO (CAMPOS_NUNCA_NA_CRIACAO, GV-26).
+    verba: z.unknown().optional(),
     responsavel: z.string().optional(),
     telefone: z.string().optional(),
     // Mesma lista canônica de `identifUf`/`avalPessoalEstado`, em vez de uma

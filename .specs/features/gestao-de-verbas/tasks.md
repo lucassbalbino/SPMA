@@ -195,15 +195,17 @@ T11
 
 **Done when**:
 
-- [ ] `usuario.schema.test.ts`: o bloco "verba criada junto do usuário (REQ-OV-08)" vira "verba nunca aceita na criação": payload com `verba` → falha com "verba não é aceito na criação de usuário", para GO e para VO
-- [ ] `guards.test.ts`: bloco `exigeOfertanteEVerba` removido junto com a função
-- [ ] `e2e/usuarios.spec.ts`: o teste OGO-09/UGO-07 (AM cria GO) envia só CNPJ + nome, espera 201, sem a chave `verba` no corpo, e zero verbas no banco para o CNPJ (GV-24); o teste "REQ-OV-08: AM criando GO sem verba recebe 400" dá lugar a GV-26: AM criando GO **com** `verba` → 400, e nem o GO nem verba existem no banco; os testes que ainda mandavam `verba` por arrasto (OGO-10 e o de `:412`) deixam de mandar
-- [ ] Gate Full passa com `npx playwright test e2e/usuarios.spec.ts`
+- [x] `usuario.schema.test.ts`: o bloco "verba criada junto do usuário (REQ-OV-08)" vira "verba nunca aceita na criação": payload com `verba` → falha com "verba não é aceito na criação de usuário", para GO e para VO
+- [x] `guards.test.ts`: bloco `exigeOfertanteEVerba` removido junto com a função
+- [x] `e2e/usuarios.spec.ts`: o teste OGO-09/UGO-07 (AM cria GO) envia só CNPJ + nome, espera 201, sem a chave `verba` no corpo, e zero verbas no banco para o CNPJ (GV-24); o teste "REQ-OV-08: AM criando GO sem verba recebe 400" dá lugar a GV-26: AM criando GO **com** `verba` → 400, e nem o GO nem verba existem no banco; os testes que ainda mandavam `verba` por arrasto (OGO-10 e o de `:412`) deixam de mandar
+- [x] Gate Full passa com `npx playwright test e2e/usuarios.spec.ts`
 
 **Tests**: e2e
 **Gate**: full
 
 **Commit**: `feat(usuarios)!: criar GO sem verba`
+
+**Status**: ✅ Done — 788 unit (798 − 9 casos de `exigeOfertanteEVerba`, removida junto da regra, − 4 testes do schema que aceitavam verba + 3 de GV-26) / 121 integration / e2e usuarios 19/19. Novo helper de fixture `getVerbasPorOfertante`. Entre a T5 e a T6, a criação de GO pela tela manda `verba` e recebe 400; a T6 fecha isso.
 
 ---
 

@@ -127,6 +127,11 @@ export function getVerba(cdVerba: number): VerbaPersistida | null {
   return executar<VerbaPersistida | null>("getVerba", cdVerba);
 }
 
+/** Todas as verbas de um GO, em `cdVerba` crescente (AD-046: um GO pode ter várias). */
+export function getVerbasPorOfertante(cdOfertante: string): VerbaPersistida[] {
+  return executar<VerbaPersistida[]>("getVerbasPorOfertante", cdOfertante);
+}
+
 export type PreCursoPersistido = {
   cdCurso: number;
   cdOfertante: string;

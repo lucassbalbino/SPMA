@@ -200,21 +200,6 @@ export function podeAcessarAvaliacao(
 }
 
 /**
- * Criar um Gestor Ofertante é criar, no mesmo passo, o Ofertante a que ele
- * responde e a verba desse Ofertante: quem pode gerir verba (AM/GT,
- * REQ-OV-08) informa `cdOfertante` + `verba` junto do usuário.
- *
- * Um GO criando outro GO não cai nesta regra: o escopo dele é herdado do
- * criador (REQ-AU-08) e o GO consome verba, não a cria (REQ-OV-08).
- */
-export function exigeOfertanteEVerba(
-  criadorTipo: TipoUsuario,
-  alvoTipo: TipoUsuario,
-): boolean {
-  return alvoTipo === "GO" && podeGerenciarVerba(criadorTipo);
-}
-
-/**
  * Matriz de EDIÇÃO da gestão de usuários (GU-21): quem pode criar um tipo
  * pode corrigir o cadastro e resetar a senha dele, menos a própria conta
  * (trocar o próprio documento ou resetar a própria senha derrubaria a

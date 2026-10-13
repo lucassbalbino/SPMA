@@ -185,8 +185,11 @@ describe("usuarioSchema - campos organizacionais fora do tipo GO (decisão desta
   );
 });
 
-describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
-  it("aceita payload sem verba (a obrigatoriedade depende de quem cria)", () => {
+// GV-26 (AD-046): a verba deixou de nascer junto do usuário - é criada à
+// parte, em /verbas. Mandar `verba` na criação é erro de quem chama, para
+// qualquer tipo (mesmo precedente de `CAMPOS_NUNCA_NA_CRIACAO`, AD-044).
+describe("usuarioSchema - verba nunca aceita na criação (GV-26)", () => {
+  it("aceita GO sem verba", () => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",
       documento: cnpjValido,
@@ -196,7 +199,7 @@ describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
     expect(result.success).toBe(true);
   });
 
-  it("aceita verba com valor e data", () => {
+  it("rejeita GO com verba, com a mensagem do campo", () => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",
       documento: cnpjValido,
@@ -204,36 +207,24 @@ describe("usuarioSchema - verba criada junto do usuário (REQ-OV-08)", () => {
       verba: { vlVerba: 5000, dtVerba: "2026-01-15" },
     });
 
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.verba?.vlVerba).toBe(5000);
-      expect(result.data.verba?.dtVerba).toBeInstanceOf(Date);
-    }
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+      "verba não é aceito na criação de usuário",
+    ]);
   });
 
-  it("rejeita verba com valor não-positivo", () => {
+  it("rejeita VO com verba, com a mesma mensagem", () => {
     const result = usuarioSchema.safeParse({
-      nome: "Instituto Exemplo",
-      documento: cnpjValido,
-      tipo: TipoUsuario.GO,
-      verba: { vlVerba: 0 },
+      nome: "Visualizador",
+      documento: basePayload.documento,
+      tipo: TipoUsuario.VO,
+      verba: { vlVerba: 5000 },
     });
 
     expect(result.success).toBe(false);
-  });
-
-  it("a verba não carrega cdOfertante próprio (é sempre o do usuário criado)", () => {
-    const result = usuarioSchema.safeParse({
-      nome: "Instituto Exemplo",
-      documento: cnpjValido,
-      tipo: TipoUsuario.GO,
-      verba: { vlVerba: 5000, cdOfertante: "999" },
-    });
-
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.verba).not.toHaveProperty("cdOfertante");
-    }
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+      "verba não é aceito na criação de usuário",
+    ]);
   });
 });
 

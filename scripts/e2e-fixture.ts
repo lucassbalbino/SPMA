@@ -215,6 +215,12 @@ async function executar(
     case "getVerba":
       return prisma.verba.findUnique({ where: { cdVerba: argumento as number } });
 
+    case "getVerbasPorOfertante":
+      return prisma.verba.findMany({
+        where: { cdOfertante: argumento as string },
+        orderBy: { cdVerba: "asc" },
+      });
+
     case "getPreCurso": {
       const cdCurso = argumento as number;
       const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso } });

@@ -25,7 +25,7 @@ import {
   deleteVerbasPorOfertante,
   getAvaliacao,
   getUsuario,
-  getVerba,
+  getVerbasPorOfertante,
   upsertUsuario,
 } from "./helpers/db";
 import { geradorDeCnpj } from "./helpers/cnpj";
@@ -51,7 +51,7 @@ const CNPJ_GO_ALHEIO = gerarCnpjValido(2);
 const CNPJ_NOVO_GO_FORJADO = gerarCnpjValido(3);
 const CNPJ_NOVO_GO_VALIDO = gerarCnpjValido(4);
 const CNPJ_INEXISTENTE = gerarCnpjValido(5);
-const CNPJ_NOVO_GO_SEM_VERBA = gerarCnpjValido(6);
+const CNPJ_NOVO_GO_COM_VERBA = gerarCnpjValido(6);
 const CNPJ_NOVO_GO_COM_EMAIL = gerarCnpjValido(7);
 
 const CPF_NOVO_AL = "30010020004";
@@ -77,7 +77,7 @@ const CPFS = [
   CNPJ_GO_ALHEIO,
   CNPJ_NOVO_GO_FORJADO,
   CNPJ_NOVO_GO_VALIDO,
-  CNPJ_NOVO_GO_SEM_VERBA,
+  CNPJ_NOVO_GO_COM_VERBA,
   CNPJ_NOVO_GO_COM_EMAIL,
   CPF_NOVO_AL,
   CPF_NOVO_VO,
@@ -409,7 +409,6 @@ test("UGO-10: POST com CNPJ de GO já existente devolve 409 com a mensagem espec
       documento: CNPJ_GO_ALHEIO,
       nome: "Segundo GO Com Mesmo CNPJ",
       tipo: "GO",
-      verba: { vlVerba: 1000, dtVerba: "2026-03-10" },
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
@@ -420,7 +419,7 @@ test("UGO-10: POST com CNPJ de GO já existente devolve 409 com a mensagem espec
   await cliente.dispose();
 });
 
-test("OGO-09/UGO-07: AM cria GO só com CNPJ válido + nome + verba - 201, verba atrelada ao próprio GO recém-criado, sem Ofertante separado", async () => {
+test("OGO-09/UGO-07/GV-24: AM cria GO só com CNPJ válido + nome - 201, sem Ofertante separado e sem nenhuma verba", async () => {
   const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
 
   const cliente = await novoCliente();
@@ -429,7 +428,6 @@ test("OGO-09/UGO-07: AM cria GO só com CNPJ válido + nome + verba - 201, verba
       documento: CNPJ_NOVO_GO_VALIDO,
       nome: "Novo GO Válido",
       tipo: "GO",
-      verba: { vlVerba: 12500.5, dtVerba: "2026-03-10" },
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
@@ -451,17 +449,16 @@ test("OGO-09/UGO-07: AM cria GO só com CNPJ válido + nome + verba - 201, verba
   expect(criado?.uf).toBeNull();
   expect(criado?.municipio).toBeNull();
 
-  // A verba tem de existir no banco, atrelada ao documento do PRÓPRIO GO
-  // recém-criado - não a um Ofertante autônomo (que não existe mais).
+  // GV-24 (AD-046): o GO nasce sem verba - AM/GT a vinculam depois, em
+  // /verbas. Nem a resposta nem o banco têm verba deste CNPJ.
   const corpo = await res.json();
-  const verba = getVerba(corpo.verba.cdVerba);
-  expect(verba?.cdOfertante).toBe(CNPJ_NOVO_GO_VALIDO);
-  expect(Number(verba?.vlVerba)).toBe(12500.5);
+  expect(corpo).not.toHaveProperty("verba");
+  expect(getVerbasPorOfertante(CNPJ_NOVO_GO_VALIDO)).toEqual([]);
 
   await cliente.dispose();
 });
 
-test("OGO-10: AM criando GO com email recebe 400 e nem o GO nem a verba são criados", async () => {
+test("OGO-10: AM criando GO com email recebe 400 e o GO não é criado", async () => {
   const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
 
   const cliente = await novoCliente();
@@ -471,38 +468,38 @@ test("OGO-10: AM criando GO com email recebe 400 e nem o GO nem a verba são cri
       nome: "GO Com Email",
       tipo: "GO",
       email: "contato@exemplo.dev",
-      verba: { vlVerba: 1000, dtVerba: "2026-03-10" },
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(400);
   expect((await res.json()).erro).toBe("email não é aceito na criação de Gestor Ofertante");
-  // `Verba.cdOfertante` é FK para `Usuario.documento`: sem o GO no banco,
-  // nenhuma verba pode apontar para ele - um GO ausente prova as duas metades.
   expect(getUsuario(CNPJ_NOVO_GO_COM_EMAIL)).toBeNull();
 
   await cliente.dispose();
 });
 
-test("REQ-OV-08: AM criando GO sem verba recebe 400 e nem o usuário é criado", async () => {
+// GV-26 (AD-046): substitui "REQ-OV-08: AM criando GO sem verba recebe 400",
+// que codificava a regra antiga - hoje é o contrário: mandar a verba junto é
+// que é erro.
+test("GV-26: AM criando GO com verba recebe 400 e nem o GO nem a verba são criados", async () => {
   const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/usuarios", {
     data: {
-      documento: CNPJ_NOVO_GO_SEM_VERBA,
-      nome: "GO Sem Verba",
+      documento: CNPJ_NOVO_GO_COM_VERBA,
+      nome: "GO Com Verba",
       tipo: "GO",
+      verba: { vlVerba: 1000, dtVerba: "2026-03-10" },
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(400);
-  expect((await res.json()).erro).toBe(
-    "Gestor Ofertante exige um Ofertante e o valor da verba",
-  );
-  expect(getUsuario(CNPJ_NOVO_GO_SEM_VERBA)).toBeNull();
+  expect((await res.json()).erro).toBe("verba não é aceito na criação de usuário");
+  expect(getUsuario(CNPJ_NOVO_GO_COM_VERBA)).toBeNull();
+  expect(getVerbasPorOfertante(CNPJ_NOVO_GO_COM_VERBA)).toEqual([]);
 
   await cliente.dispose();
 });
