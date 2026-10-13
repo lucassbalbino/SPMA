@@ -41,7 +41,7 @@ export type FiltroUsuarios = {
 
 // Só as 4 colunas da lista: nada de `senhaHash`, contadores de bloqueio ou
 // dados organizacionais saindo para a tela.
-const COLUNAS_LISTADAS = { documento: true, nome: true, email: true, tipo: true } as const;
+export const COLUNAS_LISTADAS = { documento: true, nome: true, email: true, tipo: true } as const;
 
 /**
  * O único lugar que define "quem o editor enxerga" (GU-04/05/06).

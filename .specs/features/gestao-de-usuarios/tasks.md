@@ -231,14 +231,14 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] `gestao.integration.test.ts`: só nome/e-mail → gravados; a sessão do alvo continua existindo
-- [ ] Troca de CNPJ de um GO que **criou** um VO (`criadoPor`) e tem esse VO vinculado (`cdOfertante`), com verba, pré-curso (ofertante + autor), pós-curso e sessão: depois da troca, cada um desses registros aponta para o CNPJ novo, há zero linhas com o antigo em cada tabela, e há zero sessões do alvo
-- [ ] Troca de CPF de um AL com avaliação, resposta de avaliação e dado pessoal: as três tabelas apontam para o CPF novo; `senhaHash`, `primeiraVez`, `tipo`, `criadoPor` e `dataCriacao` são idênticos aos de antes
-- [ ] Documento novo já existente → 409 "Documento já cadastrado" e nada mudou (alvo e filhos lidos de novo)
-- [ ] CPF inválido para AL → 400 "CPF inválido"; CPF (11 dígitos válidos) para GO → 400 "CNPJ inválido"
-- [ ] Mesmo documento com pontuação → tratado como sem troca; a sessão continua existindo
-- [ ] `P2002` simulado (spy no `tx.usuario.update` lançando um `PrismaClientKnownRequestError` P2002) → 409 e rollback (os filhos soltos voltam ao documento antigo)
-- [ ] Gate Full passa
+- [x] `gestao.integration.test.ts`: só nome/e-mail → gravados; a sessão do alvo continua existindo
+- [x] Troca de CNPJ de um GO que **criou** um VO (`criadoPor`) e tem esse VO vinculado (`cdOfertante`), com verba, pré-curso (ofertante + autor), pós-curso e sessão: depois da troca, cada um desses registros aponta para o CNPJ novo, há zero linhas com o antigo em cada tabela, e há zero sessões do alvo
+- [x] Troca de CPF de um AL com avaliação, resposta de avaliação e dado pessoal: as três tabelas apontam para o CPF novo; `senhaHash`, `primeiraVez`, `tipo`, `criadoPor` e `dataCriacao` são idênticos aos de antes
+- [x] Documento novo já existente → 409 "Documento já cadastrado" e nada mudou (alvo e filhos lidos de novo)
+- [x] CPF inválido para AL → 400 "CPF inválido"; CPF (11 dígitos válidos) para GO → 400 "CNPJ inválido"
+- [x] Mesmo documento com pontuação → tratado como sem troca; a sessão continua existindo
+- [x] `P2002` simulado (spy no `tx.usuario.update` lançando um `PrismaClientKnownRequestError` P2002) → 409 e rollback (os filhos soltos voltam ao documento antigo)
+- [x] Gate Full passa
 
 **Tests**: integration
 **Gate**: full
