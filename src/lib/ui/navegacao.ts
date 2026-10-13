@@ -37,6 +37,9 @@ const AVALIACOES: ItemNavegacao = { rotulo: "Avaliações", href: "/avaliacoes" 
 // Mesma rota, nome diferente: para o Aluno ela nunca lista mais que a própria.
 const MINHA_AVALIACAO: ItemNavegacao = { rotulo: "Minha avaliação", href: "/avaliacoes" };
 const MEUS_DADOS: ItemNavegacao = { rotulo: "Meus dados", href: "/meus-dados" };
+// AD-046: AM/GT criam e editam verbas ali; GO/VO veem as do próprio escopo.
+// VT e AL ficam sem o item - eles não leem verba (`podeLerVerba`).
+const VERBAS: ItemNavegacao = { rotulo: "Verbas", href: "/verbas" };
 
 const CURSOS = [PRE_CURSOS, POS_CURSOS, AVALIACOES];
 // AD-040: quem pode criar curso (AM e GO, `podeGerenciarPreCurso`) ganha o
@@ -45,20 +48,20 @@ const CURSOS = [PRE_CURSOS, POS_CURSOS, AVALIACOES];
 // listagens não têm mais botão próprio.
 const CURSOS_COM_CRIACAO = [NOVO_CURSO, ...CURSOS];
 
-// "Ofertantes", "Verbas" e "Relatórios" só existem como API, ou nem isso:
-// ficam listados no painel com o texto de hoje e não viram link.
+// "Ofertantes" e "Relatórios" ainda não têm tela: ficam listados no painel
+// com o texto de hoje e não viram link.
 export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
   [TipoUsuario.AM]: [
     { rotulo: "Gestão de usuários", itens: [GESTAO_USUARIOS] },
     { rotulo: "Ofertantes", itens: [] },
-    { rotulo: "Verbas", itens: [] },
+    { rotulo: "Verbas", itens: [VERBAS] },
     { rotulo: "Cursos", itens: CURSOS_COM_CRIACAO },
     { rotulo: "Relatórios", itens: [] },
   ],
   [TipoUsuario.GT]: [
     { rotulo: "Gestão de usuários", itens: [GESTAO_USUARIOS] },
     { rotulo: "Ofertantes", itens: [] },
-    { rotulo: "Verbas", itens: [] },
+    { rotulo: "Verbas", itens: [VERBAS] },
     { rotulo: "Cursos", itens: CURSOS },
   ],
   [TipoUsuario.VT]: [
@@ -67,9 +70,13 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
   ],
   [TipoUsuario.GO]: [
     { rotulo: "Gestão de usuários", itens: [GESTAO_USUARIOS] },
+    { rotulo: "Verbas", itens: [VERBAS] },
     { rotulo: "Meus cursos", itens: CURSOS_COM_CRIACAO },
   ],
-  [TipoUsuario.VO]: [{ rotulo: "Meus cursos", itens: CURSOS }],
+  [TipoUsuario.VO]: [
+    { rotulo: "Verbas", itens: [VERBAS] },
+    { rotulo: "Meus cursos", itens: CURSOS },
+  ],
   [TipoUsuario.AL]: [{ rotulo: "Minha avaliação", itens: [MINHA_AVALIACAO, MEUS_DADOS] }],
 };
 

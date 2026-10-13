@@ -10,26 +10,30 @@ import {
 
 // Tabela esperada escrita diretamente a partir de design.md ("A tabela de
 // navegação"), não lida do módulo sob teste.
+// GV-27/GV-28 (gestao-de-verbas): "/verbas" para AM, GT, GO e VO, logo
+// depois de "Gestão de usuários" - a ordem dos módulos do painel.
 const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
   AM: [
     "/painel",
     "/usuarios",
+    "/verbas",
     "/cursos/novo",
     "/pre-cursos",
     "/pos-cursos",
     "/avaliacoes",
   ],
-  GT: ["/painel", "/usuarios", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
+  GT: ["/painel", "/usuarios", "/verbas", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
   VT: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
   GO: [
     "/painel",
     "/usuarios",
+    "/verbas",
     "/cursos/novo",
     "/pre-cursos",
     "/pos-cursos",
     "/avaliacoes",
   ],
-  VO: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
+  VO: ["/painel", "/verbas", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
   // PESSOAL-16: "/meus-dados" (edição do dado pessoal pelo perfil) some para
   // todo perfil que não seja AL.
   AL: ["/painel", "/avaliacoes", "/meus-dados"],
@@ -41,8 +45,8 @@ const MODULOS_ESPERADOS: Record<TipoUsuario, string[]> = {
   AM: ["Gestão de usuários", "Ofertantes", "Verbas", "Cursos", "Relatórios"],
   GT: ["Gestão de usuários", "Ofertantes", "Verbas", "Cursos"],
   VT: ["Cursos", "Relatórios"],
-  GO: ["Gestão de usuários", "Meus cursos"],
-  VO: ["Meus cursos"],
+  GO: ["Gestão de usuários", "Verbas", "Meus cursos"],
+  VO: ["Verbas", "Meus cursos"],
   AL: ["Minha avaliação"],
 };
 
@@ -58,6 +62,7 @@ const ROTAS_IMPLEMENTADAS = [
   "/avaliacoes",
   "/avaliacoes/[cpf]/[cdCurso]",
   "/meus-dados",
+  "/verbas",
 ];
 
 const TODOS_OS_TIPOS = Object.values(TipoUsuario);
@@ -123,6 +128,17 @@ describe("navegacaoDoPerfil", () => {
     for (const tipo of TODOS_OS_TIPOS.filter((t) => t !== TipoUsuario.AL)) {
       expect(rotuloDe(tipo, "/avaliacoes")).toBe("Avaliações");
     }
+  });
+
+  it("GV-27/GV-28: AM, GT, GO e VO recebem 'Verbas' apontando para /verbas", () => {
+    for (const tipo of [TipoUsuario.AM, TipoUsuario.GT, TipoUsuario.GO, TipoUsuario.VO]) {
+      expect(rotuloDe(tipo, "/verbas")).toBe("Verbas");
+    }
+  });
+
+  it("GV-29: VT e AL não recebem /verbas", () => {
+    expect(hrefsDe(TipoUsuario.VT)).not.toContain("/verbas");
+    expect(hrefsDe(TipoUsuario.AL)).not.toContain("/verbas");
   });
 
   it("todo perfil recebe /painel", () => {
@@ -231,6 +247,11 @@ describe("ROTAS_COM_SESSAO", () => {
         "/dados-pessoais",
       ]),
     );
+  });
+
+  // GV-30: sem sessão, o proxy manda /verbas para o login.
+  it("GV-30: inclui /verbas", () => {
+    expect(ROTAS_COM_SESSAO).toContain("/verbas");
   });
 
   it("nao repete href (varios perfis compartilham as mesmas telas)", () => {

@@ -342,13 +342,15 @@ T11
 
 **Done when**:
 
-- [ ] `navegacao.test.ts`: `HREFS_ESPERADOS` e `MODULOS_ESPERADOS` atualizados conforme o design (AM/GT com `/verbas`; GO `["Gestão de usuários", "Verbas", "Meus cursos"]`; VO `["Verbas", "Meus cursos"]`; VT e AL sem `/verbas`); `/verbas` em `ROTAS_IMPLEMENTADAS` e em `ROTAS_COM_SESSAO` (GV-30)
-- [ ] Gate Quick passa
+- [x] `navegacao.test.ts`: `HREFS_ESPERADOS` e `MODULOS_ESPERADOS` atualizados conforme o design (AM/GT com `/verbas`; GO `["Gestão de usuários", "Verbas", "Meus cursos"]`; VO `["Verbas", "Meus cursos"]`; VT e AL sem `/verbas`); `/verbas` em `ROTAS_IMPLEMENTADAS` e em `ROTAS_COM_SESSAO` (GV-30)
+- [x] Gate Quick passa
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(navegacao): item Verbas no menu`
+
+**Status**: ✅ Done — 794 unit (+3) / e2e identidade-visual 24/24 + painel, protegido-layout, proxy verdes. Dois e2e de `identidade-visual` (UI-02 e UI-07) fixavam a lista exata do menu do GT e ganharam "Verbas", o que passou a provar o GV-27 no cabeçalho real.
 
 ---
 

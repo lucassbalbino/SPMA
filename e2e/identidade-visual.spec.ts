@@ -258,6 +258,8 @@ test.describe("casca comum", () => {
     await expect(links).toHaveText([
       "Painel",
       "Gestão de usuários",
+      // GV-27 (AD-046): o GT ganhou "Verbas".
+      "Verbas",
       "Pré-cursos",
       "Pós-cursos",
       "Avaliações",
@@ -316,13 +318,16 @@ test.describe("menu de navegação por perfil", () => {
     deleteUsuarios(CPFS_NAV);
   });
 
-  test("UI-02: GT vê os 5 itens da tabela do design", async ({ page }) => {
+  // GV-27 (gestao-de-verbas, AD-046): "Verbas" entrou depois de "Gestão de
+  // usuários" - o total de itens do GT subiu de 5 para 6.
+  test("UI-02/GV-27: GT vê os 6 itens da tabela do design", async ({ page }) => {
     await logar(page, CPF_NAV_GT, SENHA);
     await page.goto("/painel");
 
     await expect(linksDoMenu(page)).toHaveText([
       "Painel",
       "Gestão de usuários",
+      "Verbas",
       "Pré-cursos",
       "Pós-cursos",
       "Avaliações",
