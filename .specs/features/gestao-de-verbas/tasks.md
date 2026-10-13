@@ -251,16 +251,18 @@ T11
 
 **Done when**:
 
-- [ ] `e2e/verbas-page.spec.ts` (documentos inéditos):
+- [x] `e2e/verbas-page.spec.ts` (documentos inéditos):
   - GO com 1 verba e com outro GO no banco: vê a linha da própria verba (nome, CNPJ, "R$ 5000.00", saldo e data `dd/mm/aaaa`), não vê a do outro GO, e não há formulário nem botão "Editar" (GV-11 colunas, GV-14)
   - VO vinculado a um GO sem verbas: vê "Nenhuma verba cadastrada." e nenhum formulário (GV-15, GV-14)
   - VT: vê "Seu perfil não tem acesso a verbas." e nenhuma linha de verba (GV-17)
-- [ ] Gate Full passa com `npx playwright test e2e/verbas-page.spec.ts`
+- [x] Gate Full passa com `npx playwright test e2e/verbas-page.spec.ts`
 
 **Tests**: e2e
 **Gate**: full
 
 **Commit**: `feat(verbas): tela de verbas com lista escopada`
+
+**Status**: ✅ Done — 788 unit / 121 integration (sem mudança) / e2e verbas-page 3/3. A linha mostra "Valor R$ x" e "Saldo R$ y" com rótulo, para o e2e distinguir os dois valores.
 
 ---
 
