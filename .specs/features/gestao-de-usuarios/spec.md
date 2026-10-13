@@ -198,7 +198,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 - IF o alvo é um GO com cursos, verbas e VOs vinculados e o CNPJ é trocado THEN o sistema SHALL manter cursos, verbas e VOs ligados ao CNPJ novo (GU-33).
 - IF o usuário alvo está bloqueado por tentativas THEN o reset SHALL desbloqueá-lo (GU-41).
 - WHEN `documentoAtual`, `documentoNovo` ou `documento` vêm com pontuação (`529.982.247-25`) THEN o sistema SHALL normalizá-los para só dígitos antes de validar e buscar.
-- WHEN a edição ou o reset esvazia a última linha de uma página (ex.: o documento trocado sai da busca atual) THEN o sistema SHALL recarregar a página atual e, se ela passou a ser maior que `totalPaginas`, exibir "Nenhum usuário encontrado." com "Anterior" habilitado.
+- WHEN a edição ou o reset esvazia a última linha de uma página (ex.: o documento trocado sai da busca atual) THEN o sistema SHALL recarregar a página atual e, se ela passou a ser maior que `totalPaginas`, exibir "Nenhum usuário encontrado.", com "Anterior" habilitado só quando a página atual > 1.
 - IF a lista do GO está vazia THEN o sistema SHALL exibir "Nenhum usuário encontrado." e "Página 1 de 1".
 - WHEN o editor altera só o e-mail de um usuário sem nome THEN o sistema SHALL gravar o e-mail sem exigir nome.
 

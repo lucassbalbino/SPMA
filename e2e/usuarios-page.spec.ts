@@ -299,6 +299,10 @@ const CPF_AL_LISTA = gerarCpfLista(2);
 const CPF_GT_LISTA = gerarCpfLista(3);
 const CPF_VT_SEM_LISTA = gerarCpfLista(4);
 const CPF_CRIADO_PELA_LISTA = gerarCpfLista(5);
+// Documento novo de um VT paginado, trocado pela linha no teste de GU-48.
+const CPF_TROCADO_PELA_LINHA = gerarCpfLista(6);
+// GO sem nenhum VO nem Aluno: o escopo dele é vazio.
+const CNPJ_GO_VAZIO = geradorDeCnpj("54")(3);
 
 const NOME_VO_LISTA = "GU-E2E Lista VO";
 const EMAIL_VO_LISTA = "vo.lista@exemplo.com";
@@ -318,8 +322,15 @@ const DOCUMENTOS_LISTA = [
   CPF_GT_LISTA,
   CPF_VT_SEM_LISTA,
   CPF_CRIADO_PELA_LISTA,
+  CPF_TROCADO_PELA_LINHA,
+  CNPJ_GO_VAZIO,
   ...PAGINADOS.map((paginado) => paginado.documento),
 ];
+
+/** `52998224725` → `529.982.247-25`: o jeito que um gestor digitaria. */
+function comPontuacao(cpf: string): string {
+  return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
+}
 
 async function entrar(page: Page, documento: string) {
   const login = await page.request.post("/api/auth/login", {
@@ -329,6 +340,16 @@ async function entrar(page: Page, documento: string) {
 }
 
 const linhas = (page: Page) => page.getByTestId("lista-usuarios").getByRole("listitem");
+
+/**
+ * A busca espera a digitação parar antes de consultar: até a resposta
+ * chegar, a tela mostra a lista anterior, sem filtro, e o "Página X de Y"
+ * dela pode coincidir com o esperado. A 1ª linha filtrada só aparece depois.
+ */
+async function esperarPaginados(page: Page) {
+  await expect(linhas(page).first()).toContainText("GU-E2E Listagem Paginada A");
+  await expect(linhas(page).filter({ hasNotText: "GU-E2E Listagem Paginada" })).toHaveCount(0);
+}
 const chips = (page: Page) =>
   page.getByRole("group", { name: "Filtrar por tipo" }).getByRole("button");
 
@@ -364,6 +385,7 @@ test.describe("lista da Gestão de usuários", () => {
 
     upsertUsuario({ cpf: CPF_GT_LISTA, tipo: "GT", senha: SENHA, primeiraVez: false });
     upsertUsuario({ cpf: CPF_VT_SEM_LISTA, tipo: "VT", senha: SENHA, primeiraVez: false });
+    upsertUsuario({ cpf: CNPJ_GO_VAZIO, tipo: "GO", senha: SENHA, primeiraVez: false });
 
     // Os 21 VTs saem pela API de criação: um processo `tsx` por fixture
     // custaria cerca de um minuto só aqui.
@@ -496,6 +518,124 @@ test.describe("lista da Gestão de usuários", () => {
     await expect(page.getByRole("group", { name: "Filtrar por tipo" })).toHaveCount(0);
     await expect(page.getByText(/Página \d+ de \d+/)).toHaveCount(0);
     await expect(page.getByText("Nenhum usuário encontrado.")).toHaveCount(0);
+  });
+
+  test("edge case/GU-03: GO sem VO nem Aluno vê a lista vazia em 1 de 1, abaixo do formulário", async ({
+    page,
+  }) => {
+    await entrar(page, CNPJ_GO_VAZIO);
+    await page.goto("/usuarios");
+
+    await expect(page.getByText("Nenhum usuário encontrado.")).toBeVisible();
+    await expect(page.getByText("Página 1 de 1", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Anterior" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Próxima" })).toBeDisabled();
+
+    // GU-03: o formulário de criação vem acima da lista.
+    const formulario = await page.getByRole("button", { name: "Criar usuário" }).boundingBox();
+    const lista = await page.getByLabel("Buscar usuários").boundingBox();
+    expect(formulario).not.toBeNull();
+    expect(lista).not.toBeNull();
+    expect(formulario!.y).toBeLessThan(lista!.y);
+  });
+
+  test("GU-48: buscar por CPF, paginar, trocar o documento e resetar não põem documento em URL", async ({
+    page,
+  }) => {
+    const urls: string[] = [];
+    page.on("request", (requisicao) => urls.push(requisicao.url()));
+    const buscado = PAGINADOS[0].documento;
+
+    await entrar(page, CPF_GT_LISTA);
+    await page.goto("/usuarios");
+    const busca = page.getByLabel("Buscar usuários");
+
+    // Paginar.
+    await busca.fill("Listagem Paginada");
+    await esperarPaginados(page);
+    await expect(page.getByText("Página 1 de 2", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Próxima" }).click();
+    await expect(page.getByText("Página 2 de 2", { exact: true })).toBeVisible();
+
+    // Buscar pelo CPF, com pontuação.
+    await busca.fill(comPontuacao(buscado));
+    await expect(linhas(page)).toHaveCount(1);
+
+    // Editar: trocar o documento.
+    const linha = linhas(page).filter({ hasText: buscado });
+    await linha.getByRole("button", { name: "Editar" }).click();
+    await linha.getByLabel("CPF").fill(CPF_TROCADO_PELA_LINHA);
+    await linha.getByRole("button", { name: "Salvar" }).click();
+    // A lista recarregou com a mesma busca, que não acha mais o CPF antigo.
+    await expect(page.getByText("Nenhum usuário encontrado.")).toBeVisible();
+    expect(getUsuario(CPF_TROCADO_PELA_LINHA)?.tipo).toBe("VT");
+
+    // Resetar a senha do documento novo.
+    await busca.fill(CPF_TROCADO_PELA_LINHA);
+    const trocada = linhas(page).filter({ hasText: CPF_TROCADO_PELA_LINHA });
+    await trocada.getByRole("button", { name: "Editar" }).click();
+    await trocada.getByRole("button", { name: "Resetar senha" }).click();
+    await trocada.getByRole("button", { name: "Confirmar reset" }).click();
+    await expect(
+      trocada.getByText(
+        "Senha resetada. No próximo acesso, o usuário entra com a senha em branco.",
+        { exact: true },
+      ),
+    ).toBeVisible();
+
+    // As chamadas à API saíram, e nenhuma URL levou documento ou query string.
+    const chamadasApi = urls.filter((url) => new URL(url).pathname.startsWith("/api/usuarios"));
+    expect(chamadasApi.map((url) => new URL(url).pathname)).toEqual(
+      expect.arrayContaining([
+        "/api/usuarios/consulta",
+        "/api/usuarios",
+        "/api/usuarios/resetar-senha",
+      ]),
+    );
+    for (const url of chamadasApi) {
+      expect(new URL(url).search).toBe("");
+    }
+    for (const url of urls) {
+      expect(url).not.toContain(buscado);
+      expect(url).not.toContain(comPontuacao(buscado));
+      expect(url).not.toContain(CPF_TROCADO_PELA_LINHA);
+    }
+  });
+
+  test("edge case: a edição que esvazia a página mostra 'Nenhum usuário encontrado.', com 'Anterior' só depois da página 1", async ({
+    page,
+  }) => {
+    await entrar(page, CPF_GT_LISTA);
+    await page.goto("/usuarios");
+    const busca = page.getByLabel("Buscar usuários");
+    const anterior = page.getByRole("button", { name: "Anterior" });
+
+    // Página 2 de 2, com uma linha só: renomeá-la para fora da busca deixa a
+    // página 2 vazia, e a lista toda cabe em 1 página.
+    await busca.fill("Listagem Paginada");
+    await esperarPaginados(page);
+    await expect(page.getByText("Página 1 de 2", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Próxima" }).click();
+    await expect(page.getByText("Página 2 de 2", { exact: true })).toBeVisible();
+    const ultima = linhas(page).filter({ hasText: "GU-E2E Listagem Paginada U" });
+    await ultima.getByRole("button", { name: "Editar" }).click();
+    await ultima.getByLabel("Nome").fill("GU-E2E Fora da Busca U");
+    await ultima.getByRole("button", { name: "Salvar" }).click();
+
+    await expect(page.getByText("Nenhum usuário encontrado.")).toBeVisible();
+    await expect(anterior).toBeEnabled();
+
+    // Na página 1, o mesmo esvaziamento deixa "Anterior" desabilitado.
+    await busca.fill("Listagem Paginada T");
+    await expect(page.getByText("Página 1 de 1", { exact: true })).toBeVisible();
+    const unica = linhas(page).filter({ hasText: "GU-E2E Listagem Paginada T" });
+    await unica.getByRole("button", { name: "Editar" }).click();
+    await unica.getByLabel("Nome").fill("GU-E2E Fora da Busca T");
+    await unica.getByRole("button", { name: "Salvar" }).click();
+
+    await expect(page.getByText("Nenhum usuário encontrado.")).toBeVisible();
+    await expect(page.getByText("Página 1 de 1", { exact: true })).toBeVisible();
+    await expect(anterior).toBeDisabled();
   });
 });
 
