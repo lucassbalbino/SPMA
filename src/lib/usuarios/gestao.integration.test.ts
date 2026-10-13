@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db/prisma";
 import { ErroHttp } from "@/lib/api/erro-http";
 import { Prisma } from "@/generated/prisma/client";
 import { geradorDeCnpj } from "../../../e2e/helpers/cnpj";
+import { edicaoUsuarioSchema } from "@/lib/validation/schemas/gestao-usuario.schema";
 import { atualizarCadastro, resetarSenha, validarDocumentoDoTipo } from "./gestao";
 
 // Prefixo "49": espaço de numeração deste arquivo (ver `e2e/helpers/cnpj.ts`).
@@ -218,6 +219,64 @@ describe("atualizarCadastro (integration)", () => {
     // A linha inteira é comparada: cobre os cinco campos de GU-35 de uma vez,
     // e `antes` tem senha, `primeiraVez: false` e autor de propósito.
     expect(depois).toEqual({ ...antes, documento: novo });
+  });
+
+  it("GU-35: trocar o CNPJ de um GO preserva os 6 dados organizacionais", async () => {
+    const antigo = cnpj(9);
+    const novo = cnpj(10);
+    await prisma.usuario.create({
+      data: {
+        documento: antigo,
+        tipo: "GO",
+        nome: "GU-T GO Organizado",
+        responsavel: "GU-T Responsavel",
+        email: "go.organizado@exemplo.com",
+        telefone: "11999990000",
+        uf: "SP",
+        municipio: "São Paulo",
+        dadosOrganizacionaisCompletos: true,
+      },
+    });
+    const antes = await prisma.usuario.findUniqueOrThrow({ where: { documento: antigo } });
+
+    await atualizarCadastro(
+      {
+        documento: antigo,
+        nome: "GU-T GO Organizado",
+        email: "go.organizado@exemplo.com",
+        tipo: "GO",
+      },
+      { documentoNovo: validarDocumentoDoTipo("GO", novo) },
+    );
+
+    // Campo a campo: são estes que uma troca de documento poderia zerar.
+    const depois = await prisma.usuario.findUniqueOrThrow({ where: { documento: novo } });
+    expect(depois.nome).toBe("GU-T GO Organizado");
+    expect(depois.responsavel).toBe("GU-T Responsavel");
+    expect(depois.email).toBe("go.organizado@exemplo.com");
+    expect(depois.telefone).toBe("11999990000");
+    expect(depois.uf).toBe("SP");
+    expect(depois.municipio).toBe("São Paulo");
+    expect(depois.dadosOrganizacionaisCompletos).toBe(true);
+    expect(depois).toEqual({ ...antes, documento: novo });
+  });
+
+  it("GU-25: e-mail vazio na edição é gravado como null", async () => {
+    const documento = cpf(10);
+    await prisma.usuario.create({
+      data: { documento, nome: "GU-T VT Email", email: "x@exemplo.com", tipo: "VT" },
+    });
+
+    // O mesmo caminho da rota: o corpo passa pelo schema, que troca "" por null.
+    const dados = edicaoUsuarioSchema.parse({ documentoAtual: documento, email: "" });
+    await atualizarCadastro(
+      { documento, nome: "GU-T VT Email", email: "x@exemplo.com", tipo: "VT" },
+      dados,
+    );
+
+    const gravado = await prisma.usuario.findUniqueOrThrow({ where: { documento } });
+    expect(gravado.email).toBeNull();
+    expect(gravado.nome).toBe("GU-T VT Email");
   });
 
   it("GU-36: documento novo já cadastrado dá 409 e nada muda", async () => {
