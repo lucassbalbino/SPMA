@@ -156,6 +156,11 @@ describe("POST /api/auth/login (integration) - 1º acesso com a senha em branco"
     return usuario.tentativasFalhas;
   }
 
+  async function tentativasIp(ip: string): Promise<number> {
+    const registro = await prisma.tentativaLoginIp.findUnique({ where: { ip } });
+    return registro?.tentativas ?? 0;
+  }
+
   beforeAll(async () => {
     await limpar();
     await prisma.usuario.createMany({
@@ -183,9 +188,11 @@ describe("POST /api/auth/login (integration) - 1º acesso com a senha em branco"
 
   // PASB-02 + edge case "só espaços conta como senha digitada".
   it.each(["qualquerSenha1", "   "])(
-    "PASB-02: conta sem senha com senha digitada (%j) - 401 genérico, sem sessão, falha contada no CPF",
+    "PASB-02: conta sem senha com senha digitada (%j) - 401 genérico, sem sessão, falha contada no CPF e no IP",
     async (senha) => {
       const antes = await tentativasFalhas(CPF_SEM_SENHA);
+      const antesIp = await tentativasIp(IP_SEM_SENHA);
+      verifyPasswordSpy.mockClear();
 
       const res = await POST(requisicaoLogin(CPF_SEM_SENHA, senha, IP_SEM_SENHA));
 
@@ -193,11 +200,18 @@ describe("POST /api/auth/login (integration) - 1º acesso com a senha em branco"
       expect(await res.json()).toEqual({ erro: "CPF ou senha inválidos" });
       expect(res.headers.get("set-cookie")).toBeNull();
       expect(await tentativasFalhas(CPF_SEM_SENHA)).toBe(antes + 1);
+      expect(await tentativasIp(IP_SEM_SENHA)).toBe(antesIp + 1);
+      // REQ-SEC-04: conta sem senha também paga um `argon2.verify`, contra
+      // DUMMY_HASH - sem isso a resposta sairia mais rápida e revelaria quais
+      // contas ainda não definiram senha.
+      expect(verifyPasswordSpy).toHaveBeenCalledTimes(1);
+      expect(verifyPasswordSpy).toHaveBeenCalledWith(DUMMY_HASH, senha);
     },
   );
 
-  it("PASB-03: conta com senha e senha vazia - 401 genérico, sem sessão, falha contada no CPF", async () => {
+  it("PASB-03: conta com senha e senha vazia - 401 genérico, sem sessão, falha contada no CPF e no IP", async () => {
     const antes = await tentativasFalhas(CPF_COM_SENHA_VAZIA);
+    const antesIp = await tentativasIp(IP_COM_SENHA);
 
     const res = await POST(requisicaoLogin(CPF_COM_SENHA_VAZIA, "", IP_COM_SENHA));
 
@@ -205,6 +219,7 @@ describe("POST /api/auth/login (integration) - 1º acesso com a senha em branco"
     expect(await res.json()).toEqual({ erro: "CPF ou senha inválidos" });
     expect(res.headers.get("set-cookie")).toBeNull();
     expect(await tentativasFalhas(CPF_COM_SENHA_VAZIA)).toBe(antes + 1);
+    expect(await tentativasIp(IP_COM_SENHA)).toBe(antesIp + 1);
   });
 
   it("PASB-04: documento sem conta e senha vazia - 401 genérico", async () => {
