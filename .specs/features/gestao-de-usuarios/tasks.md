@@ -392,10 +392,10 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Em `e2e/usuarios-page.spec.ts`: GO vê chips "Todos", "Visualizador Ofertante" e "Aluno" e as linhas com nome, documento, tipo por extenso e e-mail; GT com 21 fixtures `GU-E2E` buscados vê "Página 1 de 2", "Anterior" desabilitado, e "Próxima" leva a "Página 2 de 2" com "Próxima" desabilitado; trocar o chip volta à página 1; busca sem resultado → "Nenhum usuário encontrado."; criar um usuário pelo formulário faz ele aparecer na lista sem `page.reload()`; VT abre `/usuarios` e não vê lista
-- [ ] Depois de buscar, paginar e filtrar, `page.url()` termina exatamente em `/usuarios`
-- [ ] Nenhuma cor literal no `.tsx` (AD-039)
-- [ ] Gate Full passa com `npx playwright test e2e/usuarios-page.spec.ts`
+- [x] Em `e2e/usuarios-page.spec.ts`: GO vê chips "Todos", "Visualizador Ofertante" e "Aluno" e as linhas com nome, documento, tipo por extenso e e-mail; GT com 21 fixtures `GU-E2E` buscados vê "Página 1 de 2", "Anterior" desabilitado, e "Próxima" leva a "Página 2 de 2" com "Próxima" desabilitado; trocar o chip volta à página 1; busca sem resultado → "Nenhum usuário encontrado."; criar um usuário pelo formulário faz ele aparecer na lista sem `page.reload()`; VT abre `/usuarios` e não vê lista
+- [x] Depois de buscar, paginar e filtrar, `page.url()` termina exatamente em `/usuarios`
+- [x] Nenhuma cor literal no `.tsx` (AD-039)
+- [x] Gate Full passa com `npx playwright test e2e/usuarios-page.spec.ts`
 
 **Tests**: e2e
 **Gate**: full

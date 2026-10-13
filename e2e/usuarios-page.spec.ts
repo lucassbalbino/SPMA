@@ -8,8 +8,9 @@
 // UGO-14/AD-043: sem `model Ofertante` separado, criar um GO deixa de ser
 // "escolher um Ofertante já cadastrado" - o próprio GO informa CNPJ+UF (T15).
 // A lista de GOs existentes passa a servir só para vincular um VO a um deles.
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
+  criarAvaliacao,
   criarPreCurso,
   criarVerba,
   deleteAvaliacoesPorCpf,
@@ -22,6 +23,12 @@ import {
   upsertUsuario,
 } from "./helpers/db";
 import { geradorDeCnpj } from "./helpers/cnpj";
+import {
+  cabecalhosAutenticados,
+  idCsrfDaResposta,
+  idSessaoDaResposta,
+  novoCliente,
+} from "./helpers/http";
 
 const SENHA = "SenhaValida123";
 
@@ -256,4 +263,237 @@ test("GU-02: abrir /usuarios/novo termina em /usuarios com o formulário de cria
   await expect(page).toHaveURL(/\/usuarios$/);
   await expect(page.locator("select#tipo")).toBeVisible();
   await expect(page.getByRole("button", { name: "Criar usuário" })).toBeVisible();
+});
+
+// --- Lista da Gestão de usuários (GU-06..GU-15, GU-49) ---------------------
+//
+// Prefixo "54" para CPFs e CNPJs: espaço de numeração próprio desta lista
+// (`e2e/usuarios-gestao.spec.ts` usa "53", a integração "48"/"49").
+//
+// Os nomes buscados não têm dígito de propósito: a busca casa o nome OU os
+// dígitos do documento (GU-11), então um texto como "GU-E2E" também casaria
+// todo documento com um "2".
+
+function calcularDigitoVerificadorCpf(digitos: number[]): number {
+  const pesoInicial = digitos.length + 1;
+  const soma = digitos.reduce(
+    (acc, digito, index) => acc + digito * (pesoInicial - index),
+    0,
+  );
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function gerarCpfLista(indice: number): string {
+  const base9 = `54000${String(indice).padStart(4, "0")}`;
+  const digitos = base9.split("").map(Number);
+  const d1 = calcularDigitoVerificadorCpf(digitos);
+  const d2 = calcularDigitoVerificadorCpf([...digitos, d1]);
+  return `${base9}${d1}${d2}`;
+}
+
+const CNPJ_GO_LISTA = geradorDeCnpj("54")(1);
+const CPF_VO_LISTA = gerarCpfLista(1);
+const CPF_AL_LISTA = gerarCpfLista(2);
+const CPF_GT_LISTA = gerarCpfLista(3);
+const CPF_VT_SEM_LISTA = gerarCpfLista(4);
+const CPF_CRIADO_PELA_LISTA = gerarCpfLista(5);
+
+const NOME_VO_LISTA = "GU-E2E Lista VO";
+const EMAIL_VO_LISTA = "vo.lista@exemplo.com";
+const NOME_AL_LISTA = "GU-E2E Lista Matriculado";
+const EMAIL_AL_LISTA = "aluno.lista@exemplo.com";
+
+// 21 VTs: uma página cheia (20) e mais um, para "Página 1 de 2" (GU-13/14).
+const PAGINADOS = "ABCDEFGHIJKLMNOPQRSTU".split("").map((letra, i) => ({
+  documento: gerarCpfLista(100 + i),
+  nome: `GU-E2E Listagem Paginada ${letra}`,
+}));
+
+const DOCUMENTOS_LISTA = [
+  CNPJ_GO_LISTA,
+  CPF_VO_LISTA,
+  CPF_AL_LISTA,
+  CPF_GT_LISTA,
+  CPF_VT_SEM_LISTA,
+  CPF_CRIADO_PELA_LISTA,
+  ...PAGINADOS.map((paginado) => paginado.documento),
+];
+
+async function entrar(page: Page, documento: string) {
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento, senha: SENHA },
+  });
+  expect(login.ok()).toBe(true);
+}
+
+const linhas = (page: Page) => page.getByTestId("lista-usuarios").getByRole("listitem");
+const chips = (page: Page) =>
+  page.getByRole("group", { name: "Filtrar por tipo" }).getByRole("button");
+
+test.describe("lista da Gestão de usuários", () => {
+  test.beforeAll(async () => {
+    // ~10 fixtures por processo `tsx`, mais 21 criações pela API: passa do
+    // timeout padrão de um hook.
+    test.setTimeout(120_000);
+
+    deleteAvaliacoesPorCpf([CPF_AL_LISTA]);
+    deletePreCursosPorOfertante([CNPJ_GO_LISTA]);
+    deleteVerbasPorOfertante([CNPJ_GO_LISTA]);
+    deleteUsuarios(DOCUMENTOS_LISTA);
+
+    upsertUsuario({ cpf: CNPJ_GO_LISTA, tipo: "GO", senha: SENHA, primeiraVez: false });
+    upsertUsuario({
+      cpf: CPF_VO_LISTA,
+      tipo: "VO",
+      cdOfertante: CNPJ_GO_LISTA,
+      nome: NOME_VO_LISTA,
+      email: EMAIL_VO_LISTA,
+    });
+    upsertUsuario({ cpf: CPF_AL_LISTA, tipo: "AL", nome: NOME_AL_LISTA, email: EMAIL_AL_LISTA });
+    // GU-05: o Aluno entra no escopo do GO pela matrícula num curso dele.
+    const cdVerba = criarVerba({ cdOfertante: CNPJ_GO_LISTA, vlVerba: 1000 }).cdVerba;
+    const { cdCurso } = criarPreCurso({
+      cdOfertante: CNPJ_GO_LISTA,
+      cdVerba,
+      vlCursoAlocado: 100,
+      criadoPor: CNPJ_GO_LISTA,
+    });
+    criarAvaliacao({ cpf: CPF_AL_LISTA, cdCurso });
+
+    upsertUsuario({ cpf: CPF_GT_LISTA, tipo: "GT", senha: SENHA, primeiraVez: false });
+    upsertUsuario({ cpf: CPF_VT_SEM_LISTA, tipo: "VT", senha: SENHA, primeiraVez: false });
+
+    // Os 21 VTs saem pela API de criação: um processo `tsx` por fixture
+    // custaria cerca de um minuto só aqui.
+    const cliente = await novoCliente();
+    const login = await cliente.post("/api/auth/login", {
+      data: { documento: CPF_GT_LISTA, senha: SENHA },
+    });
+    const idSessao = idSessaoDaResposta(login);
+    const idCsrf = idCsrfDaResposta(login);
+    if (!idSessao || !idCsrf) throw new Error("Login do GT da lista não emitiu sessão/CSRF");
+
+    for (const { documento, nome } of PAGINADOS) {
+      const res = await cliente.post("/api/usuarios", {
+        data: { documento, nome, tipo: "VT" },
+        headers: cabecalhosAutenticados(idSessao, idCsrf),
+      });
+      expect(res.status()).toBe(201);
+    }
+    await cliente.dispose();
+  });
+
+  test.afterAll(() => {
+    deleteAvaliacoesPorCpf([CPF_AL_LISTA]);
+    deletePreCursosPorOfertante([CNPJ_GO_LISTA]);
+    deleteVerbasPorOfertante([CNPJ_GO_LISTA]);
+    deleteUsuarios(DOCUMENTOS_LISTA);
+  });
+
+  test("GU-07/GU-09: GO vê os chips do seu escopo e cada linha com nome, documento, tipo e e-mail", async ({
+    page,
+  }) => {
+    await entrar(page, CNPJ_GO_LISTA);
+    await page.goto("/usuarios");
+
+    await expect(chips(page)).toHaveText(["Todos", "Visualizador Ofertante", "Aluno"]);
+
+    // GU-05: o escopo de um GO recém-criado é exatamente o VO e o Aluno dele.
+    await expect(linhas(page)).toHaveCount(2);
+
+    const vo = linhas(page).filter({ hasText: NOME_VO_LISTA });
+    await expect(vo).toContainText(CPF_VO_LISTA);
+    await expect(vo).toContainText("Visualizador Ofertante");
+    await expect(vo).toContainText(EMAIL_VO_LISTA);
+
+    const aluno = linhas(page).filter({ hasText: NOME_AL_LISTA });
+    await expect(aluno).toContainText(CPF_AL_LISTA);
+    await expect(aluno).toContainText("Aluno");
+    await expect(aluno).toContainText(EMAIL_AL_LISTA);
+  });
+
+  test("GU-11..GU-15/GU-49: GT busca, pagina e filtra, e a URL continua /usuarios", async ({
+    page,
+  }) => {
+    await entrar(page, CPF_GT_LISTA);
+    await page.goto("/usuarios");
+
+    const busca = page.getByLabel("Buscar usuários");
+    const anterior = page.getByRole("button", { name: "Anterior" });
+    const proxima = page.getByRole("button", { name: "Próxima" });
+
+    await busca.fill("Listagem Paginada");
+    await expect(linhas(page).first()).toContainText("GU-E2E Listagem Paginada A");
+    await expect(linhas(page)).toHaveCount(20);
+    await expect(linhas(page).filter({ hasNotText: "GU-E2E Listagem Paginada" })).toHaveCount(0);
+    await expect(page.getByText("Página 1 de 2", { exact: true })).toBeVisible();
+    await expect(anterior).toBeDisabled();
+
+    await proxima.click();
+    await expect(page.getByText("Página 2 de 2", { exact: true })).toBeVisible();
+    await expect(linhas(page)).toHaveCount(1);
+    await expect(linhas(page)).toContainText("GU-E2E Listagem Paginada U");
+    await expect(proxima).toBeDisabled();
+    await expect(anterior).toBeEnabled();
+
+    // GU-15: trocar o chip volta à página 1, mantendo a busca.
+    await chips(page).filter({ hasText: "Visualizador Turismo" }).click();
+    await expect(page.getByText("Página 1 de 2", { exact: true })).toBeVisible();
+    await expect(linhas(page).first()).toContainText("GU-E2E Listagem Paginada A");
+
+    // GU-15: alterar a busca também volta à página 1.
+    await proxima.click();
+    await expect(page.getByText("Página 2 de 2", { exact: true })).toBeVisible();
+    await busca.fill("Listagem Paginada T");
+    await expect(page.getByText("Página 1 de 1", { exact: true })).toBeVisible();
+    await expect(linhas(page)).toHaveCount(1);
+    await expect(linhas(page)).toContainText("GU-E2E Listagem Paginada T");
+
+    // GU-12
+    await busca.fill("Listagem Paginada Inexistente");
+    await expect(page.getByText("Nenhum usuário encontrado.")).toBeVisible();
+    await expect(linhas(page)).toHaveCount(0);
+
+    // GU-49: nada disso foi para a URL.
+    expect(page.url()).toMatch(/\/usuarios$/);
+  });
+
+  test("GU-08: criar pelo formulário recarrega a lista, com o filtro mantido, sem recarregar a página", async ({
+    page,
+  }) => {
+    await entrar(page, CPF_GT_LISTA);
+    await page.goto("/usuarios");
+    // Um recarregamento de página apagaria esta marca.
+    await page.evaluate(() => {
+      (window as unknown as { semRecarga: boolean }).semRecarga = true;
+    });
+
+    await page.getByLabel("Buscar usuários").fill("Criado Pela Lista");
+    await expect(page.getByText("Nenhum usuário encontrado.")).toBeVisible();
+
+    await page.locator("select#tipo").selectOption("VT");
+    await page.getByLabel("CPF").fill(CPF_CRIADO_PELA_LISTA);
+    await page.getByLabel("Nome").fill("GU-E2E Criado Pela Lista");
+    await page.getByRole("button", { name: "Criar usuário" }).click();
+
+    await expect(linhas(page)).toHaveCount(1);
+    await expect(linhas(page)).toContainText("GU-E2E Criado Pela Lista");
+    expect(getUsuario(CPF_CRIADO_PELA_LISTA)?.tipo).toBe("VT");
+    expect(
+      await page.evaluate(() => (window as unknown as { semRecarga?: boolean }).semRecarga),
+    ).toBe(true);
+  });
+
+  test("GU-06: VT abre /usuarios e não vê lista", async ({ page }) => {
+    await entrar(page, CPF_VT_SEM_LISTA);
+    await page.goto("/usuarios");
+
+    // A página renderizou: o aviso do formulário está lá.
+    await expect(page.getByText("Seu perfil não pode criar usuários.")).toBeVisible();
+    await expect(page.getByTestId("lista-usuarios")).toHaveCount(0);
+    await expect(page.getByRole("group", { name: "Filtrar por tipo" })).toHaveCount(0);
+    await expect(page.getByText(/Página \d+ de \d+/)).toHaveCount(0);
+    await expect(page.getByText("Nenhum usuário encontrado.")).toHaveCount(0);
+  });
 });

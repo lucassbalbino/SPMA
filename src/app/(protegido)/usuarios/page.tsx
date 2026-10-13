@@ -21,10 +21,16 @@
 // também vem daqui, no mesmo escopo de quem matricula (AVAL-05/06): o AM vê
 // os cursos de qualquer Ofertante, o GO só os do seu (via
 // `resolverEscopoOfertante`, T6 - o GO não tem mais `cdOfertante` próprio).
+//
+// A lista de usuários (GU-04..GU-16) também nasce aqui: a página 1 sai da
+// mesma `consultarUsuarios` que `POST /api/usuarios/consulta` usa, então a
+// tela e a API não têm como divergir. VT, VO e AL não têm escopo de usuários
+// e não recebem lista (GU-06).
 import { podeGerenciarVerba, requireSession, resolverEscopoOfertante } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db/prisma";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { NovoUsuarioForm } from "./NovoUsuarioForm";
+import { consultarUsuarios, whereUsuariosVisiveis } from "@/lib/usuarios/consulta";
+import { tiposVisiveis } from "@/lib/usuarios/paginacao";
+import { GestaoUsuarios } from "./GestaoUsuarios";
 
 export default async function GestaoUsuariosPage() {
   const { usuario } = await requireSession();
@@ -72,24 +78,25 @@ export default async function GestaoUsuariosPage() {
       : [];
   const nomePorCurso = new Map(nomesCursos.map((linha) => [linha.cdCurso, linha.valor]));
 
+  // `consultarUsuarios` não aceita perfil sem escopo: a checagem vem antes.
+  const paginaInicial =
+    whereUsuariosVisiveis(usuario) === null
+      ? null
+      : await consultarUsuarios(usuario, { pagina: 1 });
+
   return (
-    <>
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Novo usuário</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <NovoUsuarioForm
-            tipoCriador={usuario.tipo}
-            escolheOfertante={escolheOfertante}
-            gos={gos}
-            cursosDisponiveis={cursos.map((curso) => ({
-              cdCurso: curso.cdCurso,
-              nome: nomePorCurso.get(curso.cdCurso) ?? null,
-            }))}
-          />
-        </CardContent>
-      </Card>
-    </>
+    <GestaoUsuarios
+      formulario={{
+        tipoCriador: usuario.tipo,
+        escolheOfertante,
+        gos,
+        cursosDisponiveis: cursos.map((curso) => ({
+          cdCurso: curso.cdCurso,
+          nome: nomePorCurso.get(curso.cdCurso) ?? null,
+        })),
+      }}
+      paginaInicial={paginaInicial}
+      tipos={tiposVisiveis(usuario.tipo)}
+    />
   );
 }

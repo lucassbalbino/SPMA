@@ -228,15 +228,15 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-04 | P1: Página | Execute | Implemented |
 | GU-05 | P1: Página | Execute | Implemented |
 | GU-06 | P1: Página | Execute | Implemented |
-| GU-07 | P1: Página | Tasks | In Tasks |
-| GU-08 | P1: Página | Tasks | In Tasks |
+| GU-07 | P1: Página | Execute | Implemented |
+| GU-08 | P1: Página | Execute | Implemented |
 | GU-09 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-10 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-11 | P1: Paginar/filtrar | Execute | Implemented |
-| GU-12 | P1: Paginar/filtrar | Tasks | In Tasks |
+| GU-12 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-13 | P1: Paginar/filtrar | Execute | Implemented |
-| GU-14 | P1: Paginar/filtrar | Tasks | In Tasks |
-| GU-15 | P1: Paginar/filtrar | Tasks | In Tasks |
+| GU-14 | P1: Paginar/filtrar | Execute | Implemented |
+| GU-15 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-16 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-17 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-18 | P1: Paginar/filtrar | Execute | Implemented |
@@ -270,7 +270,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-46 | P1: Senha | Tasks | In Tasks |
 | GU-47 | P1: Senha | Execute | Implemented |
 | GU-48 | P1: Documento fora da URL | Execute | Implemented |
-| GU-49 | P1: Documento fora da URL | Tasks | In Tasks |
+| GU-49 | P1: Documento fora da URL | Execute | Implemented |
 
 **Coverage:** 49 total, 49 mapped to tasks (T1–T13, ver `Requirement` de cada tarefa), 0 unmapped.
 
