@@ -59,8 +59,6 @@ export function NovoUsuarioForm({
   // abre os demais campos depois de definido (nenhum tipo pré-selecionado).
   const [tipo, setTipo] = useState<TipoUsuario | "">("");
   const [cdOfertante, setCdOfertante] = useState("");
-  const [vlVerba, setVlVerba] = useState("");
-  const [dtVerba, setDtVerba] = useState("");
   const [cdCurso, setCdCurso] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -68,9 +66,9 @@ export function NovoUsuarioForm({
   // VO é o único perfil que se vincula a um GO já existente (AD-012) -
   // escolhido de uma lista, quando quem cria gerencia verba (AM/GT).
   const pedeGoParaVo = escolheOfertante && tipo === "VO";
-  // OGO-12 (AD-044): o GO é criado só com CNPJ, nome e verba. Email e os
-  // demais dados organizacionais ele mesmo declara no 1º acesso.
-  const pedeVerba = escolheOfertante && tipo === "GO";
+  // OGO-12 (AD-044): o GO é criado só com CNPJ e nome. Email e os demais
+  // dados organizacionais ele mesmo declara no 1º acesso; a verba é
+  // vinculada depois, em /verbas (GV-23, AD-046).
   const pedeEmail = tipo !== "GO";
   // AVAL-01: todo Aluno nasce matriculado, então o curso é obrigatório para
   // qualquer perfil que crie um AL (hoje AM e GO - REQ-AU-05/06).
@@ -93,11 +91,6 @@ export function NovoUsuarioForm({
       return;
     }
 
-    if (pedeVerba && !vlVerba) {
-      setErro("Valor da verba é obrigatório");
-      return;
-    }
-
     if (pedeCurso && !cdCurso) {
       setErro("Curso é obrigatório");
       return;
@@ -110,9 +103,6 @@ export function NovoUsuarioForm({
       tipo: tipo || undefined,
       cdOfertante: pedeGoParaVo && cdOfertante ? cdOfertante : undefined,
       cdCurso: pedeCurso && cdCurso ? Number(cdCurso) : undefined,
-      verba: pedeVerba
-        ? { vlVerba: vlVerba ? Number(vlVerba) : undefined, dtVerba: dtVerba || undefined }
-        : undefined,
     });
     if (!entrada.success) {
       setErro(entrada.error.issues[0]?.message ?? "Dados inválidos");
@@ -140,8 +130,6 @@ export function NovoUsuarioForm({
       setEmail("");
       setTipo("");
       setCdOfertante("");
-      setVlVerba("");
-      setDtVerba("");
       setCdCurso("");
     } finally {
       setEnviando(false);
@@ -234,34 +222,6 @@ export function NovoUsuarioForm({
                   </p>
                 )}
               </Field>
-            )}
-            {pedeVerba && (
-              <>
-                <Field data-invalid={!!erro}>
-                  <FieldLabel htmlFor="vlVerba">Valor da verba</FieldLabel>
-                  <Input
-                    id="vlVerba"
-                    name="vlVerba"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={vlVerba}
-                    onChange={(event) => setVlVerba(event.target.value)}
-                    disabled={enviando}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="dtVerba">Data da verba</FieldLabel>
-                  <Input
-                    id="dtVerba"
-                    name="dtVerba"
-                    type="date"
-                    value={dtVerba}
-                    onChange={(event) => setDtVerba(event.target.value)}
-                    disabled={enviando}
-                  />
-                </Field>
-              </>
             )}
             {pedeCurso && (
               <Field data-invalid={!!erro}>

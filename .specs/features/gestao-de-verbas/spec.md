@@ -209,8 +209,8 @@ Escopo Large: cada dimensão vira requisito ou recebe `N/A` explícito.
 | GV-20 | P2: Edição | Design | Pending |
 | GV-21 | P2: Edição | Tasks | Implementing |
 | GV-22 | P2: Edição | Design | Pending |
-| GV-23 | P1: GO nasce sem verba | Design | Pending |
-| GV-24 | P1: GO nasce sem verba | Design | Pending |
+| GV-23 | P1: GO nasce sem verba | Tasks | Implementing |
+| GV-24 | P1: GO nasce sem verba | Tasks | Implementing |
 | GV-25 | P1: GO nasce sem verba | Design | Pending |
 | GV-26 | P1: GO nasce sem verba | Tasks | Implementing |
 | GV-27 | P1: Navegação | Design | Pending |

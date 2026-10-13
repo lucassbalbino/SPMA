@@ -1,9 +1,9 @@
 // e2e de /usuarios, a "Gestão de usuários", pela UI real. Era o e2e de
 // /usuarios/novo (T29); a criação mudou de endereço (GU-01/GU-03) e o antigo
 // redireciona (GU-02). Cobre CA-AU-05 (GO logado só vê
-// GO/VO/AL como opções de tipo e cria um AL já matriculado), REQ-OV-08 (AM
-// logado informa os dados organizacionais do GO e a verba no mesmo
-// formulário) e AVAL-01 (curso obrigatório na criação do Aluno).
+// GO/VO/AL como opções de tipo e cria um AL já matriculado), GV-23/GV-24 (AM
+// logado cria o GO só com CNPJ e nome, sem verba - AD-046) e AVAL-01 (curso
+// obrigatório na criação do Aluno).
 //
 // UGO-14/AD-043: sem `model Ofertante` separado, criar um GO deixa de ser
 // "escolher um Ofertante já cadastrado" - o próprio GO informa CNPJ+UF (T15).
@@ -19,7 +19,7 @@ import {
   deleteVerbasPorOfertante,
   getAvaliacao,
   getUsuario,
-  getVerba,
+  getVerbasPorOfertante,
   upsertUsuario,
 } from "./helpers/db";
 import { geradorDeCnpj } from "./helpers/cnpj";
@@ -132,7 +132,7 @@ test("GO logado não vê os campos de Ofertante/verba (não gere verba)", async 
   await expect(page.locator("#vlVerba")).toHaveCount(0);
 });
 
-test("OGO-09/OGO-12: AM logado cria um GO só com CNPJ, nome e verba - a tela não pede nenhum dado organizacional", async ({
+test("OGO-09/OGO-12/GV-23/GV-24: AM logado cria um GO só com CNPJ e nome - a tela não pede dado organizacional nem verba", async ({
   page,
 }) => {
   const login = await page.request.post("/api/auth/login", {
@@ -146,20 +146,18 @@ test("OGO-09/OGO-12: AM logado cria um GO só com CNPJ, nome e verba - a tela n�
   await page.locator("select#tipo").selectOption("VO");
   await expect(page.locator("#email")).toBeVisible();
 
-  // OGO-12: com GO, só CNPJ, nome e verba. Nada de Ofertante existente, nem
-  // E-mail, UF, Responsável, Telefone ou Município.
+  // OGO-12 + GV-23: com GO, só CNPJ e nome. Nada de Ofertante existente,
+  // E-mail, UF, Responsável, Telefone, Município - nem verba (AD-046: a
+  // verba é vinculada depois, em /verbas).
   await page.locator("select#tipo").selectOption("GO");
   await expect(page.locator("select#cdOfertante")).toHaveCount(0);
-  for (const campo of ["email", "uf", "responsavel", "telefone", "municipio"]) {
+  for (const campo of ["email", "uf", "responsavel", "telefone", "municipio", "vlVerba", "dtVerba"]) {
     await expect(page.locator(`#${campo}`)).toHaveCount(0);
   }
-  await expect(page.locator("#vlVerba")).toBeVisible();
 
   // Com GO selecionado o campo de documento é rotulado "CNPJ".
   await page.getByLabel("CNPJ").fill(CNPJ_NOVO_GO);
   await page.getByLabel("Nome").fill("GO Criado Pela UI");
-  await page.getByLabel("Valor da verba").fill("7500");
-  await page.getByLabel("Data da verba").fill("2026-04-20");
 
   const [resposta] = await Promise.all([
     page.waitForResponse((res) => res.url().includes("/api/usuarios")),
@@ -173,9 +171,8 @@ test("OGO-09/OGO-12: AM logado cria um GO só com CNPJ, nome e verba - a tela n�
   expect(criado?.cdOfertante).toBeNull();
   expect(criado?.criadoPor).toBe(CPF_AM_CRIADOR);
 
-  const verba = getVerba((await resposta.json()).verba.cdVerba);
-  expect(verba?.cdOfertante).toBe(CNPJ_NOVO_GO);
-  expect(Number(verba?.vlVerba)).toBe(7500);
+  // GV-24: o GO nasce sem nenhuma verba.
+  expect(getVerbasPorOfertante(CNPJ_NOVO_GO)).toEqual([]);
 });
 
 test("UGO-14: AM logado vincula um VO a um GO existente, escolhido de uma lista", async ({

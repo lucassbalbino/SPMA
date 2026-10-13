@@ -224,13 +224,15 @@ T11
 
 **Done when**:
 
-- [ ] `e2e/usuarios-page.spec.ts`, teste OGO-09/OGO-12: com o tipo GO selecionado, `#vlVerba` e `#dtVerba` têm contagem 0; o AM cria o GO só com CNPJ e nome → 201, usuário GO no banco e zero verbas para o CNPJ
-- [ ] Gate Full passa com `npx playwright test e2e/usuarios-page.spec.ts`
+- [x] `e2e/usuarios-page.spec.ts`, teste OGO-09/OGO-12: com o tipo GO selecionado, `#vlVerba` e `#dtVerba` têm contagem 0; o AM cria o GO só com CNPJ e nome → 201, usuário GO no banco e zero verbas para o CNPJ
+- [x] Gate Full passa com `npx playwright test e2e/usuarios-page.spec.ts`
 
 **Tests**: e2e
 **Gate**: full
 
 **Commit**: `feat(usuarios): tirar os campos de verba da criação do GO`
+
+**Status**: ✅ Done — 788 unit / 121 integration / e2e usuarios-page 20/20.
 
 ---
 
