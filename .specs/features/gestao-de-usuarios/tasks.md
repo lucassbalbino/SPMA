@@ -287,9 +287,9 @@ T11 → T12 → T13
 
 **Done when**:
 
-- [ ] `e2e/usuarios-gestao.spec.ts` (novo): GT logado → 200 com as 4 chaves do contrato e `usuarios.length <= 20`; sem header CSRF → 403; VT logado → 403 "Acesso negado"; chave extra → 400
-- [ ] A requisição de busca por CPF do teste tem `request.url()` igual a `/api/usuarios/consulta`, sem query string
-- [ ] Gate Full passa com `npx playwright test e2e/usuarios-gestao.spec.ts`
+- [x] `e2e/usuarios-gestao.spec.ts` (novo): GT logado → 200 com as 4 chaves do contrato e `usuarios.length <= 20`; sem header CSRF → 403; VT logado → 403 "Acesso negado"; chave extra → 400
+- [x] A requisição de busca por CPF do teste tem `request.url()` igual a `/api/usuarios/consulta`, sem query string
+- [x] Gate Full passa com `npx playwright test e2e/usuarios-gestao.spec.ts`
 
 **Tests**: e2e
 **Gate**: full

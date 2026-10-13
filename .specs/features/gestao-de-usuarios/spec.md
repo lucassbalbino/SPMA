@@ -240,8 +240,8 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-16 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-17 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-18 | P1: Paginar/filtrar | Execute | Implemented |
-| GU-19 | P1: Paginar/filtrar | Tasks | In Tasks |
-| GU-20 | P1: Paginar/filtrar | Tasks | In Tasks |
+| GU-19 | P1: Paginar/filtrar | Execute | Implemented |
+| GU-20 | P1: Paginar/filtrar | Execute | Implemented |
 | GU-21 | P1: Nome e e-mail | Execute | Implemented |
 | GU-22 | P1: Nome e e-mail | Tasks | In Tasks |
 | GU-23 | P1: Nome e e-mail | Tasks | In Tasks |
@@ -269,7 +269,7 @@ Hoje `/usuarios/novo` só cria. Depois de criado, um usuário não pode ser cons
 | GU-45 | P1: Senha | Tasks | In Tasks |
 | GU-46 | P1: Senha | Tasks | In Tasks |
 | GU-47 | P1: Senha | Execute | Implemented |
-| GU-48 | P1: Documento fora da URL | Tasks | In Tasks |
+| GU-48 | P1: Documento fora da URL | Execute | Implemented |
 | GU-49 | P1: Documento fora da URL | Tasks | In Tasks |
 
 **Coverage:** 49 total, 49 mapped to tasks (T1–T13, ver `Requirement` de cada tarefa), 0 unmapped.
