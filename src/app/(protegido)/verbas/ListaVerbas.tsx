@@ -10,7 +10,12 @@
 import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import { edicaoVerbaSchema } from "@/lib/validation/schemas/verba.schema";
@@ -38,6 +43,9 @@ function dataBr(data: string | null): string {
   return `${dia}/${mes}/${ano}`;
 }
 
+/** Colunas compartilhadas por cabeçalho e linhas, para alinharem. */
+const COLUNAS = "sm:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_5rem]";
+
 export function ListaVerbas({
   verbas,
   podeEditar,
@@ -48,51 +56,96 @@ export function ListaVerbas({
   const [editando, setEditando] = useState<number | null>(null);
 
   if (verbas.length === 0) {
-    return <p className="text-sm text-muted-foreground">Nenhuma verba cadastrada.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Nenhuma verba cadastrada.</p>
+    );
   }
 
   return (
-    <ul className="flex flex-col gap-2">
-      {verbas.map((verba) => {
-        const aberta = editando === verba.cdVerba;
-        return (
-          <li
-            key={verba.cdVerba}
-            data-testid={`verba-${verba.cdVerba}`}
-            className="flex flex-col gap-3 rounded-lg border border-border px-3 py-2 text-sm"
-          >
-            <div className="grid items-center gap-1 sm:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_auto]">
-              <span className="font-medium">{verba.nomeOfertante ?? verba.cdOfertante}</span>
-              <span>{verba.cdOfertante}</span>
-              <span>Valor {moeda(verba.vlVerba)}</span>
-              <span>Saldo {moeda(verba.saldoDisponivel)}</span>
-              <span className="text-muted-foreground">{dataBr(verba.dtVerba)}</span>
-              {podeEditar && !aberta ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditando(verba.cdVerba)}
-                >
-                  Editar
-                </Button>
-              ) : (
-                <span />
+    <div className="overflow-hidden rounded-lg border border-border text-sm">
+      {/* Cabeçalho só visual: em tela estreita some, e cada célula traz o
+          próprio rótulo (que o leitor de tela também lê em tela larga). */}
+      <div
+        aria-hidden="true"
+        className={`hidden gap-3 border-b border-border bg-muted px-3 py-2 text-xs font-medium text-muted-foreground sm:grid ${COLUNAS}`}
+      >
+        <span>Ofertante</span>
+        <span>CNPJ</span>
+        <span>Valor</span>
+        <span>Saldo</span>
+        <span>Liberação</span>
+        <span />
+      </div>
+      <ul className="divide-y divide-border">
+        {verbas.map((verba) => {
+          const aberta = editando === verba.cdVerba;
+          return (
+            <li
+              key={verba.cdVerba}
+              data-testid={`verba-${verba.cdVerba}`}
+              className="flex flex-col gap-3 px-3 py-2"
+            >
+              <div className={`grid items-center gap-1 sm:gap-3 ${COLUNAS}`}>
+                {/* Primeiro span da linha: o nome do GO (o e2e de GV-11 conta com isso). */}
+                <span className="font-medium">
+                  {verba.nomeOfertante ?? verba.cdOfertante}
+                </span>
+                <div>
+                  <Rotulo>CNPJ</Rotulo> {verba.cdOfertante}
+                </div>
+                <div>
+                  <Rotulo>Valor</Rotulo> {moeda(verba.vlVerba)}
+                </div>
+                <div>
+                  <Rotulo>Saldo</Rotulo> {moeda(verba.saldoDisponivel)}
+                </div>
+                <div>
+                  <Rotulo>Liberação</Rotulo>{" "}
+                  <span className="text-muted-foreground">
+                    {dataBr(verba.dtVerba)}
+                  </span>
+                </div>
+                {podeEditar && !aberta ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="justify-self-start sm:justify-self-end"
+                    onClick={() => setEditando(verba.cdVerba)}
+                  >
+                    Editar
+                  </Button>
+                ) : (
+                  <span />
+                )}
+              </div>
+              {aberta && (
+                <EdicaoVerba verba={verba} aoFechar={() => setEditando(null)} />
               )}
-            </div>
-            {aberta && <EdicaoVerba verba={verba} aoFechar={() => setEditando(null)} />}
-          </li>
-        );
-      })}
-    </ul>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
+}
+
+/** Rótulo da célula: visível em tela estreita, só para leitor de tela na larga. */
+function Rotulo({ children }: { children: string }) {
+  return <span className="text-muted-foreground sm:sr-only">{children}</span>;
 }
 
 /**
  * Montado só enquanto a linha está aberta: os campos começam com os valores
  * atuais. Só valor e data - o GO de uma verba não se troca (AD-015, GV-22).
  */
-function EdicaoVerba({ verba, aoFechar }: { verba: VerbaDaTela; aoFechar: () => void }) {
+function EdicaoVerba({
+  verba,
+  aoFechar,
+}: {
+  verba: VerbaDaTela;
+  aoFechar: () => void;
+}) {
   const id = useId();
   const router = useRouter();
   const [vlVerba, setVlVerba] = useState(String(verba.vlVerba));
@@ -170,7 +223,13 @@ function EdicaoVerba({ verba, aoFechar }: { verba: VerbaDaTela; aoFechar: () => 
           <Button type="submit" size="sm" disabled={enviando}>
             Salvar
           </Button>
-          <Button type="button" size="sm" variant="outline" onClick={aoFechar} disabled={enviando}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={aoFechar}
+            disabled={enviando}
+          >
             Cancelar
           </Button>
         </div>

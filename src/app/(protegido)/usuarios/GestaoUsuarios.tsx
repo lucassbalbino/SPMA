@@ -18,7 +18,7 @@ import { headerCSRF } from "@/lib/security/csrf-client";
 import { NOME_TIPO_USUARIO } from "@/lib/ui/tipos-usuario";
 import type { PaginaUsuarios } from "@/lib/usuarios/consulta";
 import type { TipoUsuario } from "@/generated/prisma/enums";
-import { LinhaUsuario } from "./LinhaUsuario";
+import { COLUNAS_USUARIO, LinhaUsuario } from "./LinhaUsuario";
 import { NovoUsuarioForm } from "./NovoUsuarioForm";
 
 type Filtro = { pagina: number; tipo?: TipoUsuario; busca: string };
@@ -111,7 +111,10 @@ export function GestaoUsuarios({
           <CardTitle>Novo usuário</CardTitle>
         </CardHeader>
         <CardContent>
-          <NovoUsuarioForm {...formulario} aoCriar={resultado ? recarregar : undefined} />
+          <NovoUsuarioForm
+            {...formulario}
+            aoCriar={resultado ? recarregar : undefined}
+          />
         </CardContent>
       </Card>
 
@@ -121,7 +124,11 @@ export function GestaoUsuarios({
             <CardTitle>Usuários</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <div role="group" aria-label="Filtrar por tipo" className="flex flex-wrap gap-2">
+            <div
+              role="group"
+              aria-label="Filtrar por tipo"
+              className="flex flex-wrap gap-2"
+            >
               {[undefined, ...tipos].map((tipo) => {
                 const selecionado = filtro.tipo === tipo;
                 return (
@@ -132,7 +139,9 @@ export function GestaoUsuarios({
                     variant={selecionado ? "default" : "outline"}
                     aria-pressed={selecionado}
                     // GU-10/GU-15: trocar o chip volta à página 1.
-                    onClick={() => void consultar({ ...filtro, pagina: 1, tipo })}
+                    onClick={() =>
+                      void consultar({ ...filtro, pagina: 1, tipo })
+                    }
                   >
                     {tipo ? NOME_TIPO_USUARIO[tipo] : "Todos"}
                   </Button>
@@ -152,27 +161,43 @@ export function GestaoUsuarios({
             {erro && <p className="text-sm text-destructive">{erro}</p>}
 
             {resultado.usuarios.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
+              <p className="text-sm text-muted-foreground">
+                Nenhum usuário encontrado.
+              </p>
             ) : (
-              <ul
-                data-testid="lista-usuarios"
-                aria-busy={carregando}
-                className="flex flex-col gap-2"
-              >
-                {resultado.usuarios.map((usuario) => (
-                  <LinhaUsuario
-                    key={usuario.documento}
-                    usuario={usuario}
-                    editando={editando === usuario.documento}
-                    aoEditar={() => setEditando(usuario.documento)}
-                    aoFechar={() => setEditando(null)}
-                    aoSalvar={() => {
-                      setEditando(null);
-                      recarregar();
-                    }}
-                  />
-                ))}
-              </ul>
+              <div className="overflow-hidden rounded-lg border border-border text-sm">
+                {/* Cabeçalho só visual: em tela estreita some, e cada célula
+                    traz o próprio rótulo (lido pelo leitor de tela). */}
+                <div
+                  aria-hidden="true"
+                  className={`hidden gap-3 border-b border-border bg-muted px-3 py-2 text-xs font-medium text-muted-foreground sm:grid ${COLUNAS_USUARIO}`}
+                >
+                  <span>Nome</span>
+                  <span>Documento</span>
+                  <span>Tipo</span>
+                  <span>E-mail</span>
+                  <span />
+                </div>
+                <ul
+                  data-testid="lista-usuarios"
+                  aria-busy={carregando}
+                  className="divide-y divide-border"
+                >
+                  {resultado.usuarios.map((usuario) => (
+                    <LinhaUsuario
+                      key={usuario.documento}
+                      usuario={usuario}
+                      editando={editando === usuario.documento}
+                      aoEditar={() => setEditando(usuario.documento)}
+                      aoFechar={() => setEditando(null)}
+                      aoSalvar={() => {
+                        setEditando(null);
+                        recarregar();
+                      }}
+                    />
+                  ))}
+                </ul>
+              </div>
             )}
 
             {/* GU-14: "Anterior" desabilita na página 1 e "Próxima" na última. */}
@@ -182,7 +207,9 @@ export function GestaoUsuarios({
                 variant="outline"
                 size="sm"
                 disabled={carregando || resultado.pagina <= 1}
-                onClick={() => void consultar({ ...filtro, pagina: resultado.pagina - 1 })}
+                onClick={() =>
+                  void consultar({ ...filtro, pagina: resultado.pagina - 1 })
+                }
               >
                 Anterior
               </Button>
@@ -193,8 +220,12 @@ export function GestaoUsuarios({
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={carregando || resultado.pagina >= resultado.totalPaginas}
-                onClick={() => void consultar({ ...filtro, pagina: resultado.pagina + 1 })}
+                disabled={
+                  carregando || resultado.pagina >= resultado.totalPaginas
+                }
+                onClick={() =>
+                  void consultar({ ...filtro, pagina: resultado.pagina + 1 })
+                }
               >
                 Próxima
               </Button>

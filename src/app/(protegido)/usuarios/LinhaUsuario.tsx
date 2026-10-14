@@ -10,7 +10,12 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import { NOME_TIPO_USUARIO } from "@/lib/ui/tipos-usuario";
@@ -18,6 +23,9 @@ import type { LinhaGestao } from "@/lib/usuarios/consulta";
 
 const SENHA_RESETADA =
   "Senha resetada. No próximo acesso, o usuário entra com a senha em branco.";
+
+/** Colunas compartilhadas pelo cabeçalho (`GestaoUsuarios`) e pelas linhas. */
+export const COLUNAS_USUARIO = "sm:grid-cols-[1fr_1fr_1fr_1.5fr_5rem]";
 
 export function LinhaUsuario({
   usuario,
@@ -34,23 +42,47 @@ export function LinhaUsuario({
   aoSalvar: () => void;
 }) {
   return (
-    <li className="flex flex-col gap-3 rounded-lg border border-border px-3 py-2 text-sm">
-      <div className="grid items-center gap-1 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+    <li className="flex flex-col gap-3 px-3 py-2">
+      <div className={`grid items-center gap-1 sm:gap-3 ${COLUNAS_USUARIO}`}>
         <span className="font-medium">{usuario.nome ?? "—"}</span>
-        <span>{usuario.documento}</span>
-        <span>{NOME_TIPO_USUARIO[usuario.tipo]}</span>
-        <span className="text-muted-foreground">{usuario.email ?? "—"}</span>
+        <div>
+          <Rotulo>Documento</Rotulo> {usuario.documento}
+        </div>
+        <div>
+          <Rotulo>Tipo</Rotulo> {NOME_TIPO_USUARIO[usuario.tipo]}
+        </div>
+        <div className="break-all">
+          <Rotulo>E-mail</Rotulo>{" "}
+          <span className="text-muted-foreground">{usuario.email ?? "—"}</span>
+        </div>
         {usuario.editavel && !editando ? (
-          <Button type="button" variant="outline" size="sm" onClick={aoEditar}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="justify-self-start sm:justify-self-end"
+            onClick={aoEditar}
+          >
             Editar
           </Button>
         ) : (
           <span />
         )}
       </div>
-      {editando && <EdicaoUsuario usuario={usuario} aoFechar={aoFechar} aoSalvar={aoSalvar} />}
+      {editando && (
+        <EdicaoUsuario
+          usuario={usuario}
+          aoFechar={aoFechar}
+          aoSalvar={aoSalvar}
+        />
+      )}
     </li>
   );
+}
+
+/** Rótulo da célula: visível em tela estreita, só para leitor de tela na larga. */
+function Rotulo({ children }: { children: string }) {
+  return <span className="text-muted-foreground sm:sr-only">{children}</span>;
 }
 
 /**
@@ -79,7 +111,11 @@ function EdicaoUsuario({
   const ehGO = usuario.tipo === "GO";
   const tamanhoDocumento = ehGO ? 14 : 11;
 
-  async function enviar(url: string, method: string, corpo: unknown): Promise<boolean> {
+  async function enviar(
+    url: string,
+    method: string,
+    corpo: unknown,
+  ): Promise<boolean> {
     setErro(null);
     setAviso(null);
     setEnviando(true);
@@ -165,14 +201,20 @@ function EdicaoUsuario({
           />
         </Field>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor={`${id}-documento`}>{ehGO ? "CNPJ" : "CPF"}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-documento`}>
+            {ehGO ? "CNPJ" : "CPF"}
+          </FieldLabel>
           <Input
             id={`${id}-documento`}
             inputMode="numeric"
             maxLength={tamanhoDocumento}
             value={documento}
             onChange={(event) =>
-              setDocumento(event.target.value.replace(/\D/g, "").slice(0, tamanhoDocumento))
+              setDocumento(
+                event.target.value
+                  .replace(/\D/g, "")
+                  .slice(0, tamanhoDocumento),
+              )
             }
             disabled={enviando}
           />
@@ -186,7 +228,11 @@ function EdicaoUsuario({
             <Button type="button" variant="destructive" onClick={resetarSenha}>
               Confirmar reset
             </Button>
-            <Button type="button" variant="outline" onClick={() => setConfirmandoReset(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmandoReset(false)}
+            >
               Cancelar
             </Button>
           </div>
@@ -195,7 +241,12 @@ function EdicaoUsuario({
             <Button type="submit" disabled={enviando}>
               Salvar
             </Button>
-            <Button type="button" variant="outline" onClick={aoFechar} disabled={enviando}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={aoFechar}
+              disabled={enviando}
+            >
               Cancelar
             </Button>
             <Button
