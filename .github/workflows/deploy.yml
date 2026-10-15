@@ -21,15 +21,30 @@ jobs:
     # binário nativo do argon2 da plataforma em que o build roda.
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # prisma.config.ts usa env("DATABASE_URL"), que falha se a variável não
+    # existir. Nenhuma rota é pré-renderizada com dados, então nem o generate
+    # nem o build conectam ao banco - a URL só precisa existir.
+    env:
+      DATABASE_URL: "mysql://build:build@127.0.0.1:3306/build"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
 
       - run: npm ci
+
+      # Num clone limpo faltam dois artefatos gerados, ambos fora do git:
+      # o client do Prisma (`src/generated/`, importado como
+      # `@/generated/prisma/*`) e os tipos globais de rota do Next
+      # (`LayoutProps`, `PageProps`, em `.next/types`). Sem eles o `tsc`
+      # falha antes do build.
+      - name: Gerar Prisma Client e tipos de rota
+        run: |
+          npx prisma generate
+          npx next typegen
 
       - name: Verificar (tipos, lint, testes unitários)
         run: |
@@ -37,13 +52,8 @@ jobs:
           npm run lint
           npm run test:unit
 
-      # prisma.config.ts usa env("DATABASE_URL"), que falha se a variável não
-      # existir. Nenhuma rota é pré-renderizada com dados, então o build não
-      # conecta ao banco - a URL só precisa existir.
       - name: Build
         run: npm run build
-        env:
-          DATABASE_URL: "mysql://build:build@127.0.0.1:3306/build"
 
       - name: Empacotar
         run: |
