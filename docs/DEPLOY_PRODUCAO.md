@@ -166,7 +166,14 @@ certbot --nginx -d spma.seudominio.com.br --redirect -m SEU_EMAIL --agree-tos --
 ```
 
 O cookie de sessão é `secure` (`src/lib/auth/session.ts`): sem HTTPS o login
-não funciona.
+não funciona — e acessar pelo IP puro (`http://IP`) não serve.
+
+**Sem domínio ainda?** Use provisoriamente `143-95-171-171.sslip.io` (o
+sslip.io resolve o IP escrito no próprio nome, e o Let's Encrypt emite
+certificado para ele). Serve para validar a instalação com dados de teste; não
+para dados reais: quem controla o DNS desse nome é um terceiro sem contrato.
+Quando o domínio chegar, acrescente-o ao `server_name` em
+`/etc/nginx/sites-available/spma` e rode o `certbot --nginx -d` para ele.
 
 > **Não troque `proxy_set_header X-Forwarded-For $remote_addr`** por
 > `$proxy_add_x_forwarded_for`: o rate limit por IP lê o primeiro IP do
