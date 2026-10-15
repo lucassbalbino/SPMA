@@ -1,0 +1,11 @@
+# Ajuste do MySQL 8.4 para uma VPS de 2 GB dividida com o Node.
+# Instalar em /etc/mysql/mysql.conf.d/zz-spma.cnf (o "zz" faz carregar por
+# último e prevalecer sobre os padrões).
+[mysqld]
+# Só conexões da própria máquina; a porta 3306 nunca fica exposta.
+bind-address = 127.0.0.1
+mysqlx = OFF
+# O performance_schema sozinho reserva centenas de MB.
+performance_schema = OFF
+innodb_buffer_pool_size = 256M
+max_connections = 40

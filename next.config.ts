@@ -6,6 +6,10 @@ import type { NextConfig } from "next";
 // design.md - um CSP estático exigiria 'unsafe-inline' e não bloquearia XSS
 // de verdade).
 const nextConfig: NextConfig = {
+  // Build autocontido em `.next/standalone` (server.js + só o node_modules
+  // rastreado): é o que o CI empacota e manda para a VPS, que não tem RAM
+  // para rodar `next build` nem `npm ci` (ver docs/DEPLOY_PRODUCAO.md).
+  output: "standalone",
   async headers() {
     return [
       {

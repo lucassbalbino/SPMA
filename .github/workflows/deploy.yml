@@ -1,0 +1,70 @@
+# Deploy de produção na VPS (docs/DEPLOY_PRODUCAO.md).
+#
+# O build acontece AQUI, não na VPS: com 2 GB de RAM, `npm ci` + `next build`
+# disputariam memória com o MySQL e o próprio app no ar. A VPS só recebe o
+# pacote standalone pronto, aplica as migrations e reinicia o serviço.
+name: deploy-producao
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Um deploy por vez; um push novo espera o anterior terminar.
+concurrency:
+  group: deploy-producao
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Precisa ser Linux x64 como a VPS: o rastreamento do standalone copia o
+    # binário nativo do argon2 da plataforma em que o build roda.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Verificar (tipos, lint, testes unitários)
+        run: |
+          npm run typecheck
+          npm run lint
+          npm run test:unit
+
+      # prisma.config.ts usa env("DATABASE_URL"), que falha se a variável não
+      # existir. Nenhuma rota é pré-renderizada com dados, então o build não
+      # conecta ao banco - a URL só precisa existir.
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: "mysql://build:build@127.0.0.1:3306/build"
+
+      - name: Empacotar
+        run: |
+          cp -r .next/static .next/standalone/.next/
+          mkdir -p .next/standalone/prisma
+          cp -r prisma/migrations prisma/schema.prisma .next/standalone/prisma/
+          cp prisma.config.ts .next/standalone/
+          tar -czf spma.tgz -C .next/standalone .
+
+      - name: Configurar SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Enviar e publicar
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+          PORTA: ${{ secrets.VPS_PORT }}
+        run: |
+          scp -P "$PORTA" spma.tgz "spma@$HOST:/tmp/spma-$GITHUB_SHA.tgz"
+          scp -P "$PORTA" deploy/deploy.sh "spma@$HOST:/opt/spma/deploy.sh"
+          ssh -p "$PORTA" "spma@$HOST" "chmod +x /opt/spma/deploy.sh && /opt/spma/deploy.sh $GITHUB_SHA"

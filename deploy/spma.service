@@ -1,0 +1,24 @@
+# Serviço do SPMA. Instalar em /etc/systemd/system/spma.service.
+# systemd em vez de PM2: não ocupa RAM a mais num servidor de 2 GB.
+[Unit]
+Description=SPMA (Next.js standalone)
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+User=spma
+Group=spma
+WorkingDirectory=/opt/spma/current
+EnvironmentFile=/opt/spma/shared/.env.production
+Environment=NODE_OPTIONS=--max-old-space-size=512
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+# Teto de memória: se o Node vazar, o systemd o reinicia antes de o MySQL
+# ser morto pelo OOM killer do kernel.
+MemoryMax=900M
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

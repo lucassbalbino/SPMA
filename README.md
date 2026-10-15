@@ -83,10 +83,11 @@ primeiro acesso. O agente cuidará disso na feature `auth-e-usuarios`.
 npm run dev
 ```
 
-## Deploy de teste (homologação com o cliente)
+## Deploy de produção
 
-Para publicar uma instância que o cliente valida pelo navegador, sem instalar
-nada na máquina dele, siga [`docs/DEPLOY_TESTE.md`](docs/DEPLOY_TESTE.md).
+Produção roda numa VPS (Ubuntu, nginx, MySQL 8.4) e é atualizada a cada push
+na `main` pelo GitHub Actions. Instalação do servidor, operação e rollback em
+[`docs/DEPLOY_PRODUCAO.md`](docs/DEPLOY_PRODUCAO.md).
 
 ## Fluxo de desenvolvimento (spec-driven)
 

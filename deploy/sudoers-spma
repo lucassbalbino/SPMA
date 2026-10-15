@@ -1,0 +1,3 @@
+# Instalar em /etc/sudoers.d/spma (com: visudo -cf para validar).
+# O deploy.sh precisa reiniciar o serviço - e só isso.
+spma ALL=(root) NOPASSWD: /usr/bin/systemctl restart spma

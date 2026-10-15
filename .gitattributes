@@ -1,0 +1,3 @@
+# Arquivos que rodam ou são copiados para a VPS (Linux): CRLF quebra o bash
+# ("$'\r': command not found") e os .conf/.service do systemd/nginx.
+deploy/** text eol=lf

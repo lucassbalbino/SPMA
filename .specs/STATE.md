@@ -326,3 +326,12 @@ Pedido do usuário em `gestao-de-verbas`: "preciso que um ofertante possa ser vi
 4. **Teto do valor**: `vlVerba` aceita até 99.999.999,99, com no máximo 2 casas decimais, validado no Zod. Era o limite físico de `DECIMAL(10,2)`, que antes chegava ao MySQL e virava 500.
 
 **Regra para o futuro:** qualquer tela ou rota nova que leia verba usa `podeLerVerba`, não `podeAcessarOfertante`. A lista escopada com saldo mora em `src/lib/verba/consulta.ts` (`listarVerbasDoEscopo`), compartilhada pela tela e pela API.
+
+**AD-047 (2026-10-15) — Produção numa VPS própria (HostGator, 2 GB, Ubuntu 22.04): Next em modo `standalone` atrás de nginx, MySQL 8.4 local, build no GitHub Actions. O túnel Cloudflare de homologação (`uat:*`, `docs/DEPLOY_TESTE.md`) deixa de existir.**
+Pedido do usuário: migrar o sistema para a VPS; o túnel sai. Passo a passo em `docs/DEPLOY_PRODUCAO.md`, modelos de servidor em `deploy/`.
+
+1. **Build fora da VPS.** `npm ci` + `next build` não cabem em 2 GB junto com o MySQL no ar. O CI empacota `.next/standalone` (que só traz o `node_modules` rastreado) e envia por SSH. O pacote precisa ser montado em Linux x64: o rastreamento copia só o binário nativo do argon2 da plataforma do build.
+2. **`migrate deploy` continua sem passo humano** (premissa da AD-041 e de `respostas-normalizadas`). Como o CLI do Prisma não entra no standalone, `deploy/deploy.sh` o mantém numa pasta própria (`/opt/spma/migrator`) na versão do `package.json`, e roda as migrations **antes** de trocar a versão no ar.
+3. **O nginx sobrescreve `X-Forwarded-For` com `$remote_addr`**, nunca `$proxy_add_x_forwarded_for`. `obterIpCliente` lê o primeiro IP do cabeçalho; anexado, o cliente forjaria o IP e escaparia do REQ-SEC-03.
+
+**Regra para o futuro:** se um proxy/CDN entrar na frente do nginx (ex.: Cloudflare com proxy ligado), o `$remote_addr` passa a ser o IP do proxy e o rate limit por IP bloqueia todos de uma vez - exige `real_ip` com as faixas do proxy antes de ligar.
