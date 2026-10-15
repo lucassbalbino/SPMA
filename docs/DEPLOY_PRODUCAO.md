@@ -237,15 +237,15 @@ o CPF define a senha.
 
 ### 9. Backup
 
-**[VPS]**
+O backup usa o usuário `spma` do app, não o root do MySQL: só precisa ler o
+banco do sistema. **[VPS]** como root (a senha é pedida sem eco, para não
+precisar editar o arquivo à mão):
 
 ```bash
-cat > /root/.my.cnf <<'EOF'
-[client]
-user=root
-password=SENHA_ROOT_DO_MYSQL
-EOF
+read -rsp "Senha do banco (usuário spma): " P; echo
+printf '[client]\nhost=127.0.0.1\nuser=spma\npassword=%s\n' "$P" > /root/.my.cnf
 chmod 600 /root/.my.cnf
+mysql -e "SELECT 'backup ok';" spma
 ```
 
 Copie [`deploy/backup.sh`](../deploy/backup.sh) para `/opt/spma/backup.sh`
