@@ -39,6 +39,13 @@ export async function seedAdminMaster(prisma: PrismaClient) {
 }
 
 async function main() {
+  // Mostra o destino antes de gravar: o `loadEnv()` acima cai em silêncio no
+  // `.env` de dev (que também tem SEED_AM_*) quando o arquivo passado ao
+  // `dotenv -e` não existe - e o seed "dava certo" no banco errado.
+  const destino = new URL(process.env.DATABASE_URL as string);
+  console.log(
+    `Banco de destino: ${destino.hostname}:${destino.port}${destino.pathname}`,
+  );
   const adapter = new PrismaMariaDb(process.env.DATABASE_URL as string);
   const prisma = new PrismaClient({ adapter });
   try {
