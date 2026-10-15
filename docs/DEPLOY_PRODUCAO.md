@@ -217,19 +217,23 @@ O seed roda da sua máquina por um túnel SSH (na VPS não há `tsx` nem código
 ssh -p PORTA -N -L 3307:127.0.0.1:3306 spma@IP_DA_VPS
 ```
 
-**[PC]** Crie `.env.prod.local` na raiz do projeto (ignorado pelo git via `.env*.local`):
-
-```
-DATABASE_URL="mysql://spma:SENHA@127.0.0.1:3307/spma?allowPublicKeyRetrieval=true"
-SEED_AM_CPF=CPF_DO_AM
-SEED_AM_NOME="Nome do AM"
-```
-
-**[PC]** Terminal 2:
+**[PC]** Terminal 2, na raiz do projeto. As variáveis vão direto na sessão,
+sem arquivo: um `dotenv -e arquivo` com o nome errado não dá erro, e o
+`loadEnv()` do seed cai no `.env` de dev, que também tem `SEED_AM_*`. O
+seed "dá certo" no banco local.
 
 ```powershell
-npx dotenv -e .env.prod.local -- tsx prisma/seed.ts
+Test-NetConnection 127.0.0.1 -Port 3307 | Select-Object TcpTestSucceeded   # True = túnel ok
+$s = Read-Host "Senha do banco" -AsSecureString
+$env:DATABASE_URL = "mysql://spma:" + [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)) + "@127.0.0.1:3307/spma?allowPublicKeyRetrieval=true"
+$env:SEED_AM_CPF = Read-Host "CPF do Admin (so numeros)"
+$env:SEED_AM_NOME = Read-Host "Nome do Admin"
+npx tsx prisma/seed.ts
+Remove-Item Env:DATABASE_URL, Env:SEED_AM_CPF, Env:SEED_AM_NOME; $s = $null
 ```
+
+A saída precisa mostrar `Banco de destino: 127.0.0.1:3307/spma`. Com `3306`,
+o seed gravou no MySQL local.
 
 **Faça o primeiro acesso do AM imediatamente**: conta sem senha entra com a
 senha em branco (`src/app/api/auth/login/route.ts`) e quem chegar primeiro com
