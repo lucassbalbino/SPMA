@@ -10,6 +10,7 @@ import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatarDocumento } from "@/lib/validation/mascara-documento";
 
 export default async function AvaliacoesPage() {
   const { usuario } = await requireSession();
@@ -43,7 +44,7 @@ export default async function AvaliacoesPage() {
                   className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent"
                 >
                   <span>
-                    Avaliação #{avaliacao.cdCurso} - CPF {avaliacao.cpf}
+                    Avaliação #{avaliacao.cdCurso} - CPF {formatarDocumento(avaliacao.cpf)}
                   </span>
                   <span data-testid={`status-avaliacao-${avaliacao.cpf}-${avaliacao.cdCurso}`}>
                     {avaliacao.status === "ENCERRADO" ? "Encerrado" : "Em andamento"}

@@ -15,6 +15,12 @@ import { Input } from "@/components/ui/input";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import { NOME_TIPO_USUARIO } from "@/lib/ui/tipos-usuario";
 import type { LinhaGestao } from "@/lib/usuarios/consulta";
+import { normalizarDocumento } from "@/lib/validation/documento";
+import {
+  aplicarMascaraDocumento,
+  formatarDocumento,
+  TAMANHO_MASCARA,
+} from "@/lib/validation/mascara-documento";
 
 const SENHA_RESETADA =
   "Senha resetada. No próximo acesso, o usuário entra com a senha em branco.";
@@ -37,7 +43,7 @@ export function LinhaUsuario({
     <li className="flex flex-col gap-3 rounded-lg border border-border px-3 py-2 text-sm">
       <div className="grid items-center gap-1 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
         <span className="font-medium">{usuario.nome ?? "—"}</span>
-        <span>{usuario.documento}</span>
+        <span>{formatarDocumento(usuario.documento)}</span>
         <span>{NOME_TIPO_USUARIO[usuario.tipo]}</span>
         <span className="text-muted-foreground">{usuario.email ?? "—"}</span>
         {usuario.editavel && !editando ? (
@@ -69,15 +75,15 @@ function EdicaoUsuario({
   const id = useId();
   const [nome, setNome] = useState(usuario.nome ?? "");
   const [email, setEmail] = useState(usuario.email ?? "");
-  const [documento, setDocumento] = useState(usuario.documento);
+  const [documento, setDocumento] = useState(() => formatarDocumento(usuario.documento));
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [confirmandoReset, setConfirmandoReset] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
-  // GU-40: CNPJ (14 dígitos) para GO, CPF (11) para os demais, como na criação.
+  // GU-40: CNPJ para GO, CPF para os demais, como na criação.
   const ehGO = usuario.tipo === "GO";
-  const tamanhoDocumento = ehGO ? 14 : 11;
+  const tipoDocumento = ehGO ? "CNPJ" : "CPF";
 
   async function enviar(url: string, method: string, corpo: unknown): Promise<boolean> {
     setErro(null);
@@ -116,7 +122,10 @@ function EdicaoUsuario({
     const alteracoes = {
       nome: nome !== (usuario.nome ?? "") ? nome : undefined,
       email: email !== (usuario.email ?? "") ? email : undefined,
-      documentoNovo: documento !== usuario.documento ? documento : undefined,
+      documentoNovo:
+        normalizarDocumento(documento) !== usuario.documento
+          ? normalizarDocumento(documento)
+          : undefined,
     };
 
     if (Object.values(alteracoes).every((valor) => valor === undefined)) {
@@ -168,12 +177,12 @@ function EdicaoUsuario({
           <FieldLabel htmlFor={`${id}-documento`}>{ehGO ? "CNPJ" : "CPF"}</FieldLabel>
           <Input
             id={`${id}-documento`}
-            inputMode="numeric"
-            maxLength={tamanhoDocumento}
+            // CNPJ alfanumérico tem letras: teclado numérico só no CPF.
+            inputMode={ehGO ? "text" : "numeric"}
+            autoCapitalize="characters"
+            maxLength={TAMANHO_MASCARA[tipoDocumento]}
             value={documento}
-            onChange={(event) =>
-              setDocumento(event.target.value.replace(/\D/g, "").slice(0, tamanhoDocumento))
-            }
+            onChange={(event) => setDocumento(aplicarMascaraDocumento(tipoDocumento, event.target.value))}
             disabled={enviando}
           />
         </Field>
