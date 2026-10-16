@@ -22,9 +22,12 @@ export function normalizarCPF(cpf: string): string {
 }
 
 export function validarCPF(cpf: string): boolean {
-  const apenasDigitos = cpf.replace(/\D/g, "");
+  // Tira só a pontuação: uma letra no meio torna o CPF inválido, em vez de
+  // ser descartada em silêncio. `normalizarDocumento` mantém letras (CNPJ
+  // alfanumérico), então "52998224725X" passaria aqui e seria gravado assim.
+  const apenasDigitos = cpf.replace(/[^0-9A-Za-z]/g, "");
 
-  if (apenasDigitos.length !== 11) {
+  if (!/^\d{11}$/.test(apenasDigitos)) {
     return false;
   }
 

@@ -86,6 +86,19 @@ describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
     }
   });
 
+  it("aceita GO com CNPJ alfanumérico e o grava sem pontuação, em maiúscula", () => {
+    const result = usuarioSchema.safeParse({
+      nome: "Instituto Exemplo",
+      documento: "12.abc.345/01de-35",
+      tipo: TipoUsuario.GO,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.documento).toBe("12ABC34501DE35");
+    }
+  });
+
   it("GO com CNPJ inválido -> issue no campo documento", () => {
     const result = usuarioSchema.safeParse({
       nome: "Instituto Exemplo",

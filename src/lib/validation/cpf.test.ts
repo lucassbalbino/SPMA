@@ -51,4 +51,10 @@ describe("validarCPF", () => {
   it("retorna false para string vazia", () => {
     expect(validarCPF("")).toBe(false);
   });
+
+  // `normalizarDocumento` mantém letras (CNPJ alfanumérico): a letra não pode
+  // ser descartada aqui, ou o CPF seria gravado com ela.
+  it("retorna false para CPF válido com uma letra a mais", () => {
+    expect(validarCPF("52998224725X")).toBe(false);
+  });
 });

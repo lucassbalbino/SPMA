@@ -47,6 +47,23 @@ describe("validarCNPJ", () => {
   it("retorna false para string vazia", () => {
     expect(validarCNPJ("")).toBe(false);
   });
+
+  // Exemplo oficial da Receita para o CNPJ alfanumérico (jul/2026).
+  it("retorna true para CNPJ alfanumérico válido formatado", () => {
+    expect(validarCNPJ("12.ABC.345/01DE-35")).toBe(true);
+  });
+
+  it("retorna true para CNPJ alfanumérico válido sem formatação e em minúscula", () => {
+    expect(validarCNPJ("12abc34501de35")).toBe(true);
+  });
+
+  it("retorna false para CNPJ alfanumérico com dígito verificador alterado", () => {
+    expect(validarCNPJ("12.ABC.345/01DE-36")).toBe(false);
+  });
+
+  it("retorna false para letra na posição de um dígito verificador", () => {
+    expect(validarCNPJ("12.ABC.345/01DE-3A")).toBe(false);
+  });
 });
 
 describe("normalizarCNPJ", () => {
@@ -56,5 +73,9 @@ describe("normalizarCNPJ", () => {
 
   it("mantém string já normalizada inalterada", () => {
     expect(normalizarCNPJ("11222333000181")).toBe("11222333000181");
+  });
+
+  it("mantém as letras do CNPJ alfanumérico, em maiúscula", () => {
+    expect(normalizarCNPJ("12.abc.345/01de-35")).toBe("12ABC34501DE35");
   });
 });
