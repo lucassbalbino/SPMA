@@ -32,6 +32,14 @@ describe("validarDocumento", () => {
     expect(validarDocumento("1122233300018")).toEqual({ valido: false, tipo: null });
   });
 
+  it("CNPJ alfanumérico válido -> {valido:true, tipo:'CNPJ'}", () => {
+    expect(validarDocumento("12.ABC.345/01DE-35")).toEqual({ valido: true, tipo: "CNPJ" });
+  });
+
+  it("11 caracteres com letra -> {valido:false, tipo:null}", () => {
+    expect(validarDocumento("5299822472X")).toEqual({ valido: false, tipo: null });
+  });
+
   it("string vazia -> {valido:false, tipo:null}", () => {
     expect(validarDocumento("")).toEqual({ valido: false, tipo: null });
   });
@@ -44,5 +52,9 @@ describe("normalizarDocumento", () => {
 
   it("remove pontuação/máscara de um CNPJ", () => {
     expect(normalizarDocumento("11.222.333/0001-81")).toBe("11222333000181");
+  });
+
+  it("mantém as letras do CNPJ alfanumérico, em maiúscula", () => {
+    expect(normalizarDocumento("12.abc.345/01de-35")).toBe("12ABC34501DE35");
   });
 });

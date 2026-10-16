@@ -27,6 +27,11 @@ import { Input } from "@/components/ui/input";
 import { TIPOS_PERMITIDOS } from "@/lib/auth/cascata";
 import { NOME_TIPO_USUARIO } from "@/lib/ui/tipos-usuario";
 import { usuarioSchema } from "@/lib/validation/schemas/usuario.schema";
+import {
+  aplicarMascaraDocumento,
+  formatarDocumento,
+  TAMANHO_MASCARA,
+} from "@/lib/validation/mascara-documento";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import type { TipoUsuario } from "@/generated/prisma/enums";
 
@@ -73,13 +78,20 @@ export function NovoUsuarioForm({
   // AVAL-01: todo Aluno nasce matriculado, então o curso é obrigatório para
   // qualquer perfil que crie um AL (hoje AM e GO - REQ-AU-05/06).
   const pedeCurso = tipo === "AL";
-  // GO se identifica por CNPJ (14 dígitos), os demais tipos por CPF (11) -
-  // mesma distinção de `usuarioSchema`/`validarCNPJ`/`validarCPF`. O campo
-  // de documento trava a digitação nesse tamanho, dígitos apenas.
-  const tamanhoDocumento = tipo === "GO" ? 14 : 11;
+  // GO se identifica por CNPJ, os demais tipos por CPF - mesma distinção de
+  // `usuarioSchema`/`validarCNPJ`/`validarCPF`. O campo mostra o documento já
+  // pontuado; `usuarioSchema` tira a pontuação antes do envio.
+  const tipoDocumento = tipo === "GO" ? "CNPJ" : "CPF";
 
   function handleDocumentoChange(valor: string) {
-    setDocumento(valor.replace(/\D/g, "").slice(0, tamanhoDocumento));
+    setDocumento(aplicarMascaraDocumento(tipoDocumento, valor));
+  }
+
+  // Trocar o tipo troca a máscara: o que já foi digitado é reaplicado na
+  // nova, para um CPF digitado não seguir pontuado como CPF num GO.
+  function handleTipoChange(novoTipo: TipoUsuario | "") {
+    setTipo(novoTipo);
+    setDocumento((atual) => aplicarMascaraDocumento(novoTipo === "GO" ? "CNPJ" : "CPF", atual));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -149,7 +161,7 @@ export function NovoUsuarioForm({
             id="tipo"
             name="tipo"
             value={tipo}
-            onChange={(event) => setTipo(event.target.value as TipoUsuario)}
+            onChange={(event) => handleTipoChange(event.target.value as TipoUsuario | "")}
             disabled={enviando}
             className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none md:text-sm dark:bg-input/30"
           >
@@ -168,8 +180,10 @@ export function NovoUsuarioForm({
               <Input
                 id="cpf"
                 name="cpf"
-                inputMode="numeric"
-                maxLength={tamanhoDocumento}
+                // CNPJ alfanumérico tem letras: teclado numérico só no CPF.
+                inputMode={tipoDocumento === "CPF" ? "numeric" : "text"}
+                autoCapitalize="characters"
+                maxLength={TAMANHO_MASCARA[tipoDocumento]}
                 value={documento}
                 onChange={(event) => handleDocumentoChange(event.target.value)}
                 disabled={enviando}
@@ -212,7 +226,7 @@ export function NovoUsuarioForm({
                   <option value="">Selecione</option>
                   {gos.map((go) => (
                     <option key={go.documento} value={go.documento}>
-                      {go.nome ?? go.documento}
+                      {go.nome ?? formatarDocumento(go.documento)}
                     </option>
                   ))}
                 </select>

@@ -15,6 +15,7 @@ import {
   upsertUsuario,
 } from "./helpers/db";
 import { geradorDeCnpj } from "./helpers/cnpj";
+import { formatarDocumento } from "../src/lib/validation/mascara-documento";
 
 const SENHA = "SenhaValida123";
 
@@ -89,7 +90,7 @@ test("GV-11/GV-14: GO vê só a própria verba, com GO, CNPJ, valor, saldo e dat
 
   const linha = page.getByTestId(`verba-${cdVerbaA}`);
   await expect(linha).toContainText("GO Verbas Página A");
-  await expect(linha).toContainText(CNPJ_GO_A);
+  await expect(linha).toContainText(formatarDocumento(CNPJ_GO_A));
   await expect(linha).toContainText("Valor R$ 5000.00");
   // GV-16 na tela: 5000 - 1200 alocados a um curso.
   await expect(linha).toContainText("Saldo R$ 3800.00");
@@ -134,7 +135,7 @@ test("GV-11: verba sem data mostra '—', e GO sem nome aparece pelo CNPJ no lug
 
   // O primeiro campo da linha é o nome do GO; sem nome, é o CNPJ.
   const linhaSemNome = page.getByTestId(`verba-${cdVerbaE}`);
-  await expect(linhaSemNome.locator("span").first()).toHaveText(CNPJ_GO_E);
+  await expect(linhaSemNome.locator("span").first()).toHaveText(formatarDocumento(CNPJ_GO_E));
   await expect(linhaSemNome).toContainText("01/02/2026");
 });
 

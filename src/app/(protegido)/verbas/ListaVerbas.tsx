@@ -14,6 +14,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import { edicaoVerbaSchema } from "@/lib/validation/schemas/verba.schema";
+import { formatarDocumento } from "@/lib/validation/mascara-documento";
 
 /** Verba já serializada pelo Server Component: sem Decimal nem Date. */
 export interface VerbaDaTela {
@@ -62,8 +63,10 @@ export function ListaVerbas({
             className="flex flex-col gap-3 rounded-lg border border-border px-3 py-2 text-sm"
           >
             <div className="grid items-center gap-1 sm:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_auto]">
-              <span className="font-medium">{verba.nomeOfertante ?? verba.cdOfertante}</span>
-              <span>{verba.cdOfertante}</span>
+              <span className="font-medium">
+                {verba.nomeOfertante ?? formatarDocumento(verba.cdOfertante)}
+              </span>
+              <span>{formatarDocumento(verba.cdOfertante)}</span>
               <span>Valor {moeda(verba.vlVerba)}</span>
               <span>Saldo {moeda(verba.saldoDisponivel)}</span>
               <span className="text-muted-foreground">{dataBr(verba.dtVerba)}</span>

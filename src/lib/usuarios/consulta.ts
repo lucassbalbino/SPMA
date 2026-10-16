@@ -14,6 +14,7 @@ import {
   resolverEscopoOfertante,
   type UsuarioComEscopo,
 } from "../auth/permissoes";
+import { validarCNPJ } from "../validation/cnpj";
 import { normalizarDocumento } from "../validation/documento";
 import { TAMANHO_PAGINA, totalPaginas } from "./paginacao";
 
@@ -83,11 +84,18 @@ export function whereUsuariosVisiveis(
 // CPF/CNPJ (`529.982.247-25`, `11.222.333/0001-81`) e espaços, sem letra.
 const PARECE_DOCUMENTO = /^[\d.\-/\s]+$/;
 
+// O CNPJ alfanumérico tem letras, então não cabe em `PARECE_DOCUMENTO`. Só
+// conta como documento quando é um CNPJ inteiro e válido: aceitar qualquer
+// mistura de letra e dígito traria de volta o problema do "GU-T 4".
+function pareceCnpjAlfanumerico(busca: string): boolean {
+  return /[A-Za-z]/.test(busca) && /^[0-9A-Za-z.\-/\s]+$/.test(busca) && validarCNPJ(busca);
+}
+
 /**
  * Nome contém o texto; e, só quando o texto parece um documento, também o
  * documento contém os dígitos digitados (GU-11). Um texto com qualquer letra
- * é só nome: sem essa regra, "GU-T 4" traria todo usuário cujo documento
- * tem um 4.
+ * é só nome - salvo um CNPJ alfanumérico inteiro e válido: sem essa regra,
+ * "GU-T 4" traria todo usuário cujo documento tem um 4.
  *
  * O `contains` não diferencia maiúsculas pela collation default do MySQL 8.4
  * (`utf8mb4_0900_ai_ci`), provado no teste de integração.
@@ -97,7 +105,10 @@ function whereDaBusca(busca: string | undefined): Prisma.UsuarioWhereInput {
     return {};
   }
 
-  const digitos = PARECE_DOCUMENTO.test(busca) ? normalizarDocumento(busca) : "";
+  const digitos =
+    PARECE_DOCUMENTO.test(busca) || pareceCnpjAlfanumerico(busca)
+      ? normalizarDocumento(busca)
+      : "";
 
   return {
     OR: [

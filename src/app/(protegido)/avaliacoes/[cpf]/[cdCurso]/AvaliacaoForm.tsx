@@ -63,6 +63,7 @@ import {
   naoConcluiuDeclarado,
 } from "@/lib/avaliacao/condicionais";
 import { chavesOrfas } from "@/lib/validation/condicionais";
+import { formatarDocumento } from "@/lib/validation/mascara-documento";
 import type { StatusFormulario } from "@/generated/prisma/enums";
 
 type Chave = keyof RespostasAvaliacao;
@@ -480,7 +481,7 @@ export function AvaliacaoForm({
   return (
     <CascaFormulario
       testid="avaliacao"
-      titulo={`Avaliação #${cdCurso} - CPF ${cpf}`}
+      titulo={`Avaliação #${cdCurso} - CPF ${formatarDocumento(cpf)}`}
       status={form.statusAtual}
       somenteLeitura={form.somenteLeitura}
       erro={form.erro}

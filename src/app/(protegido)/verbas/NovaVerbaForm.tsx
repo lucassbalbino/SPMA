@@ -14,6 +14,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import { verbaSchema } from "@/lib/validation/schemas/verba.schema";
+import { formatarDocumento } from "@/lib/validation/mascara-documento";
 
 type OpcaoGo = { documento: string; nome: string | null };
 
@@ -82,7 +83,9 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
             <option value="">Selecione o GO</option>
             {gos.map((go) => (
               <option key={go.documento} value={go.documento}>
-                {go.nome ? `${go.nome} — ${go.documento}` : go.documento}
+                {go.nome
+                  ? `${go.nome} — ${formatarDocumento(go.documento)}`
+                  : formatarDocumento(go.documento)}
               </option>
             ))}
           </select>

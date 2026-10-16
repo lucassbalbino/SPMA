@@ -23,6 +23,7 @@ import {
   upsertUsuario,
 } from "./helpers/db";
 import { geradorDeCnpj } from "./helpers/cnpj";
+import { formatarDocumento } from "../src/lib/validation/mascara-documento";
 import {
   cabecalhosAutenticados,
   idCsrfDaResposta,
@@ -423,12 +424,12 @@ test.describe("lista da Gestão de usuários", () => {
     await expect(linhas(page)).toHaveCount(2);
 
     const vo = linhas(page).filter({ hasText: NOME_VO_LISTA });
-    await expect(vo).toContainText(CPF_VO_LISTA);
+    await expect(vo).toContainText(formatarDocumento(CPF_VO_LISTA));
     await expect(vo).toContainText("Visualizador Ofertante");
     await expect(vo).toContainText(EMAIL_VO_LISTA);
 
     const aluno = linhas(page).filter({ hasText: NOME_AL_LISTA });
-    await expect(aluno).toContainText(CPF_AL_LISTA);
+    await expect(aluno).toContainText(formatarDocumento(CPF_AL_LISTA));
     await expect(aluno).toContainText("Aluno");
     await expect(aluno).toContainText(EMAIL_AL_LISTA);
   });
@@ -559,7 +560,7 @@ test.describe("lista da Gestão de usuários", () => {
     await expect(linhas(page)).toHaveCount(1);
 
     // Editar: trocar o documento.
-    const linha = linhas(page).filter({ hasText: buscado });
+    const linha = linhas(page).filter({ hasText: formatarDocumento(buscado) });
     await linha.getByRole("button", { name: "Editar" }).click();
     await linha.getByLabel("CPF").fill(CPF_TROCADO_PELA_LINHA);
     await linha.getByRole("button", { name: "Salvar" }).click();
@@ -569,7 +570,9 @@ test.describe("lista da Gestão de usuários", () => {
 
     // Resetar a senha do documento novo.
     await busca.fill(CPF_TROCADO_PELA_LINHA);
-    const trocada = linhas(page).filter({ hasText: CPF_TROCADO_PELA_LINHA });
+    const trocada = linhas(page).filter({
+      hasText: formatarDocumento(CPF_TROCADO_PELA_LINHA),
+    });
     await trocada.getByRole("button", { name: "Editar" }).click();
     await trocada.getByRole("button", { name: "Resetar senha" }).click();
     await trocada.getByRole("button", { name: "Confirmar reset" }).click();
@@ -695,9 +698,9 @@ test.describe("edição na linha da Gestão de usuários", () => {
     await expect(linhas(page)).toHaveCount(5);
   }
 
-  // A linha sai pelo documento, que aparece nela mesmo em edição.
+  // A linha sai pelo documento, que aparece nela (pontuado) mesmo em edição.
   const linhaDe = (page: Page, documento: string) =>
-    linhas(page).filter({ hasText: documento });
+    linhas(page).filter({ hasText: formatarDocumento(documento) });
 
   test("GU-04/GU-22: GT vê Editar no VT e no AL, não vê a linha do AM e não edita a própria", async ({
     page,
@@ -721,7 +724,7 @@ test.describe("edição na linha da Gestão de usuários", () => {
     await linha.getByRole("button", { name: "Editar" }).click();
     await expect(linha.getByLabel("Nome")).toHaveValue("GU-E2E Edicao VT");
     await expect(linha.getByLabel("E-mail")).toHaveValue("vt.edicao@exemplo.com");
-    await expect(linha.getByLabel("CPF")).toHaveValue(CPF_VT_EDICAO);
+    await expect(linha.getByLabel("CPF")).toHaveValue(formatarDocumento(CPF_VT_EDICAO));
     await expect(linha.getByRole("button", { name: "Cancelar" })).toBeVisible();
     await expect(linha.getByRole("button", { name: "Resetar senha" })).toBeVisible();
 
@@ -746,12 +749,12 @@ test.describe("edição na linha da Gestão de usuários", () => {
 
     await expect(linha).toContainText("Documento já cadastrado");
     await expect(linha.getByRole("button", { name: "Salvar" })).toBeVisible();
-    await expect(linha.getByLabel("CPF")).toHaveValue(CPF_VT_OCUPADO);
+    await expect(linha.getByLabel("CPF")).toHaveValue(formatarDocumento(CPF_VT_OCUPADO));
     expect(getUsuario(CPF_VT_EDICAO)?.tipo).toBe("VT");
     expect(getUsuario(CPF_VT_OCUPADO)?.nome).toBe("GU-E2E Edicao Ocupado");
   });
 
-  test("GU-40: o documento é CNPJ de 14 dígitos para GO e CPF de 11 para VT, só dígitos", async ({
+  test("GU-40: o documento é CNPJ para GO e CPF para VT, com a pontuação posta pela máscara", async ({
     page,
   }) => {
     await abrirListaDoGT(page);
@@ -759,11 +762,12 @@ test.describe("edição na linha da Gestão de usuários", () => {
     const go = linhaDe(page, CNPJ_GO_EDICAO);
     await go.getByRole("button", { name: "Editar" }).click();
     await expect(go.getByLabel("CPF")).toHaveCount(0);
-    // Digitado tecla a tecla, como o gestor faria: pontuação e excesso caem.
+    // Digitado tecla a tecla, com pontuação, como o gestor faria: a máscara
+    // não a duplica e o excesso cai.
     await go.getByLabel("CNPJ").fill("");
     await go.getByLabel("CNPJ").pressSequentially("11.222.333/0001-8199");
-    await expect(go.getByLabel("CNPJ")).toHaveValue("11222333000181");
-    await expect(go.getByLabel("CNPJ")).toHaveAttribute("maxlength", "14");
+    await expect(go.getByLabel("CNPJ")).toHaveValue("11.222.333/0001-81");
+    await expect(go.getByLabel("CNPJ")).toHaveAttribute("maxlength", "18");
     await go.getByRole("button", { name: "Cancelar" }).click();
 
     const vt = linhaDe(page, CPF_VT_EDICAO);
@@ -771,8 +775,8 @@ test.describe("edição na linha da Gestão de usuários", () => {
     await expect(vt.getByLabel("CNPJ")).toHaveCount(0);
     await vt.getByLabel("CPF").fill("");
     await vt.getByLabel("CPF").pressSequentially("123.456.789-0123");
-    await expect(vt.getByLabel("CPF")).toHaveValue("12345678901");
-    await expect(vt.getByLabel("CPF")).toHaveAttribute("maxlength", "11");
+    await expect(vt.getByLabel("CPF")).toHaveValue("123.456.789-01");
+    await expect(vt.getByLabel("CPF")).toHaveAttribute("maxlength", "14");
   });
 
   test("edge case: corrigir só o e-mail de um usuário sem nome grava o e-mail sem exigir nome", async ({
