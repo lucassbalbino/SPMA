@@ -128,20 +128,20 @@ Escopo Medium: só as dimensões presentes.
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| IDV-01 | P1: Identificar na criação | Execute | Implementing |
-| IDV-02 | P1: Identificar na criação | Execute | Implementing |
-| IDV-03 | P1: Identificar na criação | Execute | Implementing |
-| IDV-04 | P1: Identificar na criação | Execute | Implementing |
-| IDV-05 | P1: Identificar na criação | Execute | Implementing |
-| IDV-06 | P1: Editar a identificação | Execute | Implementing |
-| IDV-07 | P1: Editar a identificação | Execute | Implementing |
-| IDV-08 | P1: Editar a identificação | Execute | Implementing |
-| IDV-09 | P1: Identificação visível | Execute | Implementing |
-| IDV-10 | P1: Identificação visível | Execute | Implementing |
-| IDV-11 | P1: Identificação visível | Execute | Implementing |
-| IDV-12 | P1: Identificação visível | Execute | Implementing |
-| IDV-13 | P1: Identificação visível | Execute | Implementing |
-| IDV-14 | P1: Identificação visível | Execute | Implementing |
+| IDV-01 | P1: Identificar na criação | Execute | Verified |
+| IDV-02 | P1: Identificar na criação | Execute | Verified |
+| IDV-03 | P1: Identificar na criação | Execute | Verified |
+| IDV-04 | P1: Identificar na criação | Execute | Verified |
+| IDV-05 | P1: Identificar na criação | Execute | Verified |
+| IDV-06 | P1: Editar a identificação | Execute | Verified |
+| IDV-07 | P1: Editar a identificação | Execute | Verified |
+| IDV-08 | P1: Editar a identificação | Execute | Verified |
+| IDV-09 | P1: Identificação visível | Execute | Verified |
+| IDV-10 | P1: Identificação visível | Execute | Verified |
+| IDV-11 | P1: Identificação visível | Execute | Verified |
+| IDV-12 | P1: Identificação visível | Execute | Verified |
+| IDV-13 | P1: Identificação visível | Execute | Verified |
+| IDV-14 | P1: Identificação visível | Execute | Verified |
 
 **Coverage:** 14 total, 14 mapped to the inline Execute plan (3 commits), 0 unmapped
 

@@ -85,6 +85,11 @@ Este arquivo é a fonte de verdade das decisões travadas. Não reabrir uma AD s
   - **Residuais Minor aceitos** (em `validation.md`): AL provado por composição em GV-17/GV-34, GV-30 indireto (`ROTAS_COM_SESSAO`), GV-14 do VO sem linhas.
   - **Lições não distiladas** (mesmo motivo de `onboarding-organizacional-go`: `lessons.py` faz auto-prune): candidatas listadas no `validation.md`.
   - **Arquivos da feature:** `.specs/features/gestao-de-verbas/{context.md,spec.md,design.md,tasks.md,validation.md}`.
+- **`identificacao-verba` (2026-10-19): DONE.** Medium, plano inline em 3 commits (`ee33d7a`, `4b90526`, `42a5f06`). `validation.md` = **PASS**, `validate_state.py identificacao-verba` = exit 0, os 14 `IDV-*` `Verified`. A verba ganha `dsVerba` (`DS_Verba VARCHAR(60) NOT NULL`, obrigatória, trim, pode repetir), editável na linha de `/verbas` e exibida como "#<cdVerba> · <identificação>" na lista e no seletor de `/cursos/novo`. A migration preenche as existentes com "Verba #<cdVerba>"; `cdVerba` não muda. Supera, só para este campo, a linha "Campos novos na verba" do Out of Scope de `gestao-de-verbas`.
+  - **Testes no HEAD:** 827 unit / 124 integration / 292 e2e. Sensor 4/4 mortos.
+  - **Verifier:** passada standalone pelo autor; o sub-agente independente não foi disparado.
+  - **Fora do escopo, não corrigido:** o gatilho do Select de `/cursos/novo` mostra o valor cru ("8") depois da escolha, não o rótulo. Vem de antes da feature.
+  - **Arquivos da feature:** `.specs/features/identificacao-verba/{spec.md,validation.md}`.
 
 ---
 
