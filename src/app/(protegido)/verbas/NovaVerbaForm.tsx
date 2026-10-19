@@ -1,5 +1,5 @@
 // Formulário de criação de verba da tela /verbas (GV-01..05, GV-07, GV-09,
-// GV-10, AD-046). Renderizado só para AM/GT (`podeGerenciarVerba`), mas isso
+// GV-10, AD-046, IDV-01..03). Renderizado só para AM/GT (`podeGerenciarVerba`), mas isso
 // é conveniência: POST /api/verbas reavalia a permissão (AD-033).
 //
 // A forma é validada aqui pelo mesmo `verbaSchema` do servidor, que é quem
@@ -21,6 +21,7 @@ type OpcaoGo = { documento: string; nome: string | null };
 export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
   const router = useRouter();
   const [cdOfertante, setCdOfertante] = useState("");
+  const [dsVerba, setDsVerba] = useState("");
   const [vlVerba, setVlVerba] = useState("");
   const [dtVerba, setDtVerba] = useState("");
   const [erro, setErro] = useState<string | null>(null);
@@ -34,6 +35,7 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
 
     const entrada = verbaSchema.safeParse({
       cdOfertante,
+      dsVerba,
       vlVerba: vlVerba === "" ? undefined : Number(vlVerba),
       dtVerba: dtVerba || undefined,
     });
@@ -57,6 +59,7 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
       }
 
       setCdOfertante("");
+      setDsVerba("");
       setVlVerba("");
       setDtVerba("");
       router.refresh();
@@ -94,6 +97,18 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
               Nenhum Ofertante cadastrado - cadastre um GO antes de criar uma verba.
             </p>
           )}
+        </Field>
+        <Field data-invalid={!!erro}>
+          <FieldLabel htmlFor="dsVerba">Identificação</FieldLabel>
+          <Input
+            id="dsVerba"
+            name="dsVerba"
+            maxLength={60}
+            placeholder="Ex.: Capacitação 2026"
+            value={dsVerba}
+            onChange={(event) => setDsVerba(event.target.value)}
+            disabled={enviando}
+          />
         </Field>
         <Field data-invalid={!!erro}>
           <FieldLabel htmlFor="vlVerba">Valor da verba</FieldLabel>

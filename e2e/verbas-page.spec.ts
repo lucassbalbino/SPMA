@@ -68,12 +68,22 @@ test.beforeAll(() => {
   upsertUsuario({ cpf: CPF_AM, tipo: "AM", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
 
-  cdVerbaA = criarVerba({ cdOfertante: CNPJ_GO_A, vlVerba: 5000, dtVerba: "2026-03-10" }).cdVerba;
+  cdVerbaA = criarVerba({
+    cdOfertante: CNPJ_GO_A,
+    dsVerba: "Capacitação A",
+    vlVerba: 5000,
+    dtVerba: "2026-03-10",
+  }).cdVerba;
   criarPreCurso({ cdOfertante: CNPJ_GO_A, cdVerba: cdVerbaA, vlCursoAlocado: 1200, criadoPor: CNPJ_GO_A });
   cdVerbaB = criarVerba({ cdOfertante: CNPJ_GO_B, vlVerba: 700 }).cdVerba;
   cdVerbaD = criarVerba({ cdOfertante: CNPJ_GO_D, vlVerba: 1000, dtVerba: "2026-03-10" }).cdVerba;
   criarPreCurso({ cdOfertante: CNPJ_GO_D, cdVerba: cdVerbaD, vlCursoAlocado: 400, criadoPor: CNPJ_GO_D });
-  cdVerbaE = criarVerba({ cdOfertante: CNPJ_GO_E, vlVerba: 300, dtVerba: "2026-02-01" }).cdVerba;
+  cdVerbaE = criarVerba({
+    cdOfertante: CNPJ_GO_E,
+    dsVerba: "Verba E original",
+    vlVerba: 300,
+    dtVerba: "2026-02-01",
+  }).cdVerba;
 });
 
 test.afterAll(() => {
@@ -91,6 +101,8 @@ test("GV-11/GV-14: GO vê só a própria verba, com GO, CNPJ, valor, saldo e dat
   const linha = page.getByTestId(`verba-${cdVerbaA}`);
   await expect(linha).toContainText("GO Verbas Página A");
   await expect(linha).toContainText(formatarDocumento(CNPJ_GO_A));
+  // IDV-09: número e identificação, também para quem só lê.
+  await expect(linha).toContainText(`#${cdVerbaA} · Capacitação A`);
   await expect(linha).toContainText("Valor R$ 5000.00");
   // GV-16 na tela: 5000 - 1200 alocados a um curso.
   await expect(linha).toContainText("Saldo R$ 3800.00");
@@ -139,7 +151,7 @@ test("GV-11: verba sem data mostra '—', e GO sem nome aparece pelo CNPJ no lug
   await expect(linhaSemNome).toContainText("01/02/2026");
 });
 
-test("GV-03/GV-04/GV-05: AM envia o formulário incompleto e vê a mensagem de cada falta, sem criar verba", async ({
+test("GV-03/IDV-03/GV-04/GV-05: AM envia o formulário incompleto e vê a mensagem de cada falta, sem criar verba", async ({
   page,
 }) => {
   await logar(page, CPF_AM);
@@ -151,6 +163,11 @@ test("GV-03/GV-04/GV-05: AM envia o formulário incompleto e vê a mensagem de c
   await expect(page.getByText("Ofertante é obrigatório")).toBeVisible();
 
   await page.getByLabel("GO").selectOption(CNPJ_GO_C);
+  await page.getByLabel("Identificação").fill("   ");
+  await criar.click();
+  await expect(page.getByText("Identificação é obrigatória")).toBeVisible();
+
+  await page.getByLabel("Identificação").fill("Verba C");
   await criar.click();
   await expect(page.getByText("Valor da verba é obrigatório")).toBeVisible();
 
@@ -161,18 +178,20 @@ test("GV-03/GV-04/GV-05: AM envia o formulário incompleto e vê a mensagem de c
   expect(getVerbasPorOfertante(CNPJ_GO_C)).toEqual([]);
 });
 
-test("GV-01/GV-02/GV-07: AM cria uma segunda verba para um GO que já tem uma, e as duas aparecem na lista sem recarregar", async ({
+test("GV-01/GV-02/GV-07/IDV-01/IDV-02: AM cria uma segunda verba para um GO que já tem uma, e as duas aparecem na lista sem recarregar", async ({
   page,
 }) => {
   await logar(page, CPF_AM);
   await page.goto("/verbas");
 
-  // GV-01: os três campos do formulário.
+  // GV-01 + IDV-01: os campos do formulário.
   await expect(page.getByLabel("GO")).toBeVisible();
+  await expect(page.getByLabel("Identificação")).toBeVisible();
   await expect(page.getByLabel("Valor da verba")).toBeVisible();
   await expect(page.getByLabel("Data de liberação")).toBeVisible();
 
   await page.getByLabel("GO").selectOption(CNPJ_GO_B);
+  await page.getByLabel("Identificação").fill("Repasse Maio");
   await page.getByLabel("Valor da verba").fill("1500.75");
   await page.getByLabel("Data de liberação").fill("2026-05-01");
 
@@ -188,6 +207,7 @@ test("GV-01/GV-02/GV-07: AM cria uma segunda verba para um GO que já tem uma, e
   expect(verbasDeB).toHaveLength(2);
   const nova = verbasDeB[1];
   expect(nova.cdOfertante).toBe(CNPJ_GO_B);
+  expect(nova.dsVerba).toBe("Repasse Maio");
   expect(Number(nova.vlVerba)).toBe(1500.75);
   expect(nova.dtVerba).toMatch(/^2026-05-01/);
 
@@ -195,6 +215,7 @@ test("GV-01/GV-02/GV-07: AM cria uma segunda verba para um GO que já tem uma, e
   await expect(page.getByTestId(`verba-${cdVerbaB}`)).toContainText("Valor R$ 700.00");
   const linhaNova = page.getByTestId(`verba-${nova.cdVerba}`);
   await expect(linhaNova).toContainText("GO Verbas Página B");
+  await expect(linhaNova).toContainText(`#${nova.cdVerba} · Repasse Maio`);
   await expect(linhaNova).toContainText("Valor R$ 1500.75");
   await expect(linhaNova).toContainText("01/05/2026");
 });
@@ -214,6 +235,7 @@ test("GV-09: o botão 'Criar verba' fica desabilitado enquanto o envio está em 
   });
 
   await page.getByLabel("GO").selectOption(CNPJ_GO_B);
+  await page.getByLabel("Identificação").fill("Verba GV-09");
   await page.getByLabel("Valor da verba").fill("10");
 
   const criar = page.getByRole("button", { name: "Criar verba" });
@@ -262,3 +284,30 @@ test("GV-18/GV-19/GV-20/GV-22: GT edita valor e data na linha - abaixo do alocad
   expect(editada?.dtVerba).toMatch(/^2026-07-15/);
 });
 
+
+test("IDV-06/IDV-07/IDV-08: GT edita a identificação na linha - vazia é recusada, a nova aparece com o número", async ({
+  page,
+}) => {
+  await logar(page, CPF_GT);
+  await page.goto("/verbas");
+
+  const linha = page.getByTestId(`verba-${cdVerbaE}`);
+  await linha.getByRole("button", { name: "Editar" }).click();
+
+  // IDV-06: o campo abre com o valor atual.
+  const campo = linha.getByLabel("Identificação");
+  await expect(campo).toHaveValue("Verba E original");
+
+  // IDV-08: só espaços é recusado e o banco não muda.
+  await campo.fill("   ");
+  await linha.getByRole("button", { name: "Salvar" }).click();
+  await expect(linha.getByText("Identificação é obrigatória")).toBeVisible();
+  expect(getVerba(cdVerbaE)?.dsVerba).toBe("Verba E original");
+
+  // IDV-07: grava e a lista mostra o novo nome sem recarregar.
+  await campo.fill("Repasse Março");
+  await linha.getByRole("button", { name: "Salvar" }).click();
+  await expect(linha).toContainText(`#${cdVerbaE} · Repasse Março`);
+  await expect(linha.getByLabel("Identificação")).toHaveCount(0);
+  expect(getVerba(cdVerbaE)?.dsVerba).toBe("Repasse Março");
+});

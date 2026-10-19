@@ -1,5 +1,6 @@
-// Lista de verbas da tela /verbas (GV-11, GV-14, GV-15, AD-046) e, para
-// AM/GT, a edição de valor e data dentro da própria linha (GV-18..20, GV-22),
+// Lista de verbas da tela /verbas (GV-11, GV-14, GV-15, AD-046, IDV-09) e,
+// para AM/GT, a edição de identificação, valor e data dentro da própria linha
+// (GV-18..20, GV-22, IDV-06..08),
 // no padrão de `LinhaUsuario`: uma linha aberta por vez.
 //
 // O escopo e o saldo chegam prontos do servidor (`listarVerbasDoEscopo`, a
@@ -21,6 +22,7 @@ export interface VerbaDaTela {
   cdVerba: number;
   cdOfertante: string;
   nomeOfertante: string | null;
+  dsVerba: string;
   vlVerba: number;
   saldoDisponivel: number;
   /** "AAAA-MM-DD", ou null quando a verba não tem data de liberação. */
@@ -62,11 +64,14 @@ export function ListaVerbas({
             data-testid={`verba-${verba.cdVerba}`}
             className="flex flex-col gap-3 rounded-lg border border-border px-3 py-2 text-sm"
           >
-            <div className="grid items-center gap-1 sm:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_auto]">
+            <div className="grid items-center gap-1 sm:grid-cols-[1.5fr_1fr_1.5fr_1fr_1fr_1fr_auto]">
               <span className="font-medium">
                 {verba.nomeOfertante ?? formatarDocumento(verba.cdOfertante)}
               </span>
               <span>{formatarDocumento(verba.cdOfertante)}</span>
+              <span>
+                #{verba.cdVerba} · {verba.dsVerba}
+              </span>
               <span>Valor {moeda(verba.vlVerba)}</span>
               <span>Saldo {moeda(verba.saldoDisponivel)}</span>
               <span className="text-muted-foreground">{dataBr(verba.dtVerba)}</span>
@@ -93,11 +98,13 @@ export function ListaVerbas({
 
 /**
  * Montado só enquanto a linha está aberta: os campos começam com os valores
- * atuais. Só valor e data - o GO de uma verba não se troca (AD-015, GV-22).
+ * atuais. Identificação, valor e data - o GO de uma verba não se troca
+ * (AD-015, GV-22).
  */
 function EdicaoVerba({ verba, aoFechar }: { verba: VerbaDaTela; aoFechar: () => void }) {
   const id = useId();
   const router = useRouter();
+  const [dsVerba, setDsVerba] = useState(verba.dsVerba);
   const [vlVerba, setVlVerba] = useState(String(verba.vlVerba));
   const [dtVerba, setDtVerba] = useState(verba.dtVerba ?? "");
   const [erro, setErro] = useState<string | null>(null);
@@ -110,6 +117,7 @@ function EdicaoVerba({ verba, aoFechar }: { verba: VerbaDaTela; aoFechar: () => 
     // Data vazia não apaga a data atual: o PATCH trata `dtVerba` ausente como
     // "não alterar" (spec.md, Assumptions).
     const entrada = edicaoVerbaSchema.safeParse({
+      dsVerba,
       vlVerba: vlVerba === "" ? undefined : Number(vlVerba),
       dtVerba: dtVerba || undefined,
     });
@@ -146,6 +154,16 @@ function EdicaoVerba({ verba, aoFechar }: { verba: VerbaDaTela; aoFechar: () => 
   return (
     <form onSubmit={handleSubmit} noValidate>
       <FieldGroup>
+        <Field data-invalid={!!erro}>
+          <FieldLabel htmlFor={`${id}-dsVerba`}>Identificação</FieldLabel>
+          <Input
+            id={`${id}-dsVerba`}
+            maxLength={60}
+            value={dsVerba}
+            onChange={(event) => setDsVerba(event.target.value)}
+            disabled={enviando}
+          />
+        </Field>
         <Field data-invalid={!!erro}>
           <FieldLabel htmlFor={`${id}-vlVerba`}>Valor da verba</FieldLabel>
           <Input

@@ -128,15 +128,15 @@ Escopo Medium: só as dimensões presentes.
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| IDV-01 | P1: Identificar na criação | - | Pending |
+| IDV-01 | P1: Identificar na criação | Execute | Implementing |
 | IDV-02 | P1: Identificar na criação | Execute | Implementing |
 | IDV-03 | P1: Identificar na criação | Execute | Implementing |
 | IDV-04 | P1: Identificar na criação | Execute | Implementing |
 | IDV-05 | P1: Identificar na criação | Execute | Implementing |
-| IDV-06 | P1: Editar a identificação | - | Pending |
-| IDV-07 | P1: Editar a identificação | - | Pending |
+| IDV-06 | P1: Editar a identificação | Execute | Implementing |
+| IDV-07 | P1: Editar a identificação | Execute | Implementing |
 | IDV-08 | P1: Editar a identificação | Execute | Implementing |
-| IDV-09 | P1: Identificação visível | - | Pending |
+| IDV-09 | P1: Identificação visível | Execute | Implementing |
 | IDV-10 | P1: Identificação visível | Execute | Implementing |
 | IDV-11 | P1: Identificação visível | Execute | Implementing |
 | IDV-12 | P1: Identificação visível | - | Pending |

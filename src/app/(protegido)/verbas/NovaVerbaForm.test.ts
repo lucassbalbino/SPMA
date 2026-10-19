@@ -38,3 +38,23 @@ describe("NovaVerbaForm com GO cadastrado", () => {
     expect(html).toContain(">Criar verba</button>");
   });
 });
+
+describe("NovaVerbaForm - campo Identificação (IDV-01)", () => {
+  const html = renderToStaticMarkup(
+    createElement(NovaVerbaForm, { gos: [{ documento: "55000000000101", nome: "GO X" }] }),
+  );
+
+  it("fica entre o GO e o Valor", () => {
+    const go = html.indexOf('for="cdOfertante"');
+    const identificacao = html.indexOf('for="dsVerba">Identificação</label>');
+    const valor = html.indexOf('for="vlVerba"');
+
+    expect(go).toBeGreaterThanOrEqual(0);
+    expect(identificacao).toBeGreaterThan(go);
+    expect(valor).toBeGreaterThan(identificacao);
+  });
+
+  it("limita a digitação a 60 caracteres", () => {
+    expect(html).toMatch(/<input[^>]*id="dsVerba"[^>]*maxLength="60"|<input[^>]*maxLength="60"[^>]*id="dsVerba"/);
+  });
+});

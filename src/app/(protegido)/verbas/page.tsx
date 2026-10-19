@@ -69,6 +69,7 @@ export default async function VerbasPage() {
               cdVerba: verba.cdVerba,
               cdOfertante: verba.cdOfertante,
               nomeOfertante: verba.nomeOfertante,
+              dsVerba: verba.dsVerba,
               vlVerba: verba.vlVerba.toNumber(),
               saldoDisponivel: verba.saldoDisponivel.toNumber(),
               // `DT_Verba` é DATE: meia-noite UTC, então o recorte ISO é o dia.
