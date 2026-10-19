@@ -57,6 +57,7 @@ export type SessaoPersistida = { id: string; cpfUsuario: string; expiraEm: strin
 export type VerbaPersistida = {
   cdVerba: number;
   cdOfertante: string;
+  dsVerba: string;
   vlVerba: string;
   dtVerba: string | null;
 };
@@ -117,6 +118,7 @@ export function deleteTentativasIp(ips: string[]): void {
 
 export function criarVerba(dados: {
   cdOfertante: string;
+  dsVerba?: string;
   vlVerba: number;
   dtVerba?: string;
 }): VerbaPersistida {

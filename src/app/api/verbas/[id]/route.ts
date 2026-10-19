@@ -70,7 +70,7 @@ async function editarVerba(request: Request, { params }: Contexto) {
 
   const verba = await prisma.verba.update({
     where: { cdVerba },
-    data: { vlVerba: dados.vlVerba, dtVerba: dados.dtVerba },
+    data: { dsVerba: dados.dsVerba, vlVerba: dados.vlVerba, dtVerba: dados.dtVerba },
   });
 
   return NextResponse.json({ verba });

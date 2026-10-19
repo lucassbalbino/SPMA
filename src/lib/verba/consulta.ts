@@ -18,6 +18,8 @@ export interface VerbaListada {
   /** CNPJ do GO dono da verba (AD-043). */
   cdOfertante: string;
   nomeOfertante: string | null;
+  /** Identificação livre da verba (IDV-09, IDV-11). */
+  dsVerba: string;
   vlVerba: Prisma.Decimal;
   dtVerba: Date | null;
   dataCriacao: Date;
@@ -57,6 +59,7 @@ export async function listarVerbasDoEscopo(
     cdVerba: verba.cdVerba,
     cdOfertante: verba.cdOfertante,
     nomeOfertante: verba.ofertante.nome,
+    dsVerba: verba.dsVerba,
     vlVerba: verba.vlVerba,
     dtVerba: verba.dtVerba,
     dataCriacao: verba.dataCriacao,

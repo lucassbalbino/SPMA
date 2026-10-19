@@ -134,7 +134,7 @@ test("AD-016: edição que iguala o valor total ao já alocado é aceita (mesma 
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/verbas/${cdVerbaComCurso}`, {
-    data: { vlVerba: 3000 },
+    data: { dsVerba: "Verba e2e", vlVerba: 3000 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -143,7 +143,7 @@ test("AD-016: edição que iguala o valor total ao já alocado é aceita (mesma 
 
   // Restaura para não afetar os testes seguintes.
   await cliente.patch(`/api/verbas/${cdVerbaComCurso}`, {
-    data: { vlVerba: 8000 },
+    data: { dsVerba: "Verba e2e", vlVerba: 8000 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -156,7 +156,7 @@ test("CA-OV-14: edição abaixo do já alocado é rejeitada com 409, valor origi
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/verbas/${cdVerbaComCurso}`, {
-    data: { vlVerba: 2999.99 },
+    data: { dsVerba: "Verba e2e", vlVerba: 2999.99 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -176,7 +176,7 @@ test("GV-21: PATCH com valor zero, negativo, acima do teto ou com 3 casas é rej
   const cliente = await novoCliente();
   for (const vlVerba of [0, -1, 100000000, 10.123]) {
     const res = await cliente.patch(`/api/verbas/${cdVerbaSemCurso}`, {
-      data: { vlVerba },
+      data: { dsVerba: "Verba e2e", vlVerba },
       headers: cabecalhosAutenticados(idSessao, idCsrf),
     });
 
@@ -193,12 +193,46 @@ test("GO não pode editar Verba (só AM/GT gerenciam)", async () => {
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/verbas/${cdVerbaSemCurso}`, {
-    data: { vlVerba: 1 },
+    data: { dsVerba: "Verba e2e", vlVerba: 1 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(403);
   expect(getVerba(cdVerbaSemCurso)?.vlVerba).toBe(valorOriginal);
+
+  await cliente.dispose();
+});
+
+// IDV-07, IDV-08, IDV-11 (identificacao-verba), na rota: a tela valida antes
+// de enviar, então só a chamada direta prova que o PATCH barra sozinho.
+test("IDV-07/08/11: PATCH grava a identificação sem espaços e o GET a devolve; vazia ou com 61 caracteres é 400 sem alterar", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GT);
+  const cliente = await novoCliente();
+
+  const res = await cliente.patch(`/api/verbas/${cdVerbaSemCurso}`, {
+    data: { dsVerba: " Repasse Março ", vlVerba: 8000 },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect(res.status()).toBe(200);
+  expect(getVerba(cdVerbaSemCurso)?.dsVerba).toBe("Repasse Março");
+
+  const get = await cliente.get(`/api/verbas/${cdVerbaSemCurso}`, {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect((await get.json()).verba.dsVerba).toBe("Repasse Março");
+
+  for (const [dsVerba, mensagem] of [
+    ["   ", "Identificação é obrigatória"],
+    ["a".repeat(61), "Identificação deve ter no máximo 60 caracteres"],
+  ]) {
+    const invalido = await cliente.patch(`/api/verbas/${cdVerbaSemCurso}`, {
+      data: { dsVerba, vlVerba: 8000 },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+    expect(invalido.status()).toBe(400);
+    expect((await invalido.json()).erro).toBe(mensagem);
+    expect(getVerba(cdVerbaSemCurso)?.dsVerba).toBe("Repasse Março");
+  }
 
   await cliente.dispose();
 });

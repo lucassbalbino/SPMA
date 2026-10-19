@@ -41,12 +41,12 @@ describe("listarVerbasDoEscopo (integration)", () => {
     await prisma.usuario.create({ data: { documento: CPF_AL, nome: "AL Consulta", tipo: "AL" } });
 
     cdVerbaAComCurso = (
-      await prisma.verba.create({ data: { cdOfertante: CNPJ_GO_A, vlVerba: 10000 } })
+      await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante: CNPJ_GO_A, vlVerba: 10000 } })
     ).cdVerba;
     cdVerbaASemCurso = (
-      await prisma.verba.create({ data: { cdOfertante: CNPJ_GO_A, vlVerba: 2500.5 } })
+      await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante: CNPJ_GO_A, vlVerba: 2500.5 } })
     ).cdVerba;
-    cdVerbaB = (await prisma.verba.create({ data: { cdOfertante: CNPJ_GO_B, vlVerba: 700 } }))
+    cdVerbaB = (await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante: CNPJ_GO_B, vlVerba: 700 } }))
       .cdVerba;
 
     await prisma.preCurso.create({

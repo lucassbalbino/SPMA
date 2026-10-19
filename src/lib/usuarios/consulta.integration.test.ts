@@ -58,7 +58,7 @@ async function limpar(documentos: string[]) {
 
 /** Matricula o Aluno num curso novo do GO (verba + pré-curso + avaliação). */
 async function matricular(cpfAluno: string, cnpjGo: string) {
-  const verba = await prisma.verba.create({ data: { cdOfertante: cnpjGo, vlVerba: 1000 } });
+  const verba = await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante: cnpjGo, vlVerba: 1000 } });
   const curso = await prisma.preCurso.create({
     data: {
       cdOfertante: cnpjGo,

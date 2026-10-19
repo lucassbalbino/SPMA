@@ -118,7 +118,7 @@ describe("migration de descarte dos dados pessoais da avaliação (integration)"
       data: { documento: CPF_ALUNO_SEM_PESSOAIS, nome: "Aluno Sem Pessoais", tipo: "AL" },
     });
 
-    const verba = await prisma.verba.create({ data: { cdOfertante, vlVerba: 100000 } });
+    const verba = await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante, vlVerba: 100000 } });
     const curso = await prisma.preCurso.create({
       data: {
         cdOfertante,

@@ -79,7 +79,7 @@ test("CA-OV-08: GT cria Verba com valor positivo para Ofertante existente", asyn
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/verbas", {
-    data: { cdOfertante: CNPJ_GO, vlVerba: 12000 },
+    data: { cdOfertante: CNPJ_GO, dsVerba: "Verba e2e", vlVerba: 12000 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -97,7 +97,7 @@ test("CA-OV-08: AM também pode criar Verba", async () => {
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/verbas", {
-    data: { cdOfertante: CNPJ_GO, vlVerba: 3000 },
+    data: { cdOfertante: CNPJ_GO, dsVerba: "Verba e2e", vlVerba: 3000 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -111,7 +111,7 @@ test("GO não pode criar Verba (só a consome)", async () => {
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/verbas", {
-    data: { cdOfertante: CNPJ_GO, vlVerba: 1000 },
+    data: { cdOfertante: CNPJ_GO, dsVerba: "Verba e2e", vlVerba: 1000 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -125,7 +125,7 @@ test("CA-OV-09: criação de Verba com Ofertante inexistente é rejeitada com 40
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/verbas", {
-    data: { cdOfertante: CNPJ_INEXISTENTE, vlVerba: 1000 },
+    data: { cdOfertante: CNPJ_INEXISTENTE, dsVerba: "Verba e2e", vlVerba: 1000 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -140,7 +140,7 @@ test("criação de Verba com valor não-positivo é rejeitada com 400", async ()
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/verbas", {
-    data: { cdOfertante: CNPJ_GO, vlVerba: 0 },
+    data: { cdOfertante: CNPJ_GO, dsVerba: "Verba e2e", vlVerba: 0 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -222,7 +222,7 @@ test("GV-06/GV-33: POST acima do teto ou com 3 casas é 400 sem criar verba; exa
   const cliente = await novoCliente();
   for (const vlVerba of [100000000, 10.123]) {
     const res = await cliente.post("/api/verbas", {
-      data: { cdOfertante: CNPJ_GO, vlVerba },
+      data: { cdOfertante: CNPJ_GO, dsVerba: "Verba e2e", vlVerba },
       headers: cabecalhosAutenticados(idSessao, idCsrf),
     });
     expect(res.status(), `vlVerba=${vlVerba}`).toBe(400);
@@ -230,11 +230,65 @@ test("GV-06/GV-33: POST acima do teto ou com 3 casas é 400 sem criar verba; exa
   expect(getVerbasPorOfertante(CNPJ_GO)).toHaveLength(quantidadeAntes);
 
   const res = await cliente.post("/api/verbas", {
-    data: { cdOfertante: CNPJ_GO, vlVerba: 99999999.99 },
+    data: { cdOfertante: CNPJ_GO, dsVerba: "Verba e2e", vlVerba: 99999999.99 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
   expect(res.status()).toBe(201);
   expect(getVerba((await res.json()).verba.cdVerba)?.vlVerba).toBe("99999999.99");
+
+  await cliente.dispose();
+});
+
+// IDV-02, IDV-05, IDV-11 (identificacao-verba): a rota grava o texto sem os
+// espaços das pontas, aceita repetição no mesmo GO e devolve o campo no GET.
+test("IDV-02/05/11: POST grava a identificação sem espaços, aceita a mesma identificação duas vezes e o GET a devolve", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GT);
+  const cliente = await novoCliente();
+
+  const cdVerbas: number[] = [];
+  for (let i = 0; i < 2; i++) {
+    const res = await cliente.post("/api/verbas", {
+      data: { cdOfertante: CNPJ_GO, dsVerba: "  Repasse Março  ", vlVerba: 100 },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+    expect(res.status()).toBe(201);
+    cdVerbas.push((await res.json()).verba.cdVerba);
+  }
+
+  expect(cdVerbas[0]).not.toBe(cdVerbas[1]);
+  expect(getVerba(cdVerbas[0])?.dsVerba).toBe("Repasse Março");
+  expect(getVerba(cdVerbas[1])?.dsVerba).toBe("Repasse Março");
+
+  const lista = await cliente.get(`/api/verbas?cdOfertante=${CNPJ_GO}`, {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  const verbas: { cdVerba: number; dsVerba: string }[] = (await lista.json()).verbas;
+  for (const cdVerba of cdVerbas) {
+    expect(verbas.find((v) => v.cdVerba === cdVerba)?.dsVerba).toBe("Repasse Março");
+  }
+
+  await cliente.dispose();
+});
+
+test("IDV-03/IDV-04: POST sem identificação, só com espaços ou com 61 caracteres é 400 com a mensagem, sem criar verba", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_GT);
+  const quantidadeAntes = getVerbasPorOfertante(CNPJ_GO).length;
+  const cliente = await novoCliente();
+
+  const casos: [string | undefined, string][] = [
+    [undefined, "Identificação é obrigatória"],
+    ["   ", "Identificação é obrigatória"],
+    ["a".repeat(61), "Identificação deve ter no máximo 60 caracteres"],
+  ];
+  for (const [dsVerba, mensagem] of casos) {
+    const res = await cliente.post("/api/verbas", {
+      data: { cdOfertante: CNPJ_GO, dsVerba, vlVerba: 100 },
+      headers: cabecalhosAutenticados(idSessao, idCsrf),
+    });
+    expect(res.status(), `dsVerba=${JSON.stringify(dsVerba)}`).toBe(400);
+    expect((await res.json()).erro).toBe(mensagem);
+  }
+  expect(getVerbasPorOfertante(CNPJ_GO)).toHaveLength(quantidadeAntes);
 
   await cliente.dispose();
 });

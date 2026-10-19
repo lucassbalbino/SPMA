@@ -83,7 +83,7 @@ async function criarGoComFilhos(documentoGo: string, documentoVo: string) {
       cdOfertante: documentoGo,
     },
   });
-  const verba = await prisma.verba.create({ data: { cdOfertante: documentoGo, vlVerba: 1000 } });
+  const verba = await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante: documentoGo, vlVerba: 1000 } });
   const curso = await prisma.preCurso.create({
     data: {
       cdOfertante: documentoGo,
@@ -189,7 +189,7 @@ describe("atualizarCadastro (integration)", () => {
         dadosPessoaisCompletos: true,
       },
     });
-    const verba = await prisma.verba.create({ data: { cdOfertante: go, vlVerba: 1000 } });
+    const verba = await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante: go, vlVerba: 1000 } });
     const curso = await prisma.preCurso.create({
       data: { cdOfertante: go, cdVerba: verba.cdVerba, vlCursoAlocado: 100, criadoPor: go },
     });

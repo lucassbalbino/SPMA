@@ -200,12 +200,14 @@ async function executar(
     case "criarVerba": {
       const dados = argumento as {
         cdOfertante: string;
+        dsVerba?: string;
         vlVerba: number;
         dtVerba?: string;
       };
       return prisma.verba.create({
         data: {
           cdOfertante: dados.cdOfertante,
+          dsVerba: dados.dsVerba ?? "Verba e2e",
           vlVerba: dados.vlVerba,
           dtVerba: dados.dtVerba ? new Date(dados.dtVerba) : undefined,
         },

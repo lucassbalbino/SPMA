@@ -145,7 +145,7 @@ describe("migration de backfill das respostas (integration)", () => {
     });
 
     const verba = await prisma.verba.create({
-      data: { cdOfertante, vlVerba: 100000 },
+      data: { dsVerba: "Verba teste", cdOfertante, vlVerba: 100000 },
     });
 
     const comRespostas = await prisma.preCurso.create({

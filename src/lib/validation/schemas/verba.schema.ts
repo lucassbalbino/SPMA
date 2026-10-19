@@ -19,7 +19,19 @@ function temNoMaximoDuasCasas(valor: number): boolean {
   return Math.abs(centavos - Math.round(centavos)) < 1e-6;
 }
 
+// IDV-02..04: nome livre da verba, pode repetir. O trim vem antes do limite,
+// então espaços nas pontas não contam e "   " é vazio. `max` conta unidades
+// UTF-16 (um emoji vale 2), o que nunca passa do VARCHAR(60) do MySQL.
+const TAMANHO_MAXIMO_IDENTIFICACAO = 60;
+
 export const camposVerbaSchema = z.object({
+  dsVerba: z
+    .string({ error: "Identificação é obrigatória" })
+    .trim()
+    .min(1, { message: "Identificação é obrigatória" })
+    .max(TAMANHO_MAXIMO_IDENTIFICACAO, {
+      message: "Identificação deve ter no máximo 60 caracteres",
+    }),
   vlVerba: z
     .number({ error: "Valor da verba é obrigatório" })
     .positive({ message: "Valor da verba deve ser positivo" })

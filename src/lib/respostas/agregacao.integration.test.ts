@@ -40,7 +40,7 @@ describe("agregação de respostas por pergunta (integration)", () => {
       data: { documento: CPF_GO, nome: "GO Agregacao", tipo: "GO", uf: "SP" },
     });
 
-    const verba = await prisma.verba.create({ data: { cdOfertante, vlVerba: 100000 } });
+    const verba = await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante, vlVerba: 100000 } });
 
     const curso = await prisma.preCurso.create({
       data: { cdOfertante, cdVerba: verba.cdVerba, vlCursoAlocado: 1000, criadoPor: CPF_GO },

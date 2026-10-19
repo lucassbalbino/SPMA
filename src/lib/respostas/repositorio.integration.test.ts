@@ -41,7 +41,7 @@ describe("repositório de respostas (integration)", () => {
     });
 
     const verba = await prisma.verba.create({
-      data: { cdOfertante, vlVerba: 100000 },
+      data: { dsVerba: "Verba teste", cdOfertante, vlVerba: 100000 },
     });
 
     const cursoA = await prisma.preCurso.create({

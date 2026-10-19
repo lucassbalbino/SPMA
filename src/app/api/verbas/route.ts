@@ -35,6 +35,7 @@ async function criarVerba(request: Request) {
   const verba = await prisma.verba.create({
     data: {
       cdOfertante: dados.cdOfertante,
+      dsVerba: dados.dsVerba,
       vlVerba: dados.vlVerba,
       dtVerba: dados.dtVerba,
     },

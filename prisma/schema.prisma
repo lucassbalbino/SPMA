@@ -151,6 +151,9 @@ model Verba {
   cdOfertante    String     @map("CD_Ofertante") @db.VarChar(14)
   ofertante      Usuario    @relation(fields: [cdOfertante], references: [documento])
 
+  // Nome livre da verba, exibido na lista e no seletor de curso (IDV-01..14).
+  // Pode repetir: o identificador continua sendo `cdVerba`.
+  dsVerba        String     @map("DS_Verba") @db.VarChar(60)
   dtVerba        DateTime?  @map("DT_Verba") @db.Date
   vlVerba        Decimal    @map("VL_Verba") @db.Decimal(10, 2) // valor TOTAL da verba
 

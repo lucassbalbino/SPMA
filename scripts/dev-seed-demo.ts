@@ -119,7 +119,7 @@ async function semear(prisma: PrismaClient) {
   const verba =
     (await prisma.verba.findFirst({ where: { cdOfertante: CNPJ_GO } })) ??
     (await prisma.verba.create({
-      data: { cdOfertante: CNPJ_GO, vlVerba: 250000, dtVerba: new Date() },
+      data: { cdOfertante: CNPJ_GO, dsVerba: "Verba (demo)", vlVerba: 250000, dtVerba: new Date() },
     }));
 
   // Um curso só: é nele que ficam o Pós-Curso e a matrícula do Aluno, para

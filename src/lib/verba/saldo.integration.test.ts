@@ -30,12 +30,12 @@ describe("saldo da verba (integration)", () => {
     });
 
     const verbaVazia = await prisma.verba.create({
-      data: { cdOfertante, vlVerba: 10000 },
+      data: { dsVerba: "Verba teste", cdOfertante, vlVerba: 10000 },
     });
     cdVerbaVazia = verbaVazia.cdVerba;
 
     const verbaComCurso = await prisma.verba.create({
-      data: { cdOfertante, vlVerba: 10000 },
+      data: { dsVerba: "Verba teste", cdOfertante, vlVerba: 10000 },
     });
     cdVerbaComCurso = verbaComCurso.cdVerba;
 
