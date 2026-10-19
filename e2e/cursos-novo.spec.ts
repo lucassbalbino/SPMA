@@ -63,8 +63,12 @@ test.beforeAll(() => {
     uf: "MG",
   });
 
-  cdVerba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 1000 }).cdVerba;
-  cdVerbaOutro = criarVerba({ cdOfertante: CNPJ_GO_OUTRO, vlVerba: 1000 }).cdVerba;
+  cdVerba = criarVerba({ cdOfertante: CNPJ_GO, dsVerba: "Capacitação GO", vlVerba: 1000 }).cdVerba;
+  cdVerbaOutro = criarVerba({
+    cdOfertante: CNPJ_GO_OUTRO,
+    dsVerba: "Capacitação Outro",
+    vlVerba: 1000,
+  }).cdVerba;
 });
 
 test.afterAll(() => {
@@ -80,31 +84,34 @@ async function login(page: import("@playwright/test").Page, documento: string = 
   expect(login.ok()).toBe(true);
 }
 
-test("seletor de Verba mostra só as Verbas do Ofertante do GO autenticado", async ({ page }) => {
+test("IDV-13: seletor de Verba mostra só as Verbas do Ofertante do GO autenticado, com número e identificação", async ({ page }) => {
   await login(page);
   await page.goto("/cursos/novo");
 
   await page.getByTestId("select-verba").click();
   await expect(page.getByTestId(`opcao-verba-${cdVerba}`)).toBeVisible();
   await expect(page.getByTestId(`opcao-verba-${cdVerbaOutro}`)).toHaveCount(0);
+
+  // IDV-13: para o GO, número e identificação, sem o nome do Ofertante.
+  await expect(page.getByTestId(`opcao-verba-${cdVerba}`)).toHaveText(
+    `#${cdVerba} · Capacitação GO — saldo R$ 1000.00`,
+  );
 });
 
-test("AD-040: seletor de Verba do AM mostra as Verbas de TODOS os Ofertantes, com o nome do Ofertante", async ({
+test("AD-040/IDV-12: seletor de Verba do AM mostra as Verbas de TODOS os Ofertantes, com o nome do Ofertante", async ({
   page,
 }) => {
   await login(page, CPF_AM);
   await page.goto("/cursos/novo");
 
   await page.getByTestId("select-verba").click();
-  const opcaoVerba = page.getByTestId(`opcao-verba-${cdVerba}`);
-  await expect(opcaoVerba).toContainText("Ofertante Novo Pré-Curso");
-  await expect(opcaoVerba).toContainText(`Verba #${cdVerba}`);
-  await expect(opcaoVerba).toContainText("saldo R$ 1000.00");
-
-  const opcaoVerbaOutro = page.getByTestId(`opcao-verba-${cdVerbaOutro}`);
-  await expect(opcaoVerbaOutro).toContainText("Ofertante Novo Pré-Curso Outro");
-  await expect(opcaoVerbaOutro).toContainText(`Verba #${cdVerbaOutro}`);
-  await expect(opcaoVerbaOutro).toContainText("saldo R$ 1000.00");
+  // IDV-12: nome do Ofertante, número, identificação e saldo.
+  await expect(page.getByTestId(`opcao-verba-${cdVerba}`)).toHaveText(
+    `Ofertante Novo Pré-Curso — #${cdVerba} · Capacitação GO — saldo R$ 1000.00`,
+  );
+  await expect(page.getByTestId(`opcao-verba-${cdVerbaOutro}`)).toHaveText(
+    `Ofertante Novo Pré-Curso Outro — #${cdVerbaOutro} · Capacitação Outro — saldo R$ 1000.00`,
+  );
 });
 
 test("GO cria curso dentro do saldo e é redirecionado para o questionário pré", async ({

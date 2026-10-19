@@ -59,6 +59,7 @@ export default async function NovoCursoPage() {
       const { saldoDisponivel } = await calcularSaldoVerba(verba.cdVerba);
       return {
         cdVerba: verba.cdVerba,
+        dsVerba: verba.dsVerba,
         saldoDisponivel: saldoDisponivel.toNumber(),
         nomeOfertante: usuario.tipo === "AM" ? verba.ofertante.nome : undefined,
       };

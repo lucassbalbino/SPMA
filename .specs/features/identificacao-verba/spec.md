@@ -139,11 +139,11 @@ Escopo Medium: só as dimensões presentes.
 | IDV-09 | P1: Identificação visível | Execute | Implementing |
 | IDV-10 | P1: Identificação visível | Execute | Implementing |
 | IDV-11 | P1: Identificação visível | Execute | Implementing |
-| IDV-12 | P1: Identificação visível | - | Pending |
-| IDV-13 | P1: Identificação visível | - | Pending |
+| IDV-12 | P1: Identificação visível | Execute | Implementing |
+| IDV-13 | P1: Identificação visível | Execute | Implementing |
 | IDV-14 | P1: Identificação visível | Execute | Implementing |
 
-**Coverage:** 14 total, 0 mapped to tasks, 14 unmapped (tasks definidas no Execute)
+**Coverage:** 14 total, 14 mapped to the inline Execute plan (3 commits), 0 unmapped
 
 ---
 

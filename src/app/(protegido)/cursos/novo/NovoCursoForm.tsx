@@ -22,7 +22,12 @@ import {
 import { criarCursoSchema } from "@/lib/validation/schemas/pre-curso.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
 
-type OpcaoVerba = { cdVerba: number; saldoDisponivel: number; nomeOfertante?: string | null };
+type OpcaoVerba = {
+  cdVerba: number;
+  dsVerba: string;
+  saldoDisponivel: number;
+  nomeOfertante?: string | null;
+};
 
 export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
   const router = useRouter();
@@ -95,8 +100,9 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
                   value={String(opcao.cdVerba)}
                   data-testid={`opcao-verba-${opcao.cdVerba}`}
                 >
+                  {/* IDV-12/13: o número fica ao lado do nome, que pode repetir. */}
                   {opcao.nomeOfertante ? `${opcao.nomeOfertante} — ` : ""}
-                  Verba #{opcao.cdVerba} — saldo R$ {opcao.saldoDisponivel.toFixed(2)}
+                  {`#${opcao.cdVerba} · ${opcao.dsVerba} — saldo R$ ${opcao.saldoDisponivel.toFixed(2)}`}
                 </SelectItem>
               ))}
             </SelectContent>
