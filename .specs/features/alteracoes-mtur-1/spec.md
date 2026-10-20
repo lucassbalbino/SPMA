@@ -163,11 +163,11 @@ Dimensões implícitas: estado (`parte1Completa`) coberto por MTUR-16; ciclo de 
 | MTUR-10 | P1: Aluno sem blocos | T3 | Implementing |
 | MTUR-11 | P1: Aluno sem blocos | T3 | Implementing |
 | MTUR-12 | P1: Aluno sem blocos | T3 | Implementing |
-| MTUR-13 | P1: Dados gravados | Tasks | Pending |
-| MTUR-14 | P1: Dados gravados | Tasks | Pending |
-| MTUR-15 | P1: Dados gravados | Tasks | Pending |
-| MTUR-16 | P1: Dados gravados | Tasks | Pending |
-| MTUR-17 | P1: Dados gravados | Tasks | Pending |
+| MTUR-13 | P1: Dados gravados | T4 | Implementing |
+| MTUR-14 | P1: Dados gravados | T4 | Implementing |
+| MTUR-15 | P1: Dados gravados | T4 | Implementing |
+| MTUR-16 | P1: Dados gravados | T4 | Implementing |
+| MTUR-17 | P1: Dados gravados | T4 | Implementing |
 | MTUR-18 | P2: docs/ | Tasks | Pending |
 
 **Coverage:** 18 total, 0 mapped to tasks, 18 unmapped ⚠️

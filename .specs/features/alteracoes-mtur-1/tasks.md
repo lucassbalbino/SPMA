@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: sem `design.md` - nenhuma decisão de arquitetura nova. A troca é de conteúdo (textos e chaves) dentro da forma já existente: schema Zod único (AD-004), respostas normalizadas `(Chave, Ordem, Valor)` e migration de dados em SQL literal (precedente: `20260911203228_descartar_dados_pessoais_do_questionario`).
-**Status**: In Progress (T1-T3 feitas)
+**Status**: In Progress (T1-T4 feitas)
 
 ---
 
@@ -154,10 +154,10 @@ T4 → T5
 
 **Done when**:
 
-- [ ] Cada UPDATE e o DELETE provados contra `spma_test`
-- [ ] Linha de outra chave e linha já com texto novo intactas (MTUR-17)
-- [ ] `Parte1_Completa` só vira `true` onde MTUR-10 vale; demais intactas (MTUR-16)
-- [ ] Gate Full passa
+- [x] Cada UPDATE e o DELETE provados contra `spma_test`
+- [x] Linha de outra chave e linha já com texto novo intactas (MTUR-17)
+- [x] `Parte1_Completa` só vira `true` onde MTUR-10 vale; demais intactas (MTUR-16)
+- [x] Gate Full passa
 
 **Tests**: integration
 **Gate**: full
