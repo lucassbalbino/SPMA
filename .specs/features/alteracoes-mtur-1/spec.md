@@ -177,5 +177,5 @@ Dimensões implícitas: estado (`parte1Completa`) coberto por MTUR-16; ciclo de 
 ## Success Criteria
 
 - [ ] Gate completo verde (`lint && build && typecheck && test:unit && test:integration && test:e2e`).
-- [ ] `grep` pelas frases antigas inteiras ("Alojamento (recepcionista", "Negro", "Sim, tenho deficiência", "Endereço da Sede", "Foram adotadas estratégias de divulgação") em `src/` e `e2e/` só encontra os testes que provam a rejeição e o SQL da migration. ("quais ações fundamentais" sozinho não serve: a Q26 do pré-curso, que o MTur não alterou, também usa a expressão.)
+- [ ] `grep` pelas frases antigas inteiras ("Alojamento (recepcionista", "Negro", "Sim, tenho deficiência", "Endereço da Sede", "Foram adotadas estratégias de divulgação") em `src/` e `e2e/` só encontra os testes que provam a rejeição, o SQL da migration e comentários de histórico que citam o texto antigo (ex.: `dados-pessoais.schema.ts`). ("quais ações fundamentais" sozinho não serve: a Q26 do pré-curso, que o MTur não alterou, também usa a expressão.)
 - [ ] Os 6 pendentes intocados: nenhuma chave nova no schema do pré-curso.

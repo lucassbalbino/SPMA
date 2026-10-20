@@ -172,8 +172,12 @@ describe("migration alteracoes_mtur_1 (integration)", () => {
             "Turismo de Base Comunitária",
           ],
           qualifNomeCurso: "Eventos",
-          // Texto livre que coincide com um texto antigo longo de Q10.
+          // Textos livres que coincidem com cada texto antigo longo de Q10:
+          // tirar o filtro `Chave` de qualquer UPDATE de Q10 tem de falhar.
           qualifCaracteristicasOutra: "Cultura e Lazer (produtor(a) / recreacionista / artesã(o) / outros)",
+          qualifEndereco: "Alojamento (recepcionista / camareiro(a) / copeiro(a) / outros)",
+          identifEntidadeResponsavel:
+            "Serviços de Alimentação (bartender / auxiliar de cozinha / outros)",
         }),
       ].map((linha) => ({ cdCurso, ...linha })),
     });
@@ -269,8 +273,19 @@ describe("migration alteracoes_mtur_1 (integration)", () => {
       where: { cdCurso, chave: "qualifCaracteristicasOutra" },
     });
 
+    const endereco = await prisma.respostaPreCurso.findFirst({
+      where: { cdCurso, chave: "qualifEndereco" },
+    });
+    const entidade = await prisma.respostaPreCurso.findFirst({
+      where: { cdCurso, chave: "identifEntidadeResponsavel" },
+    });
+
     expect(nome?.valor).toBe("Eventos");
     expect(outra?.valor).toBe("Cultura e Lazer (produtor(a) / recreacionista / artesã(o) / outros)");
+    expect(endereco?.valor).toBe("Alojamento (recepcionista / camareiro(a) / copeiro(a) / outros)");
+    expect(entidade?.valor).toBe(
+      "Serviços de Alimentação (bartender / auxiliar de cozinha / outros)",
+    );
   });
 
   // MTUR-14: Q8 "Negro" vira "Preto".
