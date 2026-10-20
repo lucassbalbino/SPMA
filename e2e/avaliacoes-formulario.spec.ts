@@ -263,6 +263,19 @@ test("MTUR-08: a tela de avaliação não renderiza os 4 blocos removidos pelo M
   await expect(
     page.getByText("14. Já trabalhou no setor de Turismo?", { exact: true }),
   ).toBeVisible();
+
+  // MTUR-12: a Parte 2 pula de Q27 para Q29 e de Q29 para Q35, sem renumerar.
+  await abrirBloco(blocoParte2(page, 4), "bloco-parte2-4");
+  await expect(
+    page.getByText("29. Após a conclusão do Curso, você sente que:", { exact: true }),
+  ).toBeVisible();
+  await abrirBloco(blocoParte2(page, 5), "bloco-parte2-5");
+  await expect(
+    page.getByText("35. Qual nota você dá para o Curso (0 a 10)?", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/^38\. A partir da sua experiência como aluno do Curso/),
+  ).toBeVisible();
 });
 
 test("Aluno salva um bloco parcial de Parte 1 e o dado persiste após reload", async ({ page }) => {

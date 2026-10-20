@@ -172,6 +172,8 @@ describe("migration alteracoes_mtur_1 (integration)", () => {
             "Turismo de Base Comunitária",
           ],
           qualifNomeCurso: "Eventos",
+          // Texto livre que coincide com um texto antigo longo de Q10.
+          qualifCaracteristicasOutra: "Cultura e Lazer (produtor(a) / recreacionista / artesã(o) / outros)",
         }),
       ].map((linha) => ({ cdCurso, ...linha })),
     });
@@ -182,9 +184,11 @@ describe("migration alteracoes_mtur_1 (integration)", () => {
       avalPessoalCondicaoPcd: PCD_FISICA,
       avalPessoalMunicipio: "Negro",
     });
+    // Texto livre de município que coincide com um texto antigo de PCD.
     await semearDadosPessoais(CPF_PARDO_AUDITIVA, {
       avalPessoalRacaEtnia: "Pardo",
       avalPessoalCondicaoPcd: "Sim, tenho deficiência auditiva.",
+      avalPessoalMunicipio: "Sim, tenho deficiência auditiva.",
     });
     await semearDadosPessoais(CPF_PRETO_VISUAL, {
       avalPessoalRacaEtnia: "Preto",
@@ -257,12 +261,16 @@ describe("migration alteracoes_mtur_1 (integration)", () => {
   });
 
   // MTUR-17: o mesmo texto noutra chave do pré-curso fica intacto.
-  it("não toca o texto 'Eventos' fora de qualifCaracteristicas", async () => {
-    const linha = await prisma.respostaPreCurso.findFirst({
+  it("não toca os textos antigos fora de qualifCaracteristicas", async () => {
+    const nome = await prisma.respostaPreCurso.findFirst({
       where: { cdCurso, chave: "qualifNomeCurso" },
     });
+    const outra = await prisma.respostaPreCurso.findFirst({
+      where: { cdCurso, chave: "qualifCaracteristicasOutra" },
+    });
 
-    expect(linha?.valor).toBe("Eventos");
+    expect(nome?.valor).toBe("Eventos");
+    expect(outra?.valor).toBe("Cultura e Lazer (produtor(a) / recreacionista / artesã(o) / outros)");
   });
 
   // MTUR-14: Q8 "Negro" vira "Preto".
@@ -277,6 +285,9 @@ describe("migration alteracoes_mtur_1 (integration)", () => {
     expect(await dadoPessoal(CPF_PRETO_VISUAL, "avalPessoalRacaEtnia")).toBe("Preto");
     expect(await dadoPessoal(CPF_BRANCO_INTELECTUAL, "avalPessoalRacaEtnia")).toBe("Branco");
     expect(await dadoPessoal(CPF_NEGRO_FISICA, "avalPessoalMunicipio")).toBe("Negro");
+    expect(await dadoPessoal(CPF_PARDO_AUDITIVA, "avalPessoalMunicipio")).toBe(
+      "Sim, tenho deficiência auditiva.",
+    );
   });
 
   // MTUR-14: os 4 tipos de deficiência colapsam em "Sim.".
