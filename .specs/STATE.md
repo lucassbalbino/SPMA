@@ -340,3 +340,13 @@ Pedido do usuário: migrar o sistema para a VPS; o túnel sai. Passo a passo em 
 3. **O nginx sobrescreve `X-Forwarded-For` com `$remote_addr`**, nunca `$proxy_add_x_forwarded_for`. `obterIpCliente` lê o primeiro IP do cabeçalho; anexado, o cliente forjaria o IP e escaparia do REQ-SEC-03.
 
 **Regra para o futuro:** se um proxy/CDN entrar na frente do nginx (ex.: Cloudflare com proxy ligado), o `$remote_addr` passa a ser o IP do proxy e o rate limit por IP bloqueia todos de uma vez - exige `real_ip` com as faixas do proxy antes de ligar.
+
+**AD-048 (2026-10-20) — Revisão dos questionários pelo MTur (`docs/Alteracoes_MTur_1.md`): 13 itens aplicados, o 1.1 (CNPJ) dispensado e os 6 pendentes intocados. As respostas já gravadas acompanham a troca por migration de dados, inclusive com perda autorizada.**
+Feature `alteracoes-mtur-1`. Supera, nos itens tocados, os dicionários de `formulario-pre-curso/spec.md`, `avaliacao-aluno/spec.md` e `dados-pessoais-separados`, que não foram reescritos (mesma solução da AD-035/AD-040).
+
+1. **Texto de opção mudou, dado mudou junto.** É a contrapartida que `respostas-normalizadas` previu ao guardar o texto validado pelo Zod em `Valor`. A migration `20261020120000_alteracoes_mtur_1` faz `UPDATE` texto antigo → novo (pré-curso Q10, aluno Q8 e Q9). Os 4 tipos de deficiência colapsam em "Sim." e o tipo se perde - decisão do usuário ao reduzir Q9 a Sim/Não.
+2. **Pergunta removida, resposta apagada.** As 11 chaves de Q10-Q13, Q28 e Q30-Q34 têm as linhas apagadas em `TB_Resposta_Avaliacao`, inclusive em avaliação encerrada. Escolha explícita do usuário contra manter órfãs (RESP-14).
+3. **Flag derivado recalculado na migration.** `Parte1_Completa` só é recalculado pela aplicação a cada gravação. Como a Parte 1 perdeu exigências, a migration o leva de `false` para `true` onde a regra nova já vale - sem isso o aluno ficaria preso sem nada pendente na tela.
+4. **Numeração do papel preservada** nos rótulos do aluno (Q14-Q27, Q29, Q35-Q38), por decisão do usuário.
+
+**Regra para o futuro:** toda troca de texto de opção ou remoção de pergunta vem com migration de dados no mesmo commit do schema, e todo flag gravado que deriva das respostas (hoje só `Parte1_Completa`) é reavaliado nessa migration.

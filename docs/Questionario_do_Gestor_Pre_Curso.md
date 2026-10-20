@@ -18,7 +18,7 @@
 
 ### SEÇÃO 2: DADOS DA QUALIFICAÇÃO PROFISSIONAL
 
-**7.** Endereço da Sede onde a ação de qualificação é realizada:
+**7.** Endereço onde a ação de qualificação é realizada:
 
 **8.** Nome da Ação de Qualificação (Curso, Plano, Programa, Projeto ou Ação):
 
@@ -29,16 +29,16 @@
 
 **10.** No caso de <u>Cursos</u>, quais características são contempladas: **(MÚLTIPLA RESPOSTA)**
 
-- a) Alojamento (recepcionista / camareiro(a) / copeiro(a) / outros)
+- a) Hospedagem (recepcionista / camareiro(a) / copeiro(a))
 - b) Agenciamento e Operação
-- c) Serviços de Alimentação (bartender / auxiliar de cozinha / outros)
+- c) Serviços de Alimentação (bartender / auxiliar de cozinha)
 - d) Transporte (Terrestre, Aquaviário ou Aéreo)
 - e) Aluguel de Transportes
 - f) Guiamento de Turismo / Condução de Turismo
 - g) Ecoturismo / Turismo de Natureza
 - h) Turismo de Base Comunitária
-- i) Cultura e Lazer (produtor(a) / recreacionista / artesã(o) / outros)
-- j) Eventos
+- i) Cultura e Lazer (produtor(a) / recreacionista / artesã(o))
+- j) Eventos (cerimonialista / organizador(a) de eventos)
 - k) Outro. Qual? \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 **11.** Modalidade do Ação de Qualificação/Curso:
@@ -206,7 +206,7 @@
 
 ### Divulgação
 
-**30.** Foram <u>adotadas</u> estratégias de divulgação do Curso, a partir da realização de **quais ações fundamentais**?
+**30.** Quais estratégias foram adotadas para a divulgação do Curso?
 
 - a) Linguagem condizente com o público-alvo que se espera atingir.
 - b) Clareza na exposição das informações sobre o Curso.

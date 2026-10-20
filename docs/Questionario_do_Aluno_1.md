@@ -40,7 +40,7 @@
 **8.** Qual a sua cor/raça/etnia?
 
 - a) Branco
-- b) Negro
+- b) Preto
 - c) Pardo
 - d) Amarelo
 - e) Indígena
@@ -48,52 +48,7 @@
 **9.** Você é uma Pessoa com Deficiência (PCD)?
 
 - a) Não sou uma Pessoa com Deficiência.
-- b) Sim, tenho deficiência física (paralisias, amputações, ausência de membros, lesões nervosas ou musculares, etc.)
-- c) Sim, tenho deficiência auditiva.
-- d) Sim, tenho deficiência visual.
-- e) Sim, tenho deficiência intelectual/mental.
-
-## SITUAÇÃO PROFISSIONAL
-
-**10.** Qual sua condição atual de trabalho?
-
-- a) Estagiário(a).
-- b) Microempreendedor Individual (MEI)
-- c) Pessoa Jurídica – PJ (empresário)
-- d) Profissional Liberal
-- e) Trabalhador(a) Autônomo/Freelancer
-- f) Trabalhador(a) Informal (sem vínculo contratual)
-- g) Trabalhador(a) Formal (CLT)
-- h) Estudante
-- i) Desempregado
-
-**11.** Atualmente você trabalha na área de Turismo?
-
-- a) Sim
-- b) Não
-
-**12.** Se sim, em qual atividade?
-
-- a) Serviços de Alimentação
-- b) Alojamento (meios de hospedagem)
-- c) Transporte (aéreo, terrestre, aquaviário)
-- d) Aluguel de Transportes
-- e) Cultura e Lazer (atrações turísticas, museus, parques)
-- f) Agências de Viagem e Operadoras
-- g) Eventos
-- h) Guiamento e Condução
-- i) Turismo de Base Comunitária
-- j) Outro
-
-**13.** Qual a sua faixa de renda mensal:
-
-- a) Sem renda
-- b) Até 01 salário mínimo
-- c) Entre 01 e 03 salários mínimos
-- d) Entre 03 e 05 salários mínimos
-- e) Entre 05 e 07 salários mínimos
-- f) Entre 07 e 10 salários mínimos
-- g) Acima de 10 salários mínimos
+- b) Sim.
 
 ## SEÇÃO 4: EXPERIÊNCIA
 
@@ -228,18 +183,6 @@
 - b) Parcialmente
 - c) Não
 
-## Continuidade nos Estudos
-
-**28.** Após a conclusão do Curso, você retomou os estudos? (Educação Básica / Fundamental)
-
-- a) Sim, a educação básica
-- b) Sim, ao ensino fundamental
-- c) Sim, ao ensino médio
-- d) Sim, ao ensino técnico
-- e) Sim, ao ensino superior
-- f) Sim, a outras formações profissionais
-- g) Não
-
 ## Motivações após o Curso
 
 **29.** Após a conclusão do Curso, você sente que: **(MÚLTIPLA ESCOLHA)**
@@ -250,46 +193,6 @@
 - d) se sente motivado(a) a melhor as suas condições de vida
 - e) se sente motivado(a) a combater práticas de violência (física, psicológica, moral, sexual ou patrimonial) contra você
 - f) melhorou as suas percepções/ações sobre as mudanças climáticas
-
-## Oportunidades Reais de Trabalho e Emprego
-
-**30.** Após a conclusão do Curso:
-
-- a) Consegui um emprego, **com carteira assinada**, na área de Turismo.
-- b) Consegui um emprego, **sem carteira assinada**, na área de Turismo.
-- c) Consegui um emprego, **com carteira assinada**, fora da área de Turismo.
-- d) Consegui um emprego, **sem carteira assinada**, fora da área de Turismo.
-- e) Estou trabalhando por conta própria (autônomo).
-- f) Estou trabalhando como MEI (próprio negócio).
-- g) Continuo na posição em que estava a trabalhar antes do curso.
-- h) Estou desempregado.
-- i) Estou estudando.
-- j) Outra. Quais?
-
-**31.** Caso não esteja trabalhando no Turismo, você pretende trabalhar no setor?
-
-- a) Sim
-- b) Não
-
-## Efetivação no Emprego
-
-**32.** Caso não esteja efetivado no emprego, após a conclusão do Curso você foi efetivado?
-
-- a) Sim
-- b) Não
-
-## Aumento da Renda
-
-**33.** Após a conclusão do Curso sua renda aumentou?
-
-- a) Sim
-- b) Não
-
-**34.** Após a conclusão do Curso, o seu padrão de vida melhorou?
-
-- a) Sim, totalmente
-- b) Sim, parcialmente
-- c) Não
 
 ## Avaliação geral
 

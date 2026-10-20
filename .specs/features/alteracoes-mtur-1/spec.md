@@ -168,9 +168,9 @@ Dimensões implícitas: estado (`parte1Completa`) coberto por MTUR-16; ciclo de 
 | MTUR-15 | P1: Dados gravados | T4 | Implementing |
 | MTUR-16 | P1: Dados gravados | T4 | Implementing |
 | MTUR-17 | P1: Dados gravados | T4 | Implementing |
-| MTUR-18 | P2: docs/ | Tasks | Pending |
+| MTUR-18 | P2: docs/ | T5 | Implementing |
 
-**Coverage:** 18 total, 0 mapped to tasks, 18 unmapped ⚠️
+**Coverage:** 18 total, 18 mapped to tasks, 0 unmapped
 
 ---
 
