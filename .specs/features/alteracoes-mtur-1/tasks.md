@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: sem `design.md` - nenhuma decisão de arquitetura nova. A troca é de conteúdo (textos e chaves) dentro da forma já existente: schema Zod único (AD-004), respostas normalizadas `(Chave, Ordem, Valor)` e migration de dados em SQL literal (precedente: `20260911203228_descartar_dados_pessoais_do_questionario`).
-**Status**: In Progress (T1, T2 feitas)
+**Status**: In Progress (T1-T3 feitas)
 
 ---
 
@@ -125,12 +125,12 @@ T4 → T5
 
 **Done when**:
 
-- [ ] Nenhuma das 11 chaves no schema, em `CHAVES_PARTE_1`, `CHAVES_SOMENTE_CONCLUINTE`, completude ou condicionais
-- [ ] Parte 1 completa com as 7 chaves + Q16 condicional (MTUR-10)
-- [ ] Encerramento com Q22="Sim" exige exatamente as 15 chaves de MTUR-11
-- [ ] Chave removida no PATCH não vira linha (MTUR-09)
-- [ ] Tela sem os 4 blocos, numeração original nos rótulos (MTUR-08, MTUR-12)
-- [ ] Gate Full passa, sem teste removido além dos que testavam as chaves removidas
+- [x] Nenhuma das 11 chaves no schema, em `CHAVES_PARTE_1`, `CHAVES_SOMENTE_CONCLUINTE`, completude ou condicionais
+- [x] Parte 1 completa com as 7 chaves + Q16 condicional (MTUR-10)
+- [x] Encerramento com Q22="Sim" exige exatamente as 15 chaves de MTUR-11
+- [x] Chave removida no PATCH não vira linha (MTUR-09)
+- [x] Tela sem os 4 blocos, numeração original nos rótulos (MTUR-08, MTUR-12)
+- [x] Gate Full passa, sem teste removido além dos que testavam as chaves removidas
 
 **Tests**: e2e
 **Gate**: full

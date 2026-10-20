@@ -102,9 +102,10 @@ const QUESTIONARIOS = [
     schema: respostasAvaliacaoSchema,
     listas: LISTAS_AVALIACAO,
     numericas: NUMERICAS_AVALIACAO,
-    // 38 = as 45 originais menos as 7 de dados pessoais, que saíram do
-    // questionário do curso para `dados-pessoais.schema.ts` (PESSOAL-11).
-    totalChaves: 38,
+    // 27 = as 45 originais menos as 7 de dados pessoais, que saíram do
+    // questionário do curso para `dados-pessoais.schema.ts` (PESSOAL-11),
+    // menos as 11 dos blocos removidos pelo MTur (MTUR-09).
+    totalChaves: 27,
   },
 ] as const;
 
@@ -158,18 +159,19 @@ describe("classificarChave", () => {
     });
   }
 
-  it("classifica 13 listas e 39 numéricas nas 120 chaves dos três questionários", () => {
+  it("classifica 13 listas e 39 numéricas nas 109 chaves dos três questionários", () => {
     const formas = QUESTIONARIOS.flatMap((questionario) =>
       Object.keys(questionario.schema.shape).map((chave) =>
         classificarChave(questionario.schema, chave),
       ),
     );
 
-    expect(formas).toHaveLength(120);
+    expect(formas).toHaveLength(109);
     expect(formas.filter((forma) => forma === "lista")).toHaveLength(13);
     expect(formas.filter((forma) => forma === "numero")).toHaveLength(39);
-    // 68 = 75 menos as 7 chaves de dados pessoais, todas escalares.
-    expect(formas.filter((forma) => forma === "texto")).toHaveLength(68);
+    // 57 = 75 menos as 7 chaves de dados pessoais e as 11 removidas pelo
+    // MTur, todas escalares de texto.
+    expect(formas.filter((forma) => forma === "texto")).toHaveLength(57);
   });
 
   it("lista opcional continua sendo lista (ZodArray.unwrap devolve o elemento)", () => {

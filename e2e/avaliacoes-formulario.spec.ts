@@ -73,7 +73,7 @@ async function login(page: Page, documento: string) {
 // `data-slot="accordion-item"` (dois Accordion na página, renderizados em
 // sequência) - escopar por índice absoluto evita colisão de rótulos de
 // opção repetidos entre blocos num `getByRole` sem escopo.
-const TOTAL_BLOCOS_PARTE_1 = 4;
+const TOTAL_BLOCOS_PARTE_1 = 3;
 
 function blocoParte1(page: Page, indice: number): Locator {
   return page.locator('[data-slot="accordion-item"]').nth(indice - 1);
@@ -132,23 +132,11 @@ async function encerrar(page: Page) {
 }
 
 async function preencherParte1(page: Page) {
-  // Situação Profissional (Q10-Q13) - primeiro bloco desde que as 7 perguntas
-  // de dados pessoais saíram deste formulário (PESSOAL-11).
+  // Experiência (Q14-Q16) - primeiro bloco desde que as 7 perguntas de dados
+  // pessoais (PESSOAL-11) e Situação Profissional (MTUR-08) saíram deste
+  // formulário.
   const b1 = blocoParte1(page, 1);
   await abrirBloco(b1, "bloco-parte1-1");
-  await selecionar(page, "campo-avalProfissCondicaoTrabalho-select", "Desempregado");
-  await marcarOpcao(page, "avalProfissAtuaTurismo", 0); // Sim
-  await selecionar(
-    page,
-    "campo-avalProfissAtividadeEspecifica-select",
-    "Alojamento (meios de hospedagem)",
-  );
-  await selecionar(page, "campo-avalProfissFaixaRenda-select", "Até 01 salário mínimo");
-  await abrirBloco(b1, "bloco-parte1-1");
-
-  // Experiência (Q14-Q16)
-  const b2 = blocoParte1(page, 2);
-  await abrirBloco(b2, "bloco-parte1-2");
   await marcarOpcao(page, "avalExperienciaTrabalhoPrevio", 1); // Não
   await marcarOpcao(page, "avalExperienciaCursoAnterior", 0); // Sim
   await selecionar(
@@ -156,22 +144,22 @@ async function preencherParte1(page: Page) {
     "campo-avalExperienciaTipoCursoAnterior-select",
     "Atualização profissional",
   );
-  await abrirBloco(b2, "bloco-parte1-2");
+  await abrirBloco(b1, "bloco-parte1-1");
 
   // Motivação (Q17-Q18)
-  const b3 = blocoParte1(page, 3);
-  await abrirBloco(b3, "bloco-parte1-3");
+  const b2 = blocoParte1(page, 2);
+  await abrirBloco(b2, "bloco-parte1-2");
   await marcarOpcao(page, "avalMotivMotivosParticipacao", 0); // Conseguir um emprego
   await marcarOpcao(page, "avalMotivFormaConhecimento", 1); // pelas Redes Sociais
-  await abrirBloco(b3, "bloco-parte1-3");
+  await abrirBloco(b2, "bloco-parte1-2");
 
   // Expectativas (Q19-Q21)
-  const b4 = blocoParte1(page, 4);
-  await abrirBloco(b4, "bloco-parte1-4");
+  const b3 = blocoParte1(page, 3);
+  await abrirBloco(b3, "bloco-parte1-3");
   await marcarOpcao(page, "avalExpectAtendimento", 0); // Sim
   await marcarOpcao(page, "avalExpectEmprego", 1); // Talvez
   await marcarOpcao(page, "avalExpectRenda", 2); // Média
-  await abrirBloco(b4, "bloco-parte1-4");
+  await abrirBloco(b3, "bloco-parte1-3");
 }
 
 async function preencherParte2Concluiu(page: Page) {
@@ -203,42 +191,21 @@ async function preencherParte2Concluiu(page: Page) {
   await marcarOpcao(page, "avalAprendizSensacaoPreparo", 1); // Parcialmente
   await abrirBloco(b3, "bloco-parte2-3");
 
-  // Continuidade nos Estudos (Q28)
+  // Motivações após o Curso (Q29) - Q28 saiu com a revisão do MTur (MTUR-08).
   const b4 = blocoParte2(page, 4);
   await abrirBloco(b4, "bloco-parte2-4");
-  await marcarOpcao(page, "avalContinuidadeRetomadaEstudos", 3); // Sim, ao ensino técnico
+  await marcarOpcao(page, "avalMotivacoesPosPercepcoes", 0);
   await abrirBloco(b4, "bloco-parte2-4");
 
-  // Motivações após o Curso (Q29)
+  // Avaliação geral (Q35-Q37) - Q30-Q34 saíram com a revisão do MTur.
   const b5 = blocoParte2(page, 5);
   await abrirBloco(b5, "bloco-parte2-5");
-  await marcarOpcao(page, "avalMotivacoesPosPercepcoes", 0);
-  await abrirBloco(b5, "bloco-parte2-5");
-
-  // Oportunidades Reais de Trabalho e Emprego (Q30, Q31)
-  const b6 = blocoParte2(page, 6);
-  await abrirBloco(b6, "bloco-parte2-6");
-  await marcarOpcao(page, "avalOportunSituacaoTrabalho", 0); // emprego com carteira no Turismo
-  await marcarOpcao(page, "avalOportunIntencaoAtuarTurismo", 0); // Sim
-  await abrirBloco(b6, "bloco-parte2-6");
-
-  // Efetivação no Emprego e Aumento da Renda (Q32-Q34)
-  const b7 = blocoParte2(page, 7);
-  await abrirBloco(b7, "bloco-parte2-7");
-  await marcarOpcao(page, "avalEfetivEmprego", 0); // Sim
-  await marcarOpcao(page, "avalEfetivAumentoRenda", 0); // Sim
-  await marcarOpcao(page, "avalEfetivMelhoriaPadraoVida", 1); // Sim, parcialmente
-  await abrirBloco(b7, "bloco-parte2-7");
-
-  // Avaliação geral (Q35-Q37)
-  const b8 = blocoParte2(page, 8);
-  await abrirBloco(b8, "bloco-parte2-8");
   await page.getByTestId("campo-avalGeralNota").fill("9");
   await page
     .getByTestId("campo-avalGeralMelhoriasComunidade")
     .fill("Mais gente da comunidade trabalhando com receptivo");
   await marcarOpcao(page, "avalGeralRecomendaCurso", 0); // Sim
-  await abrirBloco(b8, "bloco-parte2-8");
+  await abrirBloco(b5, "bloco-parte2-5");
 }
 
 // PESSOAL-11: as 7 perguntas de dados pessoais não existem mais nesta tela -
@@ -268,6 +235,36 @@ test("PESSOAL-11: a tela de avaliação não renderiza nenhuma das 7 perguntas d
   await expect(page.getByText("Dados Pessoais")).toHaveCount(0);
 });
 
+// MTUR-08/MTUR-12: os 4 blocos que o aluno só responde depois do certificado
+// não são renderizados, e as perguntas restantes mantêm o número do papel.
+test("MTUR-08: a tela de avaliação não renderiza os 4 blocos removidos pelo MTur", async ({
+  page,
+}) => {
+  const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
+
+  await login(page, CPF_AL_A);
+  await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
+
+  await expect(page.getByTestId("bloco-parte1-1")).toHaveText(/Experiência/);
+  await expect(page.getByTestId("bloco-parte2-4")).toHaveText(/Motivações após o Curso/);
+  await expect(page.getByTestId("bloco-parte2-5")).toHaveText(/Avaliação geral/);
+  await expect(page.getByTestId("bloco-parte2-6")).toHaveCount(0);
+
+  for (const titulo of [
+    "Situação Profissional",
+    "Continuidade nos Estudos",
+    "Oportunidades Reais de Trabalho e Emprego",
+    "Efetivação no Emprego e Aumento da Renda",
+  ]) {
+    await expect(page.getByText(titulo)).toHaveCount(0);
+  }
+
+  await abrirBloco(blocoParte1(page, 1), "bloco-parte1-1");
+  await expect(
+    page.getByText("14. Já trabalhou no setor de Turismo?", { exact: true }),
+  ).toBeVisible();
+});
+
 test("Aluno salva um bloco parcial de Parte 1 e o dado persiste após reload", async ({ page }) => {
   const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
 
@@ -276,14 +273,14 @@ test("Aluno salva um bloco parcial de Parte 1 e o dado persiste após reload", a
 
   const b1 = blocoParte1(page, 1);
   await abrirBloco(b1, "bloco-parte1-1");
-  await marcarOpcao(page, "avalProfissAtuaTurismo", 0); // Sim
+  await marcarOpcao(page, "avalExperienciaTrabalhoPrevio", 0); // Sim
   const resposta = await salvarRascunho(page);
   expect(resposta.ok()).toBe(true);
   await expect(page.getByTestId("erro-avaliacao")).toHaveCount(0);
 
   await page.reload();
   await abrirBloco(blocoParte1(page, 1), "bloco-parte1-1");
-  await expect(page.getByTestId("campo-avalProfissAtuaTurismo-opcao-0")).toBeChecked();
+  await expect(page.getByTestId("campo-avalExperienciaTrabalhoPrevio-opcao-0")).toBeChecked();
 });
 
 test("antes da Parte 1 completa, os controles de Parte 2 aparecem desabilitados com o aviso do gate", async ({
@@ -379,7 +376,7 @@ test("Parte 1 completa + Parte 2 completa (Concluiu='Sim') encerra de forma irre
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 
   await abrirBloco(blocoParte1(page, 1), "bloco-parte1-1");
-  await expect(page.getByTestId("campo-avalProfissCondicaoTrabalho-select")).toBeDisabled();
+  await expect(page.getByTestId("campo-avalExperienciaTipoCursoAnterior-select")).toBeDisabled();
 });
 
 test("avaliação encerrada é somente leitura, sem botões de ação", async ({ page }) => {

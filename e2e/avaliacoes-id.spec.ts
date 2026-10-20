@@ -58,19 +58,16 @@ const CPFS = [
 ];
 
 // Os 2 primeiros campos de Parte 1 (usados na gravação parcial inicial).
-// As 7 perguntas de dados pessoais saíram deste formulário (PESSOAL-11), então
-// a Parte 1 começa em Q10.
+// As 7 perguntas de dados pessoais saíram deste formulário (PESSOAL-11) e
+// Situação Profissional saiu com a revisão do MTur (MTUR-08), então a Parte 1
+// começa em Q14.
 const PARTE_1_INICIO = {
-  avalProfissCondicaoTrabalho: "Desempregado",
-  avalProfissAtuaTurismo: "Sim",
-};
-
-// As 10 chaves restantes de Parte 1 (completam as 12 no total).
-const PARTE_1_RESTANTE = {
-  avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
-  avalProfissFaixaRenda: "Até 01 salário mínimo",
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
+};
+
+// As 6 chaves restantes de Parte 1 (completam as 8 no total).
+const PARTE_1_RESTANTE = {
   avalExperienciaTipoCursoAnterior: "Atualização profissional",
   avalMotivMotivosParticipacao: ["Conseguir um emprego/trabalho"],
   avalMotivFormaConhecimento: "pelas Redes Sociais",
@@ -272,7 +269,7 @@ test("AVAL-10: mesmo misturando 1 chave de Parte 1 no PATCH, nada é persistido 
 
   const cliente = await novoCliente();
   const res = await cliente.patch(`/api/avaliacoes/${CPF_AL_GATE_FECHADO}/${cdCurso}`, {
-    data: { avalProfissCondicaoTrabalho: "Desempregado", avalParticipConcluiuCurso: "Sim" },
+    data: { avalExperienciaTrabalhoPrevio: "Não", avalParticipConcluiuCurso: "Sim" },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 

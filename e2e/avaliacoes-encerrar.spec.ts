@@ -45,13 +45,10 @@ async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCs
   return { idSessao, idCsrf };
 }
 
-// As 12 chaves de Parte 1 completas. As 7 de dados pessoais saíram deste
-// formulário (PESSOAL-11) e não entram mais na completude da Parte 1.
+// As 8 chaves de Parte 1 completas. As 7 de dados pessoais saíram deste
+// formulário (PESSOAL-11) e Situação Profissional saiu com a revisão do MTur
+// (MTUR-08).
 const PARTE_1_COMPLETA = {
-  avalProfissCondicaoTrabalho: "Desempregado",
-  avalProfissAtuaTurismo: "Sim",
-  avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
-  avalProfissFaixaRenda: "Até 01 salário mínimo",
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
   avalExperienciaTipoCursoAnterior: "Atualização profissional",
@@ -62,7 +59,7 @@ const PARTE_1_COMPLETA = {
   avalExpectRenda: "Média",
 };
 
-// As 21 chaves de Q24 a Q37 exigidas quando avalParticipConcluiuCurso="Sim",
+// As 15 chaves de Q24-Q27, Q29 e Q35-Q37 exigidas quando avalParticipConcluiuCurso="Sim",
 // mais as 2 do bloco "Participação" (Q22 e Q23), que todo aluno responde.
 const PARTE_2_COMPLETA_CONCLUIU = {
   avalParticipConcluiuCurso: "Sim",
@@ -78,14 +75,7 @@ const PARTE_2_COMPLETA_CONCLUIU = {
   avalAprendizAmpliacaoConhecimento: "Ampliou / Melhorou",
   avalAprendizAtendimentoExpectativas: "Sim",
   avalAprendizSensacaoPreparo: "Parcialmente",
-  avalContinuidadeRetomadaEstudos: "Sim, ao ensino técnico",
   avalMotivacoesPosPercepcoes: ["tem condições de atuar na área do Turismo"],
-  avalOportunSituacaoTrabalho:
-    "Consegui um emprego, com carteira assinada, na área de Turismo.",
-  avalOportunIntencaoAtuarTurismo: "Sim",
-  avalEfetivEmprego: "Sim",
-  avalEfetivAumentoRenda: "Sim",
-  avalEfetivMelhoriaPadraoVida: "Sim, parcialmente",
   avalGeralNota: 9,
   avalGeralMelhoriasComunidade: "Mais gente da comunidade trabalhando com receptivo",
   avalGeralRecomendaCurso: "Sim",
@@ -208,7 +198,7 @@ test("AVAL-16: Concluiu='Sim' com 1 das 22 chaves faltando -> 400, pendentes lis
 
 test("AVAL-16: Parte 1 incompleta -> 400, pendentes lista as chaves de Parte 1 faltantes, status permanece EM_ANDAMENTO", async () => {
   const cdCurso = criarCursoFixture();
-  const { avalProfissFaixaRenda: _omitido, ...parte1Incompleta } = PARTE_1_COMPLETA;
+  const { avalExpectRenda: _omitido, ...parte1Incompleta } = PARTE_1_COMPLETA;
   criarAvaliacao({
     cpf: CPF_AL,
     cdCurso,
@@ -224,7 +214,7 @@ test("AVAL-16: Parte 1 incompleta -> 400, pendentes lista as chaves de Parte 1 f
 
   expect(res.status()).toBe(400);
   const corpo = await res.json();
-  expect(corpo.pendentes).toContain("avalProfissFaixaRenda");
+  expect(corpo.pendentes).toContain("avalExpectRenda");
   expect(corpo.pendentes).toContain("avalParticipConcluiuCurso");
 
   const persistida = getAvaliacao(CPF_AL, cdCurso);
@@ -340,10 +330,10 @@ test("Concluiu='Sim'->'Não': o PATCH preserva as respostas de concluinte, o enc
   expect(respostas?.avalParticipMotivoNaoConclusao).toEqual(["Dificuldades financeiras"]);
   expect(respostas).not.toHaveProperty("avalGeralNota");
   expect(respostas).not.toHaveProperty("avalCursoConteudo");
-  expect(respostas).not.toHaveProperty("avalOportunSituacaoTrabalho");
+  expect(respostas).not.toHaveProperty("avalMotivacoesPosPercepcoes");
   // Q23 (frequência) e a Parte 1 continuam: não são "apenas para quem concluiu"
   expect(respostas?.avalParticipPercentualFrequencia).toBeDefined();
-  expect(respostas?.avalProfissFaixaRenda).toBeDefined();
+  expect(respostas?.avalExpectRenda).toBeDefined();
 
   await cliente.dispose();
 });

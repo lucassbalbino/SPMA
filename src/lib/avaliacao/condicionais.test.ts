@@ -7,20 +7,32 @@ import {
 } from "./condicionais";
 
 // Valores transcritos literalmente de `docs/Questionario_do_Aluno_1.md`.
-describe("normalizarCondicionaisAvaliacao", () => {
-  it("Q11='Não' com Q12 respondida -> Q12 descartada", () => {
-    const respostas = {
-      avalProfissAtuaTurismo: "Não",
-      avalProfissAtividadeEspecifica: "Eventos",
-      avalProfissFaixaRenda: "Sem renda",
-    };
-
-    expect(normalizarCondicionaisAvaliacao(respostas)).toEqual({
-      avalProfissAtuaTurismo: "Não",
-      avalProfissFaixaRenda: "Sem renda",
-    });
+// MTUR-11: com Q28 e Q30-Q34 fora do questionário, o bloco de quem concluiu
+// é Q24-Q27, Q29 e Q35-Q38.
+describe("CHAVES_SOMENTE_CONCLUINTE", () => {
+  it("lista exatamente as 16 chaves de Q24-Q27, Q29 e Q35-Q38", () => {
+    expect([...CHAVES_SOMENTE_CONCLUINTE]).toEqual([
+      "avalCursoDinamicasInclusao",
+      "avalCursoMaterialDidatico",
+      "avalCursoConteudo",
+      "avalCursoClareza",
+      "avalCursoConhecimentoInstrutores",
+      "avalCursoOrganizacao",
+      "avalCursoInfraestruturaBasica",
+      "avalCursoInfraestruturaSalaAula",
+      "avalAprendizAmpliacaoConhecimento",
+      "avalAprendizAtendimentoExpectativas",
+      "avalAprendizSensacaoPreparo",
+      "avalMotivacoesPosPercepcoes",
+      "avalGeralNota",
+      "avalGeralMelhoriasComunidade",
+      "avalGeralRecomendaCurso",
+      "avalGeralComentariosFinais",
+    ]);
   });
+});
 
+describe("normalizarCondicionaisAvaliacao", () => {
   it("Q15='Não' com Q16 respondida -> Q16 descartada", () => {
     const respostas = {
       avalExperienciaCursoAnterior: "Não",
@@ -45,7 +57,7 @@ describe("normalizarCondicionaisAvaliacao", () => {
     });
   });
 
-  it("Q22='Não' -> as 23 chaves de 'apenas para quem concluiu' são descartadas, Q22.1 e Q23 ficam", () => {
+  it("Q22='Não' -> as 16 chaves de 'apenas para quem concluiu' são descartadas, Q22.1 e Q23 ficam", () => {
     const respostas: Record<string, unknown> = {
       avalParticipConcluiuCurso: "Não",
       avalParticipMotivoNaoConclusao: ["Horário inapropriado das aulas"],
@@ -74,24 +86,10 @@ describe("normalizarCondicionaisAvaliacao", () => {
     const respostas = {
       avalParticipConcluiuCurso: "Sim",
       avalGeralNota: 0,
-      avalOportunSituacaoTrabalho: "Outra",
-      avalOportunSituacaoTrabalhoOutra: "Trabalho voluntário",
+      avalGeralComentariosFinais: "Gostei",
     };
 
     expect(normalizarCondicionaisAvaliacao(respostas)).toEqual(respostas);
-  });
-
-  it("Q30 deixou de ser 'Outra' -> o texto livre de Q30.j é descartado", () => {
-    const respostas = {
-      avalParticipConcluiuCurso: "Sim",
-      avalOportunSituacaoTrabalho: "Estou desempregado.",
-      avalOportunSituacaoTrabalhoOutra: "Trabalho voluntário",
-    };
-
-    expect(normalizarCondicionaisAvaliacao(respostas)).toEqual({
-      avalParticipConcluiuCurso: "Sim",
-      avalOportunSituacaoTrabalho: "Estou desempregado.",
-    });
   });
 
   it("respostas ausentes não quebram a normalização", () => {
@@ -100,16 +98,13 @@ describe("normalizarCondicionaisAvaliacao", () => {
 });
 
 describe("pendências condicionais", () => {
-  it("Q11='Sim' sem Q12 e Q15='Sim' sem Q16 -> as duas pendentes na Parte 1", () => {
+  // Q16 é a única condicional que sobrou na Parte 1 (Q12 saiu com MTUR-08).
+  it("Q15='Sim' sem Q16 -> só ela pendente na Parte 1", () => {
     const pendentes = pendenciasCondicionaisParte1({
-      avalProfissAtuaTurismo: "Sim",
       avalExperienciaCursoAnterior: "Sim",
     });
 
-    expect(pendentes).toEqual([
-      "avalProfissAtividadeEspecifica",
-      "avalExperienciaTipoCursoAnterior",
-    ]);
+    expect(pendentes).toEqual(["avalExperienciaTipoCursoAnterior"]);
   });
 
   it("Q22='Não' sem Q22.1 -> pendente na Parte 2", () => {
@@ -125,11 +120,5 @@ describe("pendências condicionais", () => {
     });
 
     expect(pendentes).toEqual(["avalParticipMotivoNaoConclusao"]);
-  });
-
-  it("Q30='Outra' sem o texto livre -> pendente na Parte 2", () => {
-    expect(
-      pendenciasCondicionaisParte2({ avalOportunSituacaoTrabalho: "Outra" }),
-    ).toEqual(["avalOportunSituacaoTrabalhoOutra"]);
   });
 });
