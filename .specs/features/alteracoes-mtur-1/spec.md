@@ -155,9 +155,9 @@ Dimensões implícitas: estado (`parte1Completa`) coberto por MTUR-16; ciclo de 
 | MTUR-02 | P1: Pré-curso | T1 | Implementing |
 | MTUR-03 | P1: Pré-curso | T1 | Implementing |
 | MTUR-04 | P1: Pré-curso | T1 | Implementing |
-| MTUR-05 | P1: Dados pessoais | Tasks | Pending |
-| MTUR-06 | P1: Dados pessoais | Tasks | Pending |
-| MTUR-07 | P1: Dados pessoais | Tasks | Pending |
+| MTUR-05 | P1: Dados pessoais | T2 | Implementing |
+| MTUR-06 | P1: Dados pessoais | T2 | Implementing |
+| MTUR-07 | P1: Dados pessoais | T2 | Implementing |
 | MTUR-08 | P1: Aluno sem blocos | Tasks | Pending |
 | MTUR-09 | P1: Aluno sem blocos | Tasks | Pending |
 | MTUR-10 | P1: Aluno sem blocos | Tasks | Pending |

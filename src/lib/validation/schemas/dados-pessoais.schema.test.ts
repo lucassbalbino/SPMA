@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CHAVES_DADOS_PESSOAIS,
   OPCOES_CONDICAO_PCD,
+  OPCOES_RACA_ETNIA,
   respostasDadosPessoaisSchema,
 } from "./dados-pessoais.schema";
 
@@ -45,22 +46,39 @@ describe("respostasDadosPessoaisSchema", () => {
     ).toBe(false);
   });
 
-  // Mesma regra que `avaliacao.schema.test.ts` provava no lugar antigo,
-  // preservada aqui: Q9 pede o TIPO da deficiência, não Sim/Não.
-  it("avalPessoalCondicaoPcd é o tipo da deficiência, não Sim/Não (Q9)", () => {
+  // MTUR-05: Q8 com a nomenclatura do IBGE (Alteracoes_MTur_1, item 3.1).
+  it("avalPessoalRacaEtnia tem exatamente Branco, Preto, Pardo, Amarelo, Indígena", () => {
+    expect(OPCOES_RACA_ETNIA).toEqual(["Branco", "Preto", "Pardo", "Amarelo", "Indígena"]);
+  });
+
+  // MTUR-06: Q9 reduzida a Sim/Não (item 3.2) - o tipo da deficiência deixou
+  // de ser perguntado.
+  it("avalPessoalCondicaoPcd tem exatamente as duas opções Não/Sim.", () => {
+    expect(OPCOES_CONDICAO_PCD).toEqual(["Não sou uma Pessoa com Deficiência.", "Sim."]);
+  });
+
+  // MTUR-07: os textos anteriores à revisão deixam de ser válidos.
+  it("rejeita o texto antigo Negro em avalPessoalRacaEtnia", () => {
     expect(
       respostasDadosPessoaisSchema.safeParse({
         ...RESPOSTA_VALIDA,
-        avalPessoalCondicaoPcd: "Sim",
+        avalPessoalRacaEtnia: "Negro",
       }).success,
     ).toBe(false);
+  });
 
+  it.each([
+    "Sim, tenho deficiência física (paralisias, amputações, ausência de membros, lesões nervosas ou musculares, etc.)",
+    "Sim, tenho deficiência auditiva.",
+    "Sim, tenho deficiência visual.",
+    "Sim, tenho deficiência intelectual/mental.",
+  ])("rejeita o texto antigo %s em avalPessoalCondicaoPcd", (antigo) => {
     expect(
       respostasDadosPessoaisSchema.safeParse({
         ...RESPOSTA_VALIDA,
-        avalPessoalCondicaoPcd: "Sim, tenho deficiência auditiva.",
+        avalPessoalCondicaoPcd: antigo,
       }).success,
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("aceita cada uma das opções de OPCOES_CONDICAO_PCD", () => {

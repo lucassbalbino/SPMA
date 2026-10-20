@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: sem `design.md` - nenhuma decisão de arquitetura nova. A troca é de conteúdo (textos e chaves) dentro da forma já existente: schema Zod único (AD-004), respostas normalizadas `(Chave, Ordem, Valor)` e migration de dados em SQL literal (precedente: `20260911203228_descartar_dados_pessoais_do_questionario`).
-**Status**: In Progress (T1 feita)
+**Status**: In Progress (T1, T2 feitas)
 
 ---
 
@@ -31,6 +31,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | Quick | Tarefa só com teste unitário | `npm run test:unit` |
 | Full | Tarefa com integração ou e2e | `npm run test:unit && npm run test:integration && npm run test:e2e` |
 | Build | Fim de fase / tarefa documental | `npm run lint && npm run build && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:e2e` |
+
+**Política de gate desta feature (ajustada em execução):** a suíte e2e completa levou 55 min na T1 (291/292, a falha isolada em `pos-cursos-encerrar.spec.ts` passou 5/5 sozinha - intermitência sob carga, sem relação com a mudança). Por isso o gate Full de T2-T4 roda `test:unit` e `test:integration` completos mais **só os arquivos e2e da tela tocada**. A suíte e2e completa roda uma vez, no gate Build de T5.
 
 **Conferir sempre `test-results/.last-run.json`** (`status` + `failedTests`), não o exit code de um encadeamento. Checar porta 3000 livre antes de gate com e2e.
 
@@ -96,10 +98,10 @@ T4 → T5
 
 **Done when**:
 
-- [ ] As duas listas iguais a MTUR-05 e MTUR-06, na ordem
-- [ ] "Negro" e os 4 "Sim, tenho deficiência …" rejeitados (MTUR-07)
-- [ ] `e2e/meus-dados.spec.ts` grava com os valores novos
-- [ ] Gate Full passa, sem teste removido
+- [x] As duas listas iguais a MTUR-05 e MTUR-06, na ordem
+- [x] "Negro" e os 4 "Sim, tenho deficiência …" rejeitados (MTUR-07)
+- [x] `e2e/meus-dados.spec.ts` grava com os valores novos
+- [x] Gate Full passa, sem teste removido
 
 **Tests**: e2e
 **Gate**: full

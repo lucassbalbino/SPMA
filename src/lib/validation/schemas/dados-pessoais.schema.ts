@@ -45,18 +45,14 @@ export const OPCOES_ESCOLARIDADE = [
   "Pós-graduação completa",
 ] as const;
 
-// Q8 - cor/raça/etnia.
-export const OPCOES_RACA_ETNIA = ["Branco", "Negro", "Pardo", "Amarelo", "Indígena"] as const;
+// Q8 - cor/raça/etnia, com a nomenclatura do IBGE ("Preto" no lugar de
+// "Negro", `docs/Alteracoes_MTur_1.md` item 3.1).
+export const OPCOES_RACA_ETNIA = ["Branco", "Preto", "Pardo", "Amarelo", "Indígena"] as const;
 
-// Q9 - condição de PCD. Note que NÃO é Sim/Não: o questionário fonte pede o
-// tipo da deficiência na mesma pergunta.
-export const OPCOES_CONDICAO_PCD = [
-  "Não sou uma Pessoa com Deficiência.",
-  "Sim, tenho deficiência física (paralisias, amputações, ausência de membros, lesões nervosas ou musculares, etc.)",
-  "Sim, tenho deficiência auditiva.",
-  "Sim, tenho deficiência visual.",
-  "Sim, tenho deficiência intelectual/mental.",
-] as const;
+// Q9 - condição de PCD. Até a revisão do MTur (item 3.2) a pergunta pedia o
+// tipo da deficiência; agora é só Sim/Não. As respostas gravadas com o texto
+// anterior são convertidas pela migration `20261020120000_alteracoes_mtur_1`.
+export const OPCOES_CONDICAO_PCD = ["Não sou uma Pessoa com Deficiência.", "Sim."] as const;
 
 // ---- Forma das 7 chaves (Q3-Q9) ----
 //
