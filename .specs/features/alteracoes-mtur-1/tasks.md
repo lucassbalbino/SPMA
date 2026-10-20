@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: sem `design.md` - nenhuma decisão de arquitetura nova. A troca é de conteúdo (textos e chaves) dentro da forma já existente: schema Zod único (AD-004), respostas normalizadas `(Chave, Ordem, Valor)` e migration de dados em SQL literal (precedente: `20260911203228_descartar_dados_pessoais_do_questionario`).
-**Status**: 5/5 tarefas implementadas e commitadas. Gate Build da T5: lint/build/typecheck ok, unit 852, integration 139, e2e 292/293 (a falha, `cursos-novo.spec.ts:117`, passou isolada - intermitência, tela não tocada). Aguardando Verifier.
+**Status**: Done. 5/5 tarefas + 2 commits de correção do Verifier (92ba201, 111ca9a). Verifier = PASS na iteração 3/3 (`validation.md`), `validate_state.py alteracoes-mtur-1` = exit 0.
 
 ---
 

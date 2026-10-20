@@ -151,24 +151,24 @@ Dimensões implícitas: estado (`parte1Completa`) coberto por MTUR-16; ciclo de 
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| MTUR-01 | P1: Pré-curso | T1 | Implementing |
-| MTUR-02 | P1: Pré-curso | T1 | Implementing |
-| MTUR-03 | P1: Pré-curso | T1 | Implementing |
-| MTUR-04 | P1: Pré-curso | T1 | Implementing |
-| MTUR-05 | P1: Dados pessoais | T2 | Implementing |
-| MTUR-06 | P1: Dados pessoais | T2 | Implementing |
-| MTUR-07 | P1: Dados pessoais | T2 | Implementing |
-| MTUR-08 | P1: Aluno sem blocos | T3 | Implementing |
-| MTUR-09 | P1: Aluno sem blocos | T3 | Implementing |
-| MTUR-10 | P1: Aluno sem blocos | T3 | Implementing |
-| MTUR-11 | P1: Aluno sem blocos | T3 | Implementing |
-| MTUR-12 | P1: Aluno sem blocos | T3 | Implementing |
-| MTUR-13 | P1: Dados gravados | T4 | Implementing |
-| MTUR-14 | P1: Dados gravados | T4 | Implementing |
-| MTUR-15 | P1: Dados gravados | T4 | Implementing |
-| MTUR-16 | P1: Dados gravados | T4 | Implementing |
-| MTUR-17 | P1: Dados gravados | T4 | Implementing |
-| MTUR-18 | P2: docs/ | T5 | Implementing |
+| MTUR-01 | P1: Pré-curso | T1 | Verified |
+| MTUR-02 | P1: Pré-curso | T1 | Verified |
+| MTUR-03 | P1: Pré-curso | T1 | Verified |
+| MTUR-04 | P1: Pré-curso | T1 | Verified |
+| MTUR-05 | P1: Dados pessoais | T2 | Verified |
+| MTUR-06 | P1: Dados pessoais | T2 | Verified |
+| MTUR-07 | P1: Dados pessoais | T2 | Verified |
+| MTUR-08 | P1: Aluno sem blocos | T3 | Verified |
+| MTUR-09 | P1: Aluno sem blocos | T3 | Verified |
+| MTUR-10 | P1: Aluno sem blocos | T3 | Verified |
+| MTUR-11 | P1: Aluno sem blocos | T3 | Verified |
+| MTUR-12 | P1: Aluno sem blocos | T3 | Verified |
+| MTUR-13 | P1: Dados gravados | T4 | Verified |
+| MTUR-14 | P1: Dados gravados | T4 | Verified |
+| MTUR-15 | P1: Dados gravados | T4 | Verified |
+| MTUR-16 | P1: Dados gravados | T4 | Verified |
+| MTUR-17 | P1: Dados gravados | T4 | Verified |
+| MTUR-18 | P2: docs/ | T5 | Verified |
 
 **Coverage:** 18 total, 18 mapped to tasks, 0 unmapped
 
