@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: sem `design.md`. Nenhuma decisão de arquitetura nova: as 7 chaves entram na forma que já existe (schema Zod único, AD-004; condicional "Qual?" em `condicionais.ts`, REQ-PC-09; respostas normalizadas com forma derivada do schema, AD-041). A ordem do par de inscrição estende `ordemDatasValida`, que a rota PATCH já chama contra o estado mesclado.
-**Status**: In Progress
+**Status**: Done. 4/4 tarefas. Verifier = PASS na iteração 1/3 (`validation.md`, 16/16 mutações mortas), `validate_state.py alteracoes-pre-curso-gestor` = exit 0.
 
 ---
 

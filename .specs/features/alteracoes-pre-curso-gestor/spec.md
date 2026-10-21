@@ -142,26 +142,26 @@ Dimensões implícitas: validação de entrada coberta por APC-03/APC-13/APC-14;
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| APC-01 | P1: Local da ação | T2 | Implementing |
-| APC-02 | P1: Local da ação | T2 | Implementing |
-| APC-03 | P1: Local da ação | T2 | Implementing |
-| APC-04 | P1: Local da ação | T2 | Implementing |
-| APC-05 | P1: Local da ação | T2 | Implementing |
-| APC-06 | P1: Local da ação | T2 | Implementing |
-| APC-07 | P1: Local da ação | T2 | Implementing |
-| APC-08 | P1: Idiomas | T1 | Implementing |
-| APC-09 | P1: Idiomas | T1 | Implementing |
-| APC-10 | P1: Idiomas | T1 | Implementing |
-| APC-11 | P1: Inscrição e vagas | T3 | Implementing |
-| APC-12 | P1: Inscrição e vagas | T3 | Implementing |
-| APC-13 | P1: Inscrição e vagas | T3 | Implementing |
-| APC-14 | P1: Inscrição e vagas | T3 | Implementing |
-| APC-15 | P1: Inscrição e vagas | T3 | Implementing |
-| APC-16 | P1: Inscrição e vagas | T3 | Implementing |
-| APC-17 | P1: Contagem | T3 | Implementing |
-| APC-18 | P1: Contagem | T3 | Implementing |
-| APC-19 | P1: Contagem | T3 | Implementing |
-| APC-20 | P2: docs/ | T4 | Implementing |
+| APC-01 | P1: Local da ação | T2 | Verified |
+| APC-02 | P1: Local da ação | T2 | Verified |
+| APC-03 | P1: Local da ação | T2 | Verified |
+| APC-04 | P1: Local da ação | T2 | Verified |
+| APC-05 | P1: Local da ação | T2 | Verified |
+| APC-06 | P1: Local da ação | T2 | Verified |
+| APC-07 | P1: Local da ação | T2 | Verified |
+| APC-08 | P1: Idiomas | T1 | Verified |
+| APC-09 | P1: Idiomas | T1 | Verified |
+| APC-10 | P1: Idiomas | T1 | Verified |
+| APC-11 | P1: Inscrição e vagas | T3 | Verified |
+| APC-12 | P1: Inscrição e vagas | T3 | Verified |
+| APC-13 | P1: Inscrição e vagas | T3 | Verified |
+| APC-14 | P1: Inscrição e vagas | T3 | Verified |
+| APC-15 | P1: Inscrição e vagas | T3 | Verified |
+| APC-16 | P1: Inscrição e vagas | T3 | Verified |
+| APC-17 | P1: Contagem | T3 | Verified |
+| APC-18 | P1: Contagem | T3 | Verified |
+| APC-19 | P1: Contagem | T3 | Verified |
+| APC-20 | P2: docs/ | T4 | Verified |
 
 **Coverage:** 20 total, 20 mapped to tasks, 0 unmapped
 
@@ -169,6 +169,6 @@ Dimensões implícitas: validação de entrada coberta por APC-03/APC-13/APC-14;
 
 ## Success Criteria
 
-- [ ] Gate completo verde (`lint && build && typecheck && test:unit && test:integration && test:e2e`).
-- [ ] `grep -c "Idiomas"` em `pre-curso.schema.ts` e em `docs/Questionario_do_Gestor_Pre_Curso.md` ≥ 1, e "Endereço da Sede" ausente de `src/`.
-- [ ] Nenhum arquivo em `prisma/` alterado.
+- [x] Gate completo verde (`lint && build && typecheck && test:unit && test:integration && test:e2e`).
+- [x] `grep -c "Idiomas"` em `pre-curso.schema.ts` e em `docs/Questionario_do_Gestor_Pre_Curso.md` ≥ 1, e "Endereço da Sede" ausente de `src/`.
+- [x] Nenhum arquivo em `prisma/` alterado.
