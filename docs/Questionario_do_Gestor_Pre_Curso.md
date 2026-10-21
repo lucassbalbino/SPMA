@@ -18,7 +18,16 @@
 
 ### SEÇÃO 2: DADOS DA QUALIFICAÇÃO PROFISSIONAL
 
-**7.** Endereço onde a ação de qualificação é realizada:
+**7a.** Endereço onde a ação de qualificação é realizada:
+
+**7b.** Município:
+
+**7c.** UF:
+
+**7d.** Outros municípios foram contemplados com a Ação de Qualificação?
+
+- a) Sim. Qual? \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+- b) Não
 
 **8.** Nome da Ação de Qualificação (Curso, Plano, Programa, Projeto ou Ação):
 
@@ -39,7 +48,8 @@
 - h) Turismo de Base Comunitária
 - i) Cultura e Lazer (produtor(a) / recreacionista / artesã(o))
 - j) Eventos (cerimonialista / organizador(a) de eventos)
-- k) Outro. Qual? \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+- k) Idiomas
+- l) Outro. Qual? \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 **11.** Modalidade do Ação de Qualificação/Curso:
 
@@ -64,7 +74,13 @@
 
 **16.** Número de turmas planejadas:
 
-**17.** Número previsto de alunos:
+**17a.** Número previsto de alunos:
+
+**17b.** Data prevista de início de inscrição:
+
+**17c.** Data prevista de término de inscrição:
+
+**17d.** Número de vagas:
 
 **18.** Taxa de evasão esperada (%):
 

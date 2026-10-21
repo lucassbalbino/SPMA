@@ -154,10 +154,10 @@ T4
 
 **Done when**:
 
-- [ ] `docs/Questionario_do_Gestor_Pre_Curso.md` com 7a-7d, "k) Idiomas", "l) Outro. Qual?" e 17a-17d
-- [ ] `docs/Alteracoes_Questionario_Gestor_Pre_Curso.md` salvo com "Como foi aplicado"
-- [ ] AD-049 em `.specs/STATE.md`
-- [ ] Gate Build passa
+- [x] `docs/Questionario_do_Gestor_Pre_Curso.md` com 7a-7d, "k) Idiomas", "l) Outro. Qual?" e 17a-17d
+- [x] `docs/Alteracoes_Questionario_Gestor_Pre_Curso.md` salvo com "Como foi aplicado"
+- [x] AD-049 em `.specs/STATE.md`
+- [x] Gate Build passa
 
 **Tests**: none
 **Gate**: build

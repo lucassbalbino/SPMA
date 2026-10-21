@@ -351,3 +351,11 @@ Feature `alteracoes-mtur-1`. Supera, nos itens tocados, os dicionários de `form
 4. **Numeração do papel preservada** nos rótulos do aluno (Q14-Q27, Q29, Q35-Q38), por decisão do usuário.
 
 **Regra para o futuro:** toda troca de texto de opção ou remoção de pergunta vem com migration de dados no mesmo commit do schema, e todo flag gravado que deriva das respostas (hoje só `Parte1_Completa`) é reavaliado nessa migration.
+
+**AD-049 (2026-10-21) — Os 6 itens "Pendentes" do MTur (1.3, 1.4, 1.9, 1.11-1.13) entram no pré-curso a pedido do cliente (`docs/Alteracoes_Questionario_Gestor_Pre_Curso.md`): 7 chaves novas (56 → 63), 10 condicionais, 2 pares de datas com ordem validada. Sem migration.**
+Feature `alteracoes-pre-curso-gestor`. Supera, nos itens tocados, o Dicionário de Campos de `formulario-pre-curso/spec.md`, que não foi reescrito (mesma solução da AD-048).
+
+1. **Chave nova não muda banco.** As respostas são linhas `(Chave, Ordem, Valor)` e a forma sai do schema Zod (AD-041), então `qualifMunicipio`, `qualifUf`, `qualifOutrosMunicipios`, `qualifOutrosMunicipiosQuais`, `planejDataInicioInscricao`, `planejDataTerminoInscricao` e `planejNumVagas` entram só no schema, na regra condicional e na tela.
+2. **Pré-curso EM_ANDAMENTO antigo fica pendente** nas 6 chaves novas sempre obrigatórias até o GO preenchê-las. Encerrado não é revalidado: fica com 56 chaves, e agregação futura trata as 7 como ausentes.
+3. **7a mantém o texto do MTur** ("Endereço onde…", item 1.2). O pedido do cliente citava a versão anterior ("da Sede"); só o número do rótulo mudou.
+4. **O par de inscrição usa a mesma regra do par do curso:** `ordemDatasValida` checa os dois contra o estado mesclado do PATCH, e a rota não mudou. Nenhuma regra cruza inscrição com início do curso, nem vagas com alunos previstos.

@@ -210,8 +210,8 @@ Preenchido pelo Gestor Ofertante antes do início do curso. Contém 54 itens de 
 | Bloco | Conteúdo | Tipo de resposta |
 |---|---|---|
 | Identificação | UF, município, entidade responsável, coordenador, e-mail, telefone | Texto |
-| Dados da Qualificação | Endereço, nome do curso, vínculo a plano/programa, características do curso, modalidade, região | Texto, seleção única, seleção múltipla |
-| Planejamento | Datas previstas, carga horária, turmas, alunos previstos, taxa de evasão, objetivo | Data, número, texto livre |
+| Dados da Qualificação | Endereço, município e UF da ação, outros municípios contemplados, nome do curso, vínculo a plano/programa, características do curso, modalidade, região | Texto, seleção única, seleção múltipla |
+| Planejamento | Datas previstas, carga horária, turmas, alunos previstos, período de inscrição, número de vagas, taxa de evasão, objetivo | Data, número, texto livre |
 | Público-Alvo | Perfil do público, instituição executora | Seleção múltipla, seleção única |
 | Diagnóstico Pré-Curso | Consultas realizadas com atores territoriais | Seleção múltipla |
 | Infraestrutura Básica | Avaliação de 9 itens de infraestrutura (banheiros, energia, sala de aula, biblioteca, acessibilidade, laboratório, entre outros) | Escala de avaliação |

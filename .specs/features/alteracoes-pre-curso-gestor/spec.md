@@ -161,7 +161,7 @@ Dimensões implícitas: validação de entrada coberta por APC-03/APC-13/APC-14;
 | APC-17 | P1: Contagem | T3 | Implementing |
 | APC-18 | P1: Contagem | T3 | Implementing |
 | APC-19 | P1: Contagem | T3 | Implementing |
-| APC-20 | P2: docs/ | T4 | Pending |
+| APC-20 | P2: docs/ | T4 | Implementing |
 
 **Coverage:** 20 total, 20 mapped to tasks, 0 unmapped
 

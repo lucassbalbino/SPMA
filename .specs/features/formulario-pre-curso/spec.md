@@ -55,6 +55,8 @@ O Gestor Ofertante (GO) precisa registrar, antes do início de cada curso, um di
 
 ## Dicionário de Campos (Anexo — base para o Zod schema de `respostas`)
 
+⚠️ *Atualizado por AD-049 (2026-10-21): 7 chaves novas (7b, 7c, 7d e seu "Qual?", 17b, 17c, 17d) e "Idiomas" em Q10, total 63 chaves e 10 condicionais. O dicionário destas três perguntas está em `.specs/features/alteracoes-pre-curso-gestor/spec.md`; este anexo não foi reescrito.*
+
 **Fonte:** `docs/Questionario_do_Gestor_Pre_Curso.md` (questionário real do cliente, recebido em 2026-08-29). A numeração `Q1..Q32` abaixo é a do papel. Este anexo **substituiu** o dicionário derivado que existia antes desta data — ver AD-035 em `STATE.md`.
 
 Chaves em camelCase, para uso direto como propriedades do JSON `PreCurso.respostas`. `sel-única` / `sel-múltipla` = seleção; `Qual?` = a opção abre um campo condicional de texto livre (RN-04); `excludente` = alternativa que nega todas as outras e não pode ser combinada com nenhuma (rejeitada com 400 pelo `multiplaComExclusiva`, `src/lib/validation/multipla.ts`).
