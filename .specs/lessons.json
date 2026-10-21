@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 49,
+  "next_id": 51,
   "lessons": [
     {
       "id": "L-014",
@@ -26,220 +26,24 @@
       "last_seen": "2026-10-13T13:02:07Z"
     },
     {
-      "id": "L-019",
-      "key": "ac_gap::when a spec edge case says a later write must preserve already saved values after a gate flips write a dedicated test that fills the gated fields flips the gate back and asserts the prior values are still present a generic shallow merge patch is not evidence that this specific case was verified",
-      "text": "When a spec edge case says a later write must preserve already-saved values after a gate flips, write a dedicated test that fills the gated fields, flips the gate back, and asserts the prior values are still present - a generic shallow-merge PATCH is not evidence that this specific case was verified.",
-      "signal": "ac_gap",
-      "scope": "tests",
-      "status": "candidate",
-      "features": [
-        "avaliacao-aluno"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "spec.md edge case: avalParticipConcluiuCurso changed Sim to Nao after conditional fields already saved - no test in e2e/avaliacoes-id.spec.ts or e2e/avaliacoes-formulario.spec.ts (tests)"
-      ],
-      "created": "2026-08-28T17:17:11Z",
-      "last_seen": "2026-08-28T17:17:11Z"
-    },
-    {
-      "id": "L-020",
-      "key": "surviving_mutant::when a path prefix match is defined with a separator boundary href test a sibling path that shares the prefix without the separator exact and sub route cases alone pass with or without the boundary check",
-      "text": "When a path-prefix match is defined with a separator boundary (href + '/'), test a sibling path that shares the prefix without the separator; exact and sub-route cases alone pass with or without the boundary check.",
-      "signal": "surviving_mutant",
-      "scope": "tests",
-      "status": "candidate",
-      "features": [
-        "identidade-visual"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "M2 - src/lib/ui/navegacao.ts:81 (tests)"
-      ],
-      "created": "2026-08-31T07:41:58Z",
-      "last_seen": "2026-08-31T07:41:58Z"
-    },
-    {
-      "id": "L-021",
-      "key": "surviving_mutant::a no horizontal scroll assertion on documentelement is vacuous while the page sets overflow x hidden on html body measure scrollwidth against clientwidth on the element that can actually overflow",
-      "text": "A no-horizontal-scroll assertion on documentElement is vacuous while the page sets overflow-x:hidden on html/body; measure scrollWidth against clientWidth on the element that can actually overflow.",
-      "signal": "surviving_mutant",
-      "scope": "e2e",
-      "status": "candidate",
-      "features": [
-        "identidade-visual"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "E8 - e2e/identidade-visual.spec.ts:145 (e2e)"
-      ],
-      "created": "2026-08-31T07:41:58Z",
-      "last_seen": "2026-08-31T07:41:58Z"
-    },
-    {
-      "id": "L-022",
-      "key": "surviving_mutant::assert a layout container s computed max width and centering not just that exactly one of it exists a count assertion still passes after the container classes are removed",
-      "text": "Assert a layout container's computed max-width and centering, not just that exactly one of it exists; a count assertion still passes after the container classes are removed.",
-      "signal": "surviving_mutant",
-      "scope": "e2e",
-      "status": "candidate",
-      "features": [
-        "identidade-visual"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "E7 - src/components/layout/CascaProtegida.tsx:38 (e2e)"
-      ],
-      "created": "2026-08-31T07:41:59Z",
-      "last_seen": "2026-08-31T07:41:59Z"
-    },
-    {
-      "id": "L-023",
-      "key": "surviving_mutant::to verify a truncation requirement use a deliberately oversized fixture and assert the element overflows its clientwidth a default sized fixture never exercises truncation",
-      "text": "To verify a truncation requirement, use a deliberately oversized fixture and assert the element overflows its clientWidth; a default-sized fixture never exercises truncation.",
-      "signal": "surviving_mutant",
-      "scope": "e2e",
-      "status": "candidate",
-      "features": [
-        "identidade-visual"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "E9 - src/components/layout/CascaProtegida.tsx:33 (e2e)"
-      ],
-      "created": "2026-08-31T07:41:59Z",
-      "last_seen": "2026-08-31T07:41:59Z"
-    },
-    {
-      "id": "L-024",
-      "key": "spec_precision_gap::when a listed edge case contradicts an acceptance criterion amend the criterion text before implementing leaving both makes the ac unsatisfiable as written and its verified status unearned",
-      "text": "When a listed edge case contradicts an acceptance criterion, amend the criterion text before implementing; leaving both makes the AC unsatisfiable as written and its Verified status unearned.",
-      "signal": "spec_precision_gap",
-      "scope": "specs",
-      "status": "candidate",
-      "features": [
-        "identidade-visual"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "UI-05 - .specs/features/identidade-visual/spec.md (UI-05 vs Edge Cases) (specs)"
-      ],
-      "created": "2026-08-31T07:42:08Z",
-      "last_seen": "2026-08-31T07:42:08Z"
-    },
-    {
-      "id": "L-025",
-      "key": "ac_gap::cover a fetch catch branch by aborting the intercepted route a test that returns a rejected status code exercises the response path and never enters the catch",
-      "text": "Cover a fetch catch branch by aborting the intercepted route; a test that returns a rejected status code exercises the response path and never enters the catch.",
-      "signal": "ac_gap",
-      "scope": "tests",
-      "status": "candidate",
-      "features": [
-        "identidade-visual"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "UI-05 - src/components/layout/BotaoSair.tsx:38 (tests)"
-      ],
-      "created": "2026-08-31T07:42:08Z",
-      "last_seen": "2026-08-31T07:42:08Z"
-    },
-    {
-      "id": "L-026",
-      "key": "ac_gap::when a criterion says a feature must not depend on javascript assert it in a context with javascript disabled a passing test in a js enabled browser is not evidence",
-      "text": "When a criterion says a feature must not depend on JavaScript, assert it in a context with JavaScript disabled; a passing test in a JS-enabled browser is not evidence.",
-      "signal": "ac_gap",
-      "scope": "e2e",
-      "status": "candidate",
-      "features": [
-        "identidade-visual"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "UI-07 - e2e/identidade-visual.spec.ts:132 (e2e)"
-      ],
-      "created": "2026-08-31T07:42:09Z",
-      "last_seen": "2026-08-31T07:42:09Z"
-    },
-    {
-      "id": "L-027",
-      "key": "surviving_mutant::when a criterion applies a shared container to every screen assert it on every route in scope sampling two routes leaves a per page regression on the rest undetected",
-      "text": "When a criterion applies a shared container to every screen, assert it on every route in scope; sampling two routes leaves a per-page regression on the rest undetected.",
-      "signal": "surviving_mutant",
-      "scope": "e2e",
-      "status": "candidate",
-      "features": [
-        "identidade-visual"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "N1 - e2e/identidade-visual.spec.ts:146,149,165 (UI-06) (e2e)"
-      ],
-      "created": "2026-08-31T22:05:17Z",
-      "last_seen": "2026-08-31T22:05:17Z"
-    },
-    {
-      "id": "L-028",
-      "key": "surviving_mutant::assert containment by scoping the locator inside the element the criterion names a document wide locator still passes after the child is moved out of its parent",
-      "text": "Assert containment by scoping the locator inside the element the criterion names; a document-wide locator still passes after the child is moved out of its parent.",
-      "signal": "surviving_mutant",
-      "scope": "e2e",
-      "status": "candidate",
-      "features": [
-        "identidade-visual"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "N2 - e2e/identidade-visual.spec.ts:224,403 (UI-01) (e2e)"
-      ],
-      "created": "2026-08-31T22:05:18Z",
-      "last_seen": "2026-08-31T22:05:18Z"
-    },
-    {
-      "id": "L-029",
-      "key": "surviving_mutant::when a per route assertion loop skips the routes that would need test fixtures those routes stay unverified build the fixture or record the exclusion as a named gap never only as a code comment",
-      "text": "When a per-route assertion loop skips the routes that would need test fixtures, those routes stay unverified - build the fixture or record the exclusion as a named gap, never only as a code comment.",
-      "signal": "surviving_mutant",
-      "scope": "e2e",
-      "status": "candidate",
-      "features": [
-        "identidade-visual"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "P4 - e2e/identidade-visual.spec.ts:181 (UI-06) (e2e)"
-      ],
-      "created": "2026-09-01T19:21:26Z",
-      "last_seen": "2026-09-01T19:21:26Z"
-    },
-    {
       "id": "L-030",
       "key": "ac_gap::when a spec ac lists multiple visible facts for one ui element name number balance etc assert each fact s rendered text individually a testid match or a single field checked is not evidence for the others",
       "text": "When a spec AC lists multiple visible facts for one UI element (name, number, balance, etc.), assert each fact's rendered text individually - a testid match or a single field checked is not evidence for the others.",
       "signal": "ac_gap",
       "scope": "e2e",
-      "status": "candidate",
+      "status": "confirmed",
       "features": [
-        "criacao-curso-por-am"
+        "criacao-curso-por-am",
+        "alteracoes-mtur-1"
       ],
-      "recurrence": 1,
+      "recurrence": 2,
       "harmful": 0,
       "evidence": [
-        "CURSO-02 (e2e/pre-cursos-novo.spec.ts:73-84) (e2e)"
+        "CURSO-02 (e2e/pre-cursos-novo.spec.ts:73-84) (e2e)",
+        "MTUR-12 e2e/avaliacoes-formulario.spec.ts:264 (e2e)"
       ],
       "created": "2026-09-09T23:52:19Z",
-      "last_seen": "2026-09-09T23:52:19Z"
+      "last_seen": "2026-10-20T12:33:39Z"
     },
     {
       "id": "L-031",
@@ -564,6 +368,42 @@
       ],
       "created": "2026-10-13T13:02:07Z",
       "last_seen": "2026-10-13T13:02:07Z"
+    },
+    {
+      "id": "L-049",
+      "key": "surviving_mutant::in a data migration test seed every rewritten old value under an unrelated key too so dropping any update s key filter fails a test",
+      "text": "In a data-migration test, seed every rewritten old value under an unrelated key too, so dropping any UPDATE's key filter fails a test.",
+      "signal": "surviving_mutant",
+      "scope": "database",
+      "status": "candidate",
+      "features": [
+        "alteracoes-mtur-1"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M9 prisma/migrations/20261020120000_alteracoes_mtur_1/migration.sql:43 (database)"
+      ],
+      "created": "2026-10-20T12:33:40Z",
+      "last_seen": "2026-10-20T12:33:40Z"
+    },
+    {
+      "id": "L-050",
+      "key": "spec_precision_gap::write a removed text grep criterion with the full old phrase never a fragment that also appears in untouched content",
+      "text": "Write a removed-text grep criterion with the full old phrase, never a fragment that also appears in untouched content.",
+      "signal": "spec_precision_gap",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "alteracoes-mtur-1"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec.md Success Criteria grep 'quais ações fundamentais' (PreCursoForm.tsx:350, Q26 untouched) (spec)"
+      ],
+      "created": "2026-10-20T12:33:40Z",
+      "last_seen": "2026-10-20T12:33:40Z"
     }
   ]
 }

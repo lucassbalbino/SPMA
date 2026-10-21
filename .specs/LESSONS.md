@@ -14,81 +14,15 @@ Corroborated across multiple features. Safe to apply as guidance.
 - evidence: CA-OV-12 - e2e/verbas-id.spec.ts:96-115 (tests) (+1 more)
 - last seen: 2026-10-13T13:02:07Z
 
+### L-030 - When a spec AC lists multiple visible facts for one UI element (name, number, balance, etc.), assert each fact's rendered text individually - a testid match or a single field checked is not evidence for the others.
+- signal: `ac_gap` · recurrence: 2 feature(s) · scope: `e2e` · harmful: 0
+- features: criacao-curso-por-am, alteracoes-mtur-1
+- evidence: CURSO-02 (e2e/pre-cursos-novo.spec.ts:73-84) (e2e) (+1 more)
+- last seen: 2026-10-20T12:33:39Z
+
 ## Candidates (under observation - do NOT load as guidance yet)
 
 Seen once or not yet corroborated. Tracked, not trusted.
-
-### L-019 - When a spec edge case says a later write must preserve already-saved values after a gate flips, write a dedicated test that fills the gated fields, flips the gate back, and asserts the prior values are still present - a generic shallow-merge PATCH is not evidence that this specific case was verified.
-- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
-- features: avaliacao-aluno
-- evidence: spec.md edge case: avalParticipConcluiuCurso changed Sim to Nao after conditional fields already saved - no test in e2e/avaliacoes-id.spec.ts or e2e/avaliacoes-formulario.spec.ts (tests)
-- last seen: 2026-08-28T17:17:11Z
-
-### L-020 - When a path-prefix match is defined with a separator boundary (href + '/'), test a sibling path that shares the prefix without the separator; exact and sub-route cases alone pass with or without the boundary check.
-- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
-- features: identidade-visual
-- evidence: M2 - src/lib/ui/navegacao.ts:81 (tests)
-- last seen: 2026-08-31T07:41:58Z
-
-### L-021 - A no-horizontal-scroll assertion on documentElement is vacuous while the page sets overflow-x:hidden on html/body; measure scrollWidth against clientWidth on the element that can actually overflow.
-- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
-- features: identidade-visual
-- evidence: E8 - e2e/identidade-visual.spec.ts:145 (e2e)
-- last seen: 2026-08-31T07:41:58Z
-
-### L-022 - Assert a layout container's computed max-width and centering, not just that exactly one of it exists; a count assertion still passes after the container classes are removed.
-- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
-- features: identidade-visual
-- evidence: E7 - src/components/layout/CascaProtegida.tsx:38 (e2e)
-- last seen: 2026-08-31T07:41:59Z
-
-### L-023 - To verify a truncation requirement, use a deliberately oversized fixture and assert the element overflows its clientWidth; a default-sized fixture never exercises truncation.
-- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
-- features: identidade-visual
-- evidence: E9 - src/components/layout/CascaProtegida.tsx:33 (e2e)
-- last seen: 2026-08-31T07:41:59Z
-
-### L-024 - When a listed edge case contradicts an acceptance criterion, amend the criterion text before implementing; leaving both makes the AC unsatisfiable as written and its Verified status unearned.
-- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs` · harmful: 0
-- features: identidade-visual
-- evidence: UI-05 - .specs/features/identidade-visual/spec.md (UI-05 vs Edge Cases) (specs)
-- last seen: 2026-08-31T07:42:08Z
-
-### L-025 - Cover a fetch catch branch by aborting the intercepted route; a test that returns a rejected status code exercises the response path and never enters the catch.
-- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
-- features: identidade-visual
-- evidence: UI-05 - src/components/layout/BotaoSair.tsx:38 (tests)
-- last seen: 2026-08-31T07:42:08Z
-
-### L-026 - When a criterion says a feature must not depend on JavaScript, assert it in a context with JavaScript disabled; a passing test in a JS-enabled browser is not evidence.
-- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
-- features: identidade-visual
-- evidence: UI-07 - e2e/identidade-visual.spec.ts:132 (e2e)
-- last seen: 2026-08-31T07:42:09Z
-
-### L-027 - When a criterion applies a shared container to every screen, assert it on every route in scope; sampling two routes leaves a per-page regression on the rest undetected.
-- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
-- features: identidade-visual
-- evidence: N1 - e2e/identidade-visual.spec.ts:146,149,165 (UI-06) (e2e)
-- last seen: 2026-08-31T22:05:17Z
-
-### L-028 - Assert containment by scoping the locator inside the element the criterion names; a document-wide locator still passes after the child is moved out of its parent.
-- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
-- features: identidade-visual
-- evidence: N2 - e2e/identidade-visual.spec.ts:224,403 (UI-01) (e2e)
-- last seen: 2026-08-31T22:05:18Z
-
-### L-029 - When a per-route assertion loop skips the routes that would need test fixtures, those routes stay unverified - build the fixture or record the exclusion as a named gap, never only as a code comment.
-- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
-- features: identidade-visual
-- evidence: P4 - e2e/identidade-visual.spec.ts:181 (UI-06) (e2e)
-- last seen: 2026-09-01T19:21:26Z
-
-### L-030 - When a spec AC lists multiple visible facts for one UI element (name, number, balance, etc.), assert each fact's rendered text individually - a testid match or a single field checked is not evidence for the others.
-- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
-- features: criacao-curso-por-am
-- evidence: CURSO-02 (e2e/pre-cursos-novo.spec.ts:73-84) (e2e)
-- last seen: 2026-09-09T23:52:19Z
 
 ### L-031 - When a spec edge case names multiple actor scenarios (e.g. 'for role A ... ; for role B ...'), write a dedicated test for each named actor - one representative role's test is not evidence for the others when the underlying query branches by role.
 - signal: `ac_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
@@ -197,6 +131,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: gestao-de-usuarios
 - evidence: GU-33 x GU-34 sessoes (spec)
 - last seen: 2026-10-13T13:02:07Z
+
+### L-049 - In a data-migration test, seed every rewritten old value under an unrelated key too, so dropping any UPDATE's key filter fails a test.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `database` · harmful: 0
+- features: alteracoes-mtur-1
+- evidence: M9 prisma/migrations/20261020120000_alteracoes_mtur_1/migration.sql:43 (database)
+- last seen: 2026-10-20T12:33:40Z
+
+### L-050 - Write a removed-text grep criterion with the full old phrase, never a fragment that also appears in untouched content.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: alteracoes-mtur-1
+- evidence: spec.md Success Criteria grep 'quais ações fundamentais' (PreCursoForm.tsx:350, Q26 untouched) (spec)
+- last seen: 2026-10-20T12:33:40Z
 
 ## Quarantined (failed when applied - ignore)
 
