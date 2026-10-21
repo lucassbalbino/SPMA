@@ -32,6 +32,9 @@ const RESPOSTA_COMPLETA = {
   planejCargaHoraria: 120,
   planejNumTurmas: 2,
   planejNumAlunosPrevistos: 40,
+  planejDataInicioInscricao: "2026-01-15",
+  planejDataTerminoInscricao: "2026-02-15",
+  planejNumVagas: 45,
   planejTaxaEvasaoEsperada: 10,
   planejObjetivo: "Qualificar guias locais para atuação em roteiros de base comunitária",
 
@@ -192,6 +195,46 @@ describe("validarCompletudePreCurso", () => {
       expect(resultado.pendentes).toContain(chave);
     },
   );
+
+  // APC-16: 17b, 17c e 17d são sempre obrigatórias.
+  it.each(["planejDataInicioInscricao", "planejDataTerminoInscricao", "planejNumVagas"] as const)(
+    "%s ausente -> pendente e incompleto",
+    (chave) => {
+      const { [chave]: _omitido, ...semCampo } = RESPOSTA_COMPLETA;
+      const resultado = validarCompletudePreCurso(semCampo);
+
+      expect(resultado.completo).toBe(false);
+      expect(resultado.pendentes).toContain(chave);
+    },
+  );
+
+  // APC-18: pré-curso preenchido antes da AD-049 (as 56 chaves antigas).
+  it("as 56 chaves anteriores completas -> pendentes são exatamente as 6 novas sempre obrigatórias", () => {
+    const {
+      qualifMunicipio: _a,
+      qualifUf: _b,
+      qualifOutrosMunicipios: _c,
+      qualifOutrosMunicipiosQuais: _d,
+      planejDataInicioInscricao: _e,
+      planejDataTerminoInscricao: _f,
+      planejNumVagas: _g,
+      ...anterior
+    } = RESPOSTA_COMPLETA;
+    const resultado = validarCompletudePreCurso(anterior);
+
+    expect(Object.keys(anterior)).toHaveLength(56);
+    expect(resultado.completo).toBe(false);
+    expect([...resultado.pendentes].sort()).toEqual(
+      [
+        "qualifMunicipio",
+        "qualifUf",
+        "qualifOutrosMunicipios",
+        "planejDataInicioInscricao",
+        "planejDataTerminoInscricao",
+        "planejNumVagas",
+      ].sort(),
+    );
+  });
 
   // APC-09: "Idiomas" é opção comum, não abre "Qual?".
   it("qualifCaracteristicas só com 'Idiomas' não exige qualifCaracteristicasOutra", () => {

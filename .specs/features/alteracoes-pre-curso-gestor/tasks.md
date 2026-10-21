@@ -125,12 +125,12 @@ T4
 
 **Done when**:
 
-- [ ] Forma das 3 chaves aceita e rejeita conforme APC-12/APC-13
-- [ ] `ordemDatasValida` rejeita 17c < 17b e aceita igual, uma só ou nenhuma (APC-14/APC-15), sem perder o par do curso
-- [ ] As 3 chaves aparecem em `pendentes` quando ausentes (APC-16)
-- [ ] 63 chaves e 10 regras (APC-17); fixture de 56 chaves antigas pendente exatamente nas 6 novas (APC-18)
-- [ ] Tela mostra os 4 rótulos de APC-11 na ordem; e2e preenche tudo e encerra (APC-19)
-- [ ] Gate Full passa, sem teste removido
+- [x] Forma das 3 chaves aceita e rejeita conforme APC-12/APC-13
+- [x] `ordemDatasValida` rejeita 17c < 17b e aceita igual, uma só ou nenhuma (APC-14/APC-15), sem perder o par do curso
+- [x] As 3 chaves aparecem em `pendentes` quando ausentes (APC-16)
+- [x] 63 chaves e 10 regras (APC-17); fixture de 56 chaves antigas pendente exatamente nas 6 novas (APC-18)
+- [x] Tela mostra os 4 rótulos de APC-11 na ordem; e2e preenche tudo e encerra (APC-19)
+- [x] Gate Full passa, sem teste removido
 
 **Tests**: e2e
 **Gate**: full

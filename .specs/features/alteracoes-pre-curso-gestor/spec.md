@@ -152,15 +152,15 @@ Dimensões implícitas: validação de entrada coberta por APC-03/APC-13/APC-14;
 | APC-08 | P1: Idiomas | T1 | Implementing |
 | APC-09 | P1: Idiomas | T1 | Implementing |
 | APC-10 | P1: Idiomas | T1 | Implementing |
-| APC-11 | P1: Inscrição e vagas | T3 | Pending |
-| APC-12 | P1: Inscrição e vagas | T3 | Pending |
-| APC-13 | P1: Inscrição e vagas | T3 | Pending |
-| APC-14 | P1: Inscrição e vagas | T3 | Pending |
-| APC-15 | P1: Inscrição e vagas | T3 | Pending |
-| APC-16 | P1: Inscrição e vagas | T3 | Pending |
-| APC-17 | P1: Contagem | T3 | Pending |
-| APC-18 | P1: Contagem | T3 | Pending |
-| APC-19 | P1: Contagem | T3 | Pending |
+| APC-11 | P1: Inscrição e vagas | T3 | Implementing |
+| APC-12 | P1: Inscrição e vagas | T3 | Implementing |
+| APC-13 | P1: Inscrição e vagas | T3 | Implementing |
+| APC-14 | P1: Inscrição e vagas | T3 | Implementing |
+| APC-15 | P1: Inscrição e vagas | T3 | Implementing |
+| APC-16 | P1: Inscrição e vagas | T3 | Implementing |
+| APC-17 | P1: Contagem | T3 | Implementing |
+| APC-18 | P1: Contagem | T3 | Implementing |
+| APC-19 | P1: Contagem | T3 | Implementing |
 | APC-20 | P2: docs/ | T4 | Pending |
 
 **Coverage:** 20 total, 20 mapped to tasks, 0 unmapped

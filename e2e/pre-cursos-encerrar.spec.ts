@@ -36,8 +36,8 @@ async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCs
   return { idSessao, idCsrf };
 }
 
-// As 56 chaves do questionário fonte
-// (`docs/Questionario_do_Gestor_Pre_Curso.md`), incluindo os 9 condicionais,
+// As 63 chaves do questionário fonte
+// (`docs/Questionario_do_Gestor_Pre_Curso.md`), incluindo os 10 condicionais,
 // todos aplicáveis nesta fixture.
 const RESPOSTA_COMPLETA = {
   identifUf: "SP",
@@ -63,6 +63,9 @@ const RESPOSTA_COMPLETA = {
   planejCargaHoraria: 120,
   planejNumTurmas: 2,
   planejNumAlunosPrevistos: 40,
+  planejDataInicioInscricao: "2026-01-15",
+  planejDataTerminoInscricao: "2026-02-15",
+  planejNumVagas: 45,
   planejTaxaEvasaoEsperada: 10,
   planejObjetivo: "Qualificar guias locais",
   publicoPerfil: ["Jovens", "Mulheres"],
@@ -150,7 +153,7 @@ test("REQ-PC-10/CA-04: encerramento com campo obrigatório faltando é rejeitado
   await cliente.dispose();
 });
 
-test("REQ-PC-11/CA-05: encerramento com todos os 56 campos completos -> 200, ENCERRADO, dataEncerramento preenchida", async () => {
+test("REQ-PC-11/CA-05: encerramento com todos os 63 campos completos -> 200, ENCERRADO, dataEncerramento preenchida", async () => {
   const cdCurso = criarPreCurso({ cdOfertante: CNPJ_GO, cdVerba, vlCursoAlocado: 100, criadoPor: CNPJ_GO }).cdCurso;
 
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);

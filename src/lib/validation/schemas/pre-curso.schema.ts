@@ -209,14 +209,15 @@ export const OPCOES_SUPORTE_ESTRATEGIAS = [
   EXCLUSIVA_SUPORTE,
 ] as const;
 
-// ---- Forma das 56 chaves do questionário ----
+// ---- Forma das 63 chaves do questionário ----
 //
-// Os 9 campos que só se tornam obrigatórios sob uma condição (Q21.1,
-// Q25.1/25.2/25.3 e os 5 campos "Qual?/Quais?" - REQ-PC-07/08/09) ficam
+// Os 10 campos que só se tornam obrigatórios sob uma condição (Q21.1,
+// Q25.1/25.2/25.3, os 5 campos "Qual?/Quais?" - REQ-PC-07/08/09 - e o
+// "Qual?" de Q7d, AD-049) ficam
 // `.optional()` aqui: a FORMA deles é validada em toda gravação, mas a
 // obrigatoriedade condicional é responsabilidade exclusiva de
 // `validarCompletudePreCurso` (src/lib/pre-curso/completude.ts), não deste
-// schema. `.partial()` (usado no PATCH) torna as 47 chaves restantes também
+// schema. `.partial()` (usado no PATCH) torna as 53 chaves restantes também
 // opcionais, sem alterar a validação de forma de cada uma quando presente.
 export const respostasPreCursoSchema = z.object({
   // Seção 1 - Identificação (Q1-Q6)
@@ -249,6 +250,10 @@ export const respostasPreCursoSchema = z.object({
   planejCargaHoraria: z.number().int().positive(),
   planejNumTurmas: z.number().int().positive(),
   planejNumAlunosPrevistos: z.number().int().positive(),
+  // 17b-17d (A3). A ordem de 17b/17c é checada por `ordemDatasValida`.
+  planejDataInicioInscricao: z.iso.date(),
+  planejDataTerminoInscricao: z.iso.date(),
+  planejNumVagas: z.number().int().positive(),
   planejTaxaEvasaoEsperada: z.number().min(0).max(100),
   planejObjetivo: z.string().min(1),
 
@@ -334,14 +339,24 @@ export type RespostasPreCursoParcial = z.infer<
 // setar uma data antes da outra) - por isso a rota de PATCH chama isto
 // contra o JSON já mesclado (existente + patch), não contra o corpo bruto
 // da requisição. Comparação lexicográfica é válida porque `z.iso.date()`
-// garante o formato `YYYY-MM-DD`.
+// garante o formato `YYYY-MM-DD`. Vale para os dois pares: curso (Q13/Q14)
+// e inscrição (Q17b/Q17c, AD-049), cada um avaliado por si.
 export function ordemDatasValida(dados: {
   planejDataInicioPrevista?: string;
   planejDataTerminoPrevista?: string;
+  planejDataInicioInscricao?: string;
+  planejDataTerminoInscricao?: string;
 }): boolean {
-  if (!dados.planejDataInicioPrevista || !dados.planejDataTerminoPrevista) {
+  return (
+    parEmOrdem(dados.planejDataInicioPrevista, dados.planejDataTerminoPrevista) &&
+    parEmOrdem(dados.planejDataInicioInscricao, dados.planejDataTerminoInscricao)
+  );
+}
+
+function parEmOrdem(inicio?: string, termino?: string): boolean {
+  if (!inicio || !termino) {
     return true;
   }
 
-  return dados.planejDataTerminoPrevista >= dados.planejDataInicioPrevista;
+  return termino >= inicio;
 }

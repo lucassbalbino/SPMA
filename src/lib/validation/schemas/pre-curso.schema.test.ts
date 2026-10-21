@@ -36,6 +36,9 @@ const RESPOSTA_VALIDA = {
   planejCargaHoraria: 120,
   planejNumTurmas: 2,
   planejNumAlunosPrevistos: 40,
+  planejDataInicioInscricao: "2026-01-15",
+  planejDataTerminoInscricao: "2026-02-15",
+  planejNumVagas: 45,
   planejTaxaEvasaoEsperada: 10,
   planejObjetivo: "Qualificar guias locais",
 
@@ -121,9 +124,10 @@ describe("criarCursoSchema", () => {
 });
 
 describe("respostasPreCursoSchema", () => {
-  // 56 do questionário fonte + 4 de A1 (Alteracoes_Questionario_Gestor_Pre_Curso).
-  it("tem exatamente 60 chaves (questionário fonte, Q1-Q32, com 7a-7d)", () => {
-    expect(Object.keys(respostasPreCursoSchema.shape)).toHaveLength(60);
+  // APC-17: 56 do questionário fonte + 4 de A1 + 3 de A3
+  // (Alteracoes_Questionario_Gestor_Pre_Curso).
+  it("tem exatamente 63 chaves (questionário fonte, Q1-Q32, com 7a-7d e 17a-17d)", () => {
+    expect(Object.keys(respostasPreCursoSchema.shape)).toHaveLength(63);
   });
 
   it("aceita a fixture completa e válida", () => {
@@ -250,6 +254,36 @@ describe("respostasPreCursoSchema", () => {
 
       expect(result.success).toBe(false);
     });
+  });
+
+  // APC-12/APC-13: inscrição e vagas (17b-17d).
+  describe("inscrição e vagas (Q17b-Q17d)", () => {
+    it("planejNumVagas aceita 1", () => {
+      const result = respostasPreCursoSchema.safeParse({ ...RESPOSTA_VALIDA, planejNumVagas: 1 });
+
+      expect(result.success).toBe(true);
+    });
+
+    it.each([0, -5, 2.5])("planejNumVagas rejeita %s", (valor) => {
+      const result = respostasPreCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        planejNumVagas: valor,
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it.each(["planejDataInicioInscricao", "planejDataTerminoInscricao"] as const)(
+      "%s rejeita data fora de YYYY-MM-DD",
+      (chave) => {
+        const result = respostasPreCursoSchema.safeParse({
+          ...RESPOSTA_VALIDA,
+          [chave]: "15/01/2026",
+        });
+
+        expect(result.success).toBe(false);
+      },
+    );
   });
 
   describe("campos de seleção única", () => {
@@ -492,6 +526,57 @@ describe("respostasPreCursoSchema", () => {
 
     it("nenhuma das datas presente -> válido", () => {
       expect(ordemDatasValida({})).toBe(true);
+    });
+
+    // APC-14/APC-15: o par de inscrição (17b/17c) segue a mesma regra.
+    it("término de inscrição anterior ao início de inscrição -> inválido", () => {
+      expect(
+        ordemDatasValida({
+          planejDataInicioInscricao: "2026-02-15",
+          planejDataTerminoInscricao: "2026-02-14",
+        }),
+      ).toBe(false);
+    });
+
+    it("término de inscrição igual ao início de inscrição -> válido", () => {
+      expect(
+        ordemDatasValida({
+          planejDataInicioInscricao: "2026-02-15",
+          planejDataTerminoInscricao: "2026-02-15",
+        }),
+      ).toBe(true);
+    });
+
+    it("só uma das datas de inscrição presente -> válido", () => {
+      expect(ordemDatasValida({ planejDataInicioInscricao: "2026-02-15" })).toBe(true);
+      expect(ordemDatasValida({ planejDataTerminoInscricao: "2026-01-01" })).toBe(true);
+    });
+
+    it("cada par é avaliado por si: um par inválido invalida mesmo com o outro em ordem", () => {
+      const cursoEmOrdem = {
+        planejDataInicioPrevista: "2026-03-01",
+        planejDataTerminoPrevista: "2026-06-01",
+      };
+      const inscricaoEmOrdem = {
+        planejDataInicioInscricao: "2026-01-15",
+        planejDataTerminoInscricao: "2026-02-15",
+      };
+
+      expect(ordemDatasValida({ ...cursoEmOrdem, ...inscricaoEmOrdem })).toBe(true);
+      expect(
+        ordemDatasValida({
+          ...cursoEmOrdem,
+          planejDataInicioInscricao: "2026-02-15",
+          planejDataTerminoInscricao: "2026-01-15",
+        }),
+      ).toBe(false);
+      expect(
+        ordemDatasValida({
+          ...inscricaoEmOrdem,
+          planejDataInicioPrevista: "2026-06-01",
+          planejDataTerminoPrevista: "2026-03-01",
+        }),
+      ).toBe(false);
     });
   });
 });

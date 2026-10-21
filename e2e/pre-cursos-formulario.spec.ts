@@ -205,11 +205,26 @@ async function preencherTodosOsCampos(
 
   // Seção 3 - Planejamento (Q13-Q19)
   await abrirBloco(page, 3);
+  // APC-11: 17a-17d, nessa ordem, entre Q16 e Q18.
+  const enunciadosSecao3 = (await bloco(page, 3).locator("label").allTextContents()).filter(
+    (texto) => /^\d+[a-z]?\. /.test(texto),
+  );
+  expect(enunciadosSecao3.slice(3, 9)).toEqual([
+    "16. Número de turmas planejadas",
+    "17a. Número previsto de alunos",
+    "17b. Data prevista de início de inscrição",
+    "17c. Data prevista de término de inscrição",
+    "17d. Número de vagas",
+    "18. Taxa de evasão esperada (%)",
+  ]);
   await page.getByTestId("campo-planejDataInicioPrevista").fill("2026-01-10");
   await page.getByTestId("campo-planejDataTerminoPrevista").fill("2026-03-10");
   await page.getByTestId("campo-planejCargaHoraria").fill("40");
   await page.getByTestId("campo-planejNumTurmas").fill("2");
   await page.getByTestId("campo-planejNumAlunosPrevistos").fill("30");
+  await page.getByTestId("campo-planejDataInicioInscricao").fill("2025-12-01");
+  await page.getByTestId("campo-planejDataTerminoInscricao").fill("2025-12-20");
+  await page.getByTestId("campo-planejNumVagas").fill("35");
   await page.getByTestId("campo-planejTaxaEvasaoEsperada").fill("10");
   await page.getByTestId("campo-planejObjetivo").fill("Objetivo do curso de teste");
   await fecharBloco(page, 3);
@@ -318,7 +333,7 @@ test("encerramento bloqueado por campo condicional pendente referencia o campo",
   await login(page, CNPJ_GO_A);
   await page.goto(`/pre-cursos/${cdCurso}`);
 
-  // Demais 55 campos completos (Independent Test da spec: "mantendo os
+  // Demais 62 campos completos (Independent Test da spec: "mantendo os
   // demais campos obrigatórios completos") - isola a asserção no único
   // campo que falta.
   await preencherTodosOsCampos(page, { omitirNomeInstituicao: true });
@@ -335,7 +350,7 @@ test("encerramento bloqueado por campo condicional pendente referencia o campo",
   await expect(page.getByTestId("lista-pendencias").locator("li")).toHaveCount(1);
 });
 
-test("GO preenche os 56 campos e encerra o pré-curso de forma irreversível", async ({ page }) => {
+test("GO preenche as 63 chaves e encerra o pré-curso de forma irreversível", async ({ page }) => {
   const { cdCurso } = criarPreCurso({
     cdOfertante: CNPJ_GO_A,
     cdVerba: cdVerbaA,
