@@ -142,13 +142,13 @@ Dimensões implícitas: validação de entrada coberta por APC-03/APC-13/APC-14;
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| APC-01 | P1: Local da ação | T2 | Pending |
-| APC-02 | P1: Local da ação | T2 | Pending |
-| APC-03 | P1: Local da ação | T2 | Pending |
-| APC-04 | P1: Local da ação | T2 | Pending |
-| APC-05 | P1: Local da ação | T2 | Pending |
-| APC-06 | P1: Local da ação | T2 | Pending |
-| APC-07 | P1: Local da ação | T2 | Pending |
+| APC-01 | P1: Local da ação | T2 | Implementing |
+| APC-02 | P1: Local da ação | T2 | Implementing |
+| APC-03 | P1: Local da ação | T2 | Implementing |
+| APC-04 | P1: Local da ação | T2 | Implementing |
+| APC-05 | P1: Local da ação | T2 | Implementing |
+| APC-06 | P1: Local da ação | T2 | Implementing |
+| APC-07 | P1: Local da ação | T2 | Implementing |
 | APC-08 | P1: Idiomas | T1 | Implementing |
 | APC-09 | P1: Idiomas | T1 | Implementing |
 | APC-10 | P1: Idiomas | T1 | Implementing |

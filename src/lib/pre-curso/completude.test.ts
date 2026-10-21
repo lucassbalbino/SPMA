@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validarCompletudePreCurso } from "./completude";
 
-// Fixture com os 56 campos preenchidos, incluindo os 9 condicionais - base
+// Fixture com todos os campos preenchidos, incluindo os condicionais - base
 // para os testes abaixo (spread + override/omissão). Valores transcritos
 // literalmente de `docs/Questionario_do_Gestor_Pre_Curso.md`, sem importar
 // as constantes de opções do schema: o teste tem de quebrar se alguém
@@ -15,6 +15,10 @@ const RESPOSTA_COMPLETA = {
   identifTelefone: "19999990000",
 
   qualifEndereco: "Rua das Flores, 100",
+  qualifMunicipio: "Valinhos",
+  qualifUf: "SP",
+  qualifOutrosMunicipios: "Sim",
+  qualifOutrosMunicipiosQuais: "Vinhedo e Louveira",
   qualifNomeCurso: "Guia de Turismo Local",
   qualifVinculoPrograma: "Sim",
   qualifVinculoProgramaQual: "Plano Municipal de Qualificação em Turismo",
@@ -78,7 +82,7 @@ const RESPOSTA_COMPLETA = {
 };
 
 describe("validarCompletudePreCurso", () => {
-  it("os 56 campos completos e nenhum condicional disparado -> completo=true, pendentes=[]", () => {
+  it("todos os campos completos e nenhum condicional disparado -> completo=true, pendentes=[]", () => {
     const resultado = validarCompletudePreCurso(RESPOSTA_COMPLETA);
 
     expect(resultado).toEqual({ completo: true, pendentes: [] });
@@ -160,6 +164,34 @@ describe("validarCompletudePreCurso", () => {
     expect(resultado.completo).toBe(false);
     expect(resultado.pendentes).toContain("qualifCaracteristicasOutra");
   });
+
+  // APC-04: 7d = "Sim" abre "Qual?", exigido no encerramento.
+  it("Q7d='Sim' sem qualifOutrosMunicipiosQuais -> pendente", () => {
+    const { qualifOutrosMunicipiosQuais: _omitido, ...semQuais } = RESPOSTA_COMPLETA;
+    const resultado = validarCompletudePreCurso(semQuais);
+
+    expect(resultado).toEqual({ completo: false, pendentes: ["qualifOutrosMunicipiosQuais"] });
+  });
+
+  // APC-05
+  it("Q7d='Não' não exige qualifOutrosMunicipiosQuais", () => {
+    const { qualifOutrosMunicipiosQuais: _omitido, ...base } = RESPOSTA_COMPLETA;
+    const resultado = validarCompletudePreCurso({ ...base, qualifOutrosMunicipios: "Não" });
+
+    expect(resultado).toEqual({ completo: true, pendentes: [] });
+  });
+
+  // APC-07: 7b, 7c e 7d são sempre obrigatórias.
+  it.each(["qualifMunicipio", "qualifUf", "qualifOutrosMunicipios"] as const)(
+    "%s ausente -> pendente e incompleto",
+    (chave) => {
+      const { [chave]: _omitido, ...semCampo } = RESPOSTA_COMPLETA;
+      const resultado = validarCompletudePreCurso(semCampo);
+
+      expect(resultado.completo).toBe(false);
+      expect(resultado.pendentes).toContain(chave);
+    },
+  );
 
   // APC-09: "Idiomas" é opção comum, não abre "Qual?".
   it("qualifCaracteristicas só com 'Idiomas' não exige qualifCaracteristicasOutra", () => {

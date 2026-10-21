@@ -6,9 +6,9 @@ import {
   respostasPreCursoSchema,
 } from "./pre-curso.schema";
 
-// Fixture com as 56 chaves do questionário fonte
+// Fixture com as chaves do questionário fonte
 // (`docs/Questionario_do_Gestor_Pre_Curso.md`) preenchidas com valores
-// válidos, incluindo os 9 condicionais - usada como base para os testes de
+// válidos, incluindo os condicionais - usada como base para os testes de
 // campo individual (spread + override).
 const RESPOSTA_VALIDA = {
   identifUf: "SP",
@@ -19,6 +19,10 @@ const RESPOSTA_VALIDA = {
   identifTelefone: "19999990000",
 
   qualifEndereco: "Rua das Flores, 100",
+  qualifMunicipio: "Valinhos",
+  qualifUf: "SP",
+  qualifOutrosMunicipios: "Sim",
+  qualifOutrosMunicipiosQuais: "Vinhedo e Louveira",
   qualifNomeCurso: "Guia de Turismo Local",
   qualifVinculoPrograma: "Sim",
   qualifVinculoProgramaQual: "Plano Municipal de Qualificação em Turismo",
@@ -117,8 +121,9 @@ describe("criarCursoSchema", () => {
 });
 
 describe("respostasPreCursoSchema", () => {
-  it("tem exatamente 56 chaves (questionário fonte, Q1-Q32)", () => {
-    expect(Object.keys(respostasPreCursoSchema.shape)).toHaveLength(56);
+  // 56 do questionário fonte + 4 de A1 (Alteracoes_Questionario_Gestor_Pre_Curso).
+  it("tem exatamente 60 chaves (questionário fonte, Q1-Q32, com 7a-7d)", () => {
+    expect(Object.keys(respostasPreCursoSchema.shape)).toHaveLength(60);
   });
 
   it("aceita a fixture completa e válida", () => {
@@ -192,6 +197,55 @@ describe("respostasPreCursoSchema", () => {
       const result = respostasPreCursoSchema.safeParse({
         ...RESPOSTA_VALIDA,
         [chave]: 2.5,
+      });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  // APC-02/APC-03: local da ação (7b, 7c, 7d).
+  describe("local da ação (Q7b-Q7d)", () => {
+    it("qualifUf aceita uma das 27 siglas", () => {
+      const result = respostasPreCursoSchema.safeParse({ ...RESPOSTA_VALIDA, qualifUf: "TO" });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("qualifUf rejeita sigla fora das 27", () => {
+      const result = respostasPreCursoSchema.safeParse({ ...RESPOSTA_VALIDA, qualifUf: "XX" });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("qualifMunicipio rejeita texto vazio", () => {
+      const result = respostasPreCursoSchema.safeParse({ ...RESPOSTA_VALIDA, qualifMunicipio: "" });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("qualifOutrosMunicipios aceita 'Não'", () => {
+      const result = respostasPreCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        qualifOutrosMunicipios: "Não",
+        qualifOutrosMunicipiosQuais: undefined,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("qualifOutrosMunicipios rejeita valor fora de Sim/Não", () => {
+      const result = respostasPreCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        qualifOutrosMunicipios: "Talvez",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("qualifOutrosMunicipiosQuais rejeita texto vazio quando enviado", () => {
+      const result = respostasPreCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        qualifOutrosMunicipiosQuais: "",
       });
 
       expect(result.success).toBe(false);

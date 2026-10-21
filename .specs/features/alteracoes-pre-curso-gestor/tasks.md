@@ -97,11 +97,11 @@ T4
 
 **Done when**:
 
-- [ ] Forma das 4 chaves aceita e rejeita conforme APC-02/APC-03
-- [ ] Regra `qualifOutrosMunicipiosQuais` exige com "Sim", não exige com "Não" e descarta órfã (APC-04 a APC-06)
-- [ ] As 3 sempre obrigatórias aparecem em `pendentes` quando ausentes (APC-07)
-- [ ] Tela mostra os 4 rótulos de APC-01 na ordem e revela "7d. Qual?" só com "Sim", visível no e2e
-- [ ] Gate Full passa, sem teste removido
+- [x] Forma das 4 chaves aceita e rejeita conforme APC-02/APC-03
+- [x] Regra `qualifOutrosMunicipiosQuais` exige com "Sim", não exige com "Não" e descarta órfã (APC-04 a APC-06)
+- [x] As 3 sempre obrigatórias aparecem em `pendentes` quando ausentes (APC-07)
+- [x] Tela mostra os 4 rótulos de APC-01 na ordem e revela "7d. Qual?" só com "Sim", visível no e2e
+- [x] Gate Full passa, sem teste removido
 
 **Tests**: e2e
 **Gate**: full

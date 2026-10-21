@@ -1,5 +1,6 @@
-// As 9 regras condicionais do questionário de pré-curso (REQ-PC-07: Q21.1,
-// REQ-PC-08: Q25.1/25.2/25.3, REQ-PC-09: os 5 campos "Qual?/Quais?").
+// As 10 regras condicionais do questionário de pré-curso (REQ-PC-07: Q21.1,
+// REQ-PC-08: Q25.1/25.2/25.3, REQ-PC-09: os 5 campos "Qual?/Quais?", e o
+// "Qual?" de Q7d, AD-049).
 //
 // Fonte única das condições: `completude.ts` (exigência no encerramento),
 // `PreCursoForm.tsx` (visibilidade na tela) e a limpeza de órfãs do
@@ -61,6 +62,13 @@ export const REGRAS_CONDICIONAIS_PRE_CURSO: readonly RegraCondicional<RespostasP
       chave: "qualifVinculoProgramaQual",
       dependeDe: ["qualifVinculoPrograma"],
       exigidaQuando: (dados) => dados.qualifVinculoPrograma === "Sim",
+    },
+
+    // Q7d "Sim. Qual?" - mesma família de REQ-PC-09, incluída pela AD-049.
+    {
+      chave: "qualifOutrosMunicipiosQuais",
+      dependeDe: ["qualifOutrosMunicipios"],
+      exigidaQuando: (dados) => dados.qualifOutrosMunicipios === "Sim",
     },
     {
       chave: "qualifCaracteristicasOutra",

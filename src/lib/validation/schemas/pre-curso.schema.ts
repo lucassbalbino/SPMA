@@ -227,8 +227,14 @@ export const respostasPreCursoSchema = z.object({
   identifEmail: z.string().email(),
   identifTelefone: z.string().min(1),
 
-  // Seção 2 - Dados da Qualificação Profissional (Q7-Q12)
+  // Seção 2 - Dados da Qualificação Profissional (Q7a-Q12). 7b-7d vieram
+  // de `docs/Alteracoes_Questionario_Gestor_Pre_Curso.md` (A1) e são do
+  // local da ação, não da entidade (Q1/Q2): podem divergir.
   qualifEndereco: z.string().min(1),
+  qualifMunicipio: z.string().min(1),
+  qualifUf: z.enum(OPCOES_UF),
+  qualifOutrosMunicipios: z.enum(OPCOES_SIM_NAO),
+  qualifOutrosMunicipiosQuais: z.string().min(1).optional(),
   qualifNomeCurso: z.string().min(1),
   qualifVinculoPrograma: z.enum(OPCOES_SIM_NAO),
   qualifVinculoProgramaQual: z.string().min(1).optional(),

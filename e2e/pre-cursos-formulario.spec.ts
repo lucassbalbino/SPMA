@@ -164,13 +164,31 @@ async function preencherTodosOsCampos(
   await page.getByTestId("campo-identifTelefone").fill("11999999999");
   await fecharBloco(page, 1);
 
-  // Seção 2 - Dados da Qualificação Profissional (Q7-Q12)
+  // Seção 2 - Dados da Qualificação Profissional (Q7a-Q12)
   await abrirBloco(page, 2);
-  // MTUR-01: enunciado de Q7 revisado pelo MTur.
-  await expect(
-    page.getByText("7. Endereço onde a ação de qualificação é realizada", { exact: true }),
-  ).toBeVisible();
+  // APC-01: 7a (texto do MTur, MTUR-01) a 7d, nessa ordem, antes de Q8.
+  const enunciadosSecao2 = (await bloco(page, 2).locator("label").allTextContents()).filter(
+    (texto) => /^\d+[a-z]?\. /.test(texto),
+  );
+  expect(enunciadosSecao2.slice(0, 5)).toEqual([
+    "7a. Endereço onde a ação de qualificação é realizada",
+    "7b. Município",
+    "7c. UF",
+    "7d. Outros municípios foram contemplados com a Ação de Qualificação?",
+    "8. Nome da Ação de Qualificação (Curso, Plano, Programa, Projeto ou Ação)",
+  ]);
   await page.getByTestId("campo-qualifEndereco").fill("Rua Teste, 123");
+  await page.getByTestId("campo-qualifMunicipio").fill("Cidade da Ação");
+  // Pela opção do próprio campo: o Select de Q1 também lista as 27 UFs.
+  await page.getByTestId("campo-qualifUf-select").click();
+  await page.getByTestId("campo-qualifUf-opcao-12").click(); // MG
+  // O gatilho também traz o ícone de seta, daí `toContainText`.
+  await expect(page.getByTestId("campo-qualifUf-select")).toContainText("MG");
+  // APC-05/APC-04: "7d. Qual?" só aparece com "Sim".
+  await expect(page.getByTestId("campo-qualifOutrosMunicipiosQuais")).toHaveCount(0);
+  await marcarOpcao(page, "qualifOutrosMunicipios", 0); // Sim
+  await expect(page.getByText("7d. Qual?", { exact: true })).toBeVisible();
+  await page.getByTestId("campo-qualifOutrosMunicipiosQuais").fill("Cidade Vizinha");
   await page.getByTestId("campo-qualifNomeCurso").fill("Curso de Turismo Teste");
   await marcarOpcao(page, "qualifVinculoPrograma", 0); // Q9 = Sim
   await page.getByTestId("campo-qualifVinculoProgramaQual").fill("Programa Teste");

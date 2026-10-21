@@ -120,8 +120,18 @@ const BLOCOS: BlocoDef[] = [
     campos: [
       {
         chave: "qualifEndereco",
-        rotulo: "7. Endereço onde a ação de qualificação é realizada",
+        rotulo: "7a. Endereço onde a ação de qualificação é realizada",
         tipo: "texto",
+      },
+      { chave: "qualifMunicipio", rotulo: "7b. Município", tipo: "texto" },
+      { chave: "qualifUf", rotulo: "7c. UF", tipo: "select", opcoes: OPCOES_UF },
+      {
+        chave: "qualifOutrosMunicipios",
+        rotulo: "7d. Outros municípios foram contemplados com a Ação de Qualificação?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
+        outroChave: "qualifOutrosMunicipiosQuais",
+        outroRotulo: "7d. Qual?",
       },
       {
         chave: "qualifNomeCurso",
