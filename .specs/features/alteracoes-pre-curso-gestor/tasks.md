@@ -70,10 +70,10 @@ T4
 
 **Done when**:
 
-- [ ] `OPCOES_CARACTERISTICAS` igual à lista de APC-08, na ordem
-- [ ] Só "Idiomas" marcada não exige `qualifCaracteristicasOutra` (APC-09)
-- [ ] e2e lê "Idiomas" como 11ª opção e marca "Outro" no índice 11 (APC-10)
-- [ ] Gate Full passa, sem teste removido
+- [x] `OPCOES_CARACTERISTICAS` igual à lista de APC-08, na ordem
+- [x] Só "Idiomas" marcada não exige `qualifCaracteristicasOutra` (APC-09)
+- [x] e2e lê "Idiomas" como 11ª opção e marca "Outro" no índice 11 (APC-10)
+- [x] Gate Full passa, sem teste removido
 
 **Tests**: e2e
 **Gate**: full

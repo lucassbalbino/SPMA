@@ -259,9 +259,10 @@ describe("respostasPreCursoSchema", () => {
       expect(result.success).toBe(false);
     });
 
-    // MTUR-03: as 11 opções de Q10 com a redação do MTur (Alteracoes_MTur_1,
-    // itens 1.5 a 1.8 e 1.10), na ordem do papel.
-    it("qualifCaracteristicas tem exatamente as 11 opções revisadas pelo MTur", () => {
+    // MTUR-03 + APC-08: as opções de Q10 com a redação do MTur
+    // (Alteracoes_MTur_1, itens 1.5 a 1.8 e 1.10) e "Idiomas" antes de
+    // "Outro" (Alteracoes_Questionario_Gestor_Pre_Curso, A2), na ordem do papel.
+    it("qualifCaracteristicas tem exatamente as 12 opções, com Idiomas antes de Outro", () => {
       expect(OPCOES_CARACTERISTICAS).toEqual([
         "Hospedagem (recepcionista / camareiro(a) / copeiro(a))",
         "Agenciamento e Operação",
@@ -273,6 +274,7 @@ describe("respostasPreCursoSchema", () => {
         "Turismo de Base Comunitária",
         "Cultura e Lazer (produtor(a) / recreacionista / artesã(o))",
         "Eventos (cerimonialista / organizador(a) de eventos)",
+        "Idiomas",
         "Outro",
       ]);
     });

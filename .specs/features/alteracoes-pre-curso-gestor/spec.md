@@ -149,9 +149,9 @@ Dimensões implícitas: validação de entrada coberta por APC-03/APC-13/APC-14;
 | APC-05 | P1: Local da ação | T2 | Pending |
 | APC-06 | P1: Local da ação | T2 | Pending |
 | APC-07 | P1: Local da ação | T2 | Pending |
-| APC-08 | P1: Idiomas | T1 | Pending |
-| APC-09 | P1: Idiomas | T1 | Pending |
-| APC-10 | P1: Idiomas | T1 | Pending |
+| APC-08 | P1: Idiomas | T1 | Implementing |
+| APC-09 | P1: Idiomas | T1 | Implementing |
+| APC-10 | P1: Idiomas | T1 | Implementing |
 | APC-11 | P1: Inscrição e vagas | T3 | Pending |
 | APC-12 | P1: Inscrição e vagas | T3 | Pending |
 | APC-13 | P1: Inscrição e vagas | T3 | Pending |

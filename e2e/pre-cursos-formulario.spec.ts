@@ -174,8 +174,12 @@ async function preencherTodosOsCampos(
   await page.getByTestId("campo-qualifNomeCurso").fill("Curso de Turismo Teste");
   await marcarOpcao(page, "qualifVinculoPrograma", 0); // Q9 = Sim
   await page.getByTestId("campo-qualifVinculoProgramaQual").fill("Programa Teste");
+  // APC-10: "Idiomas" é a 11ª opção de Q10, logo antes de "Outro".
+  const opcoesQ10 = bloco(page, 2).getByTestId("campo-qualifCaracteristicas-grupo").locator("label");
+  await expect(opcoesQ10.nth(10)).toHaveText("Idiomas");
+  await expect(opcoesQ10.nth(11)).toHaveText("Outro");
   await marcarOpcao(page, "qualifCaracteristicas", 9); // Eventos
-  await marcarOpcao(page, "qualifCaracteristicas", 10); // Outro
+  await marcarOpcao(page, "qualifCaracteristicas", 11); // Outro
   await page.getByTestId("campo-qualifCaracteristicasOutra").fill("Outra característica");
   await marcarOpcao(page, "qualifModalidade", 0); // Presencial
   await marcarOpcao(page, "qualifRegiao", 0); // Zona Urbana

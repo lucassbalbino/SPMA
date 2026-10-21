@@ -56,7 +56,7 @@ export const REGRAS_CONDICIONAIS_PRE_CURSO: readonly RegraCondicional<RespostasP
         dados.infraEspecificaNecessidade === INFRA_ESPECIFICA_NECESSARIA,
     },
 
-    // REQ-PC-09 - os 5 campos "Qual?/Quais?" (Q9, Q10.k, Q27.c, Q30.i, Q32.i)
+    // REQ-PC-09 - os 5 campos "Qual?/Quais?" (Q9, Q10.l, Q27.c, Q30.i, Q32.i)
     {
       chave: "qualifVinculoProgramaQual",
       dependeDe: ["qualifVinculoPrograma"],

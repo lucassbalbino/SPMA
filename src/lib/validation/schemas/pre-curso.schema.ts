@@ -34,7 +34,8 @@ export const OPCOES_SIM_NAO = ["Sim", "Não"] as const;
 // Q10 - características contempladas (múltipla, opção "Outro. Qual?").
 // Redação revisada em `docs/Alteracoes_MTur_1.md` (itens 1.5 a 1.8 e 1.10).
 // As respostas gravadas com o texto anterior são convertidas pela migration
-// `20261020120000_alteracoes_mtur_1`.
+// `20261020120000_alteracoes_mtur_1`. "Idiomas" entrou depois, a pedido do
+// cliente (`docs/Alteracoes_Questionario_Gestor_Pre_Curso.md`, A2).
 export const CARACTERISTICAS_OUTRO = "Outro";
 
 export const OPCOES_CARACTERISTICAS = [
@@ -48,6 +49,7 @@ export const OPCOES_CARACTERISTICAS = [
   "Turismo de Base Comunitária",
   "Cultura e Lazer (produtor(a) / recreacionista / artesã(o))",
   "Eventos (cerimonialista / organizador(a) de eventos)",
+  "Idiomas",
   CARACTERISTICAS_OUTRO,
 ] as const;
 

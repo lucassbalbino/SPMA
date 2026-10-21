@@ -161,6 +161,17 @@ describe("validarCompletudePreCurso", () => {
     expect(resultado.pendentes).toContain("qualifCaracteristicasOutra");
   });
 
+  // APC-09: "Idiomas" é opção comum, não abre "Qual?".
+  it("qualifCaracteristicas só com 'Idiomas' não exige qualifCaracteristicasOutra", () => {
+    const { qualifCaracteristicasOutra: _omitido, ...base } = RESPOSTA_COMPLETA;
+    const resultado = validarCompletudePreCurso({
+      ...base,
+      qualifCaracteristicas: ["Idiomas"],
+    });
+
+    expect(resultado).toEqual({ completo: true, pendentes: [] });
+  });
+
   it("docenteFormaContratacao='Outro sistema seletivo' sem docenteFormaContratacaoOutra -> pendente", () => {
     const { docenteFormaContratacaoOutra: _omitido, ...semOutro } = RESPOSTA_COMPLETA;
     const resultado = validarCompletudePreCurso(semOutro);
