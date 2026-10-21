@@ -8,8 +8,8 @@
 // As 10 chaves condicionais (REQ-PC-07: 1, REQ-PC-08: 3, REQ-PC-09: 5,
 // Q7d: 1) vêm de `condicionais.ts`, que também alimenta a visibilidade na
 // tela e a limpeza de órfãs do encerramento - as outras 53 chaves
-// sempre-obrigatórias já são
-// checadas por `respostasPreCursoSchema.safeParse`. As duas checagens rodam
+// sempre-obrigatórias já são checadas por `respostasPreCursoSchema.safeParse`.
+// As duas checagens rodam
 // em PARALELO, sem encadear a condicional como `.superRefine` no schema
 // base: o Zod PULA o callback de `superRefine` quando o schema base já
 // produziu qualquer issue (confirmado empiricamente) - com mais de 1 dos 53
