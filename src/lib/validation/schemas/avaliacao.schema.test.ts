@@ -2,18 +2,29 @@ import { describe, expect, it } from "vitest";
 import { CHAVES_DADOS_PESSOAIS } from "./dados-pessoais.schema";
 import { CHAVES_PARTE_1, respostasAvaliacaoSchema } from "./avaliacao.schema";
 
-// Fixture com as 45 chaves do questionário fonte
+// As 11 chaves dos blocos removidos (Q10-Q13, Q28, Q30, Q30.j, Q31-Q34),
+// escritas aqui em vez de derivadas do código: o teste tem de quebrar se
+// alguma delas voltar ao schema.
+const CHAVES_REMOVIDAS_MTUR = [
+  "avalProfissCondicaoTrabalho",
+  "avalProfissAtuaTurismo",
+  "avalProfissAtividadeEspecifica",
+  "avalProfissFaixaRenda",
+  "avalContinuidadeRetomadaEstudos",
+  "avalOportunSituacaoTrabalho",
+  "avalOportunSituacaoTrabalhoOutra",
+  "avalOportunIntencaoAtuarTurismo",
+  "avalEfetivEmprego",
+  "avalEfetivAumentoRenda",
+  "avalEfetivMelhoriaPadraoVida",
+];
+
+// Fixture com as 27 chaves do questionário fonte
 // (`docs/Questionario_do_Aluno_1.md`) preenchidas com valores válidos,
 // incluindo os condicionais aplicáveis - usada como base para os testes de
 // campo individual (spread + override). Valores transcritos literalmente do
 // papel, sem importar as constantes de opções do schema.
 const RESPOSTA_VALIDA = {
-  // Parte 1 - Situação Profissional (Q10-Q13)
-  avalProfissCondicaoTrabalho: "Desempregado",
-  avalProfissAtuaTurismo: "Sim",
-  avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
-  avalProfissFaixaRenda: "Até 01 salário mínimo",
-
   // Parte 1 - Experiência (Q14-Q16)
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
@@ -51,25 +62,11 @@ const RESPOSTA_VALIDA = {
   avalAprendizAtendimentoExpectativas: "Sim",
   avalAprendizSensacaoPreparo: "Parcialmente",
 
-  // Parte 2 - Continuidade nos Estudos (Q28)
-  avalContinuidadeRetomadaEstudos: "Sim, ao ensino técnico",
-
   // Parte 2 - Motivações após o Curso (Q29)
   avalMotivacoesPosPercepcoes: [
     "tem condições de atuar na área do Turismo",
     "desenvolveu novas percepções de mundo",
   ],
-
-  // Parte 2 - Oportunidades Reais de Trabalho e Emprego (Q30, Q30.j, Q31)
-  avalOportunSituacaoTrabalho:
-    "Consegui um emprego, com carteira assinada, na área de Turismo.",
-  avalOportunSituacaoTrabalhoOutra: undefined,
-  avalOportunIntencaoAtuarTurismo: "Sim",
-
-  // Parte 2 - Efetivação no Emprego e Aumento da Renda (Q32-Q34)
-  avalEfetivEmprego: "Sim",
-  avalEfetivAumentoRenda: "Sim",
-  avalEfetivMelhoriaPadraoVida: "Sim, parcialmente",
 
   // Parte 2 - Avaliação geral (Q35-Q38)
   avalGeralNota: 9,
@@ -84,8 +81,28 @@ describe("respostasAvaliacaoSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("tem exatamente 38 chaves (questionário fonte: 12 na Parte 1, 26 na Parte 2)", () => {
-    expect(Object.keys(respostasAvaliacaoSchema.shape)).toHaveLength(38);
+  it("tem exatamente 27 chaves (8 na Parte 1, 19 na Parte 2)", () => {
+    expect(Object.keys(respostasAvaliacaoSchema.shape)).toHaveLength(27);
+  });
+
+  // MTUR-09: os 4 blocos que o aluno só responde depois do certificado
+  // (Alteracoes_MTur_1, itens 3.3 a 3.6) saíram do schema.
+  it("não tem nenhuma das 11 chaves removidas pelo MTur", () => {
+    const chaves = Object.keys(respostasAvaliacaoSchema.shape);
+    for (const chave of CHAVES_REMOVIDAS_MTUR) {
+      expect(chaves).not.toContain(chave);
+    }
+  });
+
+  // MTUR-09: chave removida enviada numa gravação é descartada pelo schema,
+  // então não chega a `gravarRespostas` e não vira linha.
+  it("descarta em silêncio as chaves removidas e mantém as válidas", () => {
+    const corpo: Record<string, unknown> = { avalExpectRenda: "Alta" };
+    for (const chave of CHAVES_REMOVIDAS_MTUR) {
+      corpo[chave] = "Sim";
+    }
+
+    expect(respostasAvaliacaoSchema.parse(corpo)).toEqual({ avalExpectRenda: "Alta" });
   });
 
   // PESSOAL-11: as 7 perguntas de dados pessoais não pertencem mais a este
@@ -103,33 +120,9 @@ describe("respostasAvaliacaoSchema", () => {
 
   it("aceita um subconjunto de 1 campo válido", () => {
     const result = respostasAvaliacaoSchema.safeParse({
-      avalProfissFaixaRenda: "Até 01 salário mínimo",
+      avalExpectRenda: "Média",
     });
     expect(result.success).toBe(true);
-  });
-
-  it("avalProfissCondicaoTrabalho rejeita valor fora do enum", () => {
-    const result = respostasAvaliacaoSchema.safeParse({
-      ...RESPOSTA_VALIDA,
-      avalProfissCondicaoTrabalho: "Inventado",
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("avalOportunSituacaoTrabalho rejeita valor fora do enum", () => {
-    const result = respostasAvaliacaoSchema.safeParse({
-      ...RESPOSTA_VALIDA,
-      avalOportunSituacaoTrabalho: "Inventado",
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("avalProfissAtividadeEspecifica é seleção fechada, não texto livre (Q12)", () => {
-    const textoLivre = respostasAvaliacaoSchema.safeParse({
-      ...RESPOSTA_VALIDA,
-      avalProfissAtividadeEspecifica: "Recepção em pousada local",
-    });
-    expect(textoLivre.success).toBe(false);
   });
 
   it("avalGeralMelhoriasComunidade é texto aberto, não seleção (Q36)", () => {
@@ -280,8 +273,18 @@ describe("respostasAvaliacaoSchema", () => {
 });
 
 describe("CHAVES_PARTE_1", () => {
-  it("tem exatamente 12 entradas (Parte 1 do questionário fonte, Q10-Q21)", () => {
-    expect(CHAVES_PARTE_1).toHaveLength(12);
+  // Sem Situação Profissional (Q10-Q13, MTUR-08), a Parte 1 é Q14-Q21.
+  it("lista exatamente as 8 chaves de Q14-Q21", () => {
+    expect([...CHAVES_PARTE_1]).toEqual([
+      "avalExperienciaTrabalhoPrevio",
+      "avalExperienciaCursoAnterior",
+      "avalExperienciaTipoCursoAnterior",
+      "avalMotivMotivosParticipacao",
+      "avalMotivFormaConhecimento",
+      "avalExpectAtendimento",
+      "avalExpectEmprego",
+      "avalExpectRenda",
+    ]);
   });
 
   // PESSOAL-11/12: nenhuma chave pessoal sobrou no gate da Parte 1.

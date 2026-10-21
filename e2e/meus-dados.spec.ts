@@ -33,8 +33,8 @@ const RESPOSTAS_B = {
   avalPessoalGenero: "Feminino",
   avalPessoalFaixaEtaria: "19 a 25 anos",
   avalPessoalEscolaridade: "Ensino médio completo",
-  avalPessoalRacaEtnia: "Negro",
-  avalPessoalCondicaoPcd: "Sim, tenho deficiência auditiva.",
+  avalPessoalRacaEtnia: "Preto",
+  avalPessoalCondicaoPcd: "Sim.",
 };
 
 test.beforeAll(() => {

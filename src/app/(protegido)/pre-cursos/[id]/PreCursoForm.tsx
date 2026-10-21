@@ -120,7 +120,7 @@ const BLOCOS: BlocoDef[] = [
     campos: [
       {
         chave: "qualifEndereco",
-        rotulo: "7. Endereço da Sede onde a ação de qualificação é realizada",
+        rotulo: "7. Endereço onde a ação de qualificação é realizada",
         tipo: "texto",
       },
       {
@@ -381,7 +381,7 @@ const BLOCOS: BlocoDef[] = [
       {
         chave: "divulgacaoEstrategias",
         rotulo:
-          "30. Foram adotadas estratégias de divulgação do Curso, a partir da realização de quais ações fundamentais?",
+          "30. Quais estratégias foram adotadas para a divulgação do Curso?",
         tipo: "checkboxes",
         opcoes: OPCOES_DIVULGACAO_ESTRATEGIAS,
         exclusiva: EXCLUSIVA_DIVULGACAO,

@@ -1,7 +1,7 @@
 // Decide, em dois níveis, se uma AvaliacaoAluno pode avançar/encerrar.
 //
 // `respostasAvaliacaoSchema` (avaliacao.schema.ts) só valida FORMA - todas as
-// 45 chaves são `.optional()` lá. A obrigatoriedade condicional vive
+// chaves são `.optional()` lá. A obrigatoriedade condicional vive
 // inteiramente aqui, como funções puras, sem `.superRefine` encadeado no
 // schema base: o Zod pula o callback de `superRefine` quando o schema base
 // já tem qualquer issue, o que faria pendências condicionais nunca
@@ -9,7 +9,7 @@
 // registrada em `.specs/LESSONS.md` a partir do que aconteceu em
 // `formulario-pre-curso`.
 //
-// As condições em si (Q12, Q16, Q22.1, Q30.j e o gate de Q22) ficam em
+// As condições em si (Q16, Q22.1 e o gate de Q22) ficam em
 // `condicionais.ts`, compartilhadas com a tela e com a limpeza de órfãs do
 // encerramento.
 import { respostasAvaliacaoSchema } from "../validation/schemas/avaliacao.schema";
@@ -25,17 +25,14 @@ import {
 
 export type { ResultadoCompletude };
 
-// As 10 chaves de Parte 1 sempre-obrigatórias (as 12 chaves da Parte 1 menos
-// os 2 condicionais, checados à parte pelas regras de `condicionais.ts`).
+// As 7 chaves de Parte 1 sempre-obrigatórias (as 8 chaves da Parte 1 menos
+// Q16, condicional checado à parte pelas regras de `condicionais.ts`).
 //
 // As 7 perguntas de dados pessoais (Q3-Q9) saíram da Parte 1: são atributo do
 // Aluno, coletado uma vez fora do questionário do curso (PESSOAL-11,
-// PESSOAL-12). O veredito da Parte 1 passa a ser produzido só pelas 12 que
-// sobraram.
+// PESSOAL-12). Situação Profissional (Q10-Q13) saiu com a revisão do MTur
+// (MTUR-08/10).
 const parte1SchemaBase = respostasAvaliacaoSchema.pick({
-  avalProfissCondicaoTrabalho: true,
-  avalProfissAtuaTurismo: true,
-  avalProfissFaixaRenda: true,
   avalExperienciaTrabalhoPrevio: true,
   avalExperienciaCursoAnterior: true,
   avalMotivMotivosParticipacao: true,
@@ -55,8 +52,8 @@ const parte2SchemaSempre = respostasAvaliacaoSchema
   })
   .required();
 
-// As 21 chaves de Q24 a Q37, exigidas só quando
-// avalParticipConcluiuCurso="Sim" (AVAL-13). Q38
+// As 15 chaves de Q24-Q27, Q29 e Q35-Q37, exigidas só quando
+// avalParticipConcluiuCurso="Sim" (AVAL-13, MTUR-11). Q38
 // (`avalGeralComentariosFinais`) fica de fora: é comentário livre opcional.
 const parte2SchemaQuandoConcluiu = respostasAvaliacaoSchema.pick({
   avalCursoDinamicasInclusao: true,
@@ -70,13 +67,7 @@ const parte2SchemaQuandoConcluiu = respostasAvaliacaoSchema.pick({
   avalAprendizAmpliacaoConhecimento: true,
   avalAprendizAtendimentoExpectativas: true,
   avalAprendizSensacaoPreparo: true,
-  avalContinuidadeRetomadaEstudos: true,
   avalMotivacoesPosPercepcoes: true,
-  avalOportunSituacaoTrabalho: true,
-  avalOportunIntencaoAtuarTurismo: true,
-  avalEfetivEmprego: true,
-  avalEfetivAumentoRenda: true,
-  avalEfetivMelhoriaPadraoVida: true,
   avalGeralNota: true,
   avalGeralMelhoriasComunidade: true,
   avalGeralRecomendaCurso: true,
@@ -97,9 +88,9 @@ export function validarCompletudeParte1(respostas: unknown): ResultadoCompletude
 }
 
 // AVAL-12/13: gate interno "Concluiu o curso?" - só avaliado no encerramento.
-// As duas condicionais da Parte 2 (Q22.1, exigida quando o aluno NÃO
-// concluiu; Q30.j, exigida quando Q30="Outra") vêm da mesma tabela de regras
-// nos dois ramos - cada uma se aplica só no ramo em que sua condição vale.
+// A condicional da Parte 2 (Q22.1, exigida quando o aluno NÃO concluiu) vem
+// da mesma tabela de regras nos dois ramos - só se aplica no ramo em que sua
+// condição vale.
 export function validarCompletudeParte2(respostas: unknown): ResultadoCompletude {
   const brutos = dados(respostas);
   const concluiuCurso = brutos.avalParticipConcluiuCurso;

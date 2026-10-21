@@ -6,7 +6,8 @@ import {
   validarCompletudeParte2,
 } from "./completude";
 
-// Parte 1 completa (10 sempre-obrigatórias + os 2 condicionais satisfeitos).
+// Parte 1 completa (7 sempre-obrigatórias + Q16, condicional satisfeito).
+// Situação Profissional (Q10-Q13) saiu com a revisão do MTur (MTUR-08).
 // As 7 perguntas de dados pessoais (Q3-Q9) NÃO entram mais: saíram do
 // questionário do curso (PESSOAL-11/12) e são validadas em
 // `src/lib/dados-pessoais/completude.test.ts`.
@@ -14,10 +15,6 @@ import {
 // importar as constantes de opções do schema: o teste tem de quebrar se
 // alguém renomear uma opção só no código de produção.
 const PARTE_1_COMPLETA = {
-  avalProfissCondicaoTrabalho: "Desempregado",
-  avalProfissAtuaTurismo: "Sim",
-  avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
-  avalProfissFaixaRenda: "Até 01 salário mínimo",
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
   avalExperienciaTipoCursoAnterior: "Atualização profissional",
@@ -28,8 +25,9 @@ const PARTE_1_COMPLETA = {
   avalExpectRenda: "Média",
 };
 
-// As 21 chaves de Q24 a Q37 exigidas quando avalParticipConcluiuCurso="Sim",
-// mais as 2 do bloco "Participação" (Q22 e Q23), que todo aluno responde.
+// As 15 chaves de Q24-Q27, Q29 e Q35-Q37 exigidas quando
+// avalParticipConcluiuCurso="Sim" (MTUR-11), mais as 2 do bloco
+// "Participação" (Q22 e Q23), que todo aluno responde.
 const PARTE_2_COMPLETA_CONCLUIU = {
   avalParticipConcluiuCurso: "Sim",
   avalParticipPercentualFrequencia: "76% a 100%",
@@ -44,34 +42,47 @@ const PARTE_2_COMPLETA_CONCLUIU = {
   avalAprendizAmpliacaoConhecimento: "Ampliou / Melhorou",
   avalAprendizAtendimentoExpectativas: "Sim",
   avalAprendizSensacaoPreparo: "Parcialmente",
-  avalContinuidadeRetomadaEstudos: "Sim, ao ensino técnico",
   avalMotivacoesPosPercepcoes: ["tem condições de atuar na área do Turismo"],
-  avalOportunSituacaoTrabalho:
-    "Consegui um emprego, com carteira assinada, na área de Turismo.",
-  avalOportunIntencaoAtuarTurismo: "Sim",
-  avalEfetivEmprego: "Sim",
-  avalEfetivAumentoRenda: "Sim",
-  avalEfetivMelhoriaPadraoVida: "Sim, parcialmente",
   avalGeralNota: 9,
   avalGeralMelhoriasComunidade: "Mais gente da comunidade trabalhando com receptivo",
   avalGeralRecomendaCurso: "Sim",
 };
 
 describe("validarCompletudeParte1", () => {
-  it("as 10 chaves sempre-obrigatórias + os 2 condicionais satisfeitos -> completo=true, pendentes=[]", () => {
+  // MTUR-10: as 7 sempre-obrigatórias + Q16 bastam, sem nenhuma das 4 chaves
+  // de Situação Profissional.
+  it("as 7 chaves sempre-obrigatórias + Q16 -> completo=true, pendentes=[]", () => {
+    expect(Object.keys(PARTE_1_COMPLETA)).toHaveLength(8);
     expect(validarCompletudeParte1(PARTE_1_COMPLETA)).toEqual({
       completo: true,
       pendentes: [],
     });
   });
 
-  it("avalProfissAtuaTurismo='Sim' sem avalProfissAtividadeEspecifica -> pendente e incompleto", () => {
-    const { avalProfissAtividadeEspecifica: _omitido, ...semDetalhe } =
-      PARTE_1_COMPLETA;
-    const resultado = validarCompletudeParte1(semDetalhe);
+  // MTUR-10: Q16 só é exigida quando Q15 = "Sim".
+  it("avalExperienciaCursoAnterior='Não' sem Q16 -> completo=true", () => {
+    const { avalExperienciaTipoCursoAnterior: _omitido, ...base } = PARTE_1_COMPLETA;
+
+    expect(
+      validarCompletudeParte1({ ...base, avalExperienciaCursoAnterior: "Não" }),
+    ).toEqual({ completo: true, pendentes: [] });
+  });
+
+  // MTUR-10: cada uma das 7 sempre-obrigatórias continua exigida.
+  it.each([
+    "avalExperienciaTrabalhoPrevio",
+    "avalExperienciaCursoAnterior",
+    "avalMotivMotivosParticipacao",
+    "avalMotivFormaConhecimento",
+    "avalExpectAtendimento",
+    "avalExpectEmprego",
+    "avalExpectRenda",
+  ] as const)("sem %s -> incompleto, pendente lista essa chave", (chave) => {
+    const { [chave]: _omitido, ...semChave } = PARTE_1_COMPLETA;
+    const resultado = validarCompletudeParte1(semChave);
 
     expect(resultado.completo).toBe(false);
-    expect(resultado.pendentes).toContain("avalProfissAtividadeEspecifica");
+    expect(resultado.pendentes).toContain(chave);
   });
 
   it("avalExperienciaCursoAnterior='Sim' sem avalExperienciaTipoCursoAnterior -> pendente e incompleto", () => {
@@ -83,23 +94,12 @@ describe("validarCompletudeParte1", () => {
     expect(resultado.pendentes).toContain("avalExperienciaTipoCursoAnterior");
   });
 
-  it("avalProfissAtuaTurismo='Não' -> avalProfissAtividadeEspecifica não aparece em pendentes mesmo ausente", () => {
-    const { avalProfissAtividadeEspecifica: _omitido, ...base } = PARTE_1_COMPLETA;
-    const resultado = validarCompletudeParte1({
-      ...base,
-      avalProfissAtuaTurismo: "Não",
-    });
-
-    expect(resultado.pendentes).not.toContain("avalProfissAtividadeEspecifica");
-  });
-
-  // PESSOAL-12: o veredito da Parte 1 sai das 12 perguntas que sobraram, e
+  // PESSOAL-12: o veredito da Parte 1 sai das perguntas que sobraram, e
   // nenhuma das 7 pessoais é cobrada - nem quando nenhuma delas foi enviada.
   it("não cobra nenhuma das 7 perguntas de dados pessoais", () => {
     const resultado = validarCompletudeParte1(PARTE_1_COMPLETA);
 
     expect(resultado).toEqual({ completo: true, pendentes: [] });
-    expect(Object.keys(PARTE_1_COMPLETA)).toHaveLength(12);
     for (const chave of CHAVES_DADOS_PESSOAIS) {
       expect(resultado.pendentes).not.toContain(chave);
     }
@@ -129,25 +129,17 @@ describe("validarCompletudeParte1", () => {
     expect(quatro.pendentes).toContain("avalMotivMotivosParticipacao");
   });
 
-  it("campo sempre-obrigatório ausente (não condicional) aparece em pendentes", () => {
-    const { avalProfissFaixaRenda: _omitido, ...semCampo } = PARTE_1_COMPLETA;
-    const resultado = validarCompletudeParte1(semCampo);
-
-    expect(resultado.completo).toBe(false);
-    expect(resultado.pendentes).toContain("avalProfissFaixaRenda");
-  });
-
   it("pendência condicional aparece mesmo com a maioria dos outros campos sempre-obrigatórios também ausentes", () => {
     // A checagem condicional roda independente do resultado do safeParse
     // base - prova direta contra a lição de `formulario-pre-curso`
     // (`.superRefine` encadeado é pulado quando o schema base já tem
     // qualquer issue) - aqui a técnica evita isso desde o início.
     const resultado = validarCompletudeParte1({
-      avalProfissAtuaTurismo: "Sim",
+      avalExperienciaCursoAnterior: "Sim",
     });
 
     expect(resultado.completo).toBe(false);
-    expect(resultado.pendentes).toContain("avalProfissAtividadeEspecifica");
+    expect(resultado.pendentes).toContain("avalExperienciaTipoCursoAnterior");
   });
 });
 
@@ -164,7 +156,7 @@ describe("validarCompletudeParte2", () => {
     );
   });
 
-  it("avalParticipConcluiuCurso='Não' + motivo + frequência -> completo=true, mesmo com as 21 chaves de Q24-Q37 ausentes", () => {
+  it("avalParticipConcluiuCurso='Não' + motivo + frequência -> completo=true, mesmo com as 15 chaves de concluinte ausentes", () => {
     const resultado = validarCompletudeParte2({
       avalParticipConcluiuCurso: "Não",
       avalParticipMotivoNaoConclusao: ["Dificuldades financeiras"],
@@ -174,7 +166,7 @@ describe("validarCompletudeParte2", () => {
     expect(resultado).toEqual({ completo: true, pendentes: [] });
   });
 
-  it("avalParticipConcluiuCurso='Não' sem avalParticipMotivoNaoConclusao -> incompleto (as 21 de Q24-Q37 não aparecem)", () => {
+  it("avalParticipConcluiuCurso='Não' sem avalParticipMotivoNaoConclusao -> incompleto (as 15 de concluinte não aparecem)", () => {
     const resultado = validarCompletudeParte2({
       avalParticipConcluiuCurso: "Não",
       avalParticipPercentualFrequencia: "26% a 50%",
@@ -222,47 +214,28 @@ describe("validarCompletudeParte2", () => {
     expect(resultado).toEqual({ completo: true, pendentes: [] });
   });
 
-  it("avalParticipConcluiuCurso='Sim' com as 23 chaves preenchidas -> completo=true", () => {
+  // MTUR-11: Q22, Q23 e as 15 de concluinte bastam - nenhuma das 7 chaves
+  // removidas da Parte 2 é cobrada.
+  it("avalParticipConcluiuCurso='Sim' com as 17 chaves preenchidas -> completo=true", () => {
+    expect(Object.keys(PARTE_2_COMPLETA_CONCLUIU)).toHaveLength(17);
     expect(validarCompletudeParte2(PARTE_2_COMPLETA_CONCLUIU)).toEqual({
       completo: true,
       pendentes: [],
     });
   });
 
-  it("avalParticipConcluiuCurso='Sim' com 1 chave ausente -> incompleto, pendente lista exatamente essa chave", () => {
-    const { avalGeralNota: _omitido, ...semNota } = PARTE_2_COMPLETA_CONCLUIU;
-    const resultado = validarCompletudeParte2(semNota);
+  // MTUR-11: cada uma das 16 além do gate continua exigida - a pendência é
+  // exatamente a chave que falta.
+  it.each(
+    Object.keys(PARTE_2_COMPLETA_CONCLUIU).filter((c) => c !== "avalParticipConcluiuCurso"),
+  )("avalParticipConcluiuCurso='Sim' sem %s -> pendente lista exatamente essa chave", (chave) => {
+    const semChave: Record<string, unknown> = { ...PARTE_2_COMPLETA_CONCLUIU };
+    delete semChave[chave];
 
-    expect(resultado.completo).toBe(false);
-    expect(resultado.pendentes).toEqual(["avalGeralNota"]);
-  });
-
-  // Q30.j do questionário fonte: "Outra. Quais?" - único condicional da
-  // Parte 2.
-  it("avalOportunSituacaoTrabalho='Outra' sem avalOportunSituacaoTrabalhoOutra -> pendente", () => {
-    const resultado = validarCompletudeParte2({
-      ...PARTE_2_COMPLETA_CONCLUIU,
-      avalOportunSituacaoTrabalho: "Outra",
+    expect(validarCompletudeParte2(semChave)).toEqual({
+      completo: false,
+      pendentes: [chave],
     });
-
-    expect(resultado.completo).toBe(false);
-    expect(resultado.pendentes).toContain("avalOportunSituacaoTrabalhoOutra");
-  });
-
-  it("avalOportunSituacaoTrabalho='Outra' com a especificação preenchida -> completo=true", () => {
-    const resultado = validarCompletudeParte2({
-      ...PARTE_2_COMPLETA_CONCLUIU,
-      avalOportunSituacaoTrabalho: "Outra",
-      avalOportunSituacaoTrabalhoOutra: "Trabalho voluntário no centro cultural",
-    });
-
-    expect(resultado).toEqual({ completo: true, pendentes: [] });
-  });
-
-  it("avalOportunSituacaoTrabalhoOutra não é exigida quando a opção escolhida não é 'Outra'", () => {
-    const resultado = validarCompletudeParte2(PARTE_2_COMPLETA_CONCLUIU);
-
-    expect(resultado.pendentes).not.toContain("avalOportunSituacaoTrabalhoOutra");
   });
 
   it("avalGeralComentariosFinais ausente nunca aparece em pendentes, mesmo com tudo o resto completo", () => {
@@ -274,7 +247,7 @@ describe("validarCompletudeParte2", () => {
 
 describe("validarCompletudeAvaliacao", () => {
   it("une pendências de Parte 1 e Parte 2 (uma pendência de cada)", () => {
-    const { avalProfissFaixaRenda: _omitido, ...parte1SemRenda } =
+    const { avalExpectRenda: _omitido, ...parte1SemRenda } =
       PARTE_1_COMPLETA;
     const { avalGeralNota: _omitidoNota, ...parte2SemNota } =
       PARTE_2_COMPLETA_CONCLUIU;
@@ -285,7 +258,7 @@ describe("validarCompletudeAvaliacao", () => {
     });
 
     expect(resultado.completo).toBe(false);
-    expect(resultado.pendentes).toContain("avalProfissFaixaRenda");
+    expect(resultado.pendentes).toContain("avalExpectRenda");
     expect(resultado.pendentes).toContain("avalGeralNota");
   });
 

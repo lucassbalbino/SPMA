@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   criarCursoSchema,
+  OPCOES_CARACTERISTICAS,
   ordemDatasValida,
   respostasPreCursoSchema,
 } from "./pre-curso.schema";
@@ -239,7 +240,10 @@ describe("respostasPreCursoSchema", () => {
     it("qualifCaracteristicas aceita array de opções válidas", () => {
       const result = respostasPreCursoSchema.safeParse({
         ...RESPOSTA_VALIDA,
-        qualifCaracteristicas: ["Eventos", "Turismo de Base Comunitária"],
+        qualifCaracteristicas: [
+          "Eventos (cerimonialista / organizador(a) de eventos)",
+          "Turismo de Base Comunitária",
+        ],
         qualifCaracteristicasOutra: undefined,
       });
 
@@ -250,6 +254,40 @@ describe("respostasPreCursoSchema", () => {
       const result = respostasPreCursoSchema.safeParse({
         ...RESPOSTA_VALIDA,
         qualifCaracteristicas: ["Item inventado"],
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    // MTUR-03: as 11 opções de Q10 com a redação do MTur (Alteracoes_MTur_1,
+    // itens 1.5 a 1.8 e 1.10), na ordem do papel.
+    it("qualifCaracteristicas tem exatamente as 11 opções revisadas pelo MTur", () => {
+      expect(OPCOES_CARACTERISTICAS).toEqual([
+        "Hospedagem (recepcionista / camareiro(a) / copeiro(a))",
+        "Agenciamento e Operação",
+        "Serviços de Alimentação (bartender / auxiliar de cozinha)",
+        "Transporte (Terrestre, Aquaviário ou Aéreo)",
+        "Aluguel de Transportes",
+        "Guiamento de Turismo / Condução de Turismo",
+        "Ecoturismo / Turismo de Natureza",
+        "Turismo de Base Comunitária",
+        "Cultura e Lazer (produtor(a) / recreacionista / artesã(o))",
+        "Eventos (cerimonialista / organizador(a) de eventos)",
+        "Outro",
+      ]);
+    });
+
+    // MTUR-04: os textos anteriores à revisão deixam de ser válidos.
+    it.each([
+      "Alojamento (recepcionista / camareiro(a) / copeiro(a) / outros)",
+      "Serviços de Alimentação (bartender / auxiliar de cozinha / outros)",
+      "Cultura e Lazer (produtor(a) / recreacionista / artesã(o) / outros)",
+      "Eventos",
+    ])("qualifCaracteristicas rejeita o texto antigo %s", (antigo) => {
+      const result = respostasPreCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        qualifCaracteristicas: [antigo],
+        qualifCaracteristicasOutra: undefined,
       });
 
       expect(result.success).toBe(false);

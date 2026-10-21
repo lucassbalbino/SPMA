@@ -166,6 +166,10 @@ async function preencherTodosOsCampos(
 
   // Seção 2 - Dados da Qualificação Profissional (Q7-Q12)
   await abrirBloco(page, 2);
+  // MTUR-01: enunciado de Q7 revisado pelo MTur.
+  await expect(
+    page.getByText("7. Endereço onde a ação de qualificação é realizada", { exact: true }),
+  ).toBeVisible();
   await page.getByTestId("campo-qualifEndereco").fill("Rua Teste, 123");
   await page.getByTestId("campo-qualifNomeCurso").fill("Curso de Turismo Teste");
   await marcarOpcao(page, "qualifVinculoPrograma", 0); // Q9 = Sim
@@ -235,6 +239,12 @@ async function preencherTodosOsCampos(
 
   // Divulgação (Q30)
   await abrirBloco(page, 10);
+  // MTUR-02: enunciado de Q30 simplificado pelo MTur.
+  await expect(
+    page.getByText("30. Quais estratégias foram adotadas para a divulgação do Curso?", {
+      exact: true,
+    }),
+  ).toBeVisible();
   await marcarOpcao(page, "divulgacaoEstrategias", 8); // Divulgação via outros canais
   await page.getByTestId("campo-divulgacaoEstrategiasOutra").fill("Divulgação especial");
   await fecharBloco(page, 10);

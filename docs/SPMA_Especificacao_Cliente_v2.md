@@ -274,7 +274,7 @@ Preenchido pelo Gestor Ofertante durante e após a execução do curso. Permanec
 
 ## 6. Formulário de Avaliação do Aluno
 
-Preenchido pelo próprio aluno. Contém 45 itens de dado, organizados em duas partes: os dados pessoais e de motivação (Parte 1) e a avaliação do curso (Parte 2). A Parte 1 deve estar completa antes de o aluno acessar a Parte 2.
+Preenchido pelo próprio aluno. Contém 34 itens de dado (45 até a revisão do MTur de 2026-10, `docs/Alteracoes_MTur_1.md`, que retirou 11), organizados em duas partes: os dados pessoais e de motivação (Parte 1) e a avaliação do curso (Parte 2). A Parte 1 deve estar completa antes de o aluno acessar a Parte 2.
 
 ### 6.1 Parte 1 — Dados Pessoais e Motivação
 
@@ -283,7 +283,6 @@ O preenchimento desta parte não é exigido no momento da criação do aluno, ma
 | Bloco | Conteúdo | Tipo de resposta |
 |---|---|---|
 | Dados Pessoais | Nome, CPF, estado, município, gênero, faixa etária, escolaridade, raça/etnia, condição de PCD | Texto, CPF, seleção única |
-| Situação Profissional | Condição atual de trabalho, atuação em Turismo, faixa de renda | Seleção única, condicional |
 | Experiência | Trabalho prévio em Turismo, cursos anteriores na área | Seleção, condicional |
 | Motivação | Motivos para participar do curso (até três opções), forma de conhecimento do curso | Seleção múltipla limitada, seleção |
 | Expectativas | Expectativa de atendimento, de emprego e de melhoria de renda | Seleção única |
@@ -295,20 +294,16 @@ O preenchimento desta parte não é exigido no momento da criação do aluno, ma
 | Participação | Conclusão do curso, motivo de não conclusão, percentual de frequência | Seleção única, condicional |
 | Avaliação do Curso | 8 itens avaliados em escala (dinâmicas de inclusão, material didático, conteúdo, clareza, conhecimento dos instrutores, organização, infraestrutura básica e de sala de aula) | Escala de avaliação |
 | Aprendizado | Ampliação de conhecimento, atendimento de expectativas, sensação de preparo | Seleção única |
-| Continuidade nos Estudos | Retomada de estudos após o curso | Seleção |
 | Motivações Pós-Curso | Percepções e motivações desenvolvidas após o curso | Seleção múltipla |
-| Oportunidades de Trabalho | Situação de trabalho após o curso, intenção de atuar em Turismo | Seleção, condicional |
-| Efetivação e Renda | Efetivação no emprego, aumento de renda, melhoria de padrão de vida | Seleção única |
 | Avaliação Geral | Nota de 0 a 10, avaliação de melhorias na comunidade, recomendação do curso, comentários finais | Número, texto livre, seleção |
 
 ### 6.3 Campos Condicionais
 
 | Campo condicionante | Condição | Campo revelado |
 |---|---|---|
-| Atualmente trabalha em Turismo? | Igual a "Sim" | Atividade específica em que atua |
 | Já realizou cursos de Turismo? | Igual a "Sim" | Tipo de curso realizado |
 | Concluiu o curso? | Igual a "Não" | Motivo(s) de não conclusão |
-| Concluiu o curso? | Igual a "Sim" | Libera toda a Parte 2 de avaliação (frequência, escala de avaliação, aprendizado, continuidade, motivações, oportunidades) |
+| Concluiu o curso? | Igual a "Sim" | Libera toda a Parte 2 de avaliação (escala de avaliação, aprendizado, motivações, avaliação geral) |
 
 ### 6.4 Escala de Avaliação do Curso
 
