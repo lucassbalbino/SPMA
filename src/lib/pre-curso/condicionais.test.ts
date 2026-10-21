@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   normalizarCondicionaisPreCurso,
   pendenciasCondicionaisPreCurso,
+  REGRAS_CONDICIONAIS_PRE_CURSO,
 } from "./condicionais";
 
-// Só as chaves envolvidas nas 9 regras condicionais (as outras 47 não mudam
+// Só as chaves envolvidas nas regras condicionais (as demais não mudam
 // de comportamento aqui). Valores transcritos literalmente de
 // `docs/Questionario_do_Gestor_Pre_Curso.md`, sem importar as constantes de
 // opções: o teste tem de quebrar se alguém renomear uma opção só no código
@@ -12,6 +13,8 @@ import {
 const CONDICIONAIS_DISPARADAS = {
   qualifVinculoPrograma: "Sim",
   qualifVinculoProgramaQual: "Plano Municipal de Qualificação em Turismo",
+  qualifOutrosMunicipios: "Sim",
+  qualifOutrosMunicipiosQuais: "Vinhedo e Louveira",
   qualifCaracteristicas: ["Eventos", "Outro"],
   qualifCaracteristicasOutra: "Turismo de aventura",
   publicoInstituicaoExecutora: "Empresa contratada",
@@ -28,6 +31,22 @@ const CONDICIONAIS_DISPARADAS = {
   suporteEstrategiasOutra: "Empréstimo de uniformes",
 };
 
+// 9 de REQ-PC-07/08/09 + "7d. Qual?" (APC-04).
+it("são exatamente 10 regras condicionais", () => {
+  expect(REGRAS_CONDICIONAIS_PRE_CURSO.map((regra) => regra.chave)).toEqual([
+    "publicoInstituicaoExecutoraNome",
+    "infraEspecificaDisponibilidade",
+    "infraEspecificaSuficiencia",
+    "infraEspecificaManutencao",
+    "qualifVinculoProgramaQual",
+    "qualifOutrosMunicipiosQuais",
+    "qualifCaracteristicasOutra",
+    "docenteFormaContratacaoOutra",
+    "divulgacaoEstrategiasOutra",
+    "suporteEstrategiasOutra",
+  ]);
+});
+
 describe("normalizarCondicionaisPreCurso", () => {
   it("condições disparadas -> nada é descartado", () => {
     expect(normalizarCondicionaisPreCurso(CONDICIONAIS_DISPARADAS)).toEqual(
@@ -35,10 +54,11 @@ describe("normalizarCondicionaisPreCurso", () => {
     );
   });
 
-  it("as 9 condicionais viram órfãs quando as perguntas-mãe mudam -> todas descartadas", () => {
+  it("as 10 condicionais viram órfãs quando as perguntas-mãe mudam -> todas descartadas", () => {
     const respostas = {
       ...CONDICIONAIS_DISPARADAS,
       qualifVinculoPrograma: "Não",
+      qualifOutrosMunicipios: "Não",
       qualifCaracteristicas: ["Eventos"],
       publicoInstituicaoExecutora: "Própria Entidade",
       infraEspecificaNecessidade: "Não, apenas equipamentos básicos",
@@ -49,6 +69,7 @@ describe("normalizarCondicionaisPreCurso", () => {
 
     expect(normalizarCondicionaisPreCurso(respostas)).toEqual({
       qualifVinculoPrograma: "Não",
+      qualifOutrosMunicipios: "Não",
       qualifCaracteristicas: ["Eventos"],
       publicoInstituicaoExecutora: "Própria Entidade",
       infraEspecificaNecessidade: "Não, apenas equipamentos básicos",
@@ -99,6 +120,18 @@ describe("pendenciasCondicionaisPreCurso", () => {
     expect(pendenciasCondicionaisPreCurso({ qualifVinculoPrograma: "Sim" })).toEqual([
       "qualifVinculoProgramaQual",
     ]);
+  });
+
+  // APC-04
+  it("Q7d='Sim' e Qual? ausente -> pendência", () => {
+    expect(pendenciasCondicionaisPreCurso({ qualifOutrosMunicipios: "Sim" })).toEqual([
+      "qualifOutrosMunicipiosQuais",
+    ]);
+  });
+
+  // APC-05
+  it("Q7d='Não' -> nenhuma pendência", () => {
+    expect(pendenciasCondicionaisPreCurso({ qualifOutrosMunicipios: "Não" })).toEqual([]);
   });
 
   it("equipamentos específicos necessários -> as 3 perguntas de Q25 pendentes", () => {

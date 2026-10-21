@@ -6,9 +6,9 @@ import {
   respostasPreCursoSchema,
 } from "./pre-curso.schema";
 
-// Fixture com as 56 chaves do questionário fonte
+// Fixture com as chaves do questionário fonte
 // (`docs/Questionario_do_Gestor_Pre_Curso.md`) preenchidas com valores
-// válidos, incluindo os 9 condicionais - usada como base para os testes de
+// válidos, incluindo os condicionais - usada como base para os testes de
 // campo individual (spread + override).
 const RESPOSTA_VALIDA = {
   identifUf: "SP",
@@ -19,6 +19,10 @@ const RESPOSTA_VALIDA = {
   identifTelefone: "19999990000",
 
   qualifEndereco: "Rua das Flores, 100",
+  qualifMunicipio: "Valinhos",
+  qualifUf: "SP",
+  qualifOutrosMunicipios: "Sim",
+  qualifOutrosMunicipiosQuais: "Vinhedo e Louveira",
   qualifNomeCurso: "Guia de Turismo Local",
   qualifVinculoPrograma: "Sim",
   qualifVinculoProgramaQual: "Plano Municipal de Qualificação em Turismo",
@@ -32,6 +36,9 @@ const RESPOSTA_VALIDA = {
   planejCargaHoraria: 120,
   planejNumTurmas: 2,
   planejNumAlunosPrevistos: 40,
+  planejDataInicioInscricao: "2026-01-15",
+  planejDataTerminoInscricao: "2026-02-15",
+  planejNumVagas: 45,
   planejTaxaEvasaoEsperada: 10,
   planejObjetivo: "Qualificar guias locais",
 
@@ -117,8 +124,10 @@ describe("criarCursoSchema", () => {
 });
 
 describe("respostasPreCursoSchema", () => {
-  it("tem exatamente 56 chaves (questionário fonte, Q1-Q32)", () => {
-    expect(Object.keys(respostasPreCursoSchema.shape)).toHaveLength(56);
+  // APC-17: 56 do questionário fonte + 4 de A1 + 3 de A3
+  // (Alteracoes_Questionario_Gestor_Pre_Curso).
+  it("tem exatamente 63 chaves (questionário fonte, Q1-Q32, com 7a-7d e 17a-17d)", () => {
+    expect(Object.keys(respostasPreCursoSchema.shape)).toHaveLength(63);
   });
 
   it("aceita a fixture completa e válida", () => {
@@ -198,6 +207,85 @@ describe("respostasPreCursoSchema", () => {
     });
   });
 
+  // APC-02/APC-03: local da ação (7b, 7c, 7d).
+  describe("local da ação (Q7b-Q7d)", () => {
+    it("qualifUf aceita uma das 27 siglas", () => {
+      const result = respostasPreCursoSchema.safeParse({ ...RESPOSTA_VALIDA, qualifUf: "TO" });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("qualifUf rejeita sigla fora das 27", () => {
+      const result = respostasPreCursoSchema.safeParse({ ...RESPOSTA_VALIDA, qualifUf: "XX" });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("qualifMunicipio rejeita texto vazio", () => {
+      const result = respostasPreCursoSchema.safeParse({ ...RESPOSTA_VALIDA, qualifMunicipio: "" });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("qualifOutrosMunicipios aceita 'Não'", () => {
+      const result = respostasPreCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        qualifOutrosMunicipios: "Não",
+        qualifOutrosMunicipiosQuais: undefined,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("qualifOutrosMunicipios rejeita valor fora de Sim/Não", () => {
+      const result = respostasPreCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        qualifOutrosMunicipios: "Talvez",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("qualifOutrosMunicipiosQuais rejeita texto vazio quando enviado", () => {
+      const result = respostasPreCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        qualifOutrosMunicipiosQuais: "",
+      });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  // APC-12/APC-13: inscrição e vagas (17b-17d).
+  describe("inscrição e vagas (Q17b-Q17d)", () => {
+    it("planejNumVagas aceita 1", () => {
+      const result = respostasPreCursoSchema.safeParse({ ...RESPOSTA_VALIDA, planejNumVagas: 1 });
+
+      expect(result.success).toBe(true);
+    });
+
+    it.each([0, -5, 2.5])("planejNumVagas rejeita %s", (valor) => {
+      const result = respostasPreCursoSchema.safeParse({
+        ...RESPOSTA_VALIDA,
+        planejNumVagas: valor,
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it.each(["planejDataInicioInscricao", "planejDataTerminoInscricao"] as const)(
+      "%s rejeita data fora de YYYY-MM-DD",
+      (chave) => {
+        const result = respostasPreCursoSchema.safeParse({
+          ...RESPOSTA_VALIDA,
+          [chave]: "15/01/2026",
+        });
+
+        expect(result.success).toBe(false);
+      },
+    );
+  });
+
   describe("campos de seleção única", () => {
     it("qualifModalidade rejeita valor fora do enum", () => {
       const result = respostasPreCursoSchema.safeParse({
@@ -259,9 +347,10 @@ describe("respostasPreCursoSchema", () => {
       expect(result.success).toBe(false);
     });
 
-    // MTUR-03: as 11 opções de Q10 com a redação do MTur (Alteracoes_MTur_1,
-    // itens 1.5 a 1.8 e 1.10), na ordem do papel.
-    it("qualifCaracteristicas tem exatamente as 11 opções revisadas pelo MTur", () => {
+    // MTUR-03 + APC-08: as opções de Q10 com a redação do MTur
+    // (Alteracoes_MTur_1, itens 1.5 a 1.8 e 1.10) e "Idiomas" antes de
+    // "Outro" (Alteracoes_Questionario_Gestor_Pre_Curso, A2), na ordem do papel.
+    it("qualifCaracteristicas tem exatamente as 12 opções, com Idiomas antes de Outro", () => {
       expect(OPCOES_CARACTERISTICAS).toEqual([
         "Hospedagem (recepcionista / camareiro(a) / copeiro(a))",
         "Agenciamento e Operação",
@@ -273,6 +362,7 @@ describe("respostasPreCursoSchema", () => {
         "Turismo de Base Comunitária",
         "Cultura e Lazer (produtor(a) / recreacionista / artesã(o))",
         "Eventos (cerimonialista / organizador(a) de eventos)",
+        "Idiomas",
         "Outro",
       ]);
     });
@@ -436,6 +526,57 @@ describe("respostasPreCursoSchema", () => {
 
     it("nenhuma das datas presente -> válido", () => {
       expect(ordemDatasValida({})).toBe(true);
+    });
+
+    // APC-14/APC-15: o par de inscrição (17b/17c) segue a mesma regra.
+    it("término de inscrição anterior ao início de inscrição -> inválido", () => {
+      expect(
+        ordemDatasValida({
+          planejDataInicioInscricao: "2026-02-15",
+          planejDataTerminoInscricao: "2026-02-14",
+        }),
+      ).toBe(false);
+    });
+
+    it("término de inscrição igual ao início de inscrição -> válido", () => {
+      expect(
+        ordemDatasValida({
+          planejDataInicioInscricao: "2026-02-15",
+          planejDataTerminoInscricao: "2026-02-15",
+        }),
+      ).toBe(true);
+    });
+
+    it("só uma das datas de inscrição presente -> válido", () => {
+      expect(ordemDatasValida({ planejDataInicioInscricao: "2026-02-15" })).toBe(true);
+      expect(ordemDatasValida({ planejDataTerminoInscricao: "2026-01-01" })).toBe(true);
+    });
+
+    it("cada par é avaliado por si: um par inválido invalida mesmo com o outro em ordem", () => {
+      const cursoEmOrdem = {
+        planejDataInicioPrevista: "2026-03-01",
+        planejDataTerminoPrevista: "2026-06-01",
+      };
+      const inscricaoEmOrdem = {
+        planejDataInicioInscricao: "2026-01-15",
+        planejDataTerminoInscricao: "2026-02-15",
+      };
+
+      expect(ordemDatasValida({ ...cursoEmOrdem, ...inscricaoEmOrdem })).toBe(true);
+      expect(
+        ordemDatasValida({
+          ...cursoEmOrdem,
+          planejDataInicioInscricao: "2026-02-15",
+          planejDataTerminoInscricao: "2026-01-15",
+        }),
+      ).toBe(false);
+      expect(
+        ordemDatasValida({
+          ...inscricaoEmOrdem,
+          planejDataInicioPrevista: "2026-06-01",
+          planejDataTerminoPrevista: "2026-03-01",
+        }),
+      ).toBe(false);
     });
   });
 });

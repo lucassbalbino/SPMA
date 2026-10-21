@@ -38,6 +38,7 @@ const NUMERICAS_PRE_CURSO = [
   "planejCargaHoraria",
   "planejNumTurmas",
   "planejNumAlunosPrevistos",
+  "planejNumVagas",
   "planejTaxaEvasaoEsperada",
   "infraBasicaBanheiros",
   "infraBasicaBebedouros",
@@ -88,7 +89,8 @@ const QUESTIONARIOS = [
     schema: respostasPreCursoSchema,
     listas: LISTAS_PRE_CURSO,
     numericas: NUMERICAS_PRE_CURSO,
-    totalChaves: 56,
+    // 56 do questionário fonte + 4 de A1 + 3 de A3 (AD-049).
+    totalChaves: 63,
   },
   {
     nome: "pós-curso",
@@ -159,19 +161,20 @@ describe("classificarChave", () => {
     });
   }
 
-  it("classifica 13 listas e 39 numéricas nas 109 chaves dos três questionários", () => {
+  it("classifica 13 listas e 40 numéricas nas 116 chaves dos três questionários", () => {
     const formas = QUESTIONARIOS.flatMap((questionario) =>
       Object.keys(questionario.schema.shape).map((chave) =>
         classificarChave(questionario.schema, chave),
       ),
     );
 
-    expect(formas).toHaveLength(109);
+    expect(formas).toHaveLength(116);
     expect(formas.filter((forma) => forma === "lista")).toHaveLength(13);
-    expect(formas.filter((forma) => forma === "numero")).toHaveLength(39);
-    // 57 = 75 menos as 7 chaves de dados pessoais e as 11 removidas pelo
-    // MTur, todas escalares de texto.
-    expect(formas.filter((forma) => forma === "texto")).toHaveLength(57);
+    expect(formas.filter((forma) => forma === "numero")).toHaveLength(40);
+    // 63 = 75 menos as 7 chaves de dados pessoais e as 11 removidas pelo
+    // MTur, todas escalares de texto, mais as 4 de 7b-7d e as 2 datas de
+    // inscrição (AD-049).
+    expect(formas.filter((forma) => forma === "texto")).toHaveLength(63);
   });
 
   it("lista opcional continua sendo lista (ZodArray.unwrap devolve o elemento)", () => {

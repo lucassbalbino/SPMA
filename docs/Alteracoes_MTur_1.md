@@ -129,4 +129,4 @@ Decisões tomadas com o product owner ao implementar. Detalhe em `.specs/feature
 - **3.4 e 3.5:** nenhuma pergunta tinha esses nomes. "Impacto do Curso no Trabalho" = Q30, Q31 e Q32. "Evolução de Renda" = Q33 e Q34.
 - **Numeração:** as perguntas restantes do aluno mantêm o número original.
 - **Dados já gravados:** convertidos para os textos novos. As respostas das perguntas removidas foram apagadas.
-- **Pendentes (1.3, 1.4, 1.9, 1.11 a 1.13):** não implementados.
+- **Pendentes (1.3, 1.4, 1.9, 1.11 a 1.13):** não implementados nesta revisão. Liberados pelo cliente e aplicados em 2026-10-21 (`docs/Alteracoes_Questionario_Gestor_Pre_Curso.md`, AD-049).

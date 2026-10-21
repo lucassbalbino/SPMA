@@ -164,18 +164,40 @@ async function preencherTodosOsCampos(
   await page.getByTestId("campo-identifTelefone").fill("11999999999");
   await fecharBloco(page, 1);
 
-  // Seção 2 - Dados da Qualificação Profissional (Q7-Q12)
+  // Seção 2 - Dados da Qualificação Profissional (Q7a-Q12)
   await abrirBloco(page, 2);
-  // MTUR-01: enunciado de Q7 revisado pelo MTur.
-  await expect(
-    page.getByText("7. Endereço onde a ação de qualificação é realizada", { exact: true }),
-  ).toBeVisible();
+  // APC-01: 7a (texto do MTur, MTUR-01) a 7d, nessa ordem, antes de Q8.
+  const enunciadosSecao2 = (await bloco(page, 2).locator("label").allTextContents()).filter(
+    (texto) => /^\d+[a-z]?\. /.test(texto),
+  );
+  expect(enunciadosSecao2.slice(0, 5)).toEqual([
+    "7a. Endereço onde a ação de qualificação é realizada",
+    "7b. Município",
+    "7c. UF",
+    "7d. Outros municípios foram contemplados com a Ação de Qualificação?",
+    "8. Nome da Ação de Qualificação (Curso, Plano, Programa, Projeto ou Ação)",
+  ]);
   await page.getByTestId("campo-qualifEndereco").fill("Rua Teste, 123");
+  await page.getByTestId("campo-qualifMunicipio").fill("Cidade da Ação");
+  // Pela opção do próprio campo: o Select de Q1 também lista as 27 UFs.
+  await page.getByTestId("campo-qualifUf-select").click();
+  await page.getByTestId("campo-qualifUf-opcao-12").click(); // MG
+  // O gatilho também traz o ícone de seta, daí `toContainText`.
+  await expect(page.getByTestId("campo-qualifUf-select")).toContainText("MG");
+  // APC-05/APC-04: "7d. Qual?" só aparece com "Sim".
+  await expect(page.getByTestId("campo-qualifOutrosMunicipiosQuais")).toHaveCount(0);
+  await marcarOpcao(page, "qualifOutrosMunicipios", 0); // Sim
+  await expect(page.getByText("7d. Qual?", { exact: true })).toBeVisible();
+  await page.getByTestId("campo-qualifOutrosMunicipiosQuais").fill("Cidade Vizinha");
   await page.getByTestId("campo-qualifNomeCurso").fill("Curso de Turismo Teste");
   await marcarOpcao(page, "qualifVinculoPrograma", 0); // Q9 = Sim
   await page.getByTestId("campo-qualifVinculoProgramaQual").fill("Programa Teste");
+  // APC-10: "Idiomas" é a 11ª opção de Q10, logo antes de "Outro".
+  const opcoesQ10 = bloco(page, 2).getByTestId("campo-qualifCaracteristicas-grupo").locator("label");
+  await expect(opcoesQ10.nth(10)).toHaveText("Idiomas");
+  await expect(opcoesQ10.nth(11)).toHaveText("Outro");
   await marcarOpcao(page, "qualifCaracteristicas", 9); // Eventos
-  await marcarOpcao(page, "qualifCaracteristicas", 10); // Outro
+  await marcarOpcao(page, "qualifCaracteristicas", 11); // Outro
   await page.getByTestId("campo-qualifCaracteristicasOutra").fill("Outra característica");
   await marcarOpcao(page, "qualifModalidade", 0); // Presencial
   await marcarOpcao(page, "qualifRegiao", 0); // Zona Urbana
@@ -183,11 +205,26 @@ async function preencherTodosOsCampos(
 
   // Seção 3 - Planejamento (Q13-Q19)
   await abrirBloco(page, 3);
+  // APC-11: 17a-17d, nessa ordem, entre Q16 e Q18.
+  const enunciadosSecao3 = (await bloco(page, 3).locator("label").allTextContents()).filter(
+    (texto) => /^\d+[a-z]?\. /.test(texto),
+  );
+  expect(enunciadosSecao3.slice(3, 9)).toEqual([
+    "16. Número de turmas planejadas",
+    "17a. Número previsto de alunos",
+    "17b. Data prevista de início de inscrição",
+    "17c. Data prevista de término de inscrição",
+    "17d. Número de vagas",
+    "18. Taxa de evasão esperada (%)",
+  ]);
   await page.getByTestId("campo-planejDataInicioPrevista").fill("2026-01-10");
   await page.getByTestId("campo-planejDataTerminoPrevista").fill("2026-03-10");
   await page.getByTestId("campo-planejCargaHoraria").fill("40");
   await page.getByTestId("campo-planejNumTurmas").fill("2");
   await page.getByTestId("campo-planejNumAlunosPrevistos").fill("30");
+  await page.getByTestId("campo-planejDataInicioInscricao").fill("2025-12-01");
+  await page.getByTestId("campo-planejDataTerminoInscricao").fill("2025-12-20");
+  await page.getByTestId("campo-planejNumVagas").fill("35");
   await page.getByTestId("campo-planejTaxaEvasaoEsperada").fill("10");
   await page.getByTestId("campo-planejObjetivo").fill("Objetivo do curso de teste");
   await fecharBloco(page, 3);
@@ -296,7 +333,7 @@ test("encerramento bloqueado por campo condicional pendente referencia o campo",
   await login(page, CNPJ_GO_A);
   await page.goto(`/pre-cursos/${cdCurso}`);
 
-  // Demais 55 campos completos (Independent Test da spec: "mantendo os
+  // Demais 62 campos completos (Independent Test da spec: "mantendo os
   // demais campos obrigatórios completos") - isola a asserção no único
   // campo que falta.
   await preencherTodosOsCampos(page, { omitirNomeInstituicao: true });
@@ -313,7 +350,7 @@ test("encerramento bloqueado por campo condicional pendente referencia o campo",
   await expect(page.getByTestId("lista-pendencias").locator("li")).toHaveCount(1);
 });
 
-test("GO preenche os 56 campos e encerra o pré-curso de forma irreversível", async ({ page }) => {
+test("GO preenche as 63 chaves e encerra o pré-curso de forma irreversível", async ({ page }) => {
   const { cdCurso } = criarPreCurso({
     cdOfertante: CNPJ_GO_A,
     cdVerba: cdVerbaA,

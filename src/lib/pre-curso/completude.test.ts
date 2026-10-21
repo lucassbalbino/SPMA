@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validarCompletudePreCurso } from "./completude";
 
-// Fixture com os 56 campos preenchidos, incluindo os 9 condicionais - base
+// Fixture com todos os campos preenchidos, incluindo os condicionais - base
 // para os testes abaixo (spread + override/omissão). Valores transcritos
 // literalmente de `docs/Questionario_do_Gestor_Pre_Curso.md`, sem importar
 // as constantes de opções do schema: o teste tem de quebrar se alguém
@@ -15,6 +15,10 @@ const RESPOSTA_COMPLETA = {
   identifTelefone: "19999990000",
 
   qualifEndereco: "Rua das Flores, 100",
+  qualifMunicipio: "Valinhos",
+  qualifUf: "SP",
+  qualifOutrosMunicipios: "Sim",
+  qualifOutrosMunicipiosQuais: "Vinhedo e Louveira",
   qualifNomeCurso: "Guia de Turismo Local",
   qualifVinculoPrograma: "Sim",
   qualifVinculoProgramaQual: "Plano Municipal de Qualificação em Turismo",
@@ -28,6 +32,9 @@ const RESPOSTA_COMPLETA = {
   planejCargaHoraria: 120,
   planejNumTurmas: 2,
   planejNumAlunosPrevistos: 40,
+  planejDataInicioInscricao: "2026-01-15",
+  planejDataTerminoInscricao: "2026-02-15",
+  planejNumVagas: 45,
   planejTaxaEvasaoEsperada: 10,
   planejObjetivo: "Qualificar guias locais para atuação em roteiros de base comunitária",
 
@@ -78,7 +85,7 @@ const RESPOSTA_COMPLETA = {
 };
 
 describe("validarCompletudePreCurso", () => {
-  it("os 56 campos completos e nenhum condicional disparado -> completo=true, pendentes=[]", () => {
+  it("todos os campos completos e nenhum condicional disparado -> completo=true, pendentes=[]", () => {
     const resultado = validarCompletudePreCurso(RESPOSTA_COMPLETA);
 
     expect(resultado).toEqual({ completo: true, pendentes: [] });
@@ -159,6 +166,85 @@ describe("validarCompletudePreCurso", () => {
 
     expect(resultado.completo).toBe(false);
     expect(resultado.pendentes).toContain("qualifCaracteristicasOutra");
+  });
+
+  // APC-04: 7d = "Sim" abre "Qual?", exigido no encerramento.
+  it("Q7d='Sim' sem qualifOutrosMunicipiosQuais -> pendente", () => {
+    const { qualifOutrosMunicipiosQuais: _omitido, ...semQuais } = RESPOSTA_COMPLETA;
+    const resultado = validarCompletudePreCurso(semQuais);
+
+    expect(resultado).toEqual({ completo: false, pendentes: ["qualifOutrosMunicipiosQuais"] });
+  });
+
+  // APC-05
+  it("Q7d='Não' não exige qualifOutrosMunicipiosQuais", () => {
+    const { qualifOutrosMunicipiosQuais: _omitido, ...base } = RESPOSTA_COMPLETA;
+    const resultado = validarCompletudePreCurso({ ...base, qualifOutrosMunicipios: "Não" });
+
+    expect(resultado).toEqual({ completo: true, pendentes: [] });
+  });
+
+  // APC-07: 7b, 7c e 7d são sempre obrigatórias.
+  it.each(["qualifMunicipio", "qualifUf", "qualifOutrosMunicipios"] as const)(
+    "%s ausente -> pendente e incompleto",
+    (chave) => {
+      const { [chave]: _omitido, ...semCampo } = RESPOSTA_COMPLETA;
+      const resultado = validarCompletudePreCurso(semCampo);
+
+      expect(resultado.completo).toBe(false);
+      expect(resultado.pendentes).toContain(chave);
+    },
+  );
+
+  // APC-16: 17b, 17c e 17d são sempre obrigatórias.
+  it.each(["planejDataInicioInscricao", "planejDataTerminoInscricao", "planejNumVagas"] as const)(
+    "%s ausente -> pendente e incompleto",
+    (chave) => {
+      const { [chave]: _omitido, ...semCampo } = RESPOSTA_COMPLETA;
+      const resultado = validarCompletudePreCurso(semCampo);
+
+      expect(resultado.completo).toBe(false);
+      expect(resultado.pendentes).toContain(chave);
+    },
+  );
+
+  // APC-18: pré-curso preenchido antes da AD-049 (as 56 chaves antigas).
+  it("as 56 chaves anteriores completas -> pendentes são exatamente as 6 novas sempre obrigatórias", () => {
+    const {
+      qualifMunicipio: _a,
+      qualifUf: _b,
+      qualifOutrosMunicipios: _c,
+      qualifOutrosMunicipiosQuais: _d,
+      planejDataInicioInscricao: _e,
+      planejDataTerminoInscricao: _f,
+      planejNumVagas: _g,
+      ...anterior
+    } = RESPOSTA_COMPLETA;
+    const resultado = validarCompletudePreCurso(anterior);
+
+    expect(Object.keys(anterior)).toHaveLength(56);
+    expect(resultado.completo).toBe(false);
+    expect([...resultado.pendentes].sort()).toEqual(
+      [
+        "qualifMunicipio",
+        "qualifUf",
+        "qualifOutrosMunicipios",
+        "planejDataInicioInscricao",
+        "planejDataTerminoInscricao",
+        "planejNumVagas",
+      ].sort(),
+    );
+  });
+
+  // APC-09: "Idiomas" é opção comum, não abre "Qual?".
+  it("qualifCaracteristicas só com 'Idiomas' não exige qualifCaracteristicasOutra", () => {
+    const { qualifCaracteristicasOutra: _omitido, ...base } = RESPOSTA_COMPLETA;
+    const resultado = validarCompletudePreCurso({
+      ...base,
+      qualifCaracteristicas: ["Idiomas"],
+    });
+
+    expect(resultado).toEqual({ completo: true, pendentes: [] });
   });
 
   it("docenteFormaContratacao='Outro sistema seletivo' sem docenteFormaContratacaoOutra -> pendente", () => {

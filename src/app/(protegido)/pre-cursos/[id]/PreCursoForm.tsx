@@ -2,7 +2,7 @@
 // REQ-PC-12), colocado junto de `page.tsx` (T10). As 12 seções do
 // questionário fonte (`docs/Questionario_do_Gestor_Pre_Curso.md`) viram uma
 // tabela `BLOCOS` (metadados: bloco, chave, rótulo, tipo, opções,
-// condicional, opção excludente) em vez de 56 blocos JSX escritos à mão -
+// condicional, opção excludente) em vez de 63 blocos JSX escritos à mão -
 // `CampoResposta` interpreta essa tabela genericamente, igual ao padrão de
 // reuso de opções já usado em `pre-curso.schema.ts` (nunca duplicar a lista
 // de campos em dois lugares). Os rótulos carregam a numeração do papel
@@ -120,8 +120,18 @@ const BLOCOS: BlocoDef[] = [
     campos: [
       {
         chave: "qualifEndereco",
-        rotulo: "7. Endereço onde a ação de qualificação é realizada",
+        rotulo: "7a. Endereço onde a ação de qualificação é realizada",
         tipo: "texto",
+      },
+      { chave: "qualifMunicipio", rotulo: "7b. Município", tipo: "texto" },
+      { chave: "qualifUf", rotulo: "7c. UF", tipo: "select", opcoes: OPCOES_UF },
+      {
+        chave: "qualifOutrosMunicipios",
+        rotulo: "7d. Outros municípios foram contemplados com a Ação de Qualificação?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
+        outroChave: "qualifOutrosMunicipiosQuais",
+        outroRotulo: "7d. Qual?",
       },
       {
         chave: "qualifNomeCurso",
@@ -175,9 +185,20 @@ const BLOCOS: BlocoDef[] = [
       { chave: "planejNumTurmas", rotulo: "16. Número de turmas planejadas", tipo: "numero" },
       {
         chave: "planejNumAlunosPrevistos",
-        rotulo: "17. Número previsto de alunos",
+        rotulo: "17a. Número previsto de alunos",
         tipo: "numero",
       },
+      {
+        chave: "planejDataInicioInscricao",
+        rotulo: "17b. Data prevista de início de inscrição",
+        tipo: "data",
+      },
+      {
+        chave: "planejDataTerminoInscricao",
+        rotulo: "17c. Data prevista de término de inscrição",
+        tipo: "data",
+      },
+      { chave: "planejNumVagas", rotulo: "17d. Número de vagas", tipo: "numero" },
       {
         chave: "planejTaxaEvasaoEsperada",
         rotulo: "18. Taxa de evasão esperada (%)",

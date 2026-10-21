@@ -36,8 +36,8 @@ async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCs
   return { idSessao, idCsrf };
 }
 
-// As 56 chaves do questionário fonte
-// (`docs/Questionario_do_Gestor_Pre_Curso.md`), incluindo os 9 condicionais,
+// As 63 chaves do questionário fonte
+// (`docs/Questionario_do_Gestor_Pre_Curso.md`), incluindo os 10 condicionais,
 // todos aplicáveis nesta fixture.
 const RESPOSTA_COMPLETA = {
   identifUf: "SP",
@@ -47,6 +47,10 @@ const RESPOSTA_COMPLETA = {
   identifEmail: "maria@example.com",
   identifTelefone: "19999990000",
   qualifEndereco: "Rua das Flores, 100",
+  qualifMunicipio: "Valinhos",
+  qualifUf: "SP",
+  qualifOutrosMunicipios: "Sim",
+  qualifOutrosMunicipiosQuais: "Vinhedo e Louveira",
   qualifNomeCurso: "Guia de Turismo Local",
   qualifVinculoPrograma: "Sim",
   qualifVinculoProgramaQual: "Plano Municipal de Qualificação em Turismo",
@@ -59,6 +63,9 @@ const RESPOSTA_COMPLETA = {
   planejCargaHoraria: 120,
   planejNumTurmas: 2,
   planejNumAlunosPrevistos: 40,
+  planejDataInicioInscricao: "2026-01-15",
+  planejDataTerminoInscricao: "2026-02-15",
+  planejNumVagas: 45,
   planejTaxaEvasaoEsperada: 10,
   planejObjetivo: "Qualificar guias locais",
   publicoPerfil: ["Jovens", "Mulheres"],
@@ -146,7 +153,7 @@ test("REQ-PC-10/CA-04: encerramento com campo obrigatório faltando é rejeitado
   await cliente.dispose();
 });
 
-test("REQ-PC-11/CA-05: encerramento com todos os 56 campos completos -> 200, ENCERRADO, dataEncerramento preenchida", async () => {
+test("REQ-PC-11/CA-05: encerramento com todos os 63 campos completos -> 200, ENCERRADO, dataEncerramento preenchida", async () => {
   const cdCurso = criarPreCurso({ cdOfertante: CNPJ_GO, cdVerba, vlCursoAlocado: 100, criadoPor: CNPJ_GO }).cdCurso;
 
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
@@ -217,7 +224,7 @@ test("REQ-PC-12: PATCH após o encerramento recebe 409 (fecha o gate fim-a-fim c
   await cliente.dispose();
 });
 
-test("condicionais órfãs (Q9.Qual e Q25.1/25.2/25.3) são descartadas no encerramento", async () => {
+test("condicionais órfãs (Q7d.Qual, Q9.Qual e Q25.1/25.2/25.3) são descartadas no encerramento", async () => {
   const cdCurso = criarPreCurso({ cdOfertante: CNPJ_GO, cdVerba, vlCursoAlocado: 100, criadoPor: CNPJ_GO }).cdCurso;
 
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
@@ -228,16 +235,18 @@ test("condicionais órfãs (Q9.Qual e Q25.1/25.2/25.3) são descartadas no encer
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
-  // O Gestor volta atrás nas duas perguntas-mãe. A gravação preserva as
+  // O Gestor volta atrás nas três perguntas-mãe. A gravação preserva as
   // filhas (merge raso, REQ-PC-04); o descarte é no encerramento.
   await cliente.patch(`/api/pre-cursos/${cdCurso}`, {
     data: {
+      qualifOutrosMunicipios: "Não",
       qualifVinculoPrograma: "Não",
       infraEspecificaNecessidade: "Não, apenas equipamentos básicos",
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
   expect(getPreCurso(cdCurso)?.respostas?.infraEspecificaSuficiencia).toBeDefined();
+  expect(getPreCurso(cdCurso)?.respostas?.qualifOutrosMunicipiosQuais).toBeDefined();
 
   const res = await cliente.post(`/api/pre-cursos/${cdCurso}/encerrar`, {
     headers: cabecalhosAutenticados(idSessao, idCsrf),
@@ -247,6 +256,8 @@ test("condicionais órfãs (Q9.Qual e Q25.1/25.2/25.3) são descartadas no encer
   const respostas = getPreCurso(cdCurso)?.respostas;
   expect(getPreCurso(cdCurso)?.status).toBe("ENCERRADO");
   expect(respostas).not.toHaveProperty("qualifVinculoProgramaQual");
+  // APC-06
+  expect(respostas).not.toHaveProperty("qualifOutrosMunicipiosQuais");
   expect(respostas).not.toHaveProperty("infraEspecificaDisponibilidade");
   expect(respostas).not.toHaveProperty("infraEspecificaSuficiencia");
   expect(respostas).not.toHaveProperty("infraEspecificaManutencao");
