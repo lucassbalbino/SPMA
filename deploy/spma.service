@@ -3,7 +3,11 @@
 [Unit]
 Description=SPMA (Next.js standalone)
 After=network.target mysql.service
-Requires=mysql.service
+# Wants, não Requires: com Requires, parar o MySQL (ex.: atualização
+# automática do apt) para o SPMA junto, e o Restart=always não o religa,
+# porque a parada foi pedida, não uma queda. O pool reconecta sozinho
+# quando o MySQL volta (ver allowPublicKeyRetrieval no .env).
+Wants=mysql.service
 
 [Service]
 User=spma
