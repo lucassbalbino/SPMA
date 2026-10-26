@@ -69,6 +69,24 @@ export function requireDadosOrganizacionaisCompletos(usuario: {
 }
 
 /**
+ * AM/GT/VT/VO sem nome declaram nome e e-mail antes de seguir (AD-050): só o
+ * AM nasce com eles, os demais os informam depois do 1º login. GO e AL ficam
+ * de fora porque declaram os mesmos dados nas próprias telas de onboarding.
+ *
+ * Decidido pelo `nome` vazio, não por uma flag como as guardas vizinhas: toda
+ * conta anterior a esta regra nasceu com nome, então passa sem migration e
+ * sem ser mandada a uma tela que não lhe diz respeito.
+ */
+export function requireDadosCadastraisCompletos(usuario: {
+  tipo: TipoUsuario;
+  nome: string | null;
+}): void {
+  if (usuario.tipo !== "GO" && usuario.tipo !== "AL" && !usuario.nome) {
+    redirect("/dados-cadastrais");
+  }
+}
+
+/**
  * Enquanto o Aluno não responder as 7 perguntas de dado pessoal, nenhum
  * outro módulo abre (PESSOAL-02, PESSOAL-06). Vale só para AL: é o único
  * perfil afetado por esta feature (PESSOAL-04).

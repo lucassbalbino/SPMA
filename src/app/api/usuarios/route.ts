@@ -161,7 +161,9 @@ async function criarUsuario(request: Request) {
     const usuarioCriado = await tx.usuario.create({
       data: {
         documento: dados.documento,
-        nome: dados.nome,
+        // Só o AM nasce com nome e e-mail; os demais os declaram depois do
+        // 1º login (AD-050).
+        nome: dados.nome ?? null,
         email: dados.email ?? null,
         tipo: dados.tipo,
         cdOfertante,
@@ -169,7 +171,7 @@ async function criarUsuario(request: Request) {
         // OGO-11 (AD-044): nenhum dado organizacional nasce na criação - o GO
         // os declara no 1º acesso, e `dadosOrganizacionaisCompletos` fica no
         // default `false`. `usuarioSchema` já rejeita `responsavel`/
-        // `telefone`/`municipio` para todo tipo e `email`/`uf` para GO; `uf`
+        // `telefone`/`municipio` para todo tipo e `uf` para GO; `uf`
         // ainda pode vir para os outros tipos (decisão fixada em teste) e,
         // se vier, é gravada.
         uf: dados.uf ?? null,

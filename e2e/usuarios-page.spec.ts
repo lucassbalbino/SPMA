@@ -105,7 +105,6 @@ test("CA-AU-05: GO logado só vê VO/AL como opções e consegue criar um AL pel
   // O campo de documento só aparece depois de escolher o tipo.
   await page.locator("select#tipo").selectOption("AL");
   await page.getByLabel("CPF").fill(CPF_NOVO_AL);
-  await page.getByLabel("Nome").fill("Aluno Criado Pela UI");
   await page.locator("select#cdCurso").selectOption(String(cdCursoDoGo));
 
   const [resposta] = await Promise.all([
@@ -133,7 +132,7 @@ test("GO logado não vê os campos de Ofertante/verba (não gere verba)", async 
   await expect(page.locator("#vlVerba")).toHaveCount(0);
 });
 
-test("OGO-09/OGO-12/GV-23/GV-24: AM logado cria um GO só com CNPJ e nome - a tela não pede dado organizacional nem verba", async ({
+test("AD-050/GV-23/GV-24: AM logado cria um GO só com o CNPJ - a tela não pede nome, dado organizacional nem verba", async ({
   page,
 }) => {
   const login = await page.request.post("/api/auth/login", {
@@ -143,22 +142,26 @@ test("OGO-09/OGO-12/GV-23/GV-24: AM logado cria um GO só com CNPJ e nome - a te
 
   await page.goto("/usuarios");
 
-  // OGO-13: para os outros tipos o E-mail continua sendo pedido.
-  await page.locator("select#tipo").selectOption("VO");
+  // AD-050: nome e e-mail só são pedidos na criação de um AM; os demais
+  // perfis os declaram depois do 1º login.
+  await page.locator("select#tipo").selectOption("AM");
+  await expect(page.locator("#nome")).toBeVisible();
   await expect(page.locator("#email")).toBeVisible();
+  await page.locator("select#tipo").selectOption("VO");
+  await expect(page.locator("#nome")).toHaveCount(0);
+  await expect(page.locator("#email")).toHaveCount(0);
 
-  // OGO-12 + GV-23: com GO, só CNPJ e nome. Nada de Ofertante existente,
-  // E-mail, UF, Responsável, Telefone, Município - nem verba (AD-046: a
-  // verba é vinculada depois, em /verbas).
+  // GV-23: com GO, só o CNPJ. Nada de Ofertante existente, nome, E-mail, UF,
+  // Responsável, Telefone, Município - nem verba (AD-046: a verba é
+  // vinculada depois, em /verbas).
   await page.locator("select#tipo").selectOption("GO");
   await expect(page.locator("select#cdOfertante")).toHaveCount(0);
-  for (const campo of ["email", "uf", "responsavel", "telefone", "municipio", "vlVerba", "dtVerba"]) {
+  for (const campo of ["nome", "email", "uf", "responsavel", "telefone", "municipio", "vlVerba", "dtVerba"]) {
     await expect(page.locator(`#${campo}`)).toHaveCount(0);
   }
 
   // Com GO selecionado o campo de documento é rotulado "CNPJ".
   await page.getByLabel("CNPJ").fill(CNPJ_NOVO_GO);
-  await page.getByLabel("Nome").fill("GO Criado Pela UI");
 
   const [resposta] = await Promise.all([
     page.waitForResponse((res) => res.url().includes("/api/usuarios")),
@@ -168,7 +171,7 @@ test("OGO-09/OGO-12/GV-23/GV-24: AM logado cria um GO só com CNPJ e nome - a te
 
   const criado = getUsuario(CNPJ_NOVO_GO);
   expect(criado?.tipo).toBe("GO");
-  expect(criado?.nome).toBe("GO Criado Pela UI");
+  expect(criado?.nome).toBeNull();
   expect(criado?.cdOfertante).toBeNull();
   expect(criado?.criadoPor).toBe(CPF_AM_CRIADOR);
 
@@ -192,7 +195,6 @@ test("UGO-14: AM logado vincula um VO a um GO existente, escolhido de uma lista"
   await expect(page.locator("select#cdOfertante")).toBeVisible();
 
   await page.getByLabel("CPF").fill(CPF_NOVO_VO);
-  await page.getByLabel("Nome").fill("VO Criado Pela UI");
   await page.locator("select#cdOfertante").selectOption({ label: NOME_GO_EXISTENTE });
 
   const [resposta] = await Promise.all([
@@ -218,7 +220,6 @@ test("REQ-OV-08 (equivalente/UGO-14): AM que tenta criar VO sem escolher o Ofert
   await page.goto("/usuarios");
   await page.locator("select#tipo").selectOption("VO");
   await page.getByLabel("CPF").fill("40360046037");
-  await page.getByLabel("Nome").fill("VO Sem Ofertante");
   await page.getByRole("button", { name: "Criar usuário" }).click();
 
   await expect(page.getByText("Ofertante é obrigatório")).toBeVisible();
@@ -243,7 +244,6 @@ test("AVAL-01: o GO só vê no seletor os cursos do próprio Ofertante e não en
   expect(opcoes).toEqual(["Selecione", `Curso #${cdCursoDoGo}`]);
 
   await page.getByLabel("CPF").fill(CPF_NOVO_AL_SEM_CURSO);
-  await page.getByLabel("Nome").fill("Aluno Sem Curso");
   await page.getByRole("button", { name: "Criar usuário" }).click();
 
   await expect(page.getByText("Curso é obrigatório")).toBeVisible();
@@ -385,7 +385,7 @@ test.describe("lista da Gestão de usuários", () => {
     upsertUsuario({ cpf: CPF_VT_SEM_LISTA, tipo: "VT", senha: SENHA, primeiraVez: false });
     upsertUsuario({ cpf: CNPJ_GO_VAZIO, tipo: "GO", senha: SENHA, primeiraVez: false });
 
-    // Os 21 VTs saem pela API de criação: um processo `tsx` por fixture
+    // Os 21 VTs saem pela API de criação e de edição: um processo `tsx` por fixture
     // custaria cerca de um minuto só aqui.
     const cliente = await novoCliente();
     const login = await cliente.post("/api/auth/login", {
@@ -395,12 +395,18 @@ test.describe("lista da Gestão de usuários", () => {
     const idCsrf = idCsrfDaResposta(login);
     if (!idSessao || !idCsrf) throw new Error("Login do GT da lista não emitiu sessão/CSRF");
 
+    // AD-050: o VT nasce sem nome; a correção da gestão dá o nome da lista.
     for (const { documento, nome } of PAGINADOS) {
       const res = await cliente.post("/api/usuarios", {
-        data: { documento, nome, tipo: "VT" },
+        data: { documento, tipo: "VT" },
         headers: cabecalhosAutenticados(idSessao, idCsrf),
       });
       expect(res.status()).toBe(201);
+      const resNome = await cliente.patch("/api/usuarios", {
+        data: { documentoAtual: documento, nome },
+        headers: cabecalhosAutenticados(idSessao, idCsrf),
+      });
+      expect(resNome.status()).toBe(200);
     }
     await cliente.dispose();
   });

@@ -200,7 +200,7 @@ test("CA-AU-05: GO autenticado cria AL e a autoria fica registrada", async () =>
   const cliente = await novoCliente();
 
   const res = await cliente.post("/api/usuarios", {
-    data: { documento: CPF_NOVO_AL, nome: "Aluno Novo", tipo: "AL", cdCurso: cdCursoDoGo },
+    data: { documento: CPF_NOVO_AL, tipo: "AL", cdCurso: cdCursoDoGo },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -231,7 +231,7 @@ test("CA-AU-06: GO que forja a criação de um GT recebe 403 e nada é criado", 
   const cliente = await novoCliente();
 
   const res = await cliente.post("/api/usuarios", {
-    data: { documento: CPF_FORJADO_GT, nome: "GT Forjado", tipo: "GT" },
+    data: { documento: CPF_FORJADO_GT, tipo: "GT" },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -248,7 +248,6 @@ test("UGO-18: GO tentando criar outro GO recebe 403 e nada é criado (GO deixou 
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CNPJ_NOVO_GO_FORJADO,
-      nome: "GO Forjado",
       tipo: "GO",
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
@@ -267,7 +266,6 @@ test("REQ-AU-08: GO criando VO sem informar cdOfertante herda o próprio escopo"
   const resVo = await cliente.post("/api/usuarios", {
     data: {
       documento: CPF_NOVO_VO,
-      nome: "VO Novo",
       tipo: "VO",
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
@@ -292,7 +290,6 @@ test("UGO-16: GO forjando cdOfertante de outro GO ao criar VO recebe 403, nada �
   const resVo = await cliente.post("/api/usuarios", {
     data: {
       documento: CPF_NOVO_VO_FORJADO,
-      nome: "VO Novo",
       tipo: "VO",
       cdOfertante: CNPJ_GO_ALHEIO,
     },
@@ -315,7 +312,7 @@ test("sem sessão válida retorna 401 e não cria usuário", async () => {
 
   const semCookie = await novoCliente();
   const resSemCookie = await semCookie.post("/api/usuarios", {
-    data: { documento: CPF_SEM_SESSAO, nome: "Sem Sessão", tipo: "AL" },
+    data: { documento: CPF_SEM_SESSAO, tipo: "AL" },
     headers: {
       Cookie: `spma_csrf=${csrfArbitrario}`,
       "x-csrf-token": csrfArbitrario,
@@ -324,7 +321,7 @@ test("sem sessão válida retorna 401 e não cria usuário", async () => {
 
   const cookieInvalido = await novoCliente();
   const resCookieInvalido = await cookieInvalido.post("/api/usuarios", {
-    data: { documento: CPF_SEM_SESSAO, nome: "Sem Sessão", tipo: "AL" },
+    data: { documento: CPF_SEM_SESSAO, tipo: "AL" },
     headers: cabecalhosAutenticados(
       "00000000-0000-4000-8000-000000000000",
       csrfArbitrario,
@@ -344,7 +341,7 @@ test("CA-SEC-15: POST sem token CSRF válido é rejeitado com 403, nenhum usuár
   const cliente = await novoCliente();
 
   const res = await cliente.post("/api/usuarios", {
-    data: { documento: CPF_SEM_CSRF, nome: "Sem CSRF", tipo: "AL" },
+    data: { documento: CPF_SEM_CSRF, tipo: "AL" },
     headers: cabecalhoCookie(idSessao),
   });
 
@@ -370,14 +367,14 @@ test("UGO-10: POST com documento já existente devolve 409 com erro claro de dup
 
   const clientePrimeiro = await novoCliente();
   const primeiro = await clientePrimeiro.post("/api/usuarios", {
-    data: { documento: CPF_DUPLICADO, nome: "Primeiro Cadastro", tipo: "AL", cdCurso: cdCursoDoGo },
+    data: { documento: CPF_DUPLICADO, tipo: "AL", cdCurso: cdCursoDoGo },
     headers,
   });
   expect(primeiro.status()).toBe(201);
 
   const clienteSegundo = await novoCliente();
   const segundo = await clienteSegundo.post("/api/usuarios", {
-    data: { documento: CPF_DUPLICADO, nome: "Segundo Cadastro", tipo: "AL", cdCurso: cdCursoDoGo },
+    data: { documento: CPF_DUPLICADO, tipo: "AL", cdCurso: cdCursoDoGo },
     headers,
   });
 
@@ -407,7 +404,6 @@ test("UGO-10: POST com CNPJ de GO já existente devolve 409 com a mensagem espec
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CNPJ_GO_ALHEIO,
-      nome: "Segundo GO Com Mesmo CNPJ",
       tipo: "GO",
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
@@ -426,7 +422,6 @@ test("OGO-09/UGO-07/GV-24: AM cria GO só com CNPJ válido + nome - 201, sem Ofe
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CNPJ_NOVO_GO_VALIDO,
-      nome: "Novo GO Válido",
       tipo: "GO",
     },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
@@ -458,14 +453,13 @@ test("OGO-09/UGO-07/GV-24: AM cria GO só com CNPJ válido + nome - 201, sem Ofe
   await cliente.dispose();
 });
 
-test("OGO-10: AM criando GO com email recebe 400 e o GO não é criado", async () => {
+test("AD-050: AM criando GO com email recebe 400 e o GO não é criado", async () => {
   const { idSessao, idCsrf } = await sessaoDoAmComCsrf();
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CNPJ_NOVO_GO_COM_EMAIL,
-      nome: "GO Com Email",
       tipo: "GO",
       email: "contato@exemplo.dev",
     },
@@ -473,7 +467,7 @@ test("OGO-10: AM criando GO com email recebe 400 e o GO não é criado", async (
   });
 
   expect(res.status()).toBe(400);
-  expect((await res.json()).erro).toBe("email não é aceito na criação de Gestor Ofertante");
+  expect((await res.json()).erro).toBe("email só é aceito na criação de Administrador Master");
   expect(getUsuario(CNPJ_NOVO_GO_COM_EMAIL)).toBeNull();
 
   await cliente.dispose();
@@ -489,7 +483,6 @@ test("GV-26: AM criando GO com verba recebe 400 e nem o GO nem a verba são cria
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CNPJ_NOVO_GO_COM_VERBA,
-      nome: "GO Com Verba",
       tipo: "GO",
       verba: { vlVerba: 1000, dtVerba: "2026-03-10" },
     },
@@ -511,7 +504,6 @@ test("CA-OV-05: AM criando VO com cdOfertante inexistente recebe 400 claro, não
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CPF_NOVO_VO_INEXISTENTE,
-      nome: "VO Ofertante Inexistente",
       tipo: "VO",
       cdOfertante: CNPJ_INEXISTENTE,
     },
@@ -533,7 +525,6 @@ test("UGO-01: AM criando VO com cdOfertante apontando para um documento que exis
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CPF_NOVO_VO_TIPO_ERRADO,
-      nome: "VO Ofertante Tipo Errado",
       tipo: "VO",
       cdOfertante: CPF_AL_TIPO_ERRADO,
     },
@@ -555,10 +546,7 @@ test("AVAL-01: AM cria Aluno já matriculado num curso de qualquer Ofertante", a
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CPF_NOVO_AL_PELO_AM,
-      nome: "Aluno Criado Pelo AM",
       tipo: "AL",
-      // OGO-13: fora do GO, o email continua vindo do criador.
-      email: "aluno-pelo-am@exemplo.dev",
       // Curso de um Ofertante que não é o do AM (que não tem nenhum, AD-012).
       cdCurso: cdCursoAlheio,
     },
@@ -567,7 +555,6 @@ test("AVAL-01: AM cria Aluno já matriculado num curso de qualquer Ofertante", a
 
   expect(res.status()).toBe(201);
   expect(getUsuario(CPF_NOVO_AL_PELO_AM)?.tipo).toBe("AL");
-  expect(getUsuario(CPF_NOVO_AL_PELO_AM)?.email).toBe("aluno-pelo-am@exemplo.dev");
   expect(getAvaliacao(CPF_NOVO_AL_PELO_AM, cdCursoAlheio)?.status).toBe("EM_ANDAMENTO");
 
   await cliente.dispose();
@@ -578,7 +565,7 @@ test("AVAL-01: criar Aluno sem curso recebe 400 e o usuário não é criado", as
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/usuarios", {
-    data: { documento: CPF_NOVO_AL_SEM_CURSO, nome: "Aluno Sem Curso", tipo: "AL" },
+    data: { documento: CPF_NOVO_AL_SEM_CURSO, tipo: "AL" },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -596,7 +583,6 @@ test("AVAL-05/06: GO criando Aluno em curso de outro Ofertante recebe 403, nada 
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CPF_NOVO_AL_CURSO_ALHEIO,
-      nome: "Aluno Curso Alheio",
       tipo: "AL",
       cdCurso: cdCursoAlheio,
     },
@@ -617,7 +603,6 @@ test("criar Aluno com cdCurso inexistente recebe 404 e nada é criado", async ()
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CPF_NOVO_AL_CURSO_INEXISTENTE,
-      nome: "Aluno Curso Inexistente",
       tipo: "AL",
       cdCurso: 999999999,
     },
@@ -638,7 +623,6 @@ test("curso informado na criação de quem não é Aluno é rejeitado com 400", 
   const res = await cliente.post("/api/usuarios", {
     data: {
       documento: CPF_NOVO_AL_SEM_CURSO,
-      nome: "VO Com Curso",
       tipo: "VO",
       cdCurso: cdCursoDoGo,
     },

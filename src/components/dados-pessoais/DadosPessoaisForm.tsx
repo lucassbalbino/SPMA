@@ -1,4 +1,5 @@
 // Formulário das 7 perguntas de dado pessoal do Aluno (PESSOAL-01, PESSOAL-16),
+// precedidas do nome e do e-mail dele (AD-050: a criação já não os pede),
 // compartilhado por duas telas: a coleta obrigatória no primeiro acesso
 // (`(onboarding)/dados-pessoais`) e a edição pelo perfil
 // (`(protegido)/meus-dados`). Só o `modo` muda o que acontece depois de
@@ -48,7 +49,8 @@ interface CampoDef {
 
 const CAMPOS: CampoDef[] = [
   { chave: "avalPessoalEstado", rotulo: "Estado de residência", tipo: "select", opcoes: OPCOES_UF },
-  { chave: "avalPessoalMunicipio", rotulo: "Município e Estado", tipo: "texto" },
+  // O estado já é a pergunta anterior: aqui só o município.
+  { chave: "avalPessoalMunicipio", rotulo: "Município", tipo: "texto" },
   { chave: "avalPessoalGenero", rotulo: "Gênero", tipo: "radio", opcoes: OPCOES_GENERO },
   {
     chave: "avalPessoalFaixaEtaria",
@@ -77,9 +79,12 @@ const CAMPOS: CampoDef[] = [
 ];
 
 export function DadosPessoaisForm({
+  cadastroInicial,
   respostasIniciais,
   modo,
 }: {
+  /** Nome e e-mail já gravados em `TB_Usuario`, para editar ou completar. */
+  cadastroInicial: { nome: string; email: string };
   respostasIniciais: Partial<RespostasDadosPessoais>;
   /**
    * "onboarding": primeira gravação obrigatória - sucesso libera a
@@ -89,6 +94,8 @@ export function DadosPessoaisForm({
   modo: "onboarding" | "perfil";
 }) {
   const router = useRouter();
+  const [nome, setNome] = useState(cadastroInicial.nome);
+  const [email, setEmail] = useState(cadastroInicial.email);
   const [respostas, setRespostas] =
     useState<Partial<RespostasDadosPessoais>>(respostasIniciais);
   const [erro, setErro] = useState<string | null>(null);
@@ -109,7 +116,7 @@ export function DadosPessoaisForm({
       const res = await fetch("/api/usuarios/me/dados-pessoais", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...headerCSRF() },
-        body: JSON.stringify(respostas),
+        body: JSON.stringify({ nome, email, ...respostas }),
       });
       const corpo = await res.json();
 
@@ -143,6 +150,36 @@ export function DadosPessoaisForm({
                 Dados salvos.
               </p>
             )}
+
+            <Field>
+              <FieldLabel htmlFor="nome">Nome completo</FieldLabel>
+              <Input
+                id="nome"
+                data-testid="campo-nome"
+                autoComplete="name"
+                value={nome}
+                onChange={(event) => {
+                  setSucesso(false);
+                  setNome(event.target.value);
+                }}
+                disabled={enviando}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="email">E-mail</FieldLabel>
+              <Input
+                id="email"
+                data-testid="campo-email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => {
+                  setSucesso(false);
+                  setEmail(event.target.value);
+                }}
+                disabled={enviando}
+              />
+            </Field>
 
             {CAMPOS.map((campo) => {
               const valor = respostas[campo.chave] as string | undefined;

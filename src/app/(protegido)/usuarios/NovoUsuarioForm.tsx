@@ -71,10 +71,11 @@ export function NovoUsuarioForm({
   // VO é o único perfil que se vincula a um GO já existente (AD-012) -
   // escolhido de uma lista, quando quem cria gerencia verba (AM/GT).
   const pedeGoParaVo = escolheOfertante && tipo === "VO";
-  // OGO-12 (AD-044): o GO é criado só com CNPJ e nome. Email e os demais
-  // dados organizacionais ele mesmo declara no 1º acesso; a verba é
-  // vinculada depois, em /verbas (GV-23, AD-046).
-  const pedeEmail = tipo !== "GO";
+  // AD-050: só o Administrador Master nasce com nome e e-mail. Os demais
+  // perfis os declaram depois do 1º login (o GO junto dos dados
+  // organizacionais, AD-044); a verba do GO é vinculada depois, em /verbas
+  // (GV-23, AD-046).
+  const pedeNomeEEmail = tipo === "AM";
   // AVAL-01: todo Aluno nasce matriculado, então o curso é obrigatório para
   // qualquer perfil que crie um AL (hoje AM e GO - REQ-AU-05/06).
   const pedeCurso = tipo === "AL";
@@ -110,8 +111,8 @@ export function NovoUsuarioForm({
 
     const entrada = usuarioSchema.safeParse({
       documento,
-      nome,
-      email: pedeEmail && email ? email : undefined,
+      nome: pedeNomeEEmail ? nome : undefined,
+      email: pedeNomeEEmail && email ? email : undefined,
       tipo: tipo || undefined,
       cdOfertante: pedeGoParaVo && cdOfertante ? cdOfertante : undefined,
       cdCurso: pedeCurso && cdCurso ? Number(cdCurso) : undefined,
@@ -189,28 +190,30 @@ export function NovoUsuarioForm({
                 disabled={enviando}
               />
             </Field>
-            <Field data-invalid={!!erro}>
-              <FieldLabel htmlFor="nome">Nome</FieldLabel>
-              <Input
-                id="nome"
-                name="nome"
-                value={nome}
-                onChange={(event) => setNome(event.target.value)}
-                disabled={enviando}
-              />
-            </Field>
-            {pedeEmail && (
-              <Field>
-                <FieldLabel htmlFor="email">E-mail</FieldLabel>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  disabled={enviando}
-                />
-              </Field>
+            {pedeNomeEEmail && (
+              <>
+                <Field data-invalid={!!erro}>
+                  <FieldLabel htmlFor="nome">Nome</FieldLabel>
+                  <Input
+                    id="nome"
+                    name="nome"
+                    value={nome}
+                    onChange={(event) => setNome(event.target.value)}
+                    disabled={enviando}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="email">E-mail</FieldLabel>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    disabled={enviando}
+                  />
+                </Field>
+              </>
             )}
             {pedeGoParaVo && (
               <Field data-invalid={!!erro}>
