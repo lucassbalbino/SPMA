@@ -173,14 +173,14 @@ async function preencherParte2Concluiu(page: Page) {
   // Avaliação do curso (Q24)
   const b2 = blocoParte2(page, 2);
   await abrirBloco(b2, "bloco-parte2-2");
-  await selecionar(page, "campo-avalCursoDinamicasInclusao-select", "Ótimo");
-  await selecionar(page, "campo-avalCursoMaterialDidatico-select", "Bom");
-  await selecionar(page, "campo-avalCursoConteudo-select", "Ótimo");
-  await selecionar(page, "campo-avalCursoClareza-select", "Bom");
-  await selecionar(page, "campo-avalCursoConhecimentoInstrutores-select", "Ótimo");
-  await selecionar(page, "campo-avalCursoOrganizacao-select", "Bom");
-  await selecionar(page, "campo-avalCursoInfraestruturaBasica-select", "Regular");
-  await selecionar(page, "campo-avalCursoInfraestruturaSalaAula-select", "Regular");
+  await marcarOpcao(page, "avalCursoDinamicasInclusao", 5); // Ótimo
+  await marcarOpcao(page, "avalCursoMaterialDidatico", 4); // Bom
+  await marcarOpcao(page, "avalCursoConteudo", 5); // Ótimo
+  await marcarOpcao(page, "avalCursoClareza", 4); // Bom
+  await marcarOpcao(page, "avalCursoConhecimentoInstrutores", 5); // Ótimo
+  await marcarOpcao(page, "avalCursoOrganizacao", 4); // Bom
+  await marcarOpcao(page, "avalCursoInfraestruturaBasica", 3); // Regular
+  await marcarOpcao(page, "avalCursoInfraestruturaSalaAula", 3); // Regular
   await abrirBloco(b2, "bloco-parte2-2");
 
   // Aprendizado (Q25-Q27)
@@ -200,7 +200,7 @@ async function preencherParte2Concluiu(page: Page) {
   // Avaliação geral (Q35-Q37) - Q30-Q34 saíram com a revisão do MTur.
   const b5 = blocoParte2(page, 5);
   await abrirBloco(b5, "bloco-parte2-5");
-  await page.getByTestId("campo-avalGeralNota").fill("9");
+  await marcarOpcao(page, "avalGeralNota", 9);
   await page
     .getByTestId("campo-avalGeralMelhoriasComunidade")
     .fill("Mais gente da comunidade trabalhando com receptivo");

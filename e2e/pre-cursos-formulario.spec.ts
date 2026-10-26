@@ -184,10 +184,10 @@ async function preencherTodosOsCampos(
   await page.getByTestId("campo-qualifUf-opcao-12").click(); // MG
   // O gatilho também traz o ícone de seta, daí `toContainText`.
   await expect(page.getByTestId("campo-qualifUf-select")).toContainText("MG");
-  // APC-05/APC-04: "7d. Qual?" só aparece com "Sim".
+  // APC-05/APC-04: "7e. Quais?" só aparece com "Sim".
   await expect(page.getByTestId("campo-qualifOutrosMunicipiosQuais")).toHaveCount(0);
   await marcarOpcao(page, "qualifOutrosMunicipios", 0); // Sim
-  await expect(page.getByText("7d. Qual?", { exact: true })).toBeVisible();
+  await expect(page.getByText("7e. Quais?", { exact: true })).toBeVisible();
   await page.getByTestId("campo-qualifOutrosMunicipiosQuais").fill("Cidade Vizinha");
   await page.getByTestId("campo-qualifNomeCurso").fill("Curso de Turismo Teste");
   await marcarOpcao(page, "qualifVinculoPrograma", 0); // Q9 = Sim
@@ -246,14 +246,14 @@ async function preencherTodosOsCampos(
   // Infraestrutura Básica (Q23)
   await abrirBloco(page, 6);
   for (const chave of ESCALA_BASICA) {
-    await selecionar(page, `campo-${chave}-select`, "3 - Regular");
+    await marcarOpcao(page, chave, 3); // 3 - Regular, na planilha
   }
   await fecharBloco(page, 6);
 
   // Infraestrutura Complementar (Q24)
   await abrirBloco(page, 7);
   for (const chave of ESCALA_COMPLEMENTAR) {
-    await selecionar(page, `campo-${chave}-select`, "3 - Regular");
+    await marcarOpcao(page, chave, 3); // 3 - Regular, na planilha
   }
   await fecharBloco(page, 7);
 

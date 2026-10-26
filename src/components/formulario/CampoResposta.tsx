@@ -4,10 +4,11 @@
 // `campo.tipo` que devolve o controle correspondente.
 //
 // Existia em triplicata (`PreCursoForm`, `PosCursoForm`, `AvaliacaoForm`),
-// ~200 linhas cada, idênticas exceto por duas coisas que agora são
-// parâmetros: o `disabled` efetivo (a avaliação soma dois bloqueios próprios)
-// e a lista de opções da escala (os textos do pré-curso e da avaliação
-// diferem).
+// ~200 linhas cada, idênticas exceto pelo `disabled` efetivo (a avaliação
+// soma dois bloqueios próprios), que agora é parâmetro.
+//
+// Campos `escala` não passam por aqui: vários seguidos dividem uma planilha
+// só (`MatrizEscala`), então quem os desenha é o bloco, não o campo.
 //
 // Os `data-testid` são contrato do e2e (`campo-<chave>`,
 // `campo-<chave>-select`, `campo-<chave>-grupo`, `campo-<chave>-opcao-<i>`) -
@@ -25,14 +26,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { CampoDef, OpcaoEscala } from "./tipos";
+import type { CampoDef } from "./tipos";
 
 export function CampoResposta<C extends string, R>({
   campo,
   valor,
   desabilitado,
   invalido,
-  opcoesEscala,
   aoAlterar,
   aoAlternarOpcao,
   children,
@@ -42,8 +42,6 @@ export function CampoResposta<C extends string, R>({
   desabilitado: boolean;
   /** Marca o campo como pendente depois de um encerramento recusado. */
   invalido: boolean;
-  /** Só é consultada por campos `tipo: "escala"`. */
-  opcoesEscala?: readonly OpcaoEscala[];
   aoAlterar: (chave: C, valor: unknown) => void;
   /** Marcar/desmarcar uma opção de `checkboxes`, já com a regra da excludente. */
   aoAlternarOpcao: (campo: CampoDef<C, R>, opcao: string, marcado: boolean) => void;
@@ -127,35 +125,6 @@ export function CampoResposta<C extends string, R>({
                 data-testid={`campo-${campo.chave}-opcao-${indice}`}
               >
                 {opcao}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      );
-      break;
-    case "escala":
-      // Diferente de `select`, o valor da escala é gravado como NÚMERO - por
-      // isso o `Number(...)` na volta e o `String(...)` na ida.
-      controle = (
-        <Select
-          value={valor === undefined || valor === null ? null : String(valor)}
-          onValueChange={(novoValor) => aoAlterar(campo.chave, Number(novoValor))}
-        >
-          <SelectTrigger
-            id={campo.chave}
-            data-testid={`campo-${campo.chave}-select`}
-            disabled={desabilitado}
-          >
-            <SelectValue placeholder="Selecione" />
-          </SelectTrigger>
-          <SelectContent>
-            {opcoesEscala?.map((opcao) => (
-              <SelectItem
-                key={opcao.valor}
-                value={opcao.valor}
-                data-testid={`campo-${campo.chave}-opcao-${opcao.valor}`}
-              >
-                {opcao.rotulo}
               </SelectItem>
             ))}
           </SelectContent>

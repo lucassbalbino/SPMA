@@ -31,7 +31,7 @@ const CONDICIONAIS_DISPARADAS = {
   suporteEstrategiasOutra: "Empréstimo de uniformes",
 };
 
-// 9 de REQ-PC-07/08/09 + "7d. Qual?" (APC-04).
+// 9 de REQ-PC-07/08/09 + "7e. Quais?" (APC-04).
 it("são exatamente 10 regras condicionais", () => {
   expect(REGRAS_CONDICIONAIS_PRE_CURSO.map((regra) => regra.chave)).toEqual([
     "publicoInstituicaoExecutoraNome",

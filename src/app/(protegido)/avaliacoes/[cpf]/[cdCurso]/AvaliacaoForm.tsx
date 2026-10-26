@@ -29,6 +29,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { FieldGroup } from "@/components/ui/field";
 import { CampoResposta } from "@/components/formulario/CampoResposta";
 import { CascaFormulario } from "@/components/formulario/CascaFormulario";
+import { MatrizEscala, segmentarCampos } from "@/components/formulario/MatrizEscala";
 import { useFormularioRespostas } from "@/components/formulario/useFormularioRespostas";
 import type {
   BlocoDef as BlocoGenerico,
@@ -73,6 +74,13 @@ const ESCALA_AVALIACAO_OPCOES: readonly OpcaoEscala[] = [
   { valor: "2", rotulo: "Ruim" },
   { valor: "1", rotulo: "Péssimo" },
 ];
+
+// Q35: nota de 0 a 10, também em planilha (uma linha, onze colunas). O valor
+// gravado continua sendo o número, como quando era digitado.
+const ESCALA_NOTA_OPCOES: readonly OpcaoEscala[] = Array.from({ length: 11 }, (_, nota) => ({
+  valor: String(nota),
+  rotulo: String(nota),
+}));
 
 // Enquanto Q22 não é "Sim", as chaves de "apenas para quem concluiu" ficam
 // visíveis porém não editáveis.
@@ -268,7 +276,8 @@ const BLOCOS_PARTE_2: BlocoDef[] = [
       {
         chave: "avalGeralNota",
         rotulo: "35. Qual nota você dá para o Curso (0 a 10)?",
-        tipo: "numero",
+        tipo: "escala",
+        escala: ESCALA_NOTA_OPCOES,
       },
       {
         chave: "avalGeralMelhoriasComunidade",
@@ -362,20 +371,32 @@ export function AvaliacaoForm({
             </AccordionTrigger>
             <AccordionContent>
               <FieldGroup>
-                {bloco.campos
-                  .filter((campo) => !campo.visivelSe || campo.visivelSe(form.respostas))
-                  .map((campo) => (
+                {segmentarCampos(
+                  bloco.campos.filter((campo) => !campo.visivelSe || campo.visivelSe(form.respostas)),
+                  ESCALA_AVALIACAO_OPCOES,
+                ).map((segmento) =>
+                  "matriz" in segmento ? (
+                    <MatrizEscala
+                      key={segmento.matriz[0].chave}
+                      campos={segmento.matriz}
+                      opcoes={segmento.opcoes}
+                      valorDe={(chave) => form.respostas[chave]}
+                      desabilitado={(campo) => campoDesabilitado(campo, bloqueioDaParte)}
+                      invalido={(chave) => form.pendentes.includes(chave)}
+                      aoAlterar={form.setCampo}
+                    />
+                  ) : (
                     <CampoResposta
-                      key={campo.chave}
-                      campo={campo}
-                      valor={form.respostas[campo.chave]}
-                      desabilitado={campoDesabilitado(campo, bloqueioDaParte)}
-                      invalido={form.pendentes.includes(campo.chave)}
-                      opcoesEscala={ESCALA_AVALIACAO_OPCOES}
+                      key={segmento.campo.chave}
+                      campo={segmento.campo}
+                      valor={form.respostas[segmento.campo.chave]}
+                      desabilitado={campoDesabilitado(segmento.campo, bloqueioDaParte)}
+                      invalido={form.pendentes.includes(segmento.campo.chave)}
                       aoAlterar={form.setCampo}
                       aoAlternarOpcao={form.toggleCheckbox}
                     />
-                  ))}
+                  ),
+                )}
               </FieldGroup>
             </AccordionContent>
           </AccordionItem>
