@@ -2,10 +2,10 @@
 // OGO-19, OGO-20), renderizado por `(onboarding)/cadastro-ofertante`.
 //
 // Consome PATCH /api/usuarios/me/organizacao. Sem campo de CNPJ: a identidade
-// do GO é fixa desde a criação. O nome chega preenchido com o que o AM/GT
-// informou ao criar o GO, como valor editável e não `placeholder` - com o
-// campo obrigatório, um placeholder obrigaria a redigitar o nome só para
-// avançar.
+// do GO é fixa desde a criação. Desde a AD-050 o GO nasce sem nome e o
+// declara aqui; um GO anterior a ela tem o nome que o AM/GT informou, que
+// chega preenchido como valor editável e não `placeholder` - com o campo
+// obrigatório, um placeholder obrigaria a redigitar o nome só para avançar.
 "use client";
 
 import { useState, type FormEvent } from "react";

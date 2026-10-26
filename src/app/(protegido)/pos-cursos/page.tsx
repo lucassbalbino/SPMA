@@ -5,11 +5,13 @@
 // requireSession, sem passar por fetch interno - ver design.md). PosCurso
 // não tem CD_Ofertante próprio - o filtro é aplicado via o PreCurso pai
 // (relação). O escopo em si vem de `escopoDeLeitura`, a mesma função que a
-// rota usa.
+// rota usa. Antes de o pré-curso ser encerrado o pós-curso continua listado,
+// como "Aguardando pré-curso" (AD-050).
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/guards";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import { prisma } from "@/lib/db/prisma";
+import { posCursoLiberado } from "@/lib/pos-curso/liberacao";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function PosCursosPage() {
@@ -22,6 +24,7 @@ export default async function PosCursosPage() {
       // AL não tem escopo por Ofertante (AD-012) - lista vazia, não 403.
       () => ({ preCurso: { cdOfertante: "" } }),
     ),
+    include: { preCurso: { select: { status: true } } },
     orderBy: { cdCurso: "asc" },
   });
 
@@ -43,7 +46,11 @@ export default async function PosCursosPage() {
                 >
                   <span>Pós-curso #{posCurso.cdCurso}</span>
                   <span data-testid={`status-pos-curso-${posCurso.cdCurso}`}>
-                    {posCurso.status === "ENCERRADO" ? "Encerrado" : "Em andamento"}
+                    {posCurso.status === "ENCERRADO"
+                      ? "Encerrado"
+                      : posCursoLiberado(posCurso.preCurso)
+                        ? "Em andamento"
+                        : "Aguardando pré-curso"}
                   </span>
                 </Link>
               </li>

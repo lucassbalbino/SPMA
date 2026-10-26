@@ -3,6 +3,7 @@ import {
   aplicarMascaraDocumento,
   formatarDocumento,
   TAMANHO_MASCARA,
+  tipoDocumentoDigitado,
 } from "./mascara-documento";
 
 describe("aplicarMascaraDocumento - CPF", () => {
@@ -82,5 +83,23 @@ describe("formatarDocumento", () => {
 
   it("outro comprimento volta como está", () => {
     expect(formatarDocumento("12345")).toBe("12345");
+  });
+});
+
+describe("tipoDocumentoDigitado", () => {
+  it("até 11 caracteres é CPF, com ou sem pontuação", () => {
+    expect(tipoDocumentoDigitado("")).toBe("CPF");
+    expect(tipoDocumentoDigitado("52998224725")).toBe("CPF");
+    expect(tipoDocumentoDigitado("529.982.247-25")).toBe("CPF");
+  });
+
+  it("do 12º caractere em diante é CNPJ", () => {
+    expect(tipoDocumentoDigitado("529982247251")).toBe("CNPJ");
+    expect(tipoDocumentoDigitado("529.982.247-251")).toBe("CNPJ");
+    expect(tipoDocumentoDigitado("11.222.333/0001-81")).toBe("CNPJ");
+  });
+
+  it("qualquer letra é CNPJ alfanumérico, mesmo curto", () => {
+    expect(tipoDocumentoDigitado("12ab")).toBe("CNPJ");
   });
 });

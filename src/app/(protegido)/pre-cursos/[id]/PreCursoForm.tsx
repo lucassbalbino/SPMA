@@ -20,6 +20,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { CampoResposta } from "@/components/formulario/CampoResposta";
 import { CascaFormulario } from "@/components/formulario/CascaFormulario";
+import { MatrizEscala, segmentarCampos } from "@/components/formulario/MatrizEscala";
 import { useFormularioRespostas } from "@/components/formulario/useFormularioRespostas";
 import type {
   BlocoDef as BlocoGenerico,
@@ -131,7 +132,7 @@ const BLOCOS: BlocoDef[] = [
         tipo: "radio",
         opcoes: OPCOES_SIM_NAO,
         outroChave: "qualifOutrosMunicipiosQuais",
-        outroRotulo: "7d. Qual?",
+        outroRotulo: "7e. Quais?",
       },
       {
         chave: "qualifNomeCurso",
@@ -505,39 +506,53 @@ export function PreCursoForm({
                 <p className="mb-2 text-sm text-muted-foreground">{bloco.enunciado}</p>
               )}
               <FieldGroup>
-                {bloco.campos
-                  .filter((campo) => !campo.visivelSe || campo.visivelSe(form.respostas))
-                  .map((campo) => {
-                    const campoOutro = acionaOutro(campo, form.respostas)
-                      ? campo.outroChave!
-                      : null;
-
+                {segmentarCampos(
+                  bloco.campos.filter((campo) => !campo.visivelSe || campo.visivelSe(form.respostas)),
+                  ESCALA_OPCOES,
+                ).map((segmento) => {
+                  // Q23/Q24: os itens de infraestrutura viram uma planilha só.
+                  if ("matriz" in segmento) {
                     return (
-                      <CampoResposta
-                        key={campo.chave}
-                        campo={campo}
-                        valor={form.respostas[campo.chave]}
-                        desabilitado={form.desabilitado}
-                        invalido={form.pendentes.includes(campo.chave)}
-                        opcoesEscala={ESCALA_OPCOES}
+                      <MatrizEscala
+                        key={segmento.matriz[0].chave}
+                        campos={segmento.matriz}
+                        opcoes={segmento.opcoes}
+                        valorDe={(chave) => form.respostas[chave]}
+                        desabilitado={() => form.desabilitado}
+                        invalido={(chave) => form.pendentes.includes(chave)}
                         aoAlterar={form.setCampo}
-                        aoAlternarOpcao={form.toggleCheckbox}
-                      >
-                        {campoOutro && (
-                          <Field data-invalid={form.pendentes.includes(campoOutro)}>
-                            <FieldLabel htmlFor={campoOutro}>{ROTULOS[campoOutro]}</FieldLabel>
-                            <Input
-                              id={campoOutro}
-                              data-testid={`campo-${campoOutro}`}
-                              value={(form.respostas[campoOutro] as string | undefined) ?? ""}
-                              onChange={(event) => form.setCampo(campoOutro, event.target.value)}
-                              disabled={form.desabilitado}
-                            />
-                          </Field>
-                        )}
-                      </CampoResposta>
+                      />
                     );
-                  })}
+                  }
+
+                  const { campo } = segmento;
+                  const campoOutro = acionaOutro(campo, form.respostas) ? campo.outroChave! : null;
+
+                  return (
+                    <CampoResposta
+                      key={campo.chave}
+                      campo={campo}
+                      valor={form.respostas[campo.chave]}
+                      desabilitado={form.desabilitado}
+                      invalido={form.pendentes.includes(campo.chave)}
+                      aoAlterar={form.setCampo}
+                      aoAlternarOpcao={form.toggleCheckbox}
+                    >
+                      {campoOutro && (
+                        <Field data-invalid={form.pendentes.includes(campoOutro)}>
+                          <FieldLabel htmlFor={campoOutro}>{ROTULOS[campoOutro]}</FieldLabel>
+                          <Input
+                            id={campoOutro}
+                            data-testid={`campo-${campoOutro}`}
+                            value={(form.respostas[campoOutro] as string | undefined) ?? ""}
+                            onChange={(event) => form.setCampo(campoOutro, event.target.value)}
+                            disabled={form.desabilitado}
+                          />
+                        </Field>
+                      )}
+                    </CampoResposta>
+                  );
+                })}
               </FieldGroup>
             </AccordionContent>
           </AccordionItem>

@@ -262,7 +262,7 @@ test.describe("casca comum", () => {
       "Verbas",
       "Pré-cursos",
       "Pós-cursos",
-      "Avaliações",
+      "Avaliações Aluno",
     ]);
     await contexto.close();
   });
@@ -330,7 +330,7 @@ test.describe("menu de navegação por perfil", () => {
       "Verbas",
       "Pré-cursos",
       "Pós-cursos",
-      "Avaliações",
+      "Avaliações Aluno",
     ]);
   });
 
@@ -371,7 +371,7 @@ test.describe("menu de navegação por perfil", () => {
     await page.goto("/avaliacoes");
 
     const menu = menuDaCasca(page);
-    await expect(menu.getByRole("link", { name: "Avaliações" })).toHaveAttribute(
+    await expect(menu.getByRole("link", { name: "Avaliações Aluno" })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -406,7 +406,7 @@ test.describe("menu de navegação por perfil", () => {
       ["/usuarios", "Gestão de usuários"],
       ["/pre-cursos", "Pré-cursos"],
       ["/pos-cursos", "Pós-cursos"],
-      ["/avaliacoes", "Avaliações"],
+      ["/avaliacoes", "Avaliações Aluno"],
     ];
 
     for (const [rota, rotulo] of esperado) {

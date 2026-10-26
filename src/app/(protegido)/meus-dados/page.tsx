@@ -28,6 +28,10 @@ export default async function MeusDadosPage() {
   })) as Partial<RespostasDadosPessoais>;
 
   return (
-    <DadosPessoaisForm respostasIniciais={respostasIniciais} modo="perfil" />
+    <DadosPessoaisForm
+      cadastroInicial={{ nome: usuario.nome ?? "", email: usuario.email ?? "" }}
+      respostasIniciais={respostasIniciais}
+      modo="perfil"
+    />
   );
 }

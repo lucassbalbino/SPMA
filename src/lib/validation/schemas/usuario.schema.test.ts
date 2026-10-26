@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { TipoUsuario } from "../../../generated/prisma/enums";
 import { usuarioSchema } from "./usuario.schema";
 
+// Sem nome: só o AM é criado com nome e e-mail (AD-050).
 const basePayload = {
   documento: "111.444.777-35",
-  nome: "Fulano de Tal",
 };
 
 // CNPJ válido conhecido (dígitos verificadores corretos), mesmo padrão de
@@ -36,17 +36,18 @@ describe("usuarioSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it.each(Object.values(TipoUsuario).filter((tipo) => tipo !== TipoUsuario.GO))(
-    "aceita payload válido (CPF) para o tipo %s",
-    (tipo) => {
-      const result = usuarioSchema.safeParse({
-        ...basePayload,
-        tipo,
-      });
+  it.each(
+    Object.values(TipoUsuario).filter(
+      (tipo) => tipo !== TipoUsuario.GO && tipo !== TipoUsuario.AM,
+    ),
+  )("aceita payload válido (CPF) para o tipo %s", (tipo) => {
+    const result = usuarioSchema.safeParse({
+      ...basePayload,
+      tipo,
+    });
 
-      expect(result.success).toBe(true);
-    },
-  );
+    expect(result.success).toBe(true);
+  });
 
   it("normaliza CPF formatado para somente dígitos (garante o mesmo valor gravado independente da formatação)", () => {
     const result = usuarioSchema.safeParse({
@@ -62,10 +63,9 @@ describe("usuarioSchema", () => {
 });
 
 describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
-  // OGO-09: AM/GT identificam a organização (CNPJ + nome); o resto é do GO.
-  it("aceita GO só com CNPJ válido + nome, sem nenhum dado organizacional", () => {
+  // AD-050: AM/GT identificam a organização só pelo CNPJ; o resto é do GO.
+  it("aceita GO só com CNPJ válido, sem nenhum dado organizacional", () => {
     const result = usuarioSchema.safeParse({
-      nome: "Instituto Exemplo",
       documento: cnpjValido,
       tipo: TipoUsuario.GO,
     });
@@ -75,7 +75,6 @@ describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
 
   it("normaliza o CNPJ formatado para somente dígitos", () => {
     const result = usuarioSchema.safeParse({
-      nome: "Instituto Exemplo",
       documento: cnpjValido,
       tipo: TipoUsuario.GO,
     });
@@ -88,7 +87,6 @@ describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
 
   it("aceita GO com CNPJ alfanumérico e o grava sem pontuação, em maiúscula", () => {
     const result = usuarioSchema.safeParse({
-      nome: "Instituto Exemplo",
       documento: "12.abc.345/01de-35",
       tipo: TipoUsuario.GO,
     });
@@ -101,7 +99,6 @@ describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
 
   it("GO com CNPJ inválido -> issue no campo documento", () => {
     const result = usuarioSchema.safeParse({
-      nome: "Instituto Exemplo",
       documento: "11.222.333/0001-82", // dígito verificador alterado
       tipo: TipoUsuario.GO,
     });
@@ -131,14 +128,14 @@ describe("usuarioSchema - GO identificado por CNPJ (UGO-07/08/09)", () => {
   // OGO-10: o GO declara estes dados no 1º acesso - a criação os rejeita, em
   // vez de aceitá-los e ignorá-los.
   it.each([
-    ["email", "contato@exemplo.org", "email não é aceito na criação de Gestor Ofertante"],
+    ["nome", "Instituto Exemplo", "nome só é aceito na criação de Administrador Master"],
+    ["email", "contato@exemplo.org", "email só é aceito na criação de Administrador Master"],
     ["uf", "SP", "uf não é aceito na criação de Gestor Ofertante"],
     ["responsavel", "Fulano de Tal", "responsavel não é aceito na criação de usuário"],
     ["telefone", "11999999999", "telefone não é aceito na criação de usuário"],
     ["municipio", "São Paulo", "municipio não é aceito na criação de usuário"],
   ] as const)("rejeita GO com %s informado", (campo, valor, mensagem) => {
     const result = usuarioSchema.safeParse({
-      nome: "Instituto Exemplo",
       documento: cnpjValido,
       tipo: TipoUsuario.GO,
       [campo]: valor,
@@ -180,20 +177,57 @@ describe("usuarioSchema - campos organizacionais fora do tipo GO (decisão desta
     expect(result.success).toBe(true);
   });
 
-  // OGO-13: só o GO deixa de ter email informado na criação.
-  it.each([TipoUsuario.AL, TipoUsuario.VO, TipoUsuario.GT])(
-    "aceita email informado na criação de %s",
+});
+
+// AD-050: nome e e-mail só vêm de quem cria quando o criado é AM; os demais
+// perfis os declaram depois do 1º login.
+describe("usuarioSchema - nome e e-mail só na criação de AM (AD-050)", () => {
+  it("aceita AM com nome e e-mail", () => {
+    const result = usuarioSchema.safeParse({
+      ...basePayload,
+      tipo: TipoUsuario.AM,
+      nome: "Fulano de Tal",
+      email: "pessoa@exemplo.org",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.nome).toBe("Fulano de Tal");
+      expect(result.data.email).toBe("pessoa@exemplo.org");
+    }
+  });
+
+  it("aceita AM sem e-mail", () => {
+    const result = usuarioSchema.safeParse({
+      ...basePayload,
+      tipo: TipoUsuario.AM,
+      nome: "Fulano de Tal",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita AM sem nome", () => {
+    const result = usuarioSchema.safeParse({ ...basePayload, tipo: TipoUsuario.AM });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      expect.objectContaining({ path: ["nome"], message: "Nome é obrigatório" }),
+    ]);
+  });
+
+  it.each([TipoUsuario.GT, TipoUsuario.VT, TipoUsuario.VO, TipoUsuario.AL])(
+    "rejeita nome e e-mail na criação de %s",
     (tipo) => {
       const result = usuarioSchema.safeParse({
         ...basePayload,
         tipo,
+        nome: "Fulano de Tal",
         email: "pessoa@exemplo.org",
       });
 
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.email).toBe("pessoa@exemplo.org");
-      }
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.map((issue) => issue.path)).toEqual([["nome"], ["email"]]);
     },
   );
 });
@@ -204,7 +238,6 @@ describe("usuarioSchema - campos organizacionais fora do tipo GO (decisão desta
 describe("usuarioSchema - verba nunca aceita na criação (GV-26)", () => {
   it("aceita GO sem verba", () => {
     const result = usuarioSchema.safeParse({
-      nome: "Instituto Exemplo",
       documento: cnpjValido,
       tipo: TipoUsuario.GO,
     });
@@ -214,7 +247,6 @@ describe("usuarioSchema - verba nunca aceita na criação (GV-26)", () => {
 
   it("rejeita GO com verba, com a mensagem do campo", () => {
     const result = usuarioSchema.safeParse({
-      nome: "Instituto Exemplo",
       documento: cnpjValido,
       tipo: TipoUsuario.GO,
       verba: { vlVerba: 5000, dtVerba: "2026-01-15" },
@@ -228,7 +260,6 @@ describe("usuarioSchema - verba nunca aceita na criação (GV-26)", () => {
 
   it("rejeita VO com verba, com a mesma mensagem", () => {
     const result = usuarioSchema.safeParse({
-      nome: "Visualizador",
       documento: basePayload.documento,
       tipo: TipoUsuario.VO,
       verba: { vlVerba: 5000 },

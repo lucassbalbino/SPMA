@@ -33,7 +33,7 @@ const GESTAO_USUARIOS: ItemNavegacao = { rotulo: "Gestão de usuários", href: "
 const NOVO_CURSO: ItemNavegacao = { rotulo: "Novo curso", href: "/cursos/novo" };
 const PRE_CURSOS: ItemNavegacao = { rotulo: "Pré-cursos", href: "/pre-cursos" };
 const POS_CURSOS: ItemNavegacao = { rotulo: "Pós-cursos", href: "/pos-cursos" };
-const AVALIACOES: ItemNavegacao = { rotulo: "Avaliações", href: "/avaliacoes" };
+const AVALIACOES: ItemNavegacao = { rotulo: "Avaliações Aluno", href: "/avaliacoes" };
 // Mesma rota, nome diferente: para o Aluno ela nunca lista mais que a própria.
 const MINHA_AVALIACAO: ItemNavegacao = { rotulo: "Minha avaliação", href: "/avaliacoes" };
 const MEUS_DADOS: ItemNavegacao = { rotulo: "Meus dados", href: "/meus-dados" };
@@ -84,7 +84,12 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
  * Rotas de onboarding: existem como destino de guard, não como item de menu,
  * então não aparecem em `MODULOS_POR_PERFIL` - mas exigem sessão igual.
  */
-const ROTAS_ONBOARDING = ["/primeiro-acesso", "/cadastro-ofertante", "/dados-pessoais"];
+const ROTAS_ONBOARDING = [
+  "/primeiro-acesso",
+  "/cadastro-ofertante",
+  "/dados-cadastrais",
+  "/dados-pessoais",
+];
 
 /**
  * Toda rota que exige sessão, derivada da própria tabela de navegação.

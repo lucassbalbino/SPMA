@@ -13,6 +13,7 @@ import {
   podeGerenciarVerba,
   podeLerVerba,
   podeMatricularAluno,
+  requireDadosCadastraisCompletos,
   requireDadosOrganizacionaisCompletos,
   requireDadosPessoaisCompletos,
   requirePrimeiroAcessoConcluido,
@@ -160,6 +161,34 @@ describe("resolverEscopoOfertante", () => {
       ).toBeNull();
     },
   );
+});
+
+describe("requireDadosCadastraisCompletos (AD-050)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it.each(["AM", "GT", "VT", "VO"] as const)(
+    "redireciona %s sem nome para /dados-cadastrais",
+    (tipo) => {
+      expect(() => requireDadosCadastraisCompletos({ tipo, nome: null })).toThrow(
+        "NEXT_REDIRECT:/dados-cadastrais",
+      );
+    },
+  );
+
+  it("não redireciona quem já tem nome", () => {
+    requireDadosCadastraisCompletos({ tipo: "GT", nome: "Fulano de Tal" });
+
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  // GO e AL declaram nome e e-mail nas próprias telas de onboarding.
+  it.each(["GO", "AL"] as const)("não redireciona %s, mesmo sem nome", (tipo) => {
+    requireDadosCadastraisCompletos({ tipo, nome: null });
+
+    expect(redirect).not.toHaveBeenCalled();
+  });
 });
 
 describe("requireDadosPessoaisCompletos", () => {

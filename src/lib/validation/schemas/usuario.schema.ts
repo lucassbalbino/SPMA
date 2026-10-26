@@ -13,19 +13,25 @@ import { OPCOES_UF } from "./pre-curso.schema";
 // criada à parte, em /verbas, por AM/GT.
 const CAMPOS_NUNCA_NA_CRIACAO = ["responsavel", "telefone", "municipio", "verba"] as const;
 
-// Estes dois são do GO e também ficam fora da criação dele - mas continuam
-// aceitos para os outros tipos: `email` porque VT/VO/AL não têm onde declarar
-// o próprio (OGO-13), e `uf` por decisão anterior fixada em teste ("aceita uf
-// informada para um tipo != GO"). Se um dia só GO puder ter UF, mude a
-// decisão e o teste junto - não esta lista sozinha.
-const CAMPOS_FORA_DA_CRIACAO_DO_GO = ["email", "uf"] as const;
+// Nome e e-mail só vêm de quem cria quando o criado é um Administrador
+// Master. Todo outro perfil os declara depois do 1º login: o GO em
+// /cadastro-ofertante (AD-044), o Aluno em /dados-pessoais e GT/VT/VO em
+// /dados-cadastrais (AD-050).
+const CAMPOS_SO_NA_CRIACAO_DO_AM = ["nome", "email"] as const;
+
+// `uf` é do GO e fica fora da criação dele - mas continua aceita para os
+// outros tipos, por decisão anterior fixada em teste ("aceita uf informada
+// para um tipo != GO"). Se um dia só GO puder ter UF, mude a decisão e o
+// teste junto - não esta lista sozinha.
+const CAMPOS_FORA_DA_CRIACAO_DO_GO = ["uf"] as const;
 
 export const usuarioSchema = z
   .object({
     // 11 dígitos (CPF) ou 14 (CNPJ), conforme `tipo` - validado abaixo em
     // `superRefine` porque o algoritmo depende do `tipo` (UGO-07/UGO-09).
     documento: z.string(),
-    nome: z.string().min(1, { message: "Nome é obrigatório" }),
+    // Obrigatório só para AM (abaixo); qualquer outro tipo os rejeita.
+    nome: z.string().min(1, { message: "Nome é obrigatório" }).optional(),
     email: z.string().email({ message: "Email inválido" }).optional(),
     tipo: z.enum(TipoUsuario, { message: "Tipo de usuário inválido" }),
     // Documento (CNPJ) do GO ao qual o usuário sendo criado se vincula
@@ -69,6 +75,26 @@ export const usuarioSchema = z
           message: `${campo} não é aceito na criação de usuário`,
           path: [campo],
         });
+      }
+    }
+
+    if (data.tipo === TipoUsuario.AM) {
+      if (data.nome === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Nome é obrigatório",
+          path: ["nome"],
+        });
+      }
+    } else {
+      for (const campo of CAMPOS_SO_NA_CRIACAO_DO_AM) {
+        if (data[campo] !== undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `${campo} só é aceito na criação de Administrador Master`,
+            path: [campo],
+          });
+        }
       }
     }
 

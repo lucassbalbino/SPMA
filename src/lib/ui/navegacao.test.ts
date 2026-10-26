@@ -124,9 +124,9 @@ describe("navegacaoDoPerfil", () => {
     expect(rotuloDe(TipoUsuario.AL, "/avaliacoes")).toBe("Minha avaliação");
   });
 
-  it("o item de /avaliacoes se chama 'Avaliações' para os outros 5 perfis", () => {
+  it("o item de /avaliacoes se chama 'Avaliações Aluno' para os outros 5 perfis", () => {
     for (const tipo of TODOS_OS_TIPOS.filter((t) => t !== TipoUsuario.AL)) {
-      expect(rotuloDe(tipo, "/avaliacoes")).toBe("Avaliações");
+      expect(rotuloDe(tipo, "/avaliacoes")).toBe("Avaliações Aluno");
     }
   });
 
@@ -170,7 +170,7 @@ describe("hrefAtivo", () => {
     { rotulo: "Novo usuário", href: "/usuarios/novo" },
     { rotulo: "Pré-cursos", href: "/pre-cursos" },
     { rotulo: "Novo curso", href: "/cursos/novo" },
-    { rotulo: "Avaliações", href: "/avaliacoes" },
+    { rotulo: "Avaliações Aluno", href: "/avaliacoes" },
   ];
 
   it("casa a rota exata", () => {
@@ -230,7 +230,7 @@ describe("ROTAS_COM_SESSAO", () => {
 
   // Nao sao itens de menu - sao destino de guard -, entao nao viriam da
   // tabela sozinhas, mas exigem sessao igual.
-  it.each(["/primeiro-acesso", "/cadastro-ofertante", "/dados-pessoais"])(
+  it.each(["/primeiro-acesso", "/cadastro-ofertante", "/dados-cadastrais", "/dados-pessoais"])(
     "inclui a rota de onboarding %s",
     (rota) => {
       expect(ROTAS_COM_SESSAO).toContain(rota);

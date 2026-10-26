@@ -20,18 +20,19 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { loginSchema } from "@/lib/validation/schemas/login.schema";
-import { normalizarDocumento, type TipoDocumento } from "@/lib/validation/documento";
-import { aplicarMascaraDocumento, TAMANHO_MASCARA } from "@/lib/validation/mascara-documento";
+import {
+  aplicarMascaraDocumento,
+  TAMANHO_MASCARA,
+  tipoDocumentoDigitado,
+} from "@/lib/validation/mascara-documento";
 
 export function LoginForm() {
   const router = useRouter();
   // GO entra com CNPJ, os demais com CPF. O login não sabe o tipo antes de
-  // entrar, então quem digita escolhe a máscara; `loginSchema` tira a
-  // pontuação e decide CPF/CNPJ pelo comprimento, como sempre.
-  const [tipoDocumento, setTipoDocumento] = useState<TipoDocumento>("CPF");
+  // entrar, então a máscara segue o que foi digitado (até 11 caracteres é
+  // CPF, depois disso CNPJ); `loginSchema` tira a pontuação e decide
+  // CPF/CNPJ pelo comprimento, como sempre.
   const [documento, setDocumento] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
@@ -67,50 +68,32 @@ export function LoginForm() {
     }
   }
 
-  // Um CNPJ que chega inteiro com a máscara de CPF (o autopreenchimento do
-  // navegador guarda os 14 caracteres crus de antes da máscara) troca
-  // sozinho para CNPJ, em vez de ser cortado em 11.
+  // A máscara é escolhida pelos caracteres sem pontuação, não pelo texto já
+  // mascarado: o 12º dígito digitado depois de um CPF completo troca para
+  // CNPJ, e apagar até 11 volta para CPF.
   function handleDocumentoChange(valor: string) {
-    const tipo =
-      tipoDocumento === "CPF" && normalizarDocumento(valor).length > 11 ? "CNPJ" : tipoDocumento;
-    setTipoDocumento(tipo);
-    setDocumento(aplicarMascaraDocumento(tipo, valor));
-  }
-
-  function alternarTipoDocumento(usarCnpj: boolean) {
-    const novoTipo = usarCnpj ? "CNPJ" : "CPF";
-    setTipoDocumento(novoTipo);
-    setDocumento((atual) => aplicarMascaraDocumento(novoTipo, atual));
+    setDocumento(aplicarMascaraDocumento(tipoDocumentoDigitado(valor), valor));
   }
 
   return (
     <form onSubmit={handleSubmit} noValidate>
       <FieldGroup>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="cpf">{tipoDocumento}</FieldLabel>
+          <FieldLabel htmlFor="cpf">CPF ou CNPJ</FieldLabel>
           <Input
             id="cpf"
             name="cpf"
             autoComplete="username"
-            // CNPJ alfanumérico tem letras: teclado numérico só no CPF.
-            inputMode={tipoDocumento === "CPF" ? "numeric" : "text"}
+            // Sem teclado numérico: o mesmo campo recebe o CNPJ alfanumérico.
+            inputMode="text"
             autoCapitalize="characters"
-            maxLength={TAMANHO_MASCARA[tipoDocumento]}
+            // O maior dos dois, senão o 12º caractere nem chegaria a ser
+            // digitado para trocar a máscara.
+            maxLength={TAMANHO_MASCARA.CNPJ}
             value={documento}
             onChange={(event) => handleDocumentoChange(event.target.value)}
             disabled={enviando}
           />
-          {/* `Label`, não `FieldLabel`: este pinta um fundo quando o controle
-              dentro dele está ligado, e o switch viraria uma caixa. */}
-          <Label htmlFor="usar-cnpj" className="w-fit font-normal">
-            <Switch
-              id="usar-cnpj"
-              checked={tipoDocumento === "CNPJ"}
-              onCheckedChange={alternarTipoDocumento}
-              disabled={enviando}
-            />
-            Entrar com CNPJ
-          </Label>
         </Field>
         <Field data-invalid={!!erro}>
           <FieldLabel htmlFor="senha">Senha</FieldLabel>

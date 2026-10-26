@@ -23,6 +23,8 @@ test.beforeAll(() => {
   deleteUsuarios(CPFS);
   upsertUsuario({
     cpf: CPF_AL_NOVO,
+    // AD-050: o Aluno nasce sem nome e o declara junto dos dados pessoais.
+    nome: null,
     tipo: "AL",
     senha: SENHA,
     primeiraVez: false,
@@ -72,6 +74,8 @@ async function marcarOpcao(page: Page, chave: string, indice: number) {
 }
 
 async function preencherOs7(page: Page) {
+  await page.getByTestId("campo-nome").fill("Aluna Nova");
+  await page.getByTestId("campo-email").fill("aluna.nova@exemplo.dev");
   await selecionar(page, "campo-avalPessoalEstado-select", "AM");
   await page.getByTestId("campo-avalPessoalMunicipio").fill("Manaus, AM");
   await marcarOpcao(page, "avalPessoalGenero", 0); // Feminino
@@ -99,6 +103,8 @@ test("PESSOAL-05: envio com 1 dos 7 campos faltando é rejeitado, nada é persis
   await page.goto("/dados-pessoais");
 
   // Preenche 6 dos 7 - falta avalPessoalCondicaoPcd.
+  await page.getByTestId("campo-nome").fill("Aluna Nova");
+  await page.getByTestId("campo-email").fill("aluna.nova@exemplo.dev");
   await selecionar(page, "campo-avalPessoalEstado-select", "AM");
   await page.getByTestId("campo-avalPessoalMunicipio").fill("Manaus, AM");
   await marcarOpcao(page, "avalPessoalGenero", 0);
@@ -124,7 +130,11 @@ test("PESSOAL-01/03/06: Aluno novo preenche as 7 perguntas, é levado a /painel 
   await page.getByTestId("botao-salvar-dados-pessoais").click();
 
   await expect(page).toHaveURL(/\/painel$/);
-  expect(getUsuario(CPF_AL_NOVO)?.dadosPessoaisCompletos).toBe(true);
+  expect(getUsuario(CPF_AL_NOVO)).toMatchObject({
+    dadosPessoaisCompletos: true,
+    nome: "Aluna Nova",
+    email: "aluna.nova@exemplo.dev",
+  });
   expect(getDadosPessoais(CPF_AL_NOVO)).toEqual({
     avalPessoalEstado: "AM",
     avalPessoalMunicipio: "Manaus, AM",

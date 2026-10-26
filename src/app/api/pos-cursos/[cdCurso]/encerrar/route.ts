@@ -10,6 +10,10 @@ import { exigirMutacao } from "@/lib/api/guardas";
 import { idPositivo } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
 import { encerrarFormulario } from "@/lib/respostas/encerramento";
+import {
+  MENSAGEM_PRE_CURSO_EM_ANDAMENTO,
+  posCursoLiberado,
+} from "@/lib/pos-curso/liberacao";
 
 type Contexto = { params: Promise<{ cdCurso: string }> };
 
@@ -19,7 +23,7 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
 
   const posCurso = await prisma.posCurso.findUnique({
     where: { cdCurso },
-    include: { preCurso: { select: { cdOfertante: true } } },
+    include: { preCurso: { select: { cdOfertante: true, status: true } } },
   });
 
   if (!posCurso) {
@@ -28,6 +32,11 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
 
   if (!podeGerenciarPosCurso(sessao.usuario, posCurso.preCurso.cdOfertante)) {
     throw erroHttp(403, "Acesso negado");
+  }
+
+  // AD-050: o pós-curso só encerra depois do pré-curso.
+  if (!posCursoLiberado(posCurso.preCurso)) {
+    throw erroHttp(409, MENSAGEM_PRE_CURSO_EM_ANDAMENTO);
   }
 
   // AD-018: transição irreversível - encerrar de novo é rejeitado.

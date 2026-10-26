@@ -2,7 +2,7 @@
 //
 // Autoridade real de autorização de borda: chama, nesta ordem exata,
 // requireSession() -> requirePrimeiroAcessoConcluido() -> requireDadosOrganizacionaisCompletos()
-// -> requireDadosPessoaisCompletos().
+// -> requireDadosCadastraisCompletos() -> requireDadosPessoaisCompletos().
 // `proxy.ts` (T30) só redireciona por presença de cookie (UX); é aqui que a
 // sessão é reavaliada contra o banco a cada request (ver design.md).
 //
@@ -22,6 +22,7 @@
 // (grupos de rota são transparentes), sem o guard que criaria o loop.
 import { CascaProtegida } from "@/components/layout/CascaProtegida";
 import {
+  requireDadosCadastraisCompletos,
   requireDadosOrganizacionaisCompletos,
   requireDadosPessoaisCompletos,
   requirePrimeiroAcessoConcluido,
@@ -36,6 +37,7 @@ export default async function ProtegidoLayout({
   const { usuario } = await requireSession();
   requirePrimeiroAcessoConcluido(usuario);
   requireDadosOrganizacionaisCompletos(usuario);
+  requireDadosCadastraisCompletos(usuario);
   requireDadosPessoaisCompletos(usuario);
 
   return <CascaProtegida usuario={usuario}>{children}</CascaProtegida>;

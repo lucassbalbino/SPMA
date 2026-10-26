@@ -8,15 +8,23 @@
 // /cadastro-ofertante - Server Components não expõem o pathname da
 // requisição ao layout).
 //
-// Sempre parte de estado vazio: o PATCH tudo-ou-nada
+// As respostas sempre partem de estado vazio: o PATCH tudo-ou-nada
 // (`/api/usuarios/me/dados-pessoais`) nunca deixa gravação parcial no banco,
-// então não há nada para pré-carregar aqui.
+// então não há nada para pré-carregar. Nome e e-mail vêm da sessão - um Aluno
+// criado antes da AD-050 já nasceu com nome.
+import { requireSession } from "@/lib/auth/guards";
 import { DadosPessoaisForm } from "@/components/dados-pessoais/DadosPessoaisForm";
 
-export default function DadosPessoaisPage() {
+export default async function DadosPessoaisPage() {
+  const { usuario } = await requireSession();
+
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
-      <DadosPessoaisForm respostasIniciais={{}} modo="onboarding" />
+      <DadosPessoaisForm
+        cadastroInicial={{ nome: usuario.nome ?? "", email: usuario.email ?? "" }}
+        respostasIniciais={{}}
+        modo="onboarding"
+      />
     </main>
   );
 }

@@ -11,9 +11,9 @@
 /**
  * `email` e `data` existem porque mudam o `type` do input nativo - não é
  * decoração: `email` liga a validação do navegador e `data` abre o date
- * picker. `escala` é um select de 0-5/1-5 com rótulo por nota, cuja lista de
- * opções cada formulário fornece (as escalas do pré-curso e da avaliação têm
- * textos diferentes).
+ * picker. `escala` é uma nota gravada como número e mostrada em planilha
+ * (`MatrizEscala`), com rótulo por nota; a lista de notas cada formulário
+ * fornece (as escalas do pré-curso e da avaliação têm textos diferentes).
  */
 export type TipoCampo =
   | "texto"
@@ -48,6 +48,11 @@ export interface CampoDef<C extends string, R> {
    * o que `multiplaComExclusiva` recusa no servidor (HTTP 400).
    */
   exclusiva?: string;
+  /**
+   * Notas de um campo `escala` que não usa a escala do formulário (a nota de
+   * 0 a 10 da avaliação, ao lado das de Ótimo a Péssimo).
+   */
+  escala?: readonly OpcaoEscala[];
   /** Condição de visibilidade, lida da regra condicional compartilhada. */
   visivelSe?: (respostas: R) => boolean;
 }

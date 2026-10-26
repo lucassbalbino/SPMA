@@ -43,6 +43,8 @@ test.beforeAll(() => {
   upsertUsuario({
     cpf: CPF_AL_A,
     tipo: "AL",
+    // AD-050: o e-mail entra na completude dos dados pessoais.
+    email: "aluno-a@exemplo.dev",
     senha: SENHA,
     primeiraVez: false,
     dadosPessoaisCompletos: true,
@@ -52,6 +54,8 @@ test.beforeAll(() => {
   upsertUsuario({
     cpf: CPF_AL_B,
     tipo: "AL",
+    // AD-050: o e-mail entra na completude dos dados pessoais.
+    email: "aluno-b@exemplo.dev",
     senha: SENHA,
     primeiraVez: false,
     dadosPessoaisCompletos: true,

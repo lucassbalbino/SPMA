@@ -13,6 +13,7 @@ import {
   deleteUsuarios,
   deleteVerbasPorOfertante,
   encerrarPosCursoFixture,
+  encerrarPreCursoFixture,
   getPosCurso,
   upsertUsuario,
 } from "./helpers/db";
@@ -74,6 +75,7 @@ test.beforeAll(() => {
 
   cdVerba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 10000 }).cdVerba;
 
+  // AD-050: os dois pré-cursos encerrados, senão o pós-curso nem grava.
   cdCursoEmAndamento = criarPreCurso({
     cdOfertante: CNPJ_GO,
     cdVerba,
@@ -81,6 +83,7 @@ test.beforeAll(() => {
     criadoPor: CNPJ_GO,
   }).cdCurso;
   criarPosCurso({ cdCurso: cdCursoEmAndamento, criadoPor: CNPJ_GO });
+  encerrarPreCursoFixture(cdCursoEmAndamento);
 
   cdCursoEncerrado = criarPreCurso({
     cdOfertante: CNPJ_GO,
@@ -89,6 +92,7 @@ test.beforeAll(() => {
     criadoPor: CNPJ_GO,
   }).cdCurso;
   criarPosCurso({ cdCurso: cdCursoEncerrado, criadoPor: CNPJ_GO });
+  encerrarPreCursoFixture(cdCursoEncerrado);
   encerrarPosCursoFixture(cdCursoEncerrado);
 });
 
