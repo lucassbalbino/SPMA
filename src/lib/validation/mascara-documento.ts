@@ -32,6 +32,17 @@ function aceita(tipo: TipoDocumento, posicao: number, caractere: string): boolea
 }
 
 /**
+ * Tipo de documento do que está sendo digitado num campo que aceita os dois
+ * (o login). Até 11 caracteres é CPF; do 12º em diante, ou com qualquer
+ * letra (CNPJ alfanumérico), é CNPJ - quem digita não escolhe a máscara.
+ */
+export function tipoDocumentoDigitado(valor: string): TipoDocumento {
+  const caracteres = valor.toUpperCase().replace(/[^0-9A-Z]/g, "");
+
+  return caracteres.length > 11 || /[A-Z]/.test(caracteres) ? "CNPJ" : "CPF";
+}
+
+/**
  * Aplica a máscara ao que foi digitado ou colado, com ou sem pontuação.
  * Descarta o que não cabe na posição (letra em CPF, letra nos verificadores
  * do CNPJ) e o excedente. A pontuação só entra antes de um caractere que
