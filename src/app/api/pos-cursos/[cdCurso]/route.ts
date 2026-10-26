@@ -14,12 +14,19 @@ import { corpoValidado, idPositivo } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
 import { lerRespostasParaApi } from "@/lib/respostas/repositorio";
 import { aplicarPatchRespostas } from "@/lib/respostas/patch";
+import {
+  MENSAGEM_PRE_CURSO_EM_ANDAMENTO,
+  posCursoLiberado,
+} from "@/lib/pos-curso/liberacao";
 
 type Contexto = { params: Promise<{ cdCurso: string }> };
 
-/** PosCurso não tem CD_Ofertante próprio - o escopo vem do PreCurso pai. */
+/**
+ * PosCurso não tem CD_Ofertante próprio - o escopo vem do PreCurso pai. O
+ * status do pai decide se a gravação já está liberada (AD-050).
+ */
 const COM_OFERTANTE_DO_PAI = {
-  preCurso: { select: { cdOfertante: true } },
+  preCurso: { select: { cdOfertante: true, status: true } },
 } as const;
 
 async function consultarPosCurso(_request: Request, { params }: Contexto) {
@@ -62,6 +69,11 @@ async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
 
   if (!podeGerenciarPosCurso(sessao.usuario, posCursoExistente.preCurso.cdOfertante)) {
     throw erroHttp(403, "Acesso negado");
+  }
+
+  // AD-050: antes de o pré-curso ser encerrado, nada é gravado aqui.
+  if (!posCursoLiberado(posCursoExistente.preCurso)) {
+    throw erroHttp(409, MENSAGEM_PRE_CURSO_EM_ANDAMENTO);
   }
 
   // REQ-PO-08: somente leitura depois de encerrado, sem exceção.

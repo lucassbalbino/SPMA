@@ -13,6 +13,7 @@ import {
   deleteUsuarios,
   deleteVerbasPorOfertante,
   encerrarPosCursoFixture,
+  encerrarPreCursoFixture,
   upsertUsuario,
 } from "./helpers/db";
 import { geradorDeCnpj } from "./helpers/cnpj";
@@ -65,7 +66,13 @@ test.afterAll(() => {
   deleteUsuarios([CNPJ_GO_A, CNPJ_GO_B, CPF_VO_A]);
 });
 
-function criarPosCursoFixture(cdOfertante: string, criadoPor: string): number {
+// AD-050: o pós-curso só abre com o pré-curso encerrado - `liberado: false`
+// é o curso cujo pré-curso ainda está em andamento.
+function criarPosCursoFixture(
+  cdOfertante: string,
+  criadoPor: string,
+  { liberado = true } = {},
+): number {
   const cdCurso = criarPreCurso({
     cdOfertante,
     cdVerba: cdVerbaA,
@@ -73,6 +80,9 @@ function criarPosCursoFixture(cdOfertante: string, criadoPor: string): number {
     criadoPor,
   }).cdCurso;
   criarPosCurso({ cdCurso, criadoPor });
+  if (liberado) {
+    encerrarPreCursoFixture(cdCurso);
+  }
   return cdCurso;
 }
 
@@ -199,6 +209,24 @@ async function preencherTodosOsCampos(page: Page, opcoes: { omitirDetalheAlterac
   await marcarOpcao(page, "posContEstrategias", 0);
   await fecharBloco(page, 5);
 }
+
+test("AD-050: com o pré-curso em andamento, a página mostra o aviso no lugar do formulário", async ({
+  page,
+}) => {
+  const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A, { liberado: false });
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pos-cursos/${cdCurso}`);
+
+  await expect(page.getByTestId("aviso-pre-curso-em-andamento")).toContainText(
+    "Encerre o pré-curso antes de preencher o pós-curso",
+  );
+  await expect(page.getByTestId("form-pos-curso")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: `Ir para o pré-curso #${cdCurso}` })).toHaveAttribute(
+    "href",
+    `/pre-cursos/${cdCurso}`,
+  );
+});
 
 test("GO salva um bloco parcial e o dado persiste após reload", async ({ page }) => {
   const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A);

@@ -9,6 +9,7 @@ import {
   criarPreCurso,
   criarVerba,
   deletePreCursosPorOfertante,
+  encerrarPreCursoFixture,
   deleteUsuarios,
   deleteVerbasPorOfertante,
   getPosCurso,
@@ -99,7 +100,9 @@ test.afterAll(() => {
   deleteUsuarios(CPFS);
 });
 
-function criarPosCursoFixture(): number {
+// AD-050: o pós-curso só abre com o pré-curso encerrado - `liberado: false`
+// é o curso cujo pré-curso ainda está em andamento.
+function criarPosCursoFixture({ liberado = true } = {}): number {
   const cdCurso = criarPreCurso({
     cdOfertante: CNPJ_GO,
     cdVerba,
@@ -107,8 +110,33 @@ function criarPosCursoFixture(): number {
     criadoPor: CNPJ_GO,
   }).cdCurso;
   criarPosCurso({ cdCurso, criadoPor: CNPJ_GO });
+  if (liberado) {
+    encerrarPreCursoFixture(cdCurso);
+  }
   return cdCurso;
 }
+
+test("AD-050: com o pré-curso em andamento, gravar e encerrar o pós-curso respondem 409", async () => {
+  const cdCurso = criarPosCursoFixture({ liberado: false });
+
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
+  const cliente = await novoCliente();
+  const resGravar = await cliente.patch(`/api/pos-cursos/${cdCurso}`, {
+    data: RESPOSTA_COMPLETA,
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  const resEncerrar = await cliente.post(`/api/pos-cursos/${cdCurso}/encerrar`, {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  for (const res of [resGravar, resEncerrar]) {
+    expect(res.status()).toBe(409);
+    expect((await res.json()).erro).toBe("Encerre o pré-curso antes de preencher o pós-curso");
+  }
+  expect(getPosCurso(cdCurso)?.status).toBe("EM_ANDAMENTO");
+
+  await cliente.dispose();
+});
 
 test("REQ-PO-09: encerramento com campo obrigatório faltando é rejeitado com 400 e a pendência listada", async () => {
   const cdCurso = criarPosCursoFixture();
