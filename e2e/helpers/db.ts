@@ -214,9 +214,8 @@ export function getAvaliacao(cpf: string, cdCurso: number): AvaliacaoAlunoPersis
  * que não precisam exercitar a rota de matrícula (T4) em si.
  *
  * `respostas` é semeado pelo repositório (`src/lib/respostas/repositorio.ts`),
- * então vira linha em `TB_Resposta_Avaliacao` (a coluna JSON não existe mais,
- * AD-041). O objeto recebido aqui é o mesmo de sempre - nenhum spec muda por
- * causa disso.
+ * então vira as colunas `P*` de `TB_Avaliacao_Aluno` (AD-051). O objeto
+ * recebido aqui é o mesmo de sempre - nenhum spec muda por causa disso.
  */
 export function criarAvaliacao(dados: {
   cpf: string;

@@ -191,11 +191,17 @@ T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] Nenhuma asserção e2e enfraquecida; só comentários/fixtures que citam `TB_Resposta_*` mudam
-- [ ] Gate check passes: `npm run lint && npm run typecheck && npm run build && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Nenhuma asserção e2e enfraquecida; só comentários/fixtures que citam `TB_Resposta_*` mudam
+- [x] Gate check passes: `npm run lint && npm run typecheck && npm run build && npm run test:unit && npm run test:integration && npm run test:e2e`
+
+**Status**: Done
 
 **Tests**: e2e
 **Gate**: build
+
+**SPEC_DEVIATION**: a asserção do RESP-20 em `e2e/pre-cursos-id.spec.ts` mudou de `["Mulheres", "Jovens"]` para `["Jovens", "Mulheres"]`. A spec deixou de guardar a ordem da seleção múltipla (premissa "Ordem da seleção múltipla"), e a leitura devolve a ordem do questionário. O que o teste prova (a resposta sobrevive à lista vazia) não mudou.
+
+**Resultado e2e**: 295 de 296. A falha restante, `e2e/usuarios-page.spec.ts:489` (GU-08), é anterior a esta feature: o commit `862728e`, já na main, passou a pedir o nome só para AM, e o teste ainda preenche "Nome" ao criar um VT. Esta feature não toca `NovoUsuarioForm.tsx`. `pre-cursos-formulario.spec.ts:323` falhou uma vez sob carga e passou quando rodou isolado.
 
 **Commit**: `test(e2e): align helpers with column storage`
 

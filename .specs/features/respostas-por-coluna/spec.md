@@ -177,7 +177,7 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 | COL-13 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
 | COL-14 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
 | COL-15 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
-| COL-16 | P1: Sem regressão | Design | Pending |
+| COL-16 | P1: Sem regressão | Execute | Implementing (T5) |
 | COL-17 | P1: Migração | Execute | Implementing (T3) |
 | COL-18 | P1: Migração | Execute | Implementing (T3) |
 | COL-19 | P1: Migração | Execute | Implementing (T3) |

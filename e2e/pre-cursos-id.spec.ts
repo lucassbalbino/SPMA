@@ -150,10 +150,10 @@ test("REQ-PC-06: valor de infraestrutura fora de 0-5 é rejeitado com 400, nada 
 });
 
 // RESP-20: seleção múltipla com lista vazia é barrada pelo `.min(1)` do Zod,
-// antes de chegar ao repositório. Importa especificamente sob a AD-041: o
-// merge por chave apaga as linhas da chave ANTES de inserir as novas, então
-// uma lista vazia que escapasse da validação apagaria a resposta já gravada
-// sem colocar nada no lugar. O teste prova que a chave sobrevive intacta.
+// antes de chegar ao repositório. Uma lista vazia que escapasse da validação
+// gravaria 0 em todas as colunas P20* e apagaria a resposta já gravada. O
+// teste prova que a chave sobrevive intacta. A ordem da seleção múltipla não
+// é guardada (AD-051): a leitura devolve as opções na ordem do questionário.
 test("RESP-20: seleção múltipla com lista vazia é rejeitada com 400, resposta anterior intacta", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
@@ -172,7 +172,7 @@ test("RESP-20: seleção múltipla com lista vazia é rejeitada com 400, respost
   expect(res.status()).toBe(400);
 
   const depois = getPreCurso(cdCursoEmAndamento);
-  expect(depois?.respostas?.publicoPerfil).toEqual(["Mulheres", "Jovens"]);
+  expect(depois?.respostas?.publicoPerfil).toEqual(["Jovens", "Mulheres"]);
 
   await cliente.dispose();
 });

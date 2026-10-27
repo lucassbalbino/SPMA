@@ -82,11 +82,11 @@ function paraUsuarioPersistido<T extends { documento: string }>(
 }
 
 /**
- * As respostas que os specs inspecionam saem das linhas de `TB_Resposta_*`,
- * não da coluna JSON (RESP-07).
+ * As respostas que os specs inspecionam saem das colunas `P*` de cada
+ * formulário, lidas pelo repositório (AD-051).
  *
- * Registro sem nenhuma linha devolve `null`, e não `{}`: é exatamente o que a
- * coluna devolvia, e é o que os specs de criação afirmam ("respostas nulas").
+ * Registro sem nenhuma resposta devolve `null`, e não `{}`: é exatamente o que
+ * a antiga coluna JSON devolvia, e é o que os specs de criação afirmam ("respostas nulas").
  *
  * A regra vem de `respostasOuNulo`, a MESMA função que as rotas usam - o
  * fixture observa a produção, nunca reimplementa. Uma cópia da regra aqui
@@ -94,7 +94,7 @@ function paraUsuarioPersistido<T extends { documento: string }>(
  * exatamente assim que um mutante trocando `null` por `{}` sobreviveu a 83
  * testes e2e no sensor do Verifier.
  */
-async function respostasPorLinha(
+async function respostasDoBanco(
   prisma: PrismaClient,
   alvo: AlvoRespostas,
 ): Promise<Record<string, unknown> | null> {
@@ -177,10 +177,10 @@ async function executar(
       return prisma.sessao.findUnique({ where: { id: argumento as string } });
 
     // Lê o dado pessoal do Aluno pelo repositório (mesma regra de
-    // `respostasPorLinha`) - `TB_Dado_Pessoal_Aluno`, chaveada só por CPF.
+    // `respostasDoBanco`) - `TB_Dado_Pessoal_Aluno`, chaveada só por CPF.
     case "getDadosPessoais": {
       const cpf = argumento as string;
-      return respostasPorLinha(prisma, { formulario: "dadosPessoais", cpf });
+      return respostasDoBanco(prisma, { formulario: "dadosPessoais", cpf });
     }
 
     // Semeia o dado pessoal de um Aluno de fixture direto pelo repositório -
@@ -194,7 +194,7 @@ async function executar(
         respostas: Record<string, unknown>;
       };
       await gravarRespostas(prisma, { formulario: "dadosPessoais", cpf }, respostas);
-      return respostasPorLinha(prisma, { formulario: "dadosPessoais", cpf });
+      return respostasDoBanco(prisma, { formulario: "dadosPessoais", cpf });
     }
 
     case "criarVerba": {
@@ -231,7 +231,7 @@ async function executar(
 
       return {
         ...preCurso,
-        respostas: await respostasPorLinha(prisma, { formulario: "preCurso", cdCurso }),
+        respostas: await respostasDoBanco(prisma, { formulario: "preCurso", cdCurso }),
       };
     }
 
@@ -292,7 +292,7 @@ async function executar(
 
       return {
         ...posCurso,
-        respostas: await respostasPorLinha(prisma, { formulario: "posCurso", cdCurso }),
+        respostas: await respostasDoBanco(prisma, { formulario: "posCurso", cdCurso }),
       };
     }
 
@@ -317,10 +317,9 @@ async function executar(
     // si, ou que precisam de um estado inicial (respostas parciais,
     // parte1Completa) que a rota de matrícula nunca produz sozinha.
     //
-    // As respostas entram pelo repositório (RESP-07), na mesma transação da
-    // matrícula: o spec continua passando o mesmo objeto de sempre, e o que
-    // fica no banco são as linhas de `TB_Resposta_Avaliacao` mais a coluna
-    // JSON que o repositório espelha enquanto ela existir.
+    // As respostas entram pelo repositório, na mesma transação da matrícula:
+    // o spec continua passando o mesmo objeto de sempre, e o que fica no
+    // banco são as colunas `P*` de `TB_Avaliacao_Aluno` (AD-051).
     case "criarAvaliacao": {
       const dados = argumento as {
         cpf: string;
@@ -377,7 +376,7 @@ async function executar(
 
       return {
         ...avaliacao,
-        respostas: await respostasPorLinha(prisma, {
+        respostas: await respostasDoBanco(prisma, {
           formulario: "avaliacao",
           cpf,
           cdCurso,
