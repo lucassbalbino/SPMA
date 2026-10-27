@@ -89,12 +89,12 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 
 **Acceptance Criteria**:
 
-1. WHEN um formulário é lido pela API depois de gravado THEN o sistema SHALL devolver o mesmo objeto `{ chave: valor }`, com o texto das opções, que devolvia antes desta feature para as mesmas respostas. (COL-11)
+1. WHEN um formulário é lido pela API depois de gravado THEN o sistema SHALL devolver o mesmo objeto `{ chave: valor }`, com o texto das opções, que devolvia antes desta feature para as mesmas respostas, com duas exceções decididas nas premissas: a múltipla escolha volta na ordem do questionário, e um decimal volta arredondado para 2 casas, a precisão da coluna. (COL-11)
 2. WHEN um `PATCH` regrava uma chave THEN o sistema SHALL substituir só as colunas daquela chave e SHALL deixar as colunas das demais chaves inalteradas. (COL-12)
 3. WHEN uma chave de múltipla escolha é regravada com menos opções THEN o sistema SHALL gravar `0` nas colunas das opções que saíram da seleção. (COL-13)
 4. WHEN um `PATCH` envia `null` para uma chave THEN o sistema SHALL gravar `NULL` em todas as colunas daquela chave. (COL-14)
 5. WHEN um formulário é encerrado THEN o sistema SHALL gravar `NULL` nas colunas das respostas condicionais que não se aplicam (AD-038), na mesma transação que grava `status=ENCERRADO`. (COL-15)
-6. The system SHALL manter, sem alteração de asserção, o comportamento já especificado de completude, condicionais, recusa HTTP 409 em formulário encerrado, recusa HTTP 400 por validação ou pelo gate da Parte 1, e autorização dos quatro formulários. (COL-16)
+6. The system SHALL manter, sem alteração de asserção, o comportamento já especificado de completude, condicionais, recusa HTTP 409 em formulário encerrado, recusa HTTP 400 por validação ou pelo gate da Parte 1, e autorização dos quatro formulários. A única asserção que muda é a ordem esperada da múltipla escolha, pela mesma premissa do COL-11. (COL-16)
 
 **Independent Test**: as suítes existentes das quatro features passam; só mudam fixtures e asserções que leem as tabelas antigas direto no banco.
 
@@ -178,10 +178,10 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 | COL-14 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
 | COL-15 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
 | COL-16 | P1: Sem regressão | Execute | Implementing (T5) |
-| COL-17 | P1: Migração | Execute | Implementing (T3) |
+| COL-17 | P1: Migração | Execute | Implementing (T7) |
 | COL-18 | P1: Migração | Execute | Implementing (T3) |
 | COL-19 | P1: Migração | Execute | Implementing (T3) |
-| COL-20 | P1: Migração | Execute | Implementing (T3) |
+| COL-20 | P1: Migração | Execute | Implementing (T7) |
 | COL-21 | P1: Migração | Execute | Implementing (T3) |
 | COL-22 | P1: Migração | Execute | Implementing (T3) |
 | COL-23 | P1: Migração | Execute | Implementing (T3) |

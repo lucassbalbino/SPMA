@@ -67,3 +67,19 @@ describe("schema.prisma ↔ mapa de colunas (COL-10)", () => {
     expect(schema).not.toMatch(/@map\("(Chave|Ordem|Valor)"\)/);
   });
 });
+
+// COL-20: o backfill converte texto em letra com `CASE ... END` sem `ELSE`.
+// Texto que não casa com nenhuma opção vira NULL e a contagem da conferência
+// aborta; um `ELSE` o converteria numa letra válida e a migration gravaria a
+// resposta errada sem abortar. Nenhuma semeadura por amostra pega isso.
+describe("backfill da migration respostas_por_coluna", () => {
+  const migration = readFileSync(
+    path.resolve(process.cwd(), "prisma/migrations/20261027120000_respostas_por_coluna/migration.sql"),
+    "utf8",
+  );
+
+  it("não tem ELSE em nenhum CASE", () => {
+    expect(migration).toMatch(/\bCASE\b/);
+    expect(migration).not.toMatch(/\bELSE\b/i);
+  });
+});

@@ -14,6 +14,7 @@ import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PrismaClient } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { MAPA, type Entrada, type Formulario } from "./colunas";
 import { lerRespostas } from "./repositorio";
 
 const BANCO = "spma_migracao_colunas";
@@ -94,16 +95,14 @@ function linhas(respostas: Respostas) {
 
 async function semearLinhas(tabela: string, pai: Record<string, unknown>, respostas: Respostas) {
   const colunasPai = Object.keys(pai);
-  for (const linha of linhas(respostas)) {
-    await banco!.$executeRawUnsafe(
-      `INSERT INTO \`${tabela}\` (${colunasPai.map((c) => `\`${c}\``).join(", ")}, \`Chave\`, \`Ordem\`, \`Valor\`)
-       VALUES (${colunasPai.map(() => "?").join(", ")}, ?, ?, ?)`,
-      ...Object.values(pai),
-      linha.chave,
-      linha.ordem,
-      linha.valor,
-    );
-  }
+  const todas = linhas(respostas);
+  if (todas.length === 0) return;
+  const valores = `(${[...colunasPai.map(() => "?"), "?", "?", "?"].join(", ")})`;
+  await banco!.$executeRawUnsafe(
+    `INSERT INTO \`${tabela}\` (${colunasPai.map((c) => `\`${c}\``).join(", ")}, \`Chave\`, \`Ordem\`, \`Valor\`)
+     VALUES ${todas.map(() => valores).join(", ")}`,
+    ...todas.flatMap((linha) => [...Object.values(pai), linha.chave, linha.ordem, linha.valor]),
+  );
 }
 
 /** Banco no estado imediatamente anterior à migration, com um GO, um Aluno e dois cursos. */
@@ -196,6 +195,80 @@ async function semearTodos(cursoComRespostas: number, extras: { pre?: Respostas;
   await semearLinhas("TB_Dado_Pessoal_Aluno", { CPF: CPF_ALUNO }, { ...DADOS_PESSOAIS, ...extras.pessoal });
 }
 
+// Semeadura que passa por todas as opções do mapa (COL-17): na rodada k,
+// cada escolha única e cada múltipla recebem a opção k da lista (módulo o
+// tamanho dela) e cada escalar um valor próprio da rodada. Uma letra trocada
+// no backfill não muda contagem nenhuma, então só a leitura de cada opção a
+// denuncia.
+const RODADAS = Math.max(
+  ...Object.values(MAPA)
+    .flat()
+    .map((entrada) => ("opcoes" in entrada ? entrada.opcoes.length : 1)),
+);
+
+function valorDaRodada(entrada: Entrada, k: number): unknown {
+  switch (entrada.tipo) {
+    case "unica":
+      return entrada.opcoes[k % entrada.opcoes.length];
+    case "multipla":
+      return [entrada.opcoes[k % entrada.opcoes.length]];
+    case "sigla":
+      return ["BA", "SP", "AM"][k % 3];
+    case "texto":
+      return `${entrada.chave} ${k}`;
+    case "inteiro":
+      return k + 1;
+    case "nota":
+      return k % 6;
+    case "decimal":
+      return k + 0.25;
+    case "data":
+      return new Date(Date.UTC(2026, 0, 1 + k)).toISOString().slice(0, 10);
+  }
+}
+
+const rodada = (formulario: Formulario, k: number): Respostas =>
+  Object.fromEntries(MAPA[formulario].map((entrada) => [entrada.chave, valorDaRodada(entrada, k)]));
+
+const cpfDaRodada = (k: number) => String(50000000000 + k);
+
+/** Um curso, um pós-curso, uma avaliação e um Aluno por rodada. Devolve os cursos. */
+async function semearTodasAsOpcoes(): Promise<number[]> {
+  const [{ cdVerba }] = await consultar<{ cdVerba: number }>("SELECT MAX(CD_Verba) AS cdVerba FROM TB_Verba");
+  const cursosDaRodada: number[] = [];
+
+  for (let k = 0; k < RODADAS; k++) {
+    const cpf = cpfDaRodada(k);
+    await banco!.$executeRawUnsafe(
+      "INSERT INTO TB_Usuario (Documento_Usuario, NM_Usuario, TP_Usuario) VALUES (?, 'Aluno rodada', 'AL')",
+      cpf,
+    );
+    await banco!.$executeRawUnsafe(
+      `INSERT INTO TB_Pre_Curso (CD_Ofertante, CD_Verba, VL_Curso_Alocado, Status, Criado_Por)
+       VALUES (?, ?, 1, 'EM_ANDAMENTO', ?)`,
+      CPF_GO,
+      cdVerba,
+      CPF_GO,
+    );
+    const [{ cd }] = await consultar<{ cd: number }>("SELECT MAX(CD_Curso) AS cd FROM TB_Pre_Curso");
+    const cdCurso = Number(cd);
+    cursosDaRodada.push(cdCurso);
+    await banco!.$executeRawUnsafe(
+      "INSERT INTO TB_Pos_Curso (CD_Curso, Criado_Por, Data_Ultima_Atualizacao) VALUES (?, ?, NOW(3))",
+      cdCurso,
+      CPF_GO,
+    );
+    await banco!.$executeRawUnsafe("INSERT INTO TB_Avaliacao_Aluno (CPF, CD_Curso) VALUES (?, ?)", cpf, cdCurso);
+
+    await semearLinhas("TB_Resposta_Pre_Curso", { CD_Curso: cdCurso }, rodada("preCurso", k));
+    await semearLinhas("TB_Resposta_Pos_Curso", { CD_Curso: cdCurso }, rodada("posCurso", k));
+    await semearLinhas("TB_Resposta_Avaliacao", { CPF: cpf, CD_Curso: cdCurso }, rodada("avaliacao", k));
+    await semearLinhas("TB_Dado_Pessoal_Aluno", { CPF: cpf }, rodada("dadosPessoais", k));
+  }
+
+  return cursosDaRodada;
+}
+
 const tabelas = async () =>
   (
     await consultar<{ nome: string }>(
@@ -224,14 +297,30 @@ describe("migration respostas_por_coluna (integration)", { timeout: PREPARO_MS }
   });
 
   describe("com respostas válidas", () => {
+    let cursosDaRodada: number[];
+
     beforeAll(async () => {
       cursos = await prepararBancoAntigo();
       await semearTodos(cursos.cursoComRespostas, {
         pre: { chaveDeQuestionarioAntigo: ["resquício", "de troca"] },
         pessoal: { avalPessoalChaveAntiga: "x" },
       });
+      cursosDaRodada = await semearTodasAsOpcoes();
       await rodarMigration();
     }, PREPARO_MS);
+
+    // COL-17: cada opção de cada pergunta, nos quatro formulários, migra para
+    // a letra ou a coluna que a API gravaria - lida de volta, cada rodada é
+    // exatamente o texto semeado.
+    it("migra cada opção de cada pergunta para a coluna e a letra certas", async () => {
+      for (const [k, cdCurso] of cursosDaRodada.entries()) {
+        const cpf = cpfDaRodada(k);
+        expect(await lerRespostas(banco!, { formulario: "preCurso", cdCurso })).toEqual(rodada("preCurso", k));
+        expect(await lerRespostas(banco!, { formulario: "posCurso", cdCurso })).toEqual(rodada("posCurso", k));
+        expect(await lerRespostas(banco!, { formulario: "avaliacao", cpf, cdCurso })).toEqual(rodada("avaliacao", k));
+        expect(await lerRespostas(banco!, { formulario: "dadosPessoais", cpf })).toEqual(rodada("dadosPessoais", k));
+      }
+    });
 
     // COL-17: texto vira letra, cada valor na sua coluna e no seu tipo.
     it("grava cada resposta do Pré-Curso na sua coluna", async () => {
@@ -290,7 +379,7 @@ describe("migration respostas_por_coluna (integration)", { timeout: PREPARO_MS }
 
     it("grava os dados pessoais numa única linha por CPF", async () => {
       expect(
-        await consultar("SELECT `CPF`, `P3`, `P4`, `P5`, `P6`, `P7` FROM TB_Dado_Pessoal_Aluno"),
+        await consultar("SELECT `CPF`, `P3`, `P4`, `P5`, `P6`, `P7` FROM TB_Dado_Pessoal_Aluno WHERE CPF = ?", CPF_ALUNO),
       ).toEqual([{ CPF: CPF_ALUNO, P3: "BA", P4: "Salvador", P5: "a", P6: null, P7: "j" }]);
     });
 

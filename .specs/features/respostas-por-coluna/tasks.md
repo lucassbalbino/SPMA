@@ -56,6 +56,12 @@ T1 → T2 → T3
 T3 → T4 → T5 → T6
 ```
 
+### Phase 4: Correções da validação (iteração 1)
+
+```
+T6 → T7 → T8 → T9 → T10
+```
+
 ---
 
 ## Task Breakdown
@@ -235,6 +241,108 @@ T3 → T4 → T5 → T6
 
 ---
 
+### T7: Migração conferida opção a opção (Fix 1)
+
+**What**: Semear no teste da migration todas as opções de todas as chaves dos quatro formulários, a partir do `MAPA`, e comparar cada formulário migrado com o semeado. Proibir `ELSE` nos `CASE` do backfill com um teste unitário.
+**Where**: `src/lib/respostas/respostas-por-coluna-migracao.integration.test.ts`, `src/lib/respostas/schema-colunas.test.ts`
+**Depends on**: T6
+**Reuses**: relatório do Verifier, `validation.md` (iteração 1)
+**Requirement**: COL-17, COL-20
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] Os mutantes M6 (letra trocada numa opção), M7 (letras trocadas numa chave) e M9 (`ELSE` no `CASE`) são mortos
+- [x] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+
+**Status**: Done
+
+**Tests**: integration
+**Gate**: full
+
+**Commit**: `test(respostas): check every option through the migration`
+
+---
+
+### T8: Contrato das listagens sem colunas P* (Fix 2)
+
+**What**: Afirmar que o client padrão não devolve colunas `P*` nos três formulários e que a leitura da listagem (`omit: incluirRespostas` + `separarRespostas`) devolve o registro sem `P*` e as respostas como `{ chave: valor }`.
+**Where**: `src/lib/respostas/repositorio.integration.test.ts`
+**Depends on**: T7
+**Reuses**: relatório do Verifier, `validation.md` (iteração 1)
+**Requirement**: COL-11
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] Os mutantes M11 (`separarRespostas` deixa as `P*`) e M12 (client sem o omit global) são mortos
+- [ ] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+
+**Tests**: integration
+**Gate**: full
+
+**Commit**: `test(respostas): assert listings carry no answer columns`
+
+---
+
+### T9: Testes unitários num fuso fora do UTC (Fix 3)
+
+**What**: Fixar `TZ=America/Sao_Paulo` no runner unitário, para que uma data gravada em hora local mude o dia e o teste falhe.
+**Where**: `vitest.config.ts`
+**Depends on**: T8
+**Reuses**: relatório do Verifier, `validation.md` (iteração 1)
+**Requirement**: COL-07
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] O mutante M3 (data em hora local) é morto
+- [ ] Gate check passes: `npm run typecheck && npm run test:unit`
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `test: run unit tests in a non-utc timezone`
+
+---
+
+### T10: Reversão, janela de deploy e precisão da spec
+
+**What**: Travar o `reversao.sql` nas quatro formas antigas, na ordem do contract; recomendar o deploy num horário sem uso e o caminho de um contract interrompido em `docs/DEPLOY_PRODUCAO.md`; ressalvar a ordem da múltipla e o arredondamento dos decimais no COL-11 e no COL-16; anotar a AD-042 como rescindida na forma física; registrar as lições do Verifier.
+**Where**: `prisma/migrations/20261027120000_respostas_por_coluna/reversao.sql`, `docs/DEPLOY_PRODUCAO.md`, `.specs/`
+**Depends on**: T9
+**Reuses**: relatório do Verifier, `validation.md` (iteração 1)
+**Requirement**: COL-11, COL-16, COL-28
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] Rodada contra um banco já migrado, a reversão para na trava sem apagar coluna nenhuma
+- [ ] Gate check passes: `npm run lint && npm run typecheck && npm run build`
+
+**Tests**: none
+**Gate**: build
+
+**Commit**: `docs(respostas): guard rollback against a partial contract`
+
+---
+
 ## Diagram-Definition Cross-Check
 
 | Task | Depends On (task body) | Diagram Shows | Status |
@@ -245,6 +353,10 @@ T3 → T4 → T5 → T6
 | T4 | T3 | T3 → T4 | ✅ Match |
 | T5 | T4 | T4 → T5 | ✅ Match |
 | T6 | T5 | T5 → T6 | ✅ Match |
+| T7 | T6 | T6 → T7 | ✅ Match |
+| T8 | T7 | T7 → T8 | ✅ Match |
+| T9 | T8 | T8 → T9 | ✅ Match |
+| T10 | T9 | T9 → T10 | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -256,5 +368,9 @@ T3 → T4 → T5 → T6
 | T4 | Consulta por coluna | integration | integration | ✅ OK |
 | T5 | Rotas/telas (sem regressão) | e2e | e2e | ✅ OK |
 | T6 | Documentação | none | none | ✅ OK |
+| T7 | Migration SQL + schema ↔ migration | integration / unit | integration | ✅ OK |
+| T8 | Repositório | integration | integration | ✅ OK |
+| T9 | Mapa de colunas (runner) | unit | unit | ✅ OK |
+| T10 | Documentação e SQL de reversão | none | none | ✅ OK: a trava foi rodada à mão contra o `spma_test` migrado |
 
 **Replanejado em 2026-10-27, durante o T2:** remover os modelos antigos quebra o typecheck de todo teste que os usa, então o T2 absorveu a reescrita e a aposentadoria desses testes (antes T4 e parte do T5), e a execução deles contra o MySQL passou ao gate do T3.
