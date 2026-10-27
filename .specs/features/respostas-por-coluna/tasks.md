@@ -310,8 +310,10 @@ T6 → T7 → T8 → T9 → T10
 
 **Done when**:
 
-- [ ] O mutante M3 (data em hora local) é morto
-- [ ] Gate check passes: `npm run typecheck && npm run test:unit`
+- [x] O mutante M3 (data em hora local) é morto
+- [x] Gate check passes: `npm run typecheck && npm run test:unit`
+
+**Status**: Done
 
 **Tests**: unit
 **Gate**: quick

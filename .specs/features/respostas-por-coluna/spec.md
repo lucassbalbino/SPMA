@@ -168,7 +168,7 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 | COL-04 | P1: Pergunta é coluna | Execute | Implementing (T1) |
 | COL-05 | P1: Pergunta é coluna | Execute | Implementing (T1) |
 | COL-06 | P1: Pergunta é coluna | Execute | Implementing (T1) |
-| COL-07 | P1: Pergunta é coluna | Execute | Implementing (T1) |
+| COL-07 | P1: Pergunta é coluna | Execute | Implementing (T9) |
 | COL-08 | P1: Pergunta é coluna | Execute | Implementing (T1) |
 | COL-09 | P1: Pergunta é coluna | Execute | Implementing (T2) |
 | COL-10 | P1: Pergunta é coluna | Execute | Implementing (T2) |
