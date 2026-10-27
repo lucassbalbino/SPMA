@@ -164,18 +164,18 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 | --- | --- | --- | --- |
 | COL-01 | P1: Pergunta é coluna | Design | Pending |
 | COL-02 | P1: Pergunta é coluna | Design | Pending |
-| COL-03 | P1: Pergunta é coluna | Design | Pending |
-| COL-04 | P1: Pergunta é coluna | Design | Pending |
-| COL-05 | P1: Pergunta é coluna | Design | Pending |
-| COL-06 | P1: Pergunta é coluna | Design | Pending |
-| COL-07 | P1: Pergunta é coluna | Design | Pending |
-| COL-08 | P1: Pergunta é coluna | Design | Pending |
+| COL-03 | P1: Pergunta é coluna | Execute | Implementing (T1) |
+| COL-04 | P1: Pergunta é coluna | Execute | Implementing (T1) |
+| COL-05 | P1: Pergunta é coluna | Execute | Implementing (T1) |
+| COL-06 | P1: Pergunta é coluna | Execute | Implementing (T1) |
+| COL-07 | P1: Pergunta é coluna | Execute | Implementing (T1) |
+| COL-08 | P1: Pergunta é coluna | Execute | Implementing (T1) |
 | COL-09 | P1: Pergunta é coluna | Design | Pending |
 | COL-10 | P1: Pergunta é coluna | Design | Pending |
 | COL-11 | P1: Sem regressão | Design | Pending |
 | COL-12 | P1: Sem regressão | Design | Pending |
 | COL-13 | P1: Sem regressão | Design | Pending |
-| COL-14 | P1: Sem regressão | Design | Pending |
+| COL-14 | P1: Sem regressão | Execute | Implementing (T1) |
 | COL-15 | P1: Sem regressão | Design | Pending |
 | COL-16 | P1: Sem regressão | Design | Pending |
 | COL-17 | P1: Migração | Design | Pending |
@@ -193,7 +193,7 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 | COL-29 | Edge case | Design | Pending |
 | COL-30 | Edge case | Design | Pending |
 | COL-31 | Edge case | Design | Pending |
-| COL-32 | Edge case | Design | Pending |
+| COL-32 | Edge case | Execute | Implementing (T1) |
 
 **Coverage:** 32 total, 0 mapped to tasks, 32 unmapped ⚠️ (mapeamento no Tasks).
 

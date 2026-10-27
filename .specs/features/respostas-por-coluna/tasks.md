@@ -75,9 +75,11 @@ T4 → T5 → T6 → T7
 
 **Done when**:
 
-- [ ] O mapa reproduz as quatro tabelas de `design.md` (63 + 26 + 27 + 7 chaves; 122 + 45 + 46 + 7 colunas)
-- [ ] Teste unitário `src/lib/respostas/colunas.test.ts` prova cada tipo nos dois sentidos, a regra de nomes, o `null` e a opção exclusiva
-- [ ] Gate check passes: `npm run typecheck && npm run test:unit`
+- [x] O mapa reproduz as quatro tabelas de `design.md` (63 + 26 + 27 + 7 chaves; 122 + 45 + 46 + 7 colunas)
+- [x] Teste unitário `src/lib/respostas/colunas.test.ts` prova cada tipo nos dois sentidos, a regra de nomes, o `null` e a opção exclusiva
+- [x] Gate check passes: `npm run typecheck && npm run test:unit`
+
+**Status**: Done
 
 **Tests**: unit
 **Gate**: quick
