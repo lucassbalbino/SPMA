@@ -299,6 +299,51 @@ systemctl start spma
 Teste uma restauração de verdade (num banco `spma_restore` descartável) pelo
 menos uma vez, antes de precisar dela.
 
+### Migração das respostas por coluna (AD-051)
+
+A migration `20261027120000_respostas_por_coluna` converte as respostas já
+gravadas em produção para o formato de uma coluna por pergunta. Ela confere o
+próprio resultado antes de apagar as tabelas antigas: se algo não bater,
+aborta e nada se perde.
+
+**Antes do merge na `main`**, faça um backup na hora e copie para fora da VPS
+(o diário pode ter até 24h):
+
+```bash
+sudo /opt/spma/backup.sh && ls -lh /opt/spma/backups | tail -1
+```
+
+**Se o deploy parar em "Aplicando migrations"**, a versão anterior segue no
+ar e as respostas continuam nas tabelas antigas. O log do GitHub Actions diz o
+motivo:
+
+| Erro | Causa |
+|---|---|
+| `Check constraint 'respostas_<formulario>_divergentes' is violated` | Uma resposta gravada não corresponde a nenhuma opção do questionário atual, ou uma pergunta de resposta única tem mais de uma linha. O nome diz o formulário: `pre_curso`, `pos_curso`, `avaliacao` ou `dados_pessoais`. |
+| `Incorrect ... value` / `Truncated incorrect ...` | Um número ou uma data gravados como texto não convertem. |
+
+Para achar o valor problemático, liste o que está gravado no formulário
+apontado e compare com as opções do schema dele
+(`src/lib/validation/schemas/`):
+
+```sql
+SELECT Chave, Valor, COUNT(*) FROM TB_Resposta_Pre_Curso GROUP BY Chave, Valor ORDER BY Chave, Valor;
+```
+
+Depois **reverta a tentativa** e avise o Prisma que ela foi desfeita (sem
+esse passo, todo deploy seguinte para com `P3009`):
+
+```bash
+mysql spma < /opt/spma/migrator/prisma/migrations/20261027120000_respostas_por_coluna/reversao.sql
+cd /opt/spma/migrator && set -a && . /opt/spma/shared/.env.production && set +a \
+  && npx --no-install prisma migrate resolve --rolled-back 20261027120000_respostas_por_coluna
+```
+
+O SQL de reversão só tira o que a tentativa acrescentou (as colunas `P*` e as
+tabelas `_Novo`/`_Conferencia`). A primeira linha dele é uma trava: se a
+migration já tinha terminado, ele para com erro sem apagar nada. Corrija o
+dado (ou o código) e publique de novo.
+
 ### Sistema operacional
 
 O suporte padrão do Ubuntu 22.04 termina em **abril de 2027**. Antes disso,

@@ -510,15 +510,19 @@ model DadoPessoalAluno {
 // parsear JSON, e a decisão de normalizar ficou adiada "para quando a
 // feature de dashboard existir".
 //
-// Desde AD-041, a decisão é outra: uma linha por resposta em
-// `TB_Resposta_Pre_Curso`, `TB_Resposta_Pos_Curso` e
-// `TB_Resposta_Avaliacao`. Cada linha guarda a chave da pergunta (a mesma
-// do schema Zod), o valor como texto, e a posição — seleção múltipla vira
-// N linhas. A aplicação remonta o objeto `{ chave: valor }` na leitura
-// (`src/lib/respostas/repositorio.ts`), então completude, condicionais e
-// os formulários continuam vendo o mesmo objeto de sempre.
+// A AD-041 (2026-09-11) trocou o JSON por uma linha por resposta, em
+// tabelas `(Chave, Ordem, Valor)`. Agregar por pergunta ficou direto, mas a
+// pergunta continuava sendo um VALOR da coluna `Chave`: cruzar duas perguntas
+// exigia pivotar a tabela.
+//
+// Desde a AD-051 (2026-10-27), cada pergunta é uma coluna `P*` da tabela do
+// próprio formulário, com o nome do questionário em papel (`P11`, `P7a`,
+// `P25.1`), e cada formulário é uma linha - o formato que o Power BI filtra
+// e cruza sem tratamento. Escolha única guarda a letra da opção, múltipla
+// escolha tem uma coluna 1/0 por opção. O mapa chave → coluna e as
+// conversões ficam em `src/lib/respostas/colunas.ts`; a aplicação continua
+// vendo o mesmo objeto `{ chave: valor }` de sempre.
 //
 // O Zod segue sendo a autoridade de forma/obrigatoriedade/condicionais
-// (AD-004, REQ-SEC-17) — o que mudou foi só onde o dado repousa. O custo
-// desta vez: reescrever o texto de uma opção passa a exigir tocar nos
-// dados, não só no schema.
+// (AD-004, REQ-SEC-17). O custo desta vez: pergunta nova é coluna nova, e
+// mudar a ordem das opções exige converter as letras gravadas.

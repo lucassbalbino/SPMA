@@ -188,8 +188,8 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 | COL-24 | P1: Migração | Execute | Implementing (T3) |
 | COL-25 | P1: Filtro e cruzamento | Execute | Implementing (T4) |
 | COL-26 | P1: Filtro e cruzamento | Execute | Implementing (T4) |
-| COL-27 | P2: Regra registrada | Design | Pending |
-| COL-28 | P2: Regra registrada | Design | Pending |
+| COL-27 | P2: Regra registrada | Execute | Implementing (T6) |
+| COL-28 | P2: Regra registrada | Execute | Implementing (T6) |
 | COL-29 | Edge case | Execute | Implementing (T2, verificado no T3) |
 | COL-30 | Edge case | Execute | Implementing (T2, verificado no T3) |
 | COL-31 | Edge case | Execute | Implementing (T2, verificado no T3) |

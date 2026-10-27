@@ -222,9 +222,11 @@ T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] AD-051 com a regra de nomes, "opção nova no fim" e "pergunta retirada mantém a coluna"; AD-041 marcada como rescindida
-- [ ] `docs/DEPLOY_PRODUCAO.md` com o backup e o SQL de reversão
-- [ ] Gate check passes: `npm run lint && npm run typecheck && npm run build`
+- [x] AD-051 com a regra de nomes, "opção nova no fim" e "pergunta retirada mantém a coluna"; AD-041 marcada como rescindida
+- [x] `docs/DEPLOY_PRODUCAO.md` com o backup e o SQL de reversão
+- [x] Gate check passes: `npm run lint && npm run typecheck && npm run build`
+
+**Status**: Done
 
 **Tests**: none
 **Gate**: build
