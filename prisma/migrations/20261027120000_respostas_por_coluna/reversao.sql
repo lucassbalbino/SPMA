@@ -2,14 +2,22 @@
 -- (AD-051). Procedimento completo em docs/DEPLOY_PRODUCAO.md.
 --
 -- Só serve para o caso em que a migration parou antes do contract: as tabelas
--- antigas TB_Resposta_* ainda existem e guardam todas as respostas. A primeira
--- linha é a trava: se TB_Resposta_Pre_Curso não existe mais, a migration
--- terminou, as respostas já estão nas colunas P* e este arquivo para aqui com
--- erro, sem apagar nada.
+-- antigas TB_Resposta_* e as colunas Chave/Valor de TB_Dado_Pessoal_Aluno
+-- ainda existem e guardam todas as respostas. As quatro primeiras linhas são
+-- a trava, na ordem em que o contract derruba as tabelas antigas: se qualquer
+-- uma já não existe, o contract começou, alguma resposta só está nas colunas
+-- P* (ou em TB_Dado_Pessoal_Aluno_Novo) e este arquivo para aqui com erro,
+-- sem apagar nada.
 --
 -- Rode com o cliente mysql, sem --force, para ele parar no primeiro erro.
 
+SELECT 1 FROM `TB_Resposta_Avaliacao` LIMIT 0;
+
+SELECT 1 FROM `TB_Resposta_Pos_Curso` LIMIT 0;
+
 SELECT 1 FROM `TB_Resposta_Pre_Curso` LIMIT 0;
+
+SELECT `Chave` FROM `TB_Dado_Pessoal_Aluno` LIMIT 0;
 
 DROP TABLE IF EXISTS `_Conferencia_Respostas_Por_Coluna`;
 

@@ -337,8 +337,10 @@ T6 → T7 → T8 → T9 → T10
 
 **Done when**:
 
-- [ ] Rodada contra um banco já migrado, a reversão para na trava sem apagar coluna nenhuma
-- [ ] Gate check passes: `npm run lint && npm run typecheck && npm run build`
+- [x] Rodada contra um banco já migrado, a reversão para na trava sem apagar coluna nenhuma
+- [x] Gate check passes: `npm run lint && npm run typecheck && npm run build`
+
+**Status**: Done
 
 **Tests**: none
 **Gate**: build

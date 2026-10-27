@@ -306,6 +306,11 @@ gravadas em produção para o formato de uma coluna por pergunta. Ela confere o
 próprio resultado antes de apagar as tabelas antigas: se algo não bater,
 aborta e nada se perde.
 
+**Faça o merge num horário sem uso.** A versão anterior segue no ar enquanto
+a migration roda. Uma resposta gravada entre a cópia e a conferência aborta a
+migração, e uma gravada entre a conferência e a remoção das tabelas antigas se
+perde.
+
 **Antes do merge na `main`**, faça um backup na hora e copie para fora da VPS
 (o diário pode ter até 24h):
 
@@ -340,9 +345,14 @@ cd /opt/spma/migrator && set -a && . /opt/spma/shared/.env.production && set +a 
 ```
 
 O SQL de reversão só tira o que a tentativa acrescentou (as colunas `P*` e as
-tabelas `_Novo`/`_Conferencia`). A primeira linha dele é uma trava: se a
-migration já tinha terminado, ele para com erro sem apagar nada. Corrija o
-dado (ou o código) e publique de novo.
+tabelas `_Novo`/`_Conferencia`). As primeiras linhas dele são uma trava: se
+qualquer tabela antiga já foi removida, a migration chegou ao passo final e
+ele para com erro sem apagar nada. Nesse caso a conferência já passou e as
+respostas estão nas colunas `P*`: não reverta. Rode à mão os comandos que
+faltam depois de `-- 4. Contract` no `migration.sql` e marque a migration com
+`prisma migrate resolve --applied 20261027120000_respostas_por_coluna`.
+
+Fora desse caso, corrija o dado (ou o código) e publique de novo.
 
 ### Sistema operacional
 

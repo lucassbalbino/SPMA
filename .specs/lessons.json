@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 51,
+  "next_id": 57,
   "lessons": [
     {
       "id": "L-014",
@@ -296,6 +296,114 @@
       ],
       "created": "2026-10-20T12:33:40Z",
       "last_seen": "2026-10-20T12:33:40Z"
+    },
+    {
+      "id": "L-051",
+      "key": "surviving_mutant::in a data migration test seed every option of every mapped field and compare each migrated row with the application s own write path a sampled seed lets a wrong value mapping pass a count based self check",
+      "text": "In a data-migration test, seed every option of every mapped field and compare each migrated row with the application's own write path; a sampled seed lets a wrong value mapping pass a count-based self-check.",
+      "signal": "surviving_mutant",
+      "scope": "migrations",
+      "status": "candidate",
+      "features": [
+        "respostas-por-coluna"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M6/M7/M9 - prisma/migrations/20261027120000_respostas_por_coluna/migration.sql:289,353 (validation.md, Fix 1) (migrations)"
+      ],
+      "created": "2026-10-27T15:37:39Z",
+      "last_seen": "2026-10-27T15:37:39Z"
+    },
+    {
+      "id": "L-052",
+      "key": "surviving_mutant::when a change hides fields from api responses global omit or a response mapper assert in a route level test that those fields are absent and that the mapped field is present",
+      "text": "When a change hides fields from API responses (global omit or a response mapper), assert in a route-level test that those fields are absent and that the mapped field is present.",
+      "signal": "surviving_mutant",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "respostas-por-coluna"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M11/M12 - src/lib/respostas/repositorio.ts:68, src/lib/db/prisma.ts:40 (validation.md, Fix 2) (routes)"
+      ],
+      "created": "2026-10-27T15:37:40Z",
+      "last_seen": "2026-10-27T15:37:40Z"
+    },
+    {
+      "id": "L-053",
+      "key": "surviving_mutant::tests that turn calendar dates into date objects must pin a non utc timezone or use a daylight saving date or a local time parsing bug passes",
+      "text": "Tests that turn calendar dates into Date objects must pin a non-UTC timezone or use a daylight-saving date, or a local-time parsing bug passes.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "respostas-por-coluna"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M3 - src/lib/respostas/colunas.ts:254 (validation.md, Fix 3) (tests)"
+      ],
+      "created": "2026-10-27T15:37:40Z",
+      "last_seen": "2026-10-27T15:37:40Z"
+    },
+    {
+      "id": "L-054",
+      "key": "spec_precision_gap::when an assumption drops a guarantee such as ordering or precision write the exception into every ac that promises unchanged output",
+      "text": "When an assumption drops a guarantee such as ordering or precision, write the exception into every AC that promises unchanged output.",
+      "signal": "spec_precision_gap",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "respostas-por-coluna"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "COL-11/COL-16 vs Assumption 'Ordem da seleção múltipla' (validation.md) (spec)"
+      ],
+      "created": "2026-10-27T15:37:41Z",
+      "last_seen": "2026-10-27T15:37:41Z"
+    },
+    {
+      "id": "L-055",
+      "key": "spec_deviation::when an assumption drops a guarantee such as ordering or precision write the exception into every ac that promises unchanged output",
+      "text": "When an assumption drops a guarantee such as ordering or precision, write the exception into every AC that promises unchanged output.",
+      "signal": "spec_deviation",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "respostas-por-coluna"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "T5 SPEC_DEVIATION - e2e/pre-cursos-id.spec.ts:175 (RESP-20 order) (spec)"
+      ],
+      "created": "2026-10-27T15:37:41Z",
+      "last_seen": "2026-10-27T15:37:41Z"
+    },
+    {
+      "id": "L-056",
+      "key": "ac_gap::cover every route a feature rewrites including list endpoints with an assertion on the response field the ac names",
+      "text": "Cover every route a feature rewrites, including list endpoints, with an assertion on the response field the AC names.",
+      "signal": "ac_gap",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "respostas-por-coluna"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "COL-11 list routes - src/app/api/pre-cursos/route.ts:38 (validation.md) (routes)"
+      ],
+      "created": "2026-10-27T15:37:42Z",
+      "last_seen": "2026-10-27T15:37:42Z"
     }
   ]
 }

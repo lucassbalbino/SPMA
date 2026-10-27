@@ -177,7 +177,7 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 | COL-13 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
 | COL-14 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
 | COL-15 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
-| COL-16 | P1: Sem regressão | Execute | Implementing (T5) |
+| COL-16 | P1: Sem regressão | Execute | Implementing (T10) |
 | COL-17 | P1: Migração | Execute | Implementing (T7) |
 | COL-18 | P1: Migração | Execute | Implementing (T3) |
 | COL-19 | P1: Migração | Execute | Implementing (T3) |
@@ -189,7 +189,7 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 | COL-25 | P1: Filtro e cruzamento | Execute | Implementing (T4) |
 | COL-26 | P1: Filtro e cruzamento | Execute | Implementing (T4) |
 | COL-27 | P2: Regra registrada | Execute | Implementing (T6) |
-| COL-28 | P2: Regra registrada | Execute | Implementing (T6) |
+| COL-28 | P2: Regra registrada | Execute | Implementing (T10) |
 | COL-29 | Edge case | Execute | Implementing (T2, verificado no T3) |
 | COL-30 | Edge case | Execute | Implementing (T2, verificado no T3) |
 | COL-31 | Edge case | Execute | Implementing (T2, verificado no T3) |

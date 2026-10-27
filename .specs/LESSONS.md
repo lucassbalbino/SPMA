@@ -108,6 +108,42 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: spec.md Success Criteria grep 'quais ações fundamentais' (PreCursoForm.tsx:350, Q26 untouched) (spec)
 - last seen: 2026-10-20T12:33:40Z
 
+### L-051 - In a data-migration test, seed every option of every mapped field and compare each migrated row with the application's own write path; a sampled seed lets a wrong value mapping pass a count-based self-check.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `migrations` · harmful: 0
+- features: respostas-por-coluna
+- evidence: M6/M7/M9 - prisma/migrations/20261027120000_respostas_por_coluna/migration.sql:289,353 (validation.md, Fix 1) (migrations)
+- last seen: 2026-10-27T15:37:39Z
+
+### L-052 - When a change hides fields from API responses (global omit or a response mapper), assert in a route-level test that those fields are absent and that the mapped field is present.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: respostas-por-coluna
+- evidence: M11/M12 - src/lib/respostas/repositorio.ts:68, src/lib/db/prisma.ts:40 (validation.md, Fix 2) (routes)
+- last seen: 2026-10-27T15:37:40Z
+
+### L-053 - Tests that turn calendar dates into Date objects must pin a non-UTC timezone or use a daylight-saving date, or a local-time parsing bug passes.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: respostas-por-coluna
+- evidence: M3 - src/lib/respostas/colunas.ts:254 (validation.md, Fix 3) (tests)
+- last seen: 2026-10-27T15:37:40Z
+
+### L-054 - When an assumption drops a guarantee such as ordering or precision, write the exception into every AC that promises unchanged output.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: respostas-por-coluna
+- evidence: COL-11/COL-16 vs Assumption 'Ordem da seleção múltipla' (validation.md) (spec)
+- last seen: 2026-10-27T15:37:41Z
+
+### L-055 - When an assumption drops a guarantee such as ordering or precision, write the exception into every AC that promises unchanged output.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: respostas-por-coluna
+- evidence: T5 SPEC_DEVIATION - e2e/pre-cursos-id.spec.ts:175 (RESP-20 order) (spec)
+- last seen: 2026-10-27T15:37:41Z
+
+### L-056 - Cover every route a feature rewrites, including list endpoints, with an assertion on the response field the AC names.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: respostas-por-coluna
+- evidence: COL-11 list routes - src/app/api/pre-cursos/route.ts:38 (validation.md) (routes)
+- last seen: 2026-10-27T15:37:42Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
