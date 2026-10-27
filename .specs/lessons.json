@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 57,
+  "next_id": 58,
   "lessons": [
     {
       "id": "L-014",
@@ -400,10 +400,29 @@
       "recurrence": 1,
       "harmful": 0,
       "evidence": [
-        "COL-11 list routes - src/app/api/pre-cursos/route.ts:38 (validation.md) (routes)"
+        "COL-11 list routes - src/app/api/pre-cursos/route.ts:38 (validation.md) (routes)",
+        "COL-11 M14 - src/app/api/pre-cursos/route.ts:38 (validation.md it.2, Fix 5) (routes)"
       ],
       "created": "2026-10-27T15:37:42Z",
-      "last_seen": "2026-10-27T15:37:42Z"
+      "last_seen": "2026-10-27T16:08:39Z"
+    },
+    {
+      "id": "L-057",
+      "key": "surviving_mutant::assert migrated rows on physical column values not only through the application s read path when that path collapses distinct stored states such as 0 and null",
+      "text": "Assert migrated rows on physical column values, not only through the application's read path, when that path collapses distinct stored states such as 0 and NULL.",
+      "signal": "surviving_mutant",
+      "scope": "migrations",
+      "status": "candidate",
+      "features": [
+        "respostas-por-coluna"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M13 - prisma/migrations/20261027120000_respostas_por_coluna/migration.sql:343 (validation.md it.2, Fix 4) (migrations)"
+      ],
+      "created": "2026-10-27T16:08:38Z",
+      "last_seen": "2026-10-27T16:08:38Z"
     }
   ]
 }

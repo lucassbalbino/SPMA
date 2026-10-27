@@ -141,8 +141,14 @@ Seen once or not yet corroborated. Tracked, not trusted.
 ### L-056 - Cover every route a feature rewrites, including list endpoints, with an assertion on the response field the AC names.
 - signal: `ac_gap` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
 - features: respostas-por-coluna
-- evidence: COL-11 list routes - src/app/api/pre-cursos/route.ts:38 (validation.md) (routes)
-- last seen: 2026-10-27T15:37:42Z
+- evidence: COL-11 list routes - src/app/api/pre-cursos/route.ts:38 (validation.md) (routes) (+1 more)
+- last seen: 2026-10-27T16:08:39Z
+
+### L-057 - Assert migrated rows on physical column values, not only through the application's read path, when that path collapses distinct stored states such as 0 and NULL.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `migrations` · harmful: 0
+- features: respostas-por-coluna
+- evidence: M13 - prisma/migrations/20261027120000_respostas_por_coluna/migration.sql:343 (validation.md it.2, Fix 4) (migrations)
+- last seen: 2026-10-27T16:08:38Z
 
 ## Quarantined (failed when applied - ignore)
 

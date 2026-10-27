@@ -14,7 +14,7 @@ import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PrismaClient } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { MAPA, type Entrada, type Formulario } from "./colunas";
+import { MAPA, colunasDaEntrada, type Entrada, type Formulario } from "./colunas";
 import { lerRespostas } from "./repositorio";
 
 const BANCO = "spma_migracao_colunas";
@@ -319,6 +319,41 @@ describe("migration respostas_por_coluna (integration)", { timeout: PREPARO_MS }
         expect(await lerRespostas(banco!, { formulario: "posCurso", cdCurso })).toEqual(rodada("posCurso", k));
         expect(await lerRespostas(banco!, { formulario: "avaliacao", cpf, cdCurso })).toEqual(rodada("avaliacao", k));
         expect(await lerRespostas(banco!, { formulario: "dadosPessoais", cpf })).toEqual(rodada("dadosPessoais", k));
+      }
+    });
+
+    // COL-18: a leitura trata 0 e NULL como "não marcada", então o 0 de cada
+    // opção não marcada é conferido na coluna física, em toda múltipla.
+    it("grava 1 na opção marcada e 0 em todas as outras de cada múltipla", async () => {
+      const ONDE: Record<Formulario, string> = {
+        preCurso: "TB_Pre_Curso WHERE CD_Curso = ?",
+        posCurso: "TB_Pos_Curso WHERE CD_Curso = ?",
+        avaliacao: "TB_Avaliacao_Aluno WHERE CPF = ? AND CD_Curso = ?",
+        dadosPessoais: "TB_Dado_Pessoal_Aluno WHERE CPF = ?",
+      };
+
+      for (const [k, cdCurso] of cursosDaRodada.entries()) {
+        const cpf = cpfDaRodada(k);
+        const parametros: Record<Formulario, unknown[]> = {
+          preCurso: [cdCurso],
+          posCurso: [cdCurso],
+          avaliacao: [cpf, cdCurso],
+          dadosPessoais: [cpf],
+        };
+
+        for (const formulario of Object.keys(ONDE) as Formulario[]) {
+          const multiplas = MAPA[formulario].filter((entrada) => entrada.tipo === "multipla");
+          if (multiplas.length === 0) continue;
+          const esperado = Object.fromEntries(
+            multiplas.flatMap((entrada) =>
+              colunasDaEntrada(entrada).map((coluna, i, todas) => [coluna, i === k % todas.length ? 1 : 0]),
+            ),
+          );
+          const lista = Object.keys(esperado).map((coluna) => `\`${coluna}\``).join(", ");
+          const [linha] = await consultar(`SELECT ${lista} FROM ${ONDE[formulario]}`, ...parametros[formulario]);
+
+          expect(Object.fromEntries(Object.entries(linha).map(([c, v]) => [c, bit(v)]))).toEqual(esperado);
+        }
       }
     });
 

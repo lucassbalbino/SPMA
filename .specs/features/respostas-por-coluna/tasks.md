@@ -62,6 +62,12 @@ T3 → T4 → T5 → T6
 T6 → T7 → T8 → T9 → T10
 ```
 
+### Phase 5: Correções da validação (iteração 2)
+
+```
+T10 → T11 → T12
+```
+
 ---
 
 ## Task Breakdown
@@ -349,6 +355,58 @@ T6 → T7 → T8 → T9 → T10
 
 ---
 
+### T11: Zero físico de toda múltipla migrada (Fix 4)
+
+**What**: No teste exaustivo da migration, conferir nas colunas físicas de cada múltipla, em cada rodada, `1` na opção semeada e `0` em todas as outras.
+**Where**: `src/lib/respostas/respostas-por-coluna-migracao.integration.test.ts`
+**Depends on**: T10
+**Reuses**: relatório do Verifier, `validation.md` (iteração 2)
+**Requirement**: COL-18
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] O mutante M13 (`NULLIF(..., 0)` numa coluna de múltipla) é morto
+- [x] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+
+**Status**: Done
+
+**Tests**: integration
+**Gate**: full
+
+**Commit**: `test(respostas): assert the physical zero of every migrated option`
+
+---
+
+### T12: Respostas nas três listagens HTTP (Fix 5)
+
+**What**: Semear respostas pelo fixture (`criarPreCurso` e `criarPosCurso` passam a aceitar `respostas`, como `criarAvaliacao`) e afirmar, nos testes de listagem do GO que já existem, o `respostas` do item e a ausência de chaves `P*`.
+**Where**: `e2e/pre-cursos.spec.ts`, `e2e/pos-cursos.spec.ts`, `e2e/avaliacoes.spec.ts`
+**Depends on**: T11
+**Reuses**: relatório do Verifier, `validation.md` (iteração 2)
+**Requirement**: COL-11
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] O mutante M14 (rota sem `omit: incluirRespostas`) é morto nas três listagens
+- [ ] Gate check passes: `npm run lint && npm run typecheck` e os e2e de pré, pós e avaliação
+
+**Tests**: e2e
+**Gate**: build
+
+**Commit**: `test(e2e): assert answers in the three listings`
+
+---
+
 ## Diagram-Definition Cross-Check
 
 | Task | Depends On (task body) | Diagram Shows | Status |
@@ -363,6 +421,8 @@ T6 → T7 → T8 → T9 → T10
 | T8 | T7 | T7 → T8 | ✅ Match |
 | T9 | T8 | T8 → T9 | ✅ Match |
 | T10 | T9 | T9 → T10 | ✅ Match |
+| T11 | T10 | T10 → T11 | ✅ Match |
+| T12 | T11 | T11 → T12 | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -378,5 +438,7 @@ T6 → T7 → T8 → T9 → T10
 | T8 | Repositório | integration | integration | ✅ OK |
 | T9 | Mapa de colunas (runner) | unit | unit | ✅ OK |
 | T10 | Documentação e SQL de reversão | none | none | ✅ OK: a trava foi rodada à mão contra o `spma_test` migrado |
+| T11 | Migration SQL | integration | integration | ✅ OK |
+| T12 | Rotas de listagem | e2e | e2e | ✅ OK: assertions em testes existentes, nenhum spec novo |
 
 **Replanejado em 2026-10-27, durante o T2:** remover os modelos antigos quebra o typecheck de todo teste que os usa, então o T2 absorveu a reescrita e a aposentadoria desses testes (antes T4 e parte do T5), e a execução deles contra o MySQL passou ao gate do T3.
