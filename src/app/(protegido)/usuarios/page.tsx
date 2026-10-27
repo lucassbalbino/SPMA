@@ -62,21 +62,20 @@ export default async function GestaoUsuariosPage() {
           })
         : [];
 
-  // O nome do curso não é coluna de `PreCurso` - é a resposta da Seção 2, Q8
-  // ("Nome da Ação de Qualificação") do formulário de pré-curso, gravada em
-  // `RespostaPreCurso` (RESP-01). Pode faltar se o GO ainda não preencheu
-  // essa pergunta - o select cai pro "Curso #cd" nesse caso.
+  // O nome do curso é a resposta da Seção 2, Q8 ("Nome da Ação de
+  // Qualificação") do formulário de pré-curso, gravada na coluna `P8` de
+  // `TB_Pre_Curso` (AD-051). Pode faltar se o GO ainda não preencheu essa
+  // pergunta - o select cai pro "Curso #cd" nesse caso.
   const nomesCursos =
     cursos.length > 0
-      ? await prisma.respostaPreCurso.findMany({
-          where: {
-            cdCurso: { in: cursos.map((curso) => curso.cdCurso) },
-            chave: "qualifNomeCurso",
-          },
-          select: { cdCurso: true, valor: true },
+      ? await prisma.preCurso.findMany({
+          where: { cdCurso: { in: cursos.map((curso) => curso.cdCurso) } },
+          select: { cdCurso: true, p8: true },
         })
       : [];
-  const nomePorCurso = new Map(nomesCursos.map((linha) => [linha.cdCurso, linha.valor]));
+  const nomePorCurso = new Map(
+    nomesCursos.flatMap((curso) => (curso.p8 === null ? [] : [[curso.cdCurso, curso.p8] as const])),
+  );
 
   // `consultarUsuarios` não aceita perfil sem escopo: a checagem vem antes.
   const paginaInicial =

@@ -193,11 +193,10 @@ describe("atualizarCadastro (integration)", () => {
     const curso = await prisma.preCurso.create({
       data: { cdOfertante: go, cdVerba: verba.cdVerba, vlCursoAlocado: 100, criadoPor: go },
     });
-    await prisma.avaliacaoAluno.create({ data: { cpf: antigo, cdCurso: curso.cdCurso } });
-    await prisma.respostaAvaliacao.create({
-      data: { cpf: antigo, cdCurso: curso.cdCurso, chave: "gu_t", valor: "x" },
-    });
-    await prisma.dadoPessoalAluno.create({ data: { cpf: antigo, chave: "gu_t", valor: "y" } });
+    // As respostas são colunas da própria avaliação e da linha de dados
+    // pessoais (AD-051): trocar o documento leva as duas linhas inteiras.
+    await prisma.avaliacaoAluno.create({ data: { cpf: antigo, cdCurso: curso.cdCurso, p35: 9 } });
+    await prisma.dadoPessoalAluno.create({ data: { cpf: antigo, p5: "a" } });
     const antes = await prisma.usuario.findUniqueOrThrow({ where: { documento: antigo } });
 
     await atualizarCadastro(
@@ -205,12 +204,15 @@ describe("atualizarCadastro (integration)", () => {
       { documentoNovo: validarDocumentoDoTipo("AL", novo) },
     );
 
-    // GU-33: as três tabelas apontam para o novo, e nenhuma linha fica no antigo.
-    expect(await prisma.avaliacaoAluno.count({ where: { cpf: novo } })).toBe(1);
+    // GU-33: as duas tabelas apontam para o novo, com as respostas, e nenhuma
+    // linha fica no antigo.
+    expect(
+      await prisma.avaliacaoAluno.findMany({ where: { cpf: novo }, select: { p35: true } }),
+    ).toEqual([{ p35: 9 }]);
     expect(await prisma.avaliacaoAluno.count({ where: { cpf: antigo } })).toBe(0);
-    expect(await prisma.respostaAvaliacao.count({ where: { cpf: novo } })).toBe(1);
-    expect(await prisma.respostaAvaliacao.count({ where: { cpf: antigo } })).toBe(0);
-    expect(await prisma.dadoPessoalAluno.count({ where: { cpf: novo } })).toBe(1);
+    expect(
+      await prisma.dadoPessoalAluno.findMany({ where: { cpf: novo }, select: { p5: true } }),
+    ).toEqual([{ p5: "a" }]);
     expect(await prisma.dadoPessoalAluno.count({ where: { cpf: antigo } })).toBe(0);
 
     // GU-35: só o documento mudou; senha, 1º acesso, tipo, autoria, data de

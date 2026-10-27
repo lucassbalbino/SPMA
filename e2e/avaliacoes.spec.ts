@@ -102,7 +102,7 @@ test.beforeAll(() => {
   // As duas matrículas que as três listagens exigem, semeadas pelo Prisma
   // (`criarAvaliacao`) e não pela rota - que não existe mais. Antes, a do
   // CPF_AL era efeito colateral do primeiro teste de POST deste arquivo.
-  criarAvaliacao({ cpf: CPF_AL, cdCurso: cdCursoDoGo });
+  criarAvaliacao({ cpf: CPF_AL, cdCurso: cdCursoDoGo, respostas: { avalGeralNota: 9 } });
   criarAvaliacao({ cpf: CPF_AL_DE_OUTRO_OFERTANTE, cdCurso: cdCursoDoGo2 });
 });
 
@@ -127,6 +127,12 @@ test("AVAL-22: GO só lista avaliações de cursos do próprio Ofertante", async
   expect(
     corpo.avaliacoes.every((a: { cdOfertante: string }) => a.cdOfertante === CNPJ_GO),
   ).toBe(true);
+  // COL-11: o item traz as respostas como `{ chave: valor }` e nenhuma coluna `P*`.
+  const item = corpo.avaliacoes.find(
+    (a: { cpf: string; cdCurso: number }) => a.cpf === CPF_AL && a.cdCurso === cdCursoDoGo,
+  );
+  expect(item.respostas).toEqual({ avalGeralNota: 9 });
+  expect(Object.keys(item).filter((campo) => /^p\d/.test(campo))).toEqual([]);
 
   await cliente.dispose();
 });

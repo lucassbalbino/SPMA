@@ -496,16 +496,17 @@ test.describe("lista da Gestão de usuários", () => {
       (window as unknown as { semRecarga: boolean }).semRecarga = true;
     });
 
-    await page.getByLabel("Buscar usuários").fill("Criado Pela Lista");
+    // Só o AM nasce com nome (AD-050): o VT é criado só com o CPF, e é pelo
+    // CPF que a lista filtrada o encontra.
+    await page.getByLabel("Buscar usuários").fill(CPF_CRIADO_PELA_LISTA);
     await expect(page.getByText("Nenhum usuário encontrado.")).toBeVisible();
 
     await page.locator("select#tipo").selectOption("VT");
     await page.getByLabel("CPF").fill(CPF_CRIADO_PELA_LISTA);
-    await page.getByLabel("Nome").fill("GU-E2E Criado Pela Lista");
     await page.getByRole("button", { name: "Criar usuário" }).click();
 
     await expect(linhas(page)).toHaveCount(1);
-    await expect(linhas(page)).toContainText("GU-E2E Criado Pela Lista");
+    await expect(linhas(page)).toContainText(formatarDocumento(CPF_CRIADO_PELA_LISTA));
     expect(getUsuario(CPF_CRIADO_PELA_LISTA)?.tipo).toBe("VT");
     expect(
       await page.evaluate(() => (window as unknown as { semRecarga?: boolean }).semRecarga),

@@ -12,16 +12,32 @@
 // Prisma 7 exige driver adapter explícito em todo PrismaClient, sem
 // fallback (ver design.md, Tech Decisions). O adapter oficial para MySQL é
 // `@prisma/adapter-mariadb` (protocolo compatível).
+//
+// As colunas de resposta `P*` (AD-051) ficam omitidas por padrão: são ~120
+// por formulário e nenhuma rota deve devolvê-las cruas no JSON. Quem precisa
+// delas as pede explicitamente - o repositório por `select`, as rotas de
+// listagem por `incluirRespostas`.
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { PrismaClient } from "../../generated/prisma/client";
+import { Prisma, PrismaClient } from "../../generated/prisma/client";
+import { camposDeResposta, type Formulario } from "../respostas/colunas";
 
 const globalParaPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
+function omitirRespostas(formulario: Formulario): Record<string, boolean> {
+  return Object.fromEntries(camposDeResposta(formulario).map((campo) => [campo, true]));
+}
+
+const OMITIR_RESPOSTAS: Prisma.GlobalOmitConfig = {
+  preCurso: omitirRespostas("preCurso"),
+  posCurso: omitirRespostas("posCurso"),
+  avaliacaoAluno: omitirRespostas("avaliacao"),
+};
+
 function criarPrismaClient(): PrismaClient {
   const adapter = new PrismaMariaDb(process.env.DATABASE_URL as string);
-  return new PrismaClient({ adapter });
+  return new PrismaClient({ adapter, omit: OMITIR_RESPOSTAS });
 }
 
 export const prisma: PrismaClient = globalParaPrisma.prisma ?? criarPrismaClient();

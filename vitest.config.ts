@@ -15,5 +15,9 @@ export default defineConfig({
     include: ["src/**/*.test.ts", "e2e/helpers/**/*.test.ts"],
     exclude: ["**/*.integration.test.ts", "**/node_modules/**"],
     passWithNoTests: true,
+    // Fuso fora do UTC: uma data gravada em hora local em vez de UTC muda o
+    // dia da coluna DATE, e em UTC (ou em Lisboa no inverno) o erro passaria
+    // despercebido.
+    env: { TZ: "America/Sao_Paulo" },
   },
 });

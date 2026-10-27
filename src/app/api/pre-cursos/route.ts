@@ -11,9 +11,9 @@ import { exigirSessao } from "@/lib/api/guardas";
 import { erroHttp } from "@/lib/api/erro-http";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import {
-  LINHAS_RESPOSTA_ORDENADAS,
-  montarRespostas,
+  incluirRespostas,
   respostasOuNulo,
+  separarRespostas,
 } from "@/lib/respostas/repositorio";
 
 async function listarPreCursos(request: Request) {
@@ -35,14 +35,14 @@ async function listarPreCursos(request: Request) {
       () => ({ cdOfertante: "" }),
     ),
     orderBy: { cdCurso: "asc" },
-    include: { linhasResposta: LINHAS_RESPOSTA_ORDENADAS },
+    omit: incluirRespostas("preCurso"),
   });
 
   return NextResponse.json({
-    preCursos: registros.map(({ linhasResposta, ...preCurso }) => ({
-      ...preCurso,
-      respostas: respostasOuNulo(montarRespostas("preCurso", linhasResposta)),
-    })),
+    preCursos: registros.map((registro) => {
+      const { registro: preCurso, respostas } = separarRespostas("preCurso", registro);
+      return { ...preCurso, respostas: respostasOuNulo(respostas) };
+    }),
   });
 }
 

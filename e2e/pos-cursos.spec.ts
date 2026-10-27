@@ -85,7 +85,11 @@ test.beforeAll(() => {
     vlCursoAlocado: 100,
     criadoPor: CNPJ_GO,
   }).cdCurso;
-  criarPosCurso({ cdCurso: cdCursoComPosCurso, criadoPor: CNPJ_GO });
+  criarPosCurso({
+    cdCurso: cdCursoComPosCurso,
+    criadoPor: CNPJ_GO,
+    respostas: { posAcompanhLicaoIndividual: "Não se aplica." },
+  });
 });
 
 test.afterAll(() => {
@@ -121,6 +125,10 @@ test("REQ-PO-12: GO só lista pós-cursos do próprio Ofertante", async () => {
   expect(
     corpo.posCursos.every((p: { cdOfertante: string }) => p.cdOfertante === CNPJ_GO),
   ).toBe(true);
+  // COL-11: o item traz as respostas como `{ chave: valor }` e nenhuma coluna `P*`.
+  const item = corpo.posCursos.find((p: { cdCurso: number }) => p.cdCurso === cdCursoComPosCurso);
+  expect(item.respostas).toEqual({ posAcompanhLicaoIndividual: "Não se aplica." });
+  expect(Object.keys(item).filter((campo) => /^p\d/.test(campo))).toEqual([]);
 
   await cliente.dispose();
 });
