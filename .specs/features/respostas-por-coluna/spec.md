@@ -162,38 +162,38 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| COL-01 | P1: Pergunta é coluna | Execute | Implementing (T2) |
-| COL-02 | P1: Pergunta é coluna | Execute | Implementing (T2) |
-| COL-03 | P1: Pergunta é coluna | Execute | Implementing (T1) |
-| COL-04 | P1: Pergunta é coluna | Execute | Implementing (T1) |
-| COL-05 | P1: Pergunta é coluna | Execute | Implementing (T1) |
-| COL-06 | P1: Pergunta é coluna | Execute | Implementing (T1) |
-| COL-07 | P1: Pergunta é coluna | Execute | Implementing (T9) |
-| COL-08 | P1: Pergunta é coluna | Execute | Implementing (T1) |
-| COL-09 | P1: Pergunta é coluna | Execute | Implementing (T2) |
-| COL-10 | P1: Pergunta é coluna | Execute | Implementing (T2) |
-| COL-11 | P1: Sem regressão | Execute | Implementing (T12) |
-| COL-12 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
-| COL-13 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
-| COL-14 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
-| COL-15 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
-| COL-16 | P1: Sem regressão | Execute | Implementing (T10) |
-| COL-17 | P1: Migração | Execute | Implementing (T7) |
-| COL-18 | P1: Migração | Execute | Implementing (T11) |
-| COL-19 | P1: Migração | Execute | Implementing (T3) |
-| COL-20 | P1: Migração | Execute | Implementing (T7) |
-| COL-21 | P1: Migração | Execute | Implementing (T3) |
-| COL-22 | P1: Migração | Execute | Implementing (T3) |
-| COL-23 | P1: Migração | Execute | Implementing (T3) |
-| COL-24 | P1: Migração | Execute | Implementing (T3) |
-| COL-25 | P1: Filtro e cruzamento | Execute | Implementing (T4) |
-| COL-26 | P1: Filtro e cruzamento | Execute | Implementing (T4) |
-| COL-27 | P2: Regra registrada | Execute | Implementing (T6) |
-| COL-28 | P2: Regra registrada | Execute | Implementing (T10) |
-| COL-29 | Edge case | Execute | Implementing (T2, verificado no T3) |
-| COL-30 | Edge case | Execute | Implementing (T2, verificado no T3) |
-| COL-31 | Edge case | Execute | Implementing (T2, verificado no T3) |
-| COL-32 | Edge case | Execute | Implementing (T1) |
+| COL-01 | P1: Pergunta é coluna | Execute | Verified |
+| COL-02 | P1: Pergunta é coluna | Execute | Verified |
+| COL-03 | P1: Pergunta é coluna | Execute | Verified |
+| COL-04 | P1: Pergunta é coluna | Execute | Verified |
+| COL-05 | P1: Pergunta é coluna | Execute | Verified |
+| COL-06 | P1: Pergunta é coluna | Execute | Verified |
+| COL-07 | P1: Pergunta é coluna | Execute | Verified |
+| COL-08 | P1: Pergunta é coluna | Execute | Verified |
+| COL-09 | P1: Pergunta é coluna | Execute | Verified |
+| COL-10 | P1: Pergunta é coluna | Execute | Verified |
+| COL-11 | P1: Sem regressão | Execute | Verified |
+| COL-12 | P1: Sem regressão | Execute | Verified |
+| COL-13 | P1: Sem regressão | Execute | Verified |
+| COL-14 | P1: Sem regressão | Execute | Verified |
+| COL-15 | P1: Sem regressão | Execute | Verified |
+| COL-16 | P1: Sem regressão | Execute | Verified |
+| COL-17 | P1: Migração | Execute | Verified |
+| COL-18 | P1: Migração | Execute | Verified |
+| COL-19 | P1: Migração | Execute | Verified |
+| COL-20 | P1: Migração | Execute | Verified |
+| COL-21 | P1: Migração | Execute | Verified |
+| COL-22 | P1: Migração | Execute | Verified |
+| COL-23 | P1: Migração | Execute | Verified |
+| COL-24 | P1: Migração | Execute | Verified |
+| COL-25 | P1: Filtro e cruzamento | Execute | Verified |
+| COL-26 | P1: Filtro e cruzamento | Execute | Verified |
+| COL-27 | P2: Regra registrada | Execute | Verified |
+| COL-28 | P2: Regra registrada | Execute | Verified |
+| COL-29 | Edge case | Execute | Verified |
+| COL-30 | Edge case | Execute | Verified |
+| COL-31 | Edge case | Execute | Verified |
+| COL-32 | Edge case | Execute | Verified |
 
 **Coverage:** 32 total, 0 mapped to tasks, 32 unmapped ⚠️ (mapeamento no Tasks).
 
