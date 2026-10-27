@@ -173,26 +173,26 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 | COL-09 | P1: Pergunta é coluna | Execute | Implementing (T2) |
 | COL-10 | P1: Pergunta é coluna | Execute | Implementing (T2) |
 | COL-11 | P1: Sem regressão | Execute | Implementing (T2) |
-| COL-12 | P1: Sem regressão | Design | Pending |
-| COL-13 | P1: Sem regressão | Design | Pending |
-| COL-14 | P1: Sem regressão | Execute | Implementing (T1) |
-| COL-15 | P1: Sem regressão | Design | Pending |
+| COL-12 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
+| COL-13 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
+| COL-14 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
+| COL-15 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
 | COL-16 | P1: Sem regressão | Design | Pending |
-| COL-17 | P1: Migração | Design | Pending |
-| COL-18 | P1: Migração | Design | Pending |
-| COL-19 | P1: Migração | Design | Pending |
-| COL-20 | P1: Migração | Design | Pending |
-| COL-21 | P1: Migração | Design | Pending |
-| COL-22 | P1: Migração | Design | Pending |
-| COL-23 | P1: Migração | Design | Pending |
-| COL-24 | P1: Migração | Design | Pending |
+| COL-17 | P1: Migração | Execute | Implementing (T3) |
+| COL-18 | P1: Migração | Execute | Implementing (T3) |
+| COL-19 | P1: Migração | Execute | Implementing (T3) |
+| COL-20 | P1: Migração | Execute | Implementing (T3) |
+| COL-21 | P1: Migração | Execute | Implementing (T3) |
+| COL-22 | P1: Migração | Execute | Implementing (T3) |
+| COL-23 | P1: Migração | Execute | Implementing (T3) |
+| COL-24 | P1: Migração | Execute | Implementing (T3) |
 | COL-25 | P1: Filtro e cruzamento | Design | Pending |
 | COL-26 | P1: Filtro e cruzamento | Design | Pending |
 | COL-27 | P2: Regra registrada | Design | Pending |
 | COL-28 | P2: Regra registrada | Design | Pending |
-| COL-29 | Edge case | Design | Pending |
-| COL-30 | Edge case | Design | Pending |
-| COL-31 | Edge case | Design | Pending |
+| COL-29 | Edge case | Execute | Implementing (T2, verificado no T3) |
+| COL-30 | Edge case | Execute | Implementing (T2, verificado no T3) |
+| COL-31 | Edge case | Execute | Implementing (T2, verificado no T3) |
 | COL-32 | Edge case | Execute | Implementing (T1) |
 
 **Coverage:** 32 total, 0 mapped to tasks, 32 unmapped ⚠️ (mapeamento no Tasks).

@@ -10,17 +10,11 @@ import { PrismaClient } from "../src/generated/prisma/client";
 loadEnv({ path: ".env.test" });
 
 const DOMAIN_TABLES = [
-  // Respostas normalizadas: `TRUNCATE` do pai roda com FOREIGN_KEY_CHECKS=0
-  // e não dispara o CASCADE, e também zera o AUTO_INCREMENT do pai. Sem
-  // truncar estas três, a rodada seguinte reusa os mesmos CD_Curso e bate na
-  // unicidade de (registro, chave, ordem) com linha de uma rodada anterior.
-  "TB_Resposta_Avaliacao",
-  "TB_Resposta_Pos_Curso",
-  "TB_Resposta_Pre_Curso",
-  // Mesma razão, para o dado pessoal do Aluno: o pai é `TB_Usuario`, que é
-  // truncado logo abaixo sem disparar o CASCADE. Sem truncar esta aqui, a
-  // rodada seguinte reencontra a linha órfã do mesmo CPF e bate na unicidade
-  // de (CPF, Chave, Ordem).
+  // Dado pessoal do Aluno: o pai é `TB_Usuario`, que é truncado logo abaixo
+  // com FOREIGN_KEY_CHECKS=0, sem disparar o CASCADE. Sem truncar esta aqui,
+  // a rodada seguinte reencontra a linha órfã do mesmo CPF e bate na chave
+  // primária. As respostas dos formulários são colunas das próprias tabelas
+  // abaixo (AD-051) e vão junto com elas.
   "TB_Dado_Pessoal_Aluno",
   "TB_Avaliacao_Aluno",
   "TB_Pos_Curso",

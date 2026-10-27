@@ -135,10 +135,12 @@ T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] Teste `src/lib/respostas/respostas-por-coluna-migracao.integration.test.ts` cobre: conversão dos quatro formulários coluna a coluna, múltipla com 0/1, órfã descartada, aborto por texto sem opção e por contagem divergente com o formulário no erro, tabelas antigas intactas após aborto, colunas antigas preservadas, formulário sem resposta
-- [ ] `scripts/db-test-reset.ts` sem as três tabelas `TB_Resposta_*`
-- [ ] Depois de `npm run db:test:reset`, `prisma migrate diff` do banco para o `schema.prisma` não acusa drift
-- [ ] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration` (inclui os testes de integração reescritos no T2)
+- [x] Teste `src/lib/respostas/respostas-por-coluna-migracao.integration.test.ts` cobre: conversão dos quatro formulários coluna a coluna, múltipla com 0/1, órfã descartada, aborto por texto sem opção e por contagem divergente com o formulário no erro, tabelas antigas intactas após aborto, colunas antigas preservadas, formulário sem resposta
+- [x] `scripts/db-test-reset.ts` sem as três tabelas `TB_Resposta_*`
+- [x] Depois de `npm run db:test:reset`, `prisma migrate diff` do banco para o `schema.prisma` não acusa drift
+- [x] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration` (inclui os testes de integração reescritos no T2)
+
+**Status**: Done
 
 **Tests**: integration
 **Gate**: full
