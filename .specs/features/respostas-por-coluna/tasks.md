@@ -164,8 +164,10 @@ T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] `SELECT P12, COUNT(*) ... WHERE P11 = 'b' GROUP BY P12` e `SELECT SUM(P20a)` devolvem as contagens semeadas
-- [ ] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+- [x] `SELECT P12, COUNT(*) ... WHERE P11 = 'b' GROUP BY P12` e `SELECT SUM(P20a)` devolvem as contagens semeadas
+- [x] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+
+**Status**: Done
 
 **Tests**: integration
 **Gate**: full
