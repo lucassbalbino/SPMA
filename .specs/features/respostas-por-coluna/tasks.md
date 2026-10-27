@@ -283,8 +283,10 @@ T6 → T7 → T8 → T9 → T10
 
 **Done when**:
 
-- [ ] Os mutantes M11 (`separarRespostas` deixa as `P*`) e M12 (client sem o omit global) são mortos
-- [ ] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+- [x] Os mutantes M11 (`separarRespostas` deixa as `P*`) e M12 (client sem o omit global) são mortos
+- [x] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+
+**Status**: Done
 
 **Tests**: integration
 **Gate**: full

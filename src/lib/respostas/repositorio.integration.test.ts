@@ -10,8 +10,10 @@ import { camposDeResposta } from "./colunas";
 import {
   apagarRespostas,
   gravarRespostas,
+  incluirRespostas,
   lerRespostas,
   ISOLAMENTO_RESPOSTAS,
+  separarRespostas,
 } from "./repositorio";
 
 const CPF_GO = "40364947096";
@@ -412,5 +414,41 @@ describe("repositório de respostas por coluna (integration)", () => {
     await prisma.usuario.delete({ where: { documento: CPF_ALUNO_DESCARTAVEL } });
 
     expect(await prisma.dadoPessoalAluno.count({ where: { cpf: CPF_ALUNO_DESCARTAVEL } })).toBe(0);
+  });
+  // COL-11: as listagens devolvem o registro sem nenhuma coluna `P*` e as
+  // respostas como `{ chave: valor }`. O client padrão esconde as colunas
+  // (omit global); a listagem as pede de volta e as separa do registro.
+  it("lê sem colunas P* pelo client padrão e separa as respostas na listagem", async () => {
+    await gravarRespostas(prisma, { formulario: "preCurso", cdCurso: cdCursoA }, {
+      qualifModalidade: "Presencial",
+      publicoPerfil: ["Mulheres"],
+    });
+    await gravarRespostas(prisma, { formulario: "posCurso", cdCurso: cdCursoA }, { posFinValorTotal: 10 });
+    await gravarRespostas(
+      prisma,
+      { formulario: "avaliacao", cpf: CPF_ALUNO, cdCurso: cdCursoA },
+      { avalGeralNota: 7 },
+    );
+    const temColunaP = (registro: object) => Object.keys(registro).filter((campo) => /^p\d/.test(campo));
+
+    const padrao = [
+      await prisma.preCurso.findUniqueOrThrow({ where: { cdCurso: cdCursoA } }),
+      await prisma.posCurso.findUniqueOrThrow({ where: { cdCurso: cdCursoA } }),
+      await prisma.avaliacaoAluno.findUniqueOrThrow({
+        where: { cpf_cdCurso: { cpf: CPF_ALUNO, cdCurso: cdCursoA } },
+      }),
+    ];
+    expect(padrao.map(temColunaP)).toEqual([[], [], []]);
+
+    const [registro] = await prisma.preCurso.findMany({
+      where: { cdCurso: cdCursoA },
+      omit: incluirRespostas("preCurso"),
+    });
+    expect(registro.p11).toBe("a");
+    const separado = separarRespostas("preCurso", registro);
+
+    expect(temColunaP(separado.registro)).toEqual([]);
+    expect(separado.registro.cdCurso).toBe(cdCursoA);
+    expect(separado.respostas).toEqual({ qualifModalidade: "Presencial", publicoPerfil: ["Mulheres"] });
   });
 });
