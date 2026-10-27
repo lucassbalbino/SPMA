@@ -172,7 +172,7 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 | COL-08 | P1: Pergunta é coluna | Execute | Implementing (T1) |
 | COL-09 | P1: Pergunta é coluna | Execute | Implementing (T2) |
 | COL-10 | P1: Pergunta é coluna | Execute | Implementing (T2) |
-| COL-11 | P1: Sem regressão | Execute | Implementing (T8) |
+| COL-11 | P1: Sem regressão | Execute | Implementing (T12) |
 | COL-12 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
 | COL-13 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |
 | COL-14 | P1: Sem regressão | Execute | Implementing (T2, verificado no T3) |

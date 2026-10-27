@@ -151,6 +151,7 @@ export function criarPreCurso(dados: {
   cdVerba: number;
   vlCursoAlocado: number;
   criadoPor: string;
+  respostas?: Record<string, unknown>;
 }): { cdCurso: number } {
   return executar<{ cdCurso: number }>("criarPreCurso", dados);
 }
@@ -183,7 +184,11 @@ export type PosCursoPersistido = {
 };
 
 /** Insere um Pós-Curso direto no banco - atalho de fixture para os e2e de `formulario-pos-curso` que não precisam exercitar a rota de criação (T4) em si. */
-export function criarPosCurso(dados: { cdCurso: number; criadoPor: string }): PosCursoPersistido {
+export function criarPosCurso(dados: {
+  cdCurso: number;
+  criadoPor: string;
+  respostas?: Record<string, unknown>;
+}): PosCursoPersistido {
   return executar<PosCursoPersistido>("criarPosCurso", dados);
 }
 

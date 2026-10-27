@@ -397,11 +397,15 @@ T10 → T11 → T12
 
 **Done when**:
 
-- [ ] O mutante M14 (rota sem `omit: incluirRespostas`) é morto nas três listagens
-- [ ] Gate check passes: `npm run lint && npm run typecheck` e os e2e de pré, pós e avaliação
+- [x] O mutante M14 (rota sem `omit: incluirRespostas`) é morto nas três listagens
+- [x] Gate check passes: `npm run lint && npm run typecheck` e os e2e de pré, pós e avaliação
+
+**Status**: Done
 
 **Tests**: e2e
 **Gate**: build
+
+**Resultado e2e**: pré, pós e avaliação, 104 de 105. A falha, `e2e/pre-cursos-formulario.spec.ts:323`, é um clique de rádio/checkbox que não fica marcado sob carga paralela, cada vez num campo diferente (`suporteEstrategias` na rodada completa, `publicoInstituicaoExecutora` aqui). Passou 3 de 3 em sequência. O formulário não é tocado pela feature e o hook só muda o estado no clique local.
 
 **Commit**: `test(e2e): assert answers in the three listings`
 

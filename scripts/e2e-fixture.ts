@@ -246,14 +246,22 @@ async function executar(
       });
     }
 
+    // Respostas opcionais entram pelo repositório, como em `criarAvaliacao`.
     case "criarPreCurso": {
-      const dados = argumento as {
+      const { respostas, ...dados } = argumento as {
         cdOfertante: string;
         cdVerba: number;
         vlCursoAlocado: number;
         criadoPor: string;
+        respostas?: Record<string, unknown>;
       };
-      return prisma.preCurso.create({ data: dados });
+      return prisma.$transaction(async (tx) => {
+        const preCurso = await tx.preCurso.create({ data: dados });
+        if (respostas !== undefined) {
+          await gravarRespostas(tx, { formulario: "preCurso", cdCurso: preCurso.cdCurso }, respostas);
+        }
+        return preCurso;
+      });
     }
 
     // Limpa PreCurso de teste antes de `deleteUsuarios` - `PreCurso.criadoPor`
@@ -308,8 +316,18 @@ async function executar(
     }
 
     case "criarPosCurso": {
-      const dados = argumento as { cdCurso: number; criadoPor: string };
-      return prisma.posCurso.create({ data: dados });
+      const { respostas, ...dados } = argumento as {
+        cdCurso: number;
+        criadoPor: string;
+        respostas?: Record<string, unknown>;
+      };
+      return prisma.$transaction(async (tx) => {
+        const posCurso = await tx.posCurso.create({ data: dados });
+        if (respostas !== undefined) {
+          await gravarRespostas(tx, { formulario: "posCurso", cdCurso: dados.cdCurso }, respostas);
+        }
+        return posCurso;
+      });
     }
 
     // Insere uma AvaliacaoAluno de fixture direto no banco - atalho para os

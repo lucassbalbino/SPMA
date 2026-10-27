@@ -5,6 +5,7 @@
 // `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test } from "@playwright/test";
 import {
+  criarPreCurso,
   criarVerba,
   deletePreCursosPorOfertante,
   deleteUsuarios,
@@ -30,6 +31,7 @@ const CPFS = [CPF_GT, CNPJ_GO, CNPJ_GO_2, CPF_AL, CPF_AM];
 let cdVerba: number;
 let cdVerbaPequena: number;
 let cdVerba2Am: number;
+let cdCursoComRespostas: number;
 
 async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCsrf: string }> {
   const cliente = await novoCliente();
@@ -70,6 +72,13 @@ test.beforeAll(() => {
   cdVerba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 10000 }).cdVerba;
   cdVerbaPequena = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 500 }).cdVerba;
   cdVerba2Am = criarVerba({ cdOfertante: CNPJ_GO_2, vlVerba: 1000 }).cdVerba;
+  cdCursoComRespostas = criarPreCurso({
+    cdOfertante: CNPJ_GO,
+    cdVerba,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO,
+    respostas: { qualifModalidade: "Presencial" },
+  }).cdCurso;
 });
 
 test.afterAll(() => {
@@ -237,6 +246,10 @@ test("REQ-PC-14: GO só lista pré-cursos do próprio Ofertante", async () => {
   expect(
     corpo.preCursos.every((p: { cdOfertante: string }) => p.cdOfertante === CNPJ_GO),
   ).toBe(true);
+  // COL-11: o item traz as respostas como `{ chave: valor }` e nenhuma coluna `P*`.
+  const item = corpo.preCursos.find((p: { cdCurso: number }) => p.cdCurso === cdCursoComRespostas);
+  expect(item.respostas).toEqual({ qualifModalidade: "Presencial" });
+  expect(Object.keys(item).filter((campo) => /^p\d/.test(campo))).toEqual([]);
 
   await cliente.dispose();
 });
