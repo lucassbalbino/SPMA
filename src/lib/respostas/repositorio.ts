@@ -1,8 +1,9 @@
-// Repositório de respostas (RESP-01, RESP-03, RESP-04, RESP-19, RESP-21).
+// Repositório de respostas (COL-01, COL-02, COL-11 a COL-15, COL-30).
 //
 // Traduz entre o objeto `{ chave: valor }` que o domínio usa - completude,
 // condicionais, schemas Zod e formulários React continuam vendo exatamente
-// o mesmo objeto de sempre - e as linhas que o banco guarda.
+// o mesmo objeto de sempre - e as colunas `P*` do registro do formulário
+// (AD-051). A tradução chave ↔ coluna e texto ↔ letra vive em `colunas.ts`.
 //
 // SPEC_DEVIATION: `design.md` esboça as assinaturas como
 // `(tx, formulario, id)`. Aqui `formulario` e `id` viajam juntos num único
@@ -11,11 +12,9 @@
 // nenhum ganho de expressividade.
 // Reason: mesma informação, menos superfície e tipagem exata por formulário.
 import { Prisma } from "../../generated/prisma/client";
-import { respostasAvaliacaoSchema } from "../validation/schemas/avaliacao.schema";
-import { respostasDadosPessoaisSchema } from "../validation/schemas/dados-pessoais.schema";
-import { respostasPosCursoSchema } from "../validation/schemas/pos-curso.schema";
-import { respostasPreCursoSchema } from "../validation/schemas/pre-curso.schema";
-import { classificarChave, desserializar, serializar } from "./forma";
+import { camposDeResposta, deColunas, paraColunas, type Formulario, type Respostas } from "./colunas";
+
+export type { Respostas };
 
 /** Aceita tanto o client normal quanto o client de dentro de `$transaction`. */
 export type ClienteRespostas = Prisma.TransactionClient;
@@ -28,150 +27,103 @@ export type AlvoRespostas =
   // curso - a coleta acontece antes de existir qualquer matrícula.
   | { formulario: "dadosPessoais"; cpf: string };
 
-export type Respostas = Record<string, unknown>;
-
 /**
  * Isolamento das transações que gravam respostas.
  *
- * MEDIDO: sob o REPEATABLE READ padrão do MySQL, duas gravações concorrentes
- * no mesmo registro — em chaves DIFERENTES — batem em deadlock de forma
- * reprodutível (3 de 3 rodadas, uma das duas sempre morre). A causa é o
- * `DELETE ... WHERE cdCurso = ? AND chave IN (...)` do merge raso, que tranca
- * a lacuna do índice único. Com READ COMMITTED as duas passam, também 3 de 3.
- *
- * Baixar o isolamento aqui não custa consistência: as rotas já calculam o
- * merge com um `lerRespostas` que roda FORA da transação, e o que fica dentro
- * dela é só o delete seguido de insert. Nada aqui depende de snapshot
- * repetível.
+ * Herdado do formato por linhas, em que o `DELETE ... WHERE chave IN (...)`
+ * do merge raso trancava a lacuna do índice único e duas gravações
+ * concorrentes no mesmo registro batiam em deadlock sob REPEATABLE READ.
+ * Com as respostas em colunas a gravação é um `UPDATE` pela chave primária,
+ * sem lacuna para trancar; READ COMMITTED segue sem custo, porque as rotas
+ * calculam o merge com um `lerRespostas` que roda FORA da transação.
  */
 export const ISOLAMENTO_RESPOSTAS = {
   isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
 } as const;
 
-const SCHEMAS = {
-  preCurso: respostasPreCursoSchema,
-  posCurso: respostasPosCursoSchema,
-  avaliacao: respostasAvaliacaoSchema,
-  dadosPessoais: respostasDadosPessoaisSchema,
-} as const;
-
-type LinhaResposta = { chave: string; ordem: number; valor: string };
+/** `select` com todas as colunas de resposta do formulário. */
+function selecaoDeRespostas(formulario: Formulario): Record<string, true> {
+  return Object.fromEntries(camposDeResposta(formulario).map((campo) => [campo, true]));
+}
 
 /**
- * `include` das rotas de listagem, que trazem as linhas junto do registro-pai
- * numa consulta só (em vez de uma ida ao banco por item da lista).
- *
- * A ordenação não é cosmética: `montarRespostas` remonta cada lista de
- * múltipla escolha na ordem em que as linhas chegam, então `ordem: "asc"` é o
- * que preserva a ordem original das opções escolhidas. Era repetida à mão nas
- * 3 rotas de listagem.
+ * `omit` que traz de volta as colunas de resposta, desligadas por padrão no
+ * client (`src/lib/db/prisma.ts`). Usado pelas rotas de listagem, que leem o
+ * registro e as respostas numa consulta só.
  */
-export const LINHAS_RESPOSTA_ORDENADAS = {
-  // Sem `as const`: os tipos gerados do Prisma recusam um `orderBy` readonly.
-  orderBy: [{ chave: "asc" as const }, { ordem: "asc" as const }],
-};
-
-/** Filtro das linhas de um único registro de formulário. */
-function filtroDoPai(alvo: AlvoRespostas) {
-  if (alvo.formulario === "dadosPessoais") {
-    return { cpf: alvo.cpf };
-  }
-
-  return alvo.formulario === "avaliacao"
-    ? { cpf: alvo.cpf, cdCurso: alvo.cdCurso }
-    : { cdCurso: alvo.cdCurso };
+export function incluirRespostas(formulario: Formulario): Record<string, false> {
+  return Object.fromEntries(camposDeResposta(formulario).map((campo) => [campo, false]));
 }
 
-async function buscarLinhas(
+/**
+ * Separa as colunas de resposta do resto do registro: o registro volta sem
+ * nenhum campo `P*` (o contrato HTTP não mudou) e as respostas voltam como
+ * `{ chave: valor }`.
+ */
+export function separarRespostas<R extends object>(
+  formulario: Formulario,
+  registro: R,
+): { registro: R; respostas: Respostas } {
+  const campos = new Set(camposDeResposta(formulario));
+  const resto = Object.fromEntries(
+    Object.entries(registro).filter(([campo]) => !campos.has(campo)),
+  );
+
+  return { registro: resto as R, respostas: deColunas(formulario, registro as Respostas) };
+}
+
+async function buscarColunas(
   tx: ClienteRespostas,
   alvo: AlvoRespostas,
-): Promise<LinhaResposta[]> {
-  const { orderBy } = LINHAS_RESPOSTA_ORDENADAS;
+): Promise<Respostas | null> {
+  const select = selecaoDeRespostas(alvo.formulario);
 
   if (alvo.formulario === "preCurso") {
-    return tx.respostaPreCurso.findMany({ where: { cdCurso: alvo.cdCurso }, orderBy });
+    return tx.preCurso.findUnique({ where: { cdCurso: alvo.cdCurso }, select });
   }
 
   if (alvo.formulario === "posCurso") {
-    return tx.respostaPosCurso.findMany({ where: { cdCurso: alvo.cdCurso }, orderBy });
+    return tx.posCurso.findUnique({ where: { cdCurso: alvo.cdCurso }, select });
   }
 
   if (alvo.formulario === "dadosPessoais") {
-    return tx.dadoPessoalAluno.findMany({ where: { cpf: alvo.cpf }, orderBy });
+    return tx.dadoPessoalAluno.findUnique({ where: { cpf: alvo.cpf }, select });
   }
 
-  return tx.respostaAvaliacao.findMany({
-    where: { cpf: alvo.cpf, cdCurso: alvo.cdCurso },
-    orderBy,
+  return tx.avaliacaoAluno.findUnique({
+    where: { cpf_cdCurso: { cpf: alvo.cpf, cdCurso: alvo.cdCurso } },
+    select,
   });
 }
 
-async function apagarLinhas(
+async function gravarColunas(
   tx: ClienteRespostas,
   alvo: AlvoRespostas,
-  chaves: string[],
+  data: Respostas,
 ): Promise<void> {
-  if (chaves.length === 0) return;
-
   if (alvo.formulario === "preCurso") {
-    await tx.respostaPreCurso.deleteMany({
-      where: { cdCurso: alvo.cdCurso, chave: { in: chaves } },
-    });
+    await tx.preCurso.update({ where: { cdCurso: alvo.cdCurso }, data });
     return;
   }
 
   if (alvo.formulario === "posCurso") {
-    await tx.respostaPosCurso.deleteMany({
-      where: { cdCurso: alvo.cdCurso, chave: { in: chaves } },
-    });
+    await tx.posCurso.update({ where: { cdCurso: alvo.cdCurso }, data });
     return;
   }
 
   if (alvo.formulario === "dadosPessoais") {
-    await tx.dadoPessoalAluno.deleteMany({
-      where: { cpf: alvo.cpf, chave: { in: chaves } },
+    // A linha do Aluno nasce na primeira gravação dos dados pessoais.
+    await tx.dadoPessoalAluno.upsert({
+      where: { cpf: alvo.cpf },
+      create: { cpf: alvo.cpf, ...data },
+      update: data,
     });
     return;
   }
 
-  await tx.respostaAvaliacao.deleteMany({
-    where: { cpf: alvo.cpf, cdCurso: alvo.cdCurso, chave: { in: chaves } },
-  });
-}
-
-async function inserirLinhas(
-  tx: ClienteRespostas,
-  alvo: AlvoRespostas,
-  linhas: LinhaResposta[],
-): Promise<void> {
-  if (linhas.length === 0) return;
-
-  const pai = filtroDoPai(alvo);
-  const dados = linhas.map((linha) => ({ ...pai, ...linha }));
-
-  if (alvo.formulario === "preCurso") {
-    await tx.respostaPreCurso.createMany({
-      data: dados as Prisma.RespostaPreCursoCreateManyInput[],
-    });
-    return;
-  }
-
-  if (alvo.formulario === "posCurso") {
-    await tx.respostaPosCurso.createMany({
-      data: dados as Prisma.RespostaPosCursoCreateManyInput[],
-    });
-    return;
-  }
-
-  if (alvo.formulario === "dadosPessoais") {
-    await tx.dadoPessoalAluno.createMany({
-      data: dados as Prisma.DadoPessoalAlunoCreateManyInput[],
-    });
-    return;
-  }
-
-  await tx.respostaAvaliacao.createMany({
-    data: dados as Prisma.RespostaAvaliacaoCreateManyInput[],
+  await tx.avaliacaoAluno.update({
+    where: { cpf_cdCurso: { cpf: alvo.cpf, cdCurso: alvo.cdCurso } },
+    data,
   });
 }
 
@@ -180,54 +132,23 @@ async function inserirLinhas(
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Remonta o objeto de respostas a partir de linhas já carregadas. Separado de
- * `lerRespostas` porque as rotas de listagem trazem as linhas junto do
- * registro-pai (`include: { linhasResposta }`), numa consulta só, em vez de
- * uma ida ao banco por item da lista.
- */
-export function montarRespostas(
-  formulario: AlvoRespostas["formulario"],
-  linhas: LinhaResposta[],
-): Respostas {
-  const itensPorChave = new Map<string, string[]>();
-
-  for (const linha of linhas) {
-    const itens = itensPorChave.get(linha.chave);
-    if (itens) {
-      itens.push(linha.valor);
-    } else {
-      itensPorChave.set(linha.chave, [linha.valor]);
-    }
-  }
-
-  const schema = SCHEMAS[formulario];
-  const respostas: Respostas = {};
-
-  for (const [chave, itens] of itensPorChave) {
-    respostas[chave] = desserializar(itens, classificarChave(schema, chave));
-  }
-
-  return respostas;
-}
-
-/**
- * Remonta o objeto de respostas a partir das linhas. Registro sem nenhuma
- * linha devolve `{}` (RESP-16). O tipo de cada valor vem da forma do schema
- * Zod; chave que o schema atual não conhece volta como texto (RESP-14).
+ * Remonta o objeto de respostas a partir das colunas. Registro sem nenhuma
+ * resposta (ou inexistente) devolve `{}`.
  */
 export async function lerRespostas(
   tx: ClienteRespostas,
   alvo: AlvoRespostas,
 ): Promise<Respostas> {
-  return montarRespostas(alvo.formulario, await buscarLinhas(tx, alvo));
+  const registro = await buscarColunas(tx, alvo);
+
+  return registro ? deColunas(alvo.formulario, registro) : {};
 }
 
 /**
  * Forma do campo `respostas` no corpo das respostas HTTP: registro sem
- * nenhuma linha aparece como `null`, que é exatamente o que a coluna JSON
- * devolvia antes de ser dropada. É o que mantém o contrato da API idêntico
- * ao de antes da normalização (RESP-07 a RESP-12) - as três features que
- * dependem dele não mudaram nenhuma asserção.
+ * nenhuma resposta aparece como `null`, que é exatamente o que a coluna JSON
+ * devolvia antes da normalização. É o que mantém o contrato da API idêntico
+ * entre os formatos de armazenamento (COL-11).
  */
 export function respostasOuNulo(respostas: Respostas): Respostas | null {
   return Object.keys(respostas).length === 0 ? null : respostas;
@@ -242,46 +163,31 @@ export async function lerRespostasParaApi(
 }
 
 /**
- * Merge raso por chave (RESP-03): apaga as linhas das chaves presentes no
- * patch e insere as novas. É isso que faz uma lista que encolhe perder as
- * opções que saíram (RESP-04) e uma regravação idêntica manter uma linha só
- * (RESP-19). Chamar dentro de `$transaction` para que nada fique
- * meio-gravado (RESP-21).
+ * Merge raso por chave (COL-12): grava só as colunas das chaves presentes no
+ * patch, num único comando - uma lista que encolhe grava `false` nas opções
+ * que saíram (COL-13) e `null` limpa a pergunta (COL-14). Chamar dentro de
+ * `$transaction` junto da gravação do registro-pai (COL-30).
  */
 export async function gravarRespostas(
   tx: ClienteRespostas,
   alvo: AlvoRespostas,
   patch: Respostas,
 ): Promise<void> {
-  const chaves = Object.keys(patch);
+  const data = paraColunas(alvo.formulario, patch);
 
-  if (chaves.length === 0) return;
+  if (Object.keys(data).length === 0) return;
 
-  const linhas: LinhaResposta[] = [];
-
-  for (const chave of chaves) {
-    const valor = patch[chave];
-    if (valor === undefined || valor === null) continue;
-
-    serializar(valor).forEach((item, ordem) => {
-      linhas.push({ chave, ordem, valor: item });
-    });
-  }
-
-  await apagarLinhas(tx, alvo, chaves);
-  await inserirLinhas(tx, alvo, linhas);
+  await gravarColunas(tx, alvo, data);
 }
 
 /**
- * Remove as chaves informadas. Usado pelo encerramento para descartar a
- * resposta condicional que não se aplica (AD-038, RESP-08).
+ * Limpa as chaves informadas. Usado pelo encerramento para descartar a
+ * resposta condicional que não se aplica (AD-038, COL-15).
  */
 export async function apagarRespostas(
   tx: ClienteRespostas,
   alvo: AlvoRespostas,
   chaves: string[],
 ): Promise<void> {
-  if (chaves.length === 0) return;
-
-  await apagarLinhas(tx, alvo, chaves);
+  await gravarRespostas(tx, alvo, Object.fromEntries(chaves.map((chave) => [chave, null])));
 }

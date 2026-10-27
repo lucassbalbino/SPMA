@@ -14,9 +14,9 @@ import { exigirSessao } from "@/lib/api/guardas";
 import { erroHttp } from "@/lib/api/erro-http";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import {
-  LINHAS_RESPOSTA_ORDENADAS,
-  montarRespostas,
+  incluirRespostas,
   respostasOuNulo,
+  separarRespostas,
 } from "@/lib/respostas/repositorio";
 
 async function listarPosCursos(request: Request) {
@@ -42,18 +42,19 @@ async function listarPosCursos(request: Request) {
       () => ({ preCurso: { cdOfertante: "" } }),
     ),
     orderBy: { cdCurso: "asc" },
-    include: {
-      preCurso: { select: { cdOfertante: true } },
-      linhasResposta: LINHAS_RESPOSTA_ORDENADAS,
-    },
+    omit: incluirRespostas("posCurso"),
+    include: { preCurso: { select: { cdOfertante: true } } },
   });
 
   return NextResponse.json({
-    posCursos: posCursos.map(({ preCurso, linhasResposta, ...posCurso }) => ({
-      ...posCurso,
-      cdOfertante: preCurso.cdOfertante,
-      respostas: respostasOuNulo(montarRespostas("posCurso", linhasResposta)),
-    })),
+    posCursos: posCursos.map(({ preCurso, ...registro }) => {
+      const { registro: posCurso, respostas } = separarRespostas("posCurso", registro);
+      return {
+        ...posCurso,
+        cdOfertante: preCurso.cdOfertante,
+        respostas: respostasOuNulo(respostas),
+      };
+    }),
   });
 }
 

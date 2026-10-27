@@ -47,13 +47,13 @@ T1
 ### Phase 2: Persistência por coluna
 
 ```
-T1 → T2 → T3 → T4
+T1 → T2 → T3
 ```
 
 ### Phase 3: Consumidores e documentação
 
 ```
-T4 → T5 → T6 → T7
+T3 → T4 → T5 → T6
 ```
 
 ---
@@ -88,13 +88,13 @@ T4 → T5 → T6 → T7
 
 ---
 
-### T2: Modelo físico e repositório por coluna
+### T2: Modelo físico, repositório e testes que dependem dele
 
-**What**: Trocar o modelo Prisma (colunas `P*` nos três formulários, `DadoPessoalAluno` com uma linha por CPF, sem as tabelas `RespostaPreCurso`/`RespostaPosCurso`/`RespostaAvaliacao`) e reescrever o repositório, a omissão global do client, as três rotas de listagem e a página de usuários sobre ele, removendo `forma.ts`.
+**What**: Trocar o modelo Prisma (colunas `P*` nos três formulários, `DadoPessoalAluno` com uma linha por CPF, sem `RespostaPreCurso`/`RespostaPosCurso`/`RespostaAvaliacao`) e reescrever sobre ele o repositório, a omissão global do client, as três rotas de listagem, a página de usuários e os testes de integração que usam esses modelos.
 **Where**: `src/lib/respostas/repositorio.ts`
 **Depends on**: T1
 **Reuses**: API pública atual do repositório; `separarRespostas` substitui `montarRespostas` nas rotas de listagem
-**Requirement**: COL-01, COL-02, COL-09, COL-10, COL-11
+**Requirement**: COL-01, COL-02, COL-09, COL-10, COL-11, COL-12, COL-13, COL-14, COL-15, COL-29, COL-30, COL-31
 
 **Tools**:
 
@@ -103,11 +103,15 @@ T4 → T5 → T6 → T7
 
 **Done when**:
 
-- [ ] `prisma/schema.prisma` tem as colunas de `design.md`; `npx prisma validate` passa
-- [ ] Teste unitário `src/lib/respostas/schema-colunas.test.ts` prova que toda chave do mapa tem coluna no modelo certo e toda coluna `P*` do modelo tem dono (COL-10)
-- [ ] `src/lib/respostas/forma.ts` e `forma.test.ts` removidos (código morto do formato antigo)
-- [ ] Nenhum `.ts`/`.tsx` fora dos testes de integração referencia `respostaPreCurso`, `respostaPosCurso`, `respostaAvaliacao` ou `linhasResposta`
-- [ ] Gate check passes: `npm run typecheck && npm run test:unit`
+- [x] `prisma/schema.prisma` tem as colunas de `design.md`; `npx prisma validate` passa
+- [x] Teste unitário `src/lib/respostas/schema-colunas.test.ts` prova que toda chave do mapa tem coluna no modelo certo, no tipo certo, e toda coluna `P*` do modelo tem dono (COL-07, COL-09, COL-10)
+- [x] `src/lib/respostas/repositorio.integration.test.ts` reescrito com asserção sobre as colunas físicas para COL-11 a COL-15 e COL-29 a COL-31 (executado no gate do T3, o primeiro em que o banco tem as colunas)
+- [x] `src/lib/usuarios/gestao.integration.test.ts` com a fixture no formato novo (respostas viajam com a linha na troca de documento)
+- [x] Aposentados os testes que só existem para o formato antigo: `forma.test.ts` (com `forma.ts`), `agregacao`, `backfill`, `dados-pessoais-migracao` e `alteracoes-mtur-migracao` `.integration.test.ts`
+- [x] Nenhum `.ts`/`.tsx` referencia `respostaPreCurso`, `respostaPosCurso`, `respostaAvaliacao` ou `linhasResposta`
+- [x] Gate check passes: `npm run typecheck && npm run test:unit`
+
+**Status**: Done
 
 **Tests**: unit
 **Gate**: quick
@@ -121,7 +125,7 @@ T4 → T5 → T6 → T7
 **What**: Escrever a migration `respostas_por_coluna` (expand, backfill, conferência por `CHECK` nomeado, contract) e o seu teste de integração num banco descartável.
 **Where**: `prisma/migrations/20261027120000_respostas_por_coluna/migration.sql`
 **Depends on**: T2
-**Reuses**: harness `sqlDaMigration` de `alteracoes-mtur-migracao.integration.test.ts`
+**Reuses**: harness `sqlDaMigration` dos testes de migration anteriores
 **Requirement**: COL-17, COL-18, COL-19, COL-20, COL-21, COL-22, COL-23, COL-24
 
 **Tools**:
@@ -132,8 +136,9 @@ T4 → T5 → T6 → T7
 **Done when**:
 
 - [ ] Teste `src/lib/respostas/respostas-por-coluna-migracao.integration.test.ts` cobre: conversão dos quatro formulários coluna a coluna, múltipla com 0/1, órfã descartada, aborto por texto sem opção e por contagem divergente com o formulário no erro, tabelas antigas intactas após aborto, colunas antigas preservadas, formulário sem resposta
-- [ ] Depois de `npm run db:test:reset`, `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code` não acusa drift
-- [ ] Gate check passes: `npm run db:test:reset && npx vitest run -c vitest.integration.config.ts src/lib/respostas/respostas-por-coluna-migracao.integration.test.ts`
+- [ ] `scripts/db-test-reset.ts` sem as três tabelas `TB_Resposta_*`
+- [ ] Depois de `npm run db:test:reset`, `prisma migrate diff` do banco para o `schema.prisma` não acusa drift
+- [ ] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration` (inclui os testes de integração reescritos no T2)
 
 **Tests**: integration
 **Gate**: full
@@ -142,38 +147,13 @@ T4 → T5 → T6 → T7
 
 ---
 
-### T4: Testes de integração do repositório
+### T4: Cruzamento por pergunta direto na tabela
 
-**What**: Reescrever `repositorio.integration.test.ts` para o formato por coluna e atualizar a lista de tabelas de `scripts/db-test-reset.ts`.
-**Where**: `src/lib/respostas/repositorio.integration.test.ts`
-**Depends on**: T3
-**Reuses**: cenários do teste atual (merge raso, lista que encolhe, regravação idêntica, concorrência, cascata)
-**Requirement**: COL-11, COL-12, COL-13, COL-14, COL-15, COL-29, COL-30, COL-31
-
-**Tools**:
-
-- MCP: NONE
-- Skill: NONE
-
-**Done when**:
-
-- [ ] Cada AC listado tem asserção sobre o valor das colunas no banco e sobre o objeto lido
-- [ ] Gate check passes: `npm run db:test:reset && npm run test:unit && npx vitest run -c vitest.integration.config.ts src/lib/respostas/repositorio.integration.test.ts`
-
-**Tests**: integration
-**Gate**: full
-
-**Commit**: `test(respostas): cover column repository against mysql`
-
----
-
-### T5: Cruzamento por pergunta e testes de migrations antigas
-
-**What**: Substituir `agregacao.integration.test.ts` por um teste de filtro e cruzamento sobre as colunas, aposentar os três testes de migrations antigas e ajustar a fixture de `gestao.integration.test.ts`.
+**What**: Teste de integração que prova o filtro e o cruzamento por pergunta numa única tabela, no lugar da agregação por `(Chave, Valor)`.
 **Where**: `src/lib/respostas/cruzamento.integration.test.ts`
-**Depends on**: T4
+**Depends on**: T3
 **Reuses**: semeadura via `gravarRespostas`
-**Requirement**: COL-25, COL-26, COL-16
+**Requirement**: COL-25, COL-26
 
 **Tools**:
 
@@ -183,21 +163,20 @@ T4 → T5 → T6 → T7
 **Done when**:
 
 - [ ] `SELECT P12, COUNT(*) ... WHERE P11 = 'b' GROUP BY P12` e `SELECT SUM(P20a)` devolvem as contagens semeadas
-- [ ] `backfill`, `dados-pessoais-migracao` e `alteracoes-mtur-migracao` `.integration.test.ts` removidos, com o motivo no commit
 - [ ] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
 
 **Tests**: integration
 **Gate**: full
 
-**Commit**: `test(respostas): replace row aggregation with column cross-filter`
+**Commit**: `test(respostas): cross-filter answers by question column`
 
 ---
 
-### T6: Suíte e2e sem regressão
+### T5: Suíte e2e sem regressão
 
 **What**: Ajustar os helpers e2e que ainda descrevem o formato antigo e rodar a suíte completa.
 **Where**: `e2e/helpers/db.ts`
-**Depends on**: T5
+**Depends on**: T4
 **Reuses**: suíte e2e existente das quatro features
 **Requirement**: COL-16
 
@@ -218,11 +197,11 @@ T4 → T5 → T6 → T7
 
 ---
 
-### T7: AD-051 e procedimento de deploy
+### T6: AD-051 e procedimento de deploy
 
 **What**: Registrar a AD-051 em `.specs/STATE.md` (rescinde a AD-041), atualizar a nota do `schema.prisma` e escrever em `docs/DEPLOY_PRODUCAO.md` o backup antes do deploy e a reversão de uma migração abortada.
 **Where**: `.specs/STATE.md`
-**Depends on**: T6
+**Depends on**: T5
 **Reuses**: formato das ADs existentes
 **Requirement**: COL-27, COL-28
 
@@ -249,21 +228,21 @@ T4 → T5 → T6 → T7
 | Task | Depends On (task body) | Diagram Shows | Status |
 | --- | --- | --- | --- |
 | T1 | None | Phase 1 start | ✅ Match |
-| T2 | T1 | T1 (fase anterior) → T2 | ✅ Match |
+| T2 | T1 | T1 → T2 | ✅ Match |
 | T3 | T2 | T2 → T3 | ✅ Match |
 | T4 | T3 | T3 → T4 | ✅ Match |
-| T5 | T4 | T4 (fase anterior) → T5 | ✅ Match |
+| T5 | T4 | T4 → T5 | ✅ Match |
 | T6 | T5 | T5 → T6 | ✅ Match |
-| T7 | T6 | T6 → T7 | ✅ Match |
 
 ## Test Co-location Validation
 
 | Task | Code Layer Created/Modified | Matrix Requires | Task Says | Status |
 | --- | --- | --- | --- | --- |
 | T1 | Mapa de colunas | unit | unit | ✅ OK |
-| T2 | Schema + repositório | unit (schema) / integration (repositório) | unit | ✅ OK: o repositório só roda contra o banco depois da migration (T3); seus testes de integração entram no primeiro task em que são executáveis (T4, merge forward) |
+| T2 | Schema + repositório | unit (schema) / integration (repositório) | unit | ✅ OK: os testes de integração do repositório são escritos no T2 e executados no T3, o primeiro task em que o banco tem as colunas (merge forward) |
 | T3 | Migration SQL | integration | integration | ✅ OK |
-| T4 | Repositório | integration | integration | ✅ OK |
-| T5 | Testes de integração | integration | integration | ✅ OK |
-| T6 | Rotas/telas (sem regressão) | e2e | e2e | ✅ OK |
-| T7 | Documentação | none | none | ✅ OK |
+| T4 | Consulta por coluna | integration | integration | ✅ OK |
+| T5 | Rotas/telas (sem regressão) | e2e | e2e | ✅ OK |
+| T6 | Documentação | none | none | ✅ OK |
+
+**Replanejado em 2026-10-27, durante o T2:** remover os modelos antigos quebra o typecheck de todo teste que os usa, então o T2 absorveu a reescrita e a aposentadoria desses testes (antes T4 e parte do T5), e a execução deles contra o MySQL passou ao gate do T3.

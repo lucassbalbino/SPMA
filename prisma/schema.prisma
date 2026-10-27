@@ -5,7 +5,7 @@
 // Convenções:
 // - Nomes de tabela seguem o documento do cliente (TB_*), via @@map.
 // - Enums para TP_Usuario e Status (' ' em andamento / 'E' encerrado é modelado como enum EM_ANDAMENTO/ENCERRADO).
-// - Campos de questionário (P1..P32, PG1..PG25, PA1..PA36) NÃO são colunas individuais aqui:
+// - Cada pergunta dos questionários é uma coluna `P*` da tabela do próprio formulário:
 //   ver nota "Estratégia de armazenamento das respostas" no fim do arquivo.
 
 generator client {
@@ -94,7 +94,7 @@ model Usuario {
 
   // Relações de domínio
   avaliacoes       AvaliacaoAluno[] @relation("AlunoAvaliacoes")
-  dadosPessoais    DadoPessoalAluno[]
+  dadosPessoais    DadoPessoalAluno?
   cursosCriados    PreCurso[]       @relation("GoCursos")
   cursosOfertados  PreCurso[]       @relation("PreCursoOfertante")
   posCursosCriados PosCurso[]       @relation("GoPosCursos")
@@ -192,7 +192,131 @@ model PreCurso {
 
   posCurso       PosCurso?
   avaliacoes     AvaliacaoAluno[]
-  linhasResposta RespostaPreCurso[]
+
+  // Respostas, uma coluna por pergunta (AD-051, `src/lib/respostas/colunas.ts`).
+  p1       String?   @map("P1") @db.Char(2)
+  p2       String?   @map("P2") @db.Text
+  p3       String?   @map("P3") @db.Text
+  p4       String?   @map("P4") @db.Text
+  p5       String?   @map("P5") @db.Text
+  p6       String?   @map("P6") @db.Text
+  p7a      String?   @map("P7a") @db.Text
+  p7b      String?   @map("P7b") @db.Text
+  p7c      String?   @map("P7c") @db.Char(2)
+  p7d      String?   @map("P7d") @db.Char(1)
+  p7e      String?   @map("P7e") @db.Text
+  p8       String?   @map("P8") @db.Text
+  p9       String?   @map("P9") @db.Char(1)
+  p9Qual   String?   @map("P9Qual") @db.Text
+  p10a     Boolean?  @map("P10a")
+  p10b     Boolean?  @map("P10b")
+  p10c     Boolean?  @map("P10c")
+  p10d     Boolean?  @map("P10d")
+  p10e     Boolean?  @map("P10e")
+  p10f     Boolean?  @map("P10f")
+  p10g     Boolean?  @map("P10g")
+  p10h     Boolean?  @map("P10h")
+  p10i     Boolean?  @map("P10i")
+  p10j     Boolean?  @map("P10j")
+  p10k     Boolean?  @map("P10k")
+  p10l     Boolean?  @map("P10l")
+  p10Qual  String?   @map("P10Qual") @db.Text
+  p11      String?   @map("P11") @db.Char(1)
+  p12      String?   @map("P12") @db.Char(1)
+  p13      DateTime? @map("P13") @db.Date
+  p14      DateTime? @map("P14") @db.Date
+  p15      Int?      @map("P15")
+  p16      Int?      @map("P16")
+  p17a     Int?      @map("P17a")
+  p17b     DateTime? @map("P17b") @db.Date
+  p17c     DateTime? @map("P17c") @db.Date
+  p17d     Int?      @map("P17d")
+  p18      Decimal?  @map("P18") @db.Decimal(5, 2)
+  p19      String?   @map("P19") @db.Text
+  p20a     Boolean?  @map("P20a")
+  p20b     Boolean?  @map("P20b")
+  p20c     Boolean?  @map("P20c")
+  p20d     Boolean?  @map("P20d")
+  p20e     Boolean?  @map("P20e")
+  p20f     Boolean?  @map("P20f")
+  p20g     Boolean?  @map("P20g")
+  p20h     Boolean?  @map("P20h")
+  p20i     Boolean?  @map("P20i")
+  p20j     Boolean?  @map("P20j")
+  p20k     Boolean?  @map("P20k")
+  p21      String?   @map("P21") @db.Char(1)
+  p21_1    String?   @map("P21.1") @db.Text
+  p22a     Boolean?  @map("P22a")
+  p22b     Boolean?  @map("P22b")
+  p22c     Boolean?  @map("P22c")
+  p22d     Boolean?  @map("P22d")
+  p22e     Boolean?  @map("P22e")
+  p22f     Boolean?  @map("P22f")
+  p22g     Boolean?  @map("P22g")
+  p22h     Boolean?  @map("P22h")
+  p23_1    Int?      @map("P23.1") @db.TinyInt
+  p23_2    Int?      @map("P23.2") @db.TinyInt
+  p23_3    Int?      @map("P23.3") @db.TinyInt
+  p23_4    Int?      @map("P23.4") @db.TinyInt
+  p23_5    Int?      @map("P23.5") @db.TinyInt
+  p23_6    Int?      @map("P23.6") @db.TinyInt
+  p23_7    Int?      @map("P23.7") @db.TinyInt
+  p23_8    Int?      @map("P23.8") @db.TinyInt
+  p23_9    Int?      @map("P23.9") @db.TinyInt
+  p24_1    Int?      @map("P24.1") @db.TinyInt
+  p24_2    Int?      @map("P24.2") @db.TinyInt
+  p24_3    Int?      @map("P24.3") @db.TinyInt
+  p24_4    Int?      @map("P24.4") @db.TinyInt
+  p24_5    Int?      @map("P24.5") @db.TinyInt
+  p24_6    Int?      @map("P24.6") @db.TinyInt
+  p24_7    Int?      @map("P24.7") @db.TinyInt
+  p24_8    Int?      @map("P24.8") @db.TinyInt
+  p25      String?   @map("P25") @db.Char(1)
+  p25_1    String?   @map("P25.1") @db.Char(1)
+  p25_2    String?   @map("P25.2") @db.Char(1)
+  p25_3    String?   @map("P25.3") @db.Char(1)
+  p26a     Boolean?  @map("P26a")
+  p26b     Boolean?  @map("P26b")
+  p26c     Boolean?  @map("P26c")
+  p26d     Boolean?  @map("P26d")
+  p26e     Boolean?  @map("P26e")
+  p26f     Boolean?  @map("P26f")
+  p26g     Boolean?  @map("P26g")
+  p26h     Boolean?  @map("P26h")
+  p27      String?   @map("P27") @db.Char(1)
+  p27Qual  String?   @map("P27Qual") @db.Text
+  p28      String?   @map("P28") @db.Char(1)
+  p29      String?   @map("P29") @db.Char(1)
+  p30a     Boolean?  @map("P30a")
+  p30b     Boolean?  @map("P30b")
+  p30c     Boolean?  @map("P30c")
+  p30d     Boolean?  @map("P30d")
+  p30e     Boolean?  @map("P30e")
+  p30f     Boolean?  @map("P30f")
+  p30g     Boolean?  @map("P30g")
+  p30h     Boolean?  @map("P30h")
+  p30i     Boolean?  @map("P30i")
+  p30Qual  String?   @map("P30Qual") @db.Text
+  p31a     Boolean?  @map("P31a")
+  p31b     Boolean?  @map("P31b")
+  p31c     Boolean?  @map("P31c")
+  p31d     Boolean?  @map("P31d")
+  p31e     Boolean?  @map("P31e")
+  p31f     Boolean?  @map("P31f")
+  p31g     Boolean?  @map("P31g")
+  p31h     Boolean?  @map("P31h")
+  p32a     Boolean?  @map("P32a")
+  p32b     Boolean?  @map("P32b")
+  p32c     Boolean?  @map("P32c")
+  p32d     Boolean?  @map("P32d")
+  p32e     Boolean?  @map("P32e")
+  p32f     Boolean?  @map("P32f")
+  p32g     Boolean?  @map("P32g")
+  p32h     Boolean?  @map("P32h")
+  p32i     Boolean?  @map("P32i")
+  p32j     Boolean?  @map("P32j")
+  p32Qual  String?   @map("P32Qual") @db.Text
+
 
   @@index([cdOfertante])
   @@index([cdVerba])
@@ -215,7 +339,53 @@ model PosCurso {
   dataUltimaAtualizacao DateTime  @updatedAt @map("Data_Ultima_Atualizacao")
   dataEncerramento     DateTime?  @map("Data_Encerramento")
 
-  linhasResposta       RespostaPosCurso[]
+  // Respostas, uma coluna por pergunta (AD-051, `src/lib/respostas/colunas.ts`).
+  p1       String?   @map("P1") @db.Char(1)
+  p2       String?   @map("P2") @db.Char(1)
+  p3       String?   @map("P3") @db.Char(1)
+  p4       String?   @map("P4") @db.Char(1)
+  p5       String?   @map("P5") @db.Char(1)
+  p6a      Boolean?  @map("P6a")
+  p6b      Boolean?  @map("P6b")
+  p6c      Boolean?  @map("P6c")
+  p6d      Boolean?  @map("P6d")
+  p6e      Boolean?  @map("P6e")
+  p6f      Boolean?  @map("P6f")
+  p7       DateTime? @map("P7") @db.Date
+  p8       DateTime? @map("P8") @db.Date
+  p9       Int?      @map("P9")
+  p10      String?   @map("P10") @db.Text
+  p11      String?   @map("P11") @db.Char(1)
+  p12      String?   @map("P12") @db.Text
+  p13      Int?      @map("P13")
+  p14      Int?      @map("P14")
+  p15      Int?      @map("P15")
+  p16a     Boolean?  @map("P16a")
+  p16b     Boolean?  @map("P16b")
+  p16c     Boolean?  @map("P16c")
+  p16d     Boolean?  @map("P16d")
+  p16e     Boolean?  @map("P16e")
+  p16f     Boolean?  @map("P16f")
+  p16g     Boolean?  @map("P16g")
+  p16h     Boolean?  @map("P16h")
+  p16i     Boolean?  @map("P16i")
+  p16j     Boolean?  @map("P16j")
+  p17      String?   @map("P17") @db.Char(1)
+  p18      String?   @map("P18") @db.Char(1)
+  p19      Decimal?  @map("P19") @db.Decimal(12, 2)
+  p20      Decimal?  @map("P20") @db.Decimal(12, 2)
+  p21      Decimal?  @map("P21") @db.Decimal(12, 2)
+  p22      Decimal?  @map("P22") @db.Decimal(12, 2)
+  p23      Decimal?  @map("P23") @db.Decimal(12, 2)
+  p24      String?   @map("P24") @db.Char(1)
+  p25      String?   @map("P25") @db.Char(1)
+  p26a     Boolean?  @map("P26a")
+  p26b     Boolean?  @map("P26b")
+  p26c     Boolean?  @map("P26c")
+  p26d     Boolean?  @map("P26d")
+  p26e     Boolean?  @map("P26e")
+  p26f     Boolean?  @map("P26f")
+
 
   @@map("TB_Pos_Curso")
 }
@@ -245,7 +415,54 @@ model AvaliacaoAluno {
   dataCriacao       DateTime      @default(now()) @map("Data_Criacao")
   dataEncerramento  DateTime?     @map("Data_Encerramento")
 
-  linhasResposta    RespostaAvaliacao[]
+  // Respostas, uma coluna por pergunta (AD-051, `src/lib/respostas/colunas.ts`).
+  p14      String?   @map("P14") @db.Char(1)
+  p15      String?   @map("P15") @db.Char(1)
+  p16      String?   @map("P16") @db.Char(1)
+  p17a     Boolean?  @map("P17a")
+  p17b     Boolean?  @map("P17b")
+  p17c     Boolean?  @map("P17c")
+  p17d     Boolean?  @map("P17d")
+  p17e     Boolean?  @map("P17e")
+  p17f     Boolean?  @map("P17f")
+  p18      String?   @map("P18") @db.Char(1)
+  p19      String?   @map("P19") @db.Char(1)
+  p20      String?   @map("P20") @db.Char(1)
+  p21      String?   @map("P21") @db.Char(1)
+  p22      String?   @map("P22") @db.Char(1)
+  p22_1a   Boolean?  @map("P22.1a")
+  p22_1b   Boolean?  @map("P22.1b")
+  p22_1c   Boolean?  @map("P22.1c")
+  p22_1d   Boolean?  @map("P22.1d")
+  p22_1e   Boolean?  @map("P22.1e")
+  p22_1f   Boolean?  @map("P22.1f")
+  p22_1g   Boolean?  @map("P22.1g")
+  p22_1h   Boolean?  @map("P22.1h")
+  p22_1i   Boolean?  @map("P22.1i")
+  p22_1j   Boolean?  @map("P22.1j")
+  p23      String?   @map("P23") @db.Char(1)
+  p24_1    Int?      @map("P24.1") @db.TinyInt
+  p24_2    Int?      @map("P24.2") @db.TinyInt
+  p24_3    Int?      @map("P24.3") @db.TinyInt
+  p24_4    Int?      @map("P24.4") @db.TinyInt
+  p24_5    Int?      @map("P24.5") @db.TinyInt
+  p24_6    Int?      @map("P24.6") @db.TinyInt
+  p24_7    Int?      @map("P24.7") @db.TinyInt
+  p24_8    Int?      @map("P24.8") @db.TinyInt
+  p25      String?   @map("P25") @db.Char(1)
+  p26      String?   @map("P26") @db.Char(1)
+  p27      String?   @map("P27") @db.Char(1)
+  p29a     Boolean?  @map("P29a")
+  p29b     Boolean?  @map("P29b")
+  p29c     Boolean?  @map("P29c")
+  p29d     Boolean?  @map("P29d")
+  p29e     Boolean?  @map("P29e")
+  p29f     Boolean?  @map("P29f")
+  p35      Int?      @map("P35") @db.TinyInt
+  p36      String?   @map("P36") @db.Text
+  p37      String?   @map("P37") @db.Char(1)
+  p38      String?   @map("P38") @db.Text
+
 
   @@id([cpf, cdCurso])
   @@index([cdCurso])
@@ -253,86 +470,30 @@ model AvaliacaoAluno {
 }
 
 // ─────────────────────────────────────────────────────────────
-// RESPOSTAS NORMALIZADAS  (RESP-05, RESP-06, RESP-18)
-// Uma linha por resposta, três tabelas de forma idêntica — uma por
-// formulário, cada uma com FK real para o seu pai. Estas tabelas são a
-// ÚNICA fonte das respostas: a coluna `Respostas` dos três modelos foi
-// dropada pela migração `20260910222847_remover_coluna_respostas`.
-//
-// `Chave` é a chave do schema Zod (AD-004), que já é a fonte de verdade
-// da forma. `Ordem` é a posição dentro de uma seleção múltipla; 0 para
-// valor escalar. `Valor` guarda o texto que o Zod já valida hoje — o tipo
-// real é reconstruído na leitura por `src/lib/respostas/forma.ts`.
-// ─────────────────────────────────────────────────────────────
-
-model RespostaPreCurso {
-  id       Int      @id @default(autoincrement()) @map("ID_Resposta")
-  cdCurso  Int      @map("CD_Curso")
-  preCurso PreCurso @relation(fields: [cdCurso], references: [cdCurso], onDelete: Cascade)
-
-  chave    String   @map("Chave") @db.VarChar(100)
-  ordem    Int      @default(0) @map("Ordem")
-  valor    String   @map("Valor") @db.Text
-
-  @@unique([cdCurso, chave, ordem])
-  @@index([chave])
-  @@map("TB_Resposta_Pre_Curso")
-}
-
-model RespostaPosCurso {
-  id       Int      @id @default(autoincrement()) @map("ID_Resposta")
-  cdCurso  Int      @map("CD_Curso")
-  posCurso PosCurso @relation(fields: [cdCurso], references: [cdCurso], onDelete: Cascade)
-
-  chave    String   @map("Chave") @db.VarChar(100)
-  ordem    Int      @default(0) @map("Ordem")
-  valor    String   @map("Valor") @db.Text
-
-  @@unique([cdCurso, chave, ordem])
-  @@index([chave])
-  @@map("TB_Resposta_Pos_Curso")
-}
-
-model RespostaAvaliacao {
-  id        Int            @id @default(autoincrement()) @map("ID_Resposta")
-  // Nome de campo mantido (AD-043) - largura acompanha AvaliacaoAluno.cpf.
-  cpf       String         @map("CPF") @db.VarChar(14)
-  cdCurso   Int            @map("CD_Curso")
-  avaliacao AvaliacaoAluno @relation(fields: [cpf, cdCurso], references: [cpf, cdCurso], onDelete: Cascade)
-
-  chave     String         @map("Chave") @db.VarChar(100)
-  ordem     Int            @default(0) @map("Ordem")
-  valor     String         @map("Valor") @db.Text
-
-  @@unique([cpf, cdCurso, chave, ordem])
-  @@index([chave])
-  @@map("TB_Resposta_Avaliacao")
-}
-
-// ─────────────────────────────────────────────────────────────
-// DADO PESSOAL DO ALUNO  (PESSOAL-07, PESSOAL-08, PESSOAL-09)
-// Mesma forma `(pai, Chave, Ordem, Valor)` das três tabelas acima, só
-// que a chave-pai é o CPF sozinho: as 7 perguntas da seção DADOS
-// PESSOAIS (Q3-Q9) são atributo da pessoa, não da matrícula. Uma linha
-// por (Aluno, pergunta, posição) — o Aluno é a mesma pessoa em qualquer
-// curso que faça.
+// DADO PESSOAL DO ALUNO  (PESSOAL-07, PESSOAL-08, PESSOAL-09, AD-051)
+// Uma linha por Aluno, com as 7 perguntas da seção DADOS PESSOAIS
+// (P3-P9) como colunas. A chave é o CPF sozinho: são atributo da pessoa,
+// não da matrícula, e valem para qualquer curso que ela faça.
 //
 // `onDelete: Cascade` satisfaz PESSOAL-09 por constraint física, sem
 // lógica de aplicação: removeu o Aluno, os dados pessoais dele vão junto.
 // ─────────────────────────────────────────────────────────────
 
 model DadoPessoalAluno {
-  id      Int     @id @default(autoincrement()) @map("ID_Dado")
   // Nome de campo mantido (AD-043) - largura acompanha Usuario.documento.
-  cpf     String  @map("CPF") @db.VarChar(14)
+  cpf     String  @id @map("CPF") @db.VarChar(14)
   usuario Usuario @relation(fields: [cpf], references: [documento], onDelete: Cascade)
 
-  chave   String  @map("Chave") @db.VarChar(100)
-  ordem   Int     @default(0) @map("Ordem")
-  valor   String  @map("Valor") @db.Text
+  // Respostas, uma coluna por pergunta (AD-051, `src/lib/respostas/colunas.ts`).
+  p3       String?   @map("P3") @db.Char(2)
+  p4       String?   @map("P4") @db.Text
+  p5       String?   @map("P5") @db.Char(1)
+  p6       String?   @map("P6") @db.Char(1)
+  p7       String?   @map("P7") @db.Char(1)
+  p8       String?   @map("P8") @db.Char(1)
+  p9       String?   @map("P9") @db.Char(1)
 
-  @@unique([cpf, chave, ordem])
-  @@index([chave])
+
   @@map("TB_Dado_Pessoal_Aluno")
 }
 

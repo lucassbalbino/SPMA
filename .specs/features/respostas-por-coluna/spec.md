@@ -162,17 +162,17 @@ Hoje as respostas ficam em tabelas de forma `(pai, Chave, Ordem, Valor)`: a perg
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| COL-01 | P1: Pergunta é coluna | Design | Pending |
-| COL-02 | P1: Pergunta é coluna | Design | Pending |
+| COL-01 | P1: Pergunta é coluna | Execute | Implementing (T2) |
+| COL-02 | P1: Pergunta é coluna | Execute | Implementing (T2) |
 | COL-03 | P1: Pergunta é coluna | Execute | Implementing (T1) |
 | COL-04 | P1: Pergunta é coluna | Execute | Implementing (T1) |
 | COL-05 | P1: Pergunta é coluna | Execute | Implementing (T1) |
 | COL-06 | P1: Pergunta é coluna | Execute | Implementing (T1) |
 | COL-07 | P1: Pergunta é coluna | Execute | Implementing (T1) |
 | COL-08 | P1: Pergunta é coluna | Execute | Implementing (T1) |
-| COL-09 | P1: Pergunta é coluna | Design | Pending |
-| COL-10 | P1: Pergunta é coluna | Design | Pending |
-| COL-11 | P1: Sem regressão | Design | Pending |
+| COL-09 | P1: Pergunta é coluna | Execute | Implementing (T2) |
+| COL-10 | P1: Pergunta é coluna | Execute | Implementing (T2) |
+| COL-11 | P1: Sem regressão | Execute | Implementing (T2) |
 | COL-12 | P1: Sem regressão | Design | Pending |
 | COL-13 | P1: Sem regressão | Design | Pending |
 | COL-14 | P1: Sem regressão | Execute | Implementing (T1) |

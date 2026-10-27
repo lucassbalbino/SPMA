@@ -18,9 +18,9 @@ import { comTratamentoDeErro } from "@/lib/errors/api-error";
 import { exigirSessao } from "@/lib/api/guardas";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import {
-  LINHAS_RESPOSTA_ORDENADAS,
-  montarRespostas,
+  incluirRespostas,
   respostasOuNulo,
+  separarRespostas,
 } from "@/lib/respostas/repositorio";
 
 async function listarAvaliacoes(request: Request) {
@@ -42,18 +42,19 @@ async function listarAvaliacoes(request: Request) {
       () => ({ cpf: escopo.tipo === "proprioAluno" ? escopo.cpf : "" }),
     ),
     orderBy: [{ cdCurso: "asc" }, { cpf: "asc" }],
-    include: {
-      curso: { select: { cdOfertante: true } },
-      linhasResposta: LINHAS_RESPOSTA_ORDENADAS,
-    },
+    omit: incluirRespostas("avaliacao"),
+    include: { curso: { select: { cdOfertante: true } } },
   });
 
   return NextResponse.json({
-    avaliacoes: avaliacoes.map(({ curso, linhasResposta, ...avaliacao }) => ({
-      ...avaliacao,
-      cdOfertante: curso.cdOfertante,
-      respostas: respostasOuNulo(montarRespostas("avaliacao", linhasResposta)),
-    })),
+    avaliacoes: avaliacoes.map(({ curso, ...registro }) => {
+      const { registro: avaliacao, respostas } = separarRespostas("avaliacao", registro);
+      return {
+        ...avaliacao,
+        cdOfertante: curso.cdOfertante,
+        respostas: respostasOuNulo(respostas),
+      };
+    }),
   });
 }
 
