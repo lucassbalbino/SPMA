@@ -157,8 +157,10 @@ T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] `CHECK TABLE` OK nas quatro VIEWs de formulário e em `bi.TB_Curso` no banco local migrado
-- [ ] Gate check passes: `npm run typecheck && npm run test:unit`
+- [x] `CHECK TABLE` OK nas quatro VIEWs de formulário e em `bi.TB_Curso` no banco local migrado
+- [x] Gate check passes: `npm run typecheck && npm run test:unit`
+
+**Status**: Done
 
 **Tests**: unit
 **Gate**: quick

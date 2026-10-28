@@ -2,14 +2,18 @@
 -- src/lib/respostas/views-bi.ts - não edite à mão. Procedimento em
 -- docs/DEPLOY_PRODUCAO.md, seção "VIEWs do banco bi".
 
-CREATE OR REPLACE VIEW `bi`.`TB_Pre_Curso` AS SELECT
+CREATE OR REPLACE VIEW `bi`.`TB_Curso` AS SELECT
   `CD_Curso`,
   `CD_Ofertante`,
   `CD_Verba`,
   `VL_Curso_Alocado`,
-  `Status`,
   `Data_Criacao`,
-  `Criado_Por`,
+  `Criado_Por`
+FROM `spma`.`TB_Curso`;
+
+CREATE OR REPLACE VIEW `bi`.`TB_Pre_Curso` AS SELECT
+  `CD_Curso`,
+  `Status`,
   `Data_Encerramento`,
   `P1`,
   `P2`,
@@ -138,8 +142,6 @@ FROM `spma`.`TB_Pre_Curso`;
 CREATE OR REPLACE VIEW `bi`.`TB_Pos_Curso` AS SELECT
   `CD_Curso`,
   `Status`,
-  `Data_Criacao`,
-  `Criado_Por`,
   `Data_Ultima_Atualizacao`,
   `Data_Encerramento`,
   `P1`,

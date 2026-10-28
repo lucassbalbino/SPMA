@@ -156,9 +156,9 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 | CUR-16 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
 | CUR-17 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
 | CUR-18 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
-| CUR-19 | P2: VIEWs do Power BI | Design | Pending |
-| CUR-20 | P2: VIEWs do Power BI | Design | Pending |
-| CUR-21 | P2: VIEWs do Power BI | Design | Pending |
+| CUR-19 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
+| CUR-20 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
+| CUR-21 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
 | CUR-22 | P2: Decisão e deploy registrados | Design | Pending |
 | CUR-23 | P2: Decisão e deploy registrados | Design | Pending |
 
