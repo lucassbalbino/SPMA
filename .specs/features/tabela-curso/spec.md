@@ -141,15 +141,15 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
 | CUR-01 | P1: Curso como tabela própria | Execute | Implementing (T1) |
-| CUR-02 | P1: Curso como tabela própria | Execute | Implementing (T1) |
+| CUR-02 | P1: Curso como tabela própria | Execute | Implementing (T3) |
 | CUR-03 | P1: Curso como tabela própria | Execute | Implementing (T1) |
 | CUR-04 | P1: Curso como tabela própria | Execute | Implementing (T1) |
-| CUR-05 | P1: Curso como tabela própria | Execute | Implementing (T1) |
-| CUR-06 | P1: Curso como tabela própria | Design | Pending |
-| CUR-07 | P1: Curso como tabela própria | Design | Pending |
-| CUR-08 | P1: Curso como tabela própria | Design | Pending |
+| CUR-05 | P1: Curso como tabela própria | Execute | Implementing (T3) |
+| CUR-06 | P1: Curso como tabela própria | Execute | Implementing (T3) |
+| CUR-07 | P1: Curso como tabela própria | Execute | Implementing (T3) |
+| CUR-08 | P1: Curso como tabela própria | Execute | Implementing (T3) |
 | CUR-11 | P1: Sem regressão | Execute | Implementing (T1) |
-| CUR-12 | P1: Sem regressão | Execute | Implementing (T1) |
+| CUR-12 | P1: Sem regressão | Execute | Implementing (T3) |
 | CUR-13 | P1: Sem regressão | Design | Pending |
 | CUR-14 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
 | CUR-15 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |

@@ -131,7 +131,9 @@ T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+- [x] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+
+**Status**: Done
 
 **Tests**: integration
 **Gate**: full
