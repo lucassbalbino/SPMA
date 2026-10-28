@@ -20,7 +20,7 @@ erDiagram
 
 Fluxo de criação (`POST /api/cursos`), numa transação: `curso.create` → `preCurso.create({ cdCurso })` → `posCurso.create({ cdCurso })`.
 
-Nome: `gravarRespostas`/`apagarRespostas` do pré-curso, quando o patch toca a P8, também gravam `TB_Curso.NM_Curso` no mesmo `tx`.
+O nome do curso continua sendo só a P8 de `TB_Pre_Curso`; `TB_Curso` não tem nome.
 
 ---
 
@@ -53,14 +53,10 @@ Trocam `preCurso.cdOfertante` por `preCurso.curso.cdOfertante` (ou `comCurso`) e
 
 A soma do alocado passa de `preCurso.aggregate` para `curso.aggregate` (CUR-12).
 
-### `src/lib/respostas/repositorio.ts`
-
-Quando `paraColunas("preCurso", patch)` inclui o campo `p8`, grava `curso.update({ nmCurso })` no mesmo cliente transacional (CUR-09, CUR-10).
-
 ### Migration `…_tabela_curso`
 
 1. **Expand:** `CREATE TABLE TB_Curso`.
-2. **Backfill:** `INSERT INTO TB_Curso SELECT CD_Curso, CD_Ofertante, CD_Verba, VL_Curso_Alocado, P8, Criado_Por, Data_Criacao FROM TB_Pre_Curso`. O `AUTO_INCREMENT` do InnoDB avança sozinho para depois do maior `CD_Curso` inserido (CUR-15).
+2. **Backfill:** `INSERT INTO TB_Curso SELECT CD_Curso, CD_Ofertante, CD_Verba, VL_Curso_Alocado, Criado_Por, Data_Criacao FROM TB_Pre_Curso`. O `AUTO_INCREMENT` do InnoDB avança sozinho para depois do maior `CD_Curso` inserido (CUR-15).
 3. **Conferência:** tabela `_Conferencia_Tabela_Curso` com dois `CHECK` nomeados.
    - `cursos_divergentes`: mesma contagem, e nenhuma linha em que algum campo do curso difira do pré de origem (comparação com `<=>`). Cobre CUR-16.
    - `cursos_orfaos`: nenhum pós ou avaliação sem curso. Cobre CUR-17.
@@ -86,7 +82,6 @@ model Curso {
   cdOfertante    String   @map("CD_Ofertante") @db.VarChar(14)
   cdVerba        Int      @map("CD_Verba")
   vlCursoAlocado Decimal  @map("VL_Curso_Alocado") @db.Decimal(10, 2)
-  nmCurso        String?  @map("NM_Curso") @db.Text
   criadoPor      String   @map("Criado_Por") @db.VarChar(14)
   dataCriacao    DateTime @default(now()) @map("Data_Criacao")
 
@@ -133,4 +128,4 @@ model Curso {
 | --- | --- | --- |
 | Nome do model | `Curso`, relação `curso` em pré, pós e avaliação | A avaliação já usa `curso`: os filtros dela não mudam. |
 | Contrato HTTP | Achatar com `comCurso` | Nenhuma tela nem e2e muda (CUR-11, CUR-13). |
-| Cópia do nome | No repositório de respostas, no mesmo `tx` | É o único caminho que grava a P8. |
+| Nome do curso | Fica na P8 do pré-curso | Decisão do usuário. |

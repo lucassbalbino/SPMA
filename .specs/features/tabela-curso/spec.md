@@ -6,7 +6,7 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 
 ## Goals
 
-- [ ] `TB_Curso` é a única fonte do ofertante, da verba, do valor alocado, do criador, da data de criação e do nome do curso.
+- [ ] `TB_Curso` é a única fonte do ofertante, da verba, do valor alocado, do criador e da data de criação do curso.
 - [ ] `TB_Pre_Curso`, `TB_Pos_Curso` e `TB_Avaliacao_Aluno` se ligam a `TB_Curso` por chave estrangeira em `CD_Curso`.
 - [ ] Os cursos já existentes em produção migram sem perda, e a migration aborta se a conferência não bater.
 - [ ] Nenhuma tela, rota ou teste existente muda de comportamento.
@@ -27,11 +27,11 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --- | --- | --- | --- |
-| Campos da `TB_Curso` | `CD_Curso` (gerado), `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado`, `NM_Curso`, `Criado_Por`, `Data_Criacao` | Critério do usuário: tudo o que é do curso e não é pergunta. Ofertante, verba e valor hoje só estão no pré, mas valem para o curso inteiro. | y |
+| Campos da `TB_Curso` | `CD_Curso` (gerado), `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado`, `Criado_Por`, `Data_Criacao` | Critério do usuário: tudo o que é do curso e não é pergunta. Ofertante, verba e valor hoje só estão no pré, mas valem para o curso inteiro. | y |
 | Status e datas de etapa | `Status` e `Data_Encerramento` ficam em cada formulário; `Data_Ultima_Atualizacao` fica no pós | O pré pode estar encerrado com o pós em andamento: são da etapa, não do curso. | y |
 | Duplicação | Os campos movidos saem de `TB_Pre_Curso` e de `TB_Pos_Curso` | Escolha do usuário: cada informação num lugar só. | y |
 | Avaliação | `TB_Avaliacao_Aluno.CD_Curso` passa a apontar para `TB_Curso` | Escolha do usuário: o aluno avalia o curso. | y |
-| Nome do curso | `NM_Curso` é uma cópia da P8 do pré-curso, gravada na mesma transação que a P8 | Escolha do usuário. A P8 continua sendo a resposta; `NM_Curso` existe para consulta. | y |
+| Nome do curso | Fica só na P8 de `TB_Pre_Curso`; `TB_Curso` não tem coluna de nome | Decisão do usuário ("NM_Curso deve permanecer no pré-curso"), que revê a cópia escolhida antes. CUR-09 e CUR-10 foram retirados. | y |
 | Criador e data do curso na migração | Vêm do pré-curso; o criador e a data de criação próprios do pós são descartados | Decisão do usuário: "os dois questionários devem ser tratados como um só, todas as infos referentes ao curso devem ser únicas e ligadas aos dois". O pré e o pós nascem juntos pelo mesmo Gestor (`POST /api/cursos`); só dados antigos, da rota de pós-curso já removida, podem divergir, e essa divergência fica no backup. | y |
 | Contrato HTTP | As rotas continuam devolvendo `cdOfertante`, `cdVerba`, `vlCursoAlocado`, `criadoPor` e `dataCriacao` com os mesmos nomes, lidos de `TB_Curso` | Nenhuma tela nem teste deve mudar (CUR-11). | y |
 | VIEWs do `bi` | `bi.TB_Curso` nova; `bi.TB_Pre_Curso` e `bi.TB_Pos_Curso` passam a espelhar só as próprias colunas, como as tabelas | O `bi` espelha o `spma` sem colunas sensíveis. No Power BI, ofertante e verba passam a vir da `TB_Curso`, pelo relacionamento em `CD_Curso`. | Confirmado pelo usuário. | y |
@@ -51,7 +51,7 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 
 **Acceptance Criteria**:
 
-1. The system SHALL ter a tabela `TB_Curso` com as colunas `CD_Curso` (chave primária gerada pelo banco), `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado`, `NM_Curso`, `Criado_Por` e `Data_Criacao`. (CUR-01)
+1. The system SHALL ter a tabela `TB_Curso` com as colunas `CD_Curso` (chave primária gerada pelo banco), `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado`, `Criado_Por` e `Data_Criacao`. (CUR-01)
 2. The system SHALL ligar `TB_Pre_Curso.CD_Curso`, `TB_Pos_Curso.CD_Curso` e `TB_Avaliacao_Aluno.CD_Curso` a `TB_Curso.CD_Curso` por chave estrangeira. (CUR-02)
 3. The system SHALL não ter as colunas `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado`, `Criado_Por` e `Data_Criacao` em `TB_Pre_Curso`, nem `Criado_Por` e `Data_Criacao` em `TB_Pos_Curso`. (CUR-03)
 4. The system SHALL manter `Status` e `Data_Encerramento` em `TB_Pre_Curso` e em `TB_Pos_Curso`, e `Data_Ultima_Atualizacao` em `TB_Pos_Curso`. (CUR-04)
@@ -61,21 +61,6 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 8. IF um curso com avaliação é apagado THEN o sistema SHALL recusar a exclusão e manter o curso, o pré, o pós e as avaliações. (CUR-08)
 
 **Independent Test**: criar um curso pela rota e ler as três linhas com o mesmo `CD_Curso`; consultar `information_schema` para as chaves estrangeiras e as colunas removidas.
-
----
-
-### P1: Nome do curso ⭐ MVP
-
-**User Story**: Como analista, quero o nome do curso na `TB_Curso`, para identificar o curso sem buscar a resposta do pré-curso.
-
-**Why P1**: Escolha do usuário; sem o nome, a dimensão de curso só tem códigos.
-
-**Acceptance Criteria**:
-
-1. WHEN a pergunta 8 do pré-curso (`qualifNomeCurso`) é gravada THEN o sistema SHALL gravar o mesmo texto em `TB_Curso.NM_Curso`, na mesma transação. (CUR-09)
-2. WHEN a pergunta 8 do pré-curso é apagada (`null`) THEN o sistema SHALL gravar `NULL` em `TB_Curso.NM_Curso`. (CUR-10)
-
-**Independent Test**: gravar e apagar a P8 por `PATCH` e ler `NM_Curso`.
 
 ---
 
@@ -103,7 +88,7 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 
 **Acceptance Criteria**:
 
-1. WHEN a migration roda THEN o sistema SHALL criar uma linha em `TB_Curso` para cada linha de `TB_Pre_Curso`, com o mesmo `CD_Curso`, `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado`, `Criado_Por` e `Data_Criacao` do pré-curso, e `NM_Curso` igual à P8. (CUR-14)
+1. WHEN a migration roda THEN o sistema SHALL criar uma linha em `TB_Curso` para cada linha de `TB_Pre_Curso`, com o mesmo `CD_Curso`, `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado`, `Criado_Por` e `Data_Criacao` do pré-curso. (CUR-14)
 2. WHEN um curso é criado depois da migration THEN o sistema SHALL gerar um `CD_Curso` maior que todos os já existentes. (CUR-15)
 3. IF o número de linhas de `TB_Curso` difere do de `TB_Pre_Curso`, ou algum valor migrado difere do pré-curso de origem, THEN o sistema SHALL abortar a migration antes de remover qualquer coluna, com um erro que identifica a conferência. (CUR-16)
 4. IF algum pós-curso ou avaliação aponta para um `CD_Curso` sem linha em `TB_Curso` THEN o sistema SHALL abortar a migration antes de remover qualquer coluna. (CUR-17)
@@ -146,9 +131,8 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 
 ## Edge Cases
 
-- IF a P8 nunca foi respondida THEN `NM_Curso` SHALL ser `NULL` (coberto por CUR-14 na migração e por CUR-10 depois).
-- WHEN o pré-curso é encerrado THEN `NM_Curso` SHALL continuar igual à P8: a P8 não é condicional e não é limpa no encerramento (coberto por CUR-09).
 - IF a migration aborta THEN o sistema SHALL deixar as colunas antigas de `TB_Pre_Curso` e `TB_Pos_Curso` intactas (coberto por CUR-16 e CUR-17).
+- WHEN um curso tem pré-curso mas a P8 nunca foi respondida THEN o curso SHALL existir em `TB_Curso` do mesmo jeito: o nome não participa do curso (coberto por CUR-14).
 
 ---
 
@@ -164,8 +148,6 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 | CUR-06 | P1: Curso como tabela própria | Design | Pending |
 | CUR-07 | P1: Curso como tabela própria | Design | Pending |
 | CUR-08 | P1: Curso como tabela própria | Design | Pending |
-| CUR-09 | P1: Nome do curso | Design | Pending |
-| CUR-10 | P1: Nome do curso | Design | Pending |
 | CUR-11 | P1: Sem regressão | Design | Pending |
 | CUR-12 | P1: Sem regressão | Design | Pending |
 | CUR-13 | P1: Sem regressão | Design | Pending |
@@ -180,7 +162,7 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 | CUR-22 | P2: Decisão e deploy registrados | Design | Pending |
 | CUR-23 | P2: Decisão e deploy registrados | Design | Pending |
 
-**Coverage:** 23 total, 0 mapped to tasks, 23 unmapped ⚠️
+**Coverage:** 21 total (CUR-09 e CUR-10 retirados), 0 mapped to tasks, 21 unmapped ⚠️
 
 ---
 
@@ -190,9 +172,9 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 | --- | --- |
 | Input validation & bounds | Sem entrada nova: a criação de curso segue validada como hoje (CUR-13). |
 | Failure / partial-failure states | Criação numa transação (CUR-06); migration aborta antes de remover colunas (CUR-16, CUR-17). |
-| Idempotency / retry / duplicate handling | Regravar a P8 regrava `NM_Curso` com o mesmo valor (CUR-09). |
+| Idempotency / retry / duplicate handling | N/A because não há escrita nova repetível: o curso só é criado por `POST /api/cursos`, que segue igual (CUR-05). |
 | Auth boundaries & rate limits | N/A because os guards não mudam; o escopo por Ofertante lê `CD_Ofertante` de `TB_Curso` com o mesmo resultado (CUR-13). |
-| Concurrency / ordering | P8 e `NM_Curso` na mesma transação (CUR-09). |
+| Concurrency / ordering | Curso, pré e pós criados na mesma transação (CUR-05). |
 | Data lifecycle / expiry | Exclusão espelha as regras atuais (CUR-07, CUR-08). |
 | Observability | N/A because não há log nem métrica nova; o aborto da migration nomeia a conferência (CUR-16). |
 | External-dependency failure | VIEWs do `bi` quebram até o script ser aplicado: procedimento em CUR-23. |
