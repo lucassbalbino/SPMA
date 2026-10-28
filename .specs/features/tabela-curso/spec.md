@@ -140,27 +140,27 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| CUR-01 | P1: Curso como tabela própria | Execute | Implementing (T1) |
-| CUR-02 | P1: Curso como tabela própria | Execute | Implementing (T3) |
-| CUR-03 | P1: Curso como tabela própria | Execute | Implementing (T1) |
-| CUR-04 | P1: Curso como tabela própria | Execute | Implementing (T1) |
-| CUR-05 | P1: Curso como tabela própria | Execute | Implementing (T3) |
-| CUR-06 | P1: Curso como tabela própria | Execute | Implementing (T3) |
-| CUR-07 | P1: Curso como tabela própria | Execute | Implementing (T3) |
-| CUR-08 | P1: Curso como tabela própria | Execute | Implementing (T8) |
-| CUR-11 | P1: Sem regressão | Execute | Implementing (T9) |
-| CUR-12 | P1: Sem regressão | Execute | Implementing (T3) |
-| CUR-13 | P1: Sem regressão | Execute | Implementing (T9) |
-| CUR-14 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
-| CUR-15 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
-| CUR-16 | P1: Migração dos cursos existentes | Execute | Implementing (T7) |
-| CUR-17 | P1: Migração dos cursos existentes | Execute | Implementing (T7) |
-| CUR-18 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
-| CUR-19 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
-| CUR-20 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
-| CUR-21 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
-| CUR-22 | P2: Decisão e deploy registrados | Execute | Implementing (T9) |
-| CUR-23 | P2: Decisão e deploy registrados | Execute | Implementing (T7) |
+| CUR-01 | P1: Curso como tabela própria | Execute | Verified |
+| CUR-02 | P1: Curso como tabela própria | Execute | Verified |
+| CUR-03 | P1: Curso como tabela própria | Execute | Verified |
+| CUR-04 | P1: Curso como tabela própria | Execute | Verified |
+| CUR-05 | P1: Curso como tabela própria | Execute | Verified |
+| CUR-06 | P1: Curso como tabela própria | Execute | Verified |
+| CUR-07 | P1: Curso como tabela própria | Execute | Verified |
+| CUR-08 | P1: Curso como tabela própria | Execute | Verified |
+| CUR-11 | P1: Sem regressão | Execute | Verified |
+| CUR-12 | P1: Sem regressão | Execute | Verified |
+| CUR-13 | P1: Sem regressão | Execute | Verified |
+| CUR-14 | P1: Migração dos cursos existentes | Execute | Verified |
+| CUR-15 | P1: Migração dos cursos existentes | Execute | Verified |
+| CUR-16 | P1: Migração dos cursos existentes | Execute | Verified |
+| CUR-17 | P1: Migração dos cursos existentes | Execute | Verified |
+| CUR-18 | P1: Migração dos cursos existentes | Execute | Verified |
+| CUR-19 | P2: VIEWs do Power BI | Execute | Verified |
+| CUR-20 | P2: VIEWs do Power BI | Execute | Verified |
+| CUR-21 | P2: VIEWs do Power BI | Execute | Verified |
+| CUR-22 | P2: Decisão e deploy registrados | Execute | Verified |
+| CUR-23 | P2: Decisão e deploy registrados | Execute | Verified |
 
 **Coverage:** 21 total (CUR-09 e CUR-10 retirados), 0 mapped to tasks, 21 unmapped ⚠️
 
