@@ -24,18 +24,6 @@ Corroborated across multiple features. Safe to apply as guidance.
 
 Seen once or not yet corroborated. Tracked, not trusted.
 
-### L-037 - A mandatory-redirect guard that runs in a protected route group's own layout must target a sibling route group, never a page inside that same protected group, or the redirect loops on itself.
-- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `auth-guards` · harmful: 0
-- features: dados-pessoais-separados
-- evidence: src/app/(protegido)/layout.tsx:9-22 (SPEC_DEVIATION: /dados-pessoais vs /painel) (auth-guards)
-- last seen: 2026-09-12T00:33:35Z
-
-### L-038 - When a form's completeness gates navigation access rather than just a UI section, its write route must persist all-or-nothing on the merged resulting state, never a shallow merge that can leave the record partially overwritten.
-- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `respostas-repo` · harmful: 0
-- features: dados-pessoais-separados
-- evidence: src/app/api/usuarios/me/dados-pessoais/route.ts:63-81 (SPEC_DEVIATION: tudo-ou-nada vs merge raso de AVAL-07) (respostas-repo)
-- last seen: 2026-09-12T00:33:38Z
-
 ### L-039 - When an entity absorbs the table it used to point at, its own copy of that foreign key must be null on creation, never a value still required from the request payload.
 - signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
 - features: unificacao-ofertante-go
@@ -149,6 +137,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: respostas-por-coluna
 - evidence: M13 - prisma/migrations/20261027120000_respostas_por_coluna/migration.sql:343 (validation.md it.2, Fix 4) (migrations)
 - last seen: 2026-10-27T16:08:38Z
+
+### L-058 - Antes de uma migration remover ou renomear tabela ou coluna, consultar no servidor quem depende dela fora do schema da aplicação (information_schema.VIEWS de todos os bancos, como o bi do Power BI) e perguntar ao usuário como os consumidores externos leem o banco.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `migration` · harmful: 0
+- features: respostas-por-coluna
+- evidence: prisma/migrations/20261027120000_respostas_por_coluna/migration.sql:981 (migration)
+- last seen: 2026-10-28T10:13:40Z
 
 ## Quarantined (failed when applied - ignore)
 

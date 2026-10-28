@@ -354,6 +354,31 @@ faltam depois de `-- 4. Contract` no `migration.sql` e marque a migration com
 
 Fora desse caso, corrija o dado (ou o código) e publique de novo.
 
+### VIEWs do banco `bi` (Power BI)
+
+O Power BI do cliente não lê o banco `spma`: ele lê o banco `bi`, que tem uma
+VIEW por tabela do `spma`, com uma lista fixa de colunas. A senha de
+`TB_Usuario` e o token de `TB_Sessao` ficam de fora. O `bi` não é criado
+pelas migrations, então **toda migration que remove ou renomeia tabela ou
+coluna quebra a VIEW correspondente**, e uma coluna nova só aparece no Power
+BI depois que a VIEW é refeita.
+
+As VIEWs das tabelas de formulário estão versionadas em `scripts/views-bi.sql`,
+geradas a partir do mapa de perguntas (`npm run bi:views`). Um teste unitário
+falha se o arquivo ficar para trás do código. Depois de todo deploy que mude
+essas tabelas, aplique o arquivo com um usuário que tenha `SELECT` no `spma`,
+o mesmo que criou as VIEWs:
+
+```bash
+mysql < /opt/spma/migrator/prisma/views-bi.sql
+```
+
+Para conferir se alguma VIEW ficou quebrada:
+
+```sql
+SELECT CONCAT('CHECK TABLE bi.`', TABLE_NAME, '`;') FROM information_schema.VIEWS WHERE TABLE_SCHEMA = 'bi';
+```
+
 ### Sistema operacional
 
 O suporte padrão do Ubuntu 22.04 termina em **abril de 2027**. Antes disso,
