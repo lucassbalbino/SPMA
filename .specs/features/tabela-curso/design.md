@@ -43,7 +43,7 @@ O nome do curso continua sendo só a P8 de `TB_Pre_Curso`; `TB_Curso` não tem n
 
 - `INCLUIR_CURSO`: `{ curso: { select: { cdOfertante, cdVerba, vlCursoAlocado, criadoPor, dataCriacao } } }`.
 - `comCurso(registro)`: devolve o registro sem a chave `curso` e com os campos dela no topo. É a única tradução entre o modelo novo e o JSON de sempre (CUR-11).
-- O pós-curso só expõe `criadoPor`, `dataCriacao` e `cdOfertante`, os campos que já expunha: `comCurso` recebe a lista de campos a achatar.
+- O pós-curso só expõe `criadoPor`, `dataCriacao` e `cdOfertante`, os campos que já expunha: `comCurso` recebe a lista de campos a achatar. O `GET` do pós já trazia `cdOfertante`; o `PATCH` e o `encerrar` passam a trazê-lo também, porque usam o mesmo `comCurso`. É só um campo a mais, sem nenhum removido (CUR-11).
 
 ### Rotas e páginas
 

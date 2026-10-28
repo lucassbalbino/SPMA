@@ -144,6 +144,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: prisma/migrations/20261027120000_respostas_por_coluna/migration.sql:981 (migration)
 - last seen: 2026-10-28T10:13:40Z
 
+### L-059 - Provoke every branch of a migration self-check CHECK with its own abort scenario, not just one representative branch
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `migrations` · harmful: 0
+- features: tabela-curso
+- evidence: validation.md M9 prisma/migrations/20261028120000_tabela_curso/migration.sql:60 (migrations)
+- last seen: 2026-10-28T14:25:25Z
+
+### L-060 - Corrupt each compared column separately when testing a backfill divergence check
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `migrations` · harmful: 0
+- features: tabela-curso
+- evidence: validation.md M2b prisma/migrations/20261028120000_tabela_curso/migration.sql:57 (migrations)
+- last seen: 2026-10-28T14:25:25Z
+
+### L-061 - When a spec removes columns, state how existing assertions on those columns may be retargeted instead of promising no assertion changes
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: tabela-curso
+- evidence: CUR-13 src/lib/usuarios/gestao.integration.test.ts:156 (spec)
+- last seen: 2026-10-28T14:25:26Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

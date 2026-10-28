@@ -298,7 +298,9 @@ T6 → T7 → T8 → T9
 
 **Done when**:
 
-- [ ] Gate check passes: `npm run lint && npm run typecheck && npm run build`
+- [x] Gate check passes: `npm run lint && npm run typecheck && npm run build`
+
+**Status**: Done
 
 **Tests**: none
 **Gate**: build

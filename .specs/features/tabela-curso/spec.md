@@ -148,9 +148,9 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 | CUR-06 | P1: Curso como tabela própria | Execute | Implementing (T3) |
 | CUR-07 | P1: Curso como tabela própria | Execute | Implementing (T3) |
 | CUR-08 | P1: Curso como tabela própria | Execute | Implementing (T8) |
-| CUR-11 | P1: Sem regressão | Execute | Implementing (T1) |
+| CUR-11 | P1: Sem regressão | Execute | Implementing (T9) |
 | CUR-12 | P1: Sem regressão | Execute | Implementing (T3) |
-| CUR-13 | P1: Sem regressão | Execute | Implementing (T8) |
+| CUR-13 | P1: Sem regressão | Execute | Implementing (T9) |
 | CUR-14 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
 | CUR-15 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
 | CUR-16 | P1: Migração dos cursos existentes | Execute | Implementing (T7) |
@@ -159,7 +159,7 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 | CUR-19 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
 | CUR-20 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
 | CUR-21 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
-| CUR-22 | P2: Decisão e deploy registrados | Execute | Implementing (T6) |
+| CUR-22 | P2: Decisão e deploy registrados | Execute | Implementing (T9) |
 | CUR-23 | P2: Decisão e deploy registrados | Execute | Implementing (T7) |
 
 **Coverage:** 21 total (CUR-09 e CUR-10 retirados), 0 mapped to tasks, 21 unmapped ⚠️
