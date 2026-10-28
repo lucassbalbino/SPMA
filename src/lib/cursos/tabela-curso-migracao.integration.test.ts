@@ -331,45 +331,88 @@ describe("migration tabela_curso (integration)", { timeout: PREPARO_MS }, () => 
     });
   });
 
-  // CUR-16: um backfill que grava valor diferente do pré-curso aborta antes do
-  // contract, e as colunas antigas ficam intactas.
-  it("aborta com cursos_divergentes quando um valor migrado difere do pré-curso", async () => {
-    await prepararBancoAntigo();
-    const antes = await consultar("SELECT CD_Curso, CD_Ofertante, VL_Curso_Alocado FROM TB_Pre_Curso ORDER BY CD_Curso");
+  // CUR-16, CUR-17 e CUR-23: cada ramo da conferência aborta antes do
+  // contract, e a reversão desfaz a tentativa. Um banco antigo só; cada
+  // tentativa abortada é desfeita pelo reversao.sql antes da seguinte.
+  describe("conferência", () => {
+    // A linha do backfill que copia os campos do pré-curso para TB_Curso.
+    const COPIA = "SELECT `CD_Curso`, `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado`, `Data_Criacao`, `Criado_Por`";
+    const FIM_DA_COPIA = "FROM `TB_Pre_Curso`;";
 
-    await expect(
-      rodarMigration((sql) =>
-        sql.replace(
-          "SELECT `CD_Curso`, `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado`,",
-          "SELECT `CD_Curso`, `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado` + 1,",
-        ),
-      ),
-    ).rejects.toThrow(/cursos_divergentes/);
+    const trocar = (de: string, para: string) => (sql: string) => {
+      if (!sql.includes(de)) throw new Error(`trecho não encontrado na migration: ${de}`);
+      return sql.replace(de, para);
+    };
 
-    expect(await consultar("SELECT CD_Curso, CD_Ofertante, VL_Curso_Alocado FROM TB_Pre_Curso ORDER BY CD_Curso")).toEqual(antes);
-  });
+    let colunasAntes: { pre: string[]; pos: string[] };
 
-  // CUR-17: um pós-curso sem curso aborta antes do contract; a reversão
-  // devolve o banco ao estado anterior (CUR-23).
-  it("aborta com cursos_orfaos quando um pós-curso não tem curso, e a reversão desfaz a tentativa", async () => {
-    await prepararBancoAntigo();
-    // Na mesma conexão: desligar as FKs só vale para a sessão que o fez.
-    await banco!.$transaction(async (tx) => {
-      await tx.$executeRawUnsafe("SET FOREIGN_KEY_CHECKS = 0");
-      await tx.$executeRawUnsafe(
-        "INSERT INTO TB_Pos_Curso (CD_Curso, Status, Criado_Por, Data_Ultima_Atualizacao) VALUES (99999, 'EM_ANDAMENTO', ?, NOW(3))",
-        CNPJ_GO,
-      );
-      await tx.$executeRawUnsafe("SET FOREIGN_KEY_CHECKS = 1");
+    /** Desfaz a tentativa abortada e libera a migration para um novo deploy. */
+    async function desfazer() {
+      await reverter();
+      await banco!.$executeRawUnsafe("DELETE FROM _prisma_migrations WHERE migration_name = ?", nova);
+    }
+
+    beforeAll(async () => {
+      await prepararBancoAntigo();
+      colunasAntes = { pre: await colunas("TB_Pre_Curso"), pos: await colunas("TB_Pos_Curso") };
+    }, PREPARO_MS);
+
+    // CUR-16: cada coluna copiada é comparada com o pré-curso de origem. No
+    // curso 2 o criador (AM) difere do ofertante, então trocar um pelo outro
+    // diverge pelo menos ali.
+    it.each([
+      ["o valor alocado", "`VL_Curso_Alocado`,", "`VL_Curso_Alocado` + 1,"],
+      ["o ofertante", "`CD_Curso`, `CD_Ofertante`,", "`CD_Curso`, `Criado_Por`,"],
+      ["a verba", "`CD_Verba`, `VL_Curso_Alocado`, `Data_Criacao`", "`CD_Verba` + 1, `VL_Curso_Alocado`, `Data_Criacao`"],
+      ["a data de criação", "`Data_Criacao`, `Criado_Por`", "DATE_ADD(`Data_Criacao`, INTERVAL 1 SECOND), `Criado_Por`"],
+      ["o criador", "`Data_Criacao`, `Criado_Por`", "`Data_Criacao`, `CD_Ofertante`"],
+    ])("aborta com cursos_divergentes quando %s migrado difere do pré-curso", async (_campo, de, para) => {
+      await expect(rodarMigration(trocar(COPIA, COPIA.replace(de, para)))).rejects.toThrow(/cursos_divergentes/);
+
+      expect(await colunas("TB_Pre_Curso")).toEqual(colunasAntes.pre);
+      expect(await colunas("TB_Pos_Curso")).toEqual(colunasAntes.pos);
+      await desfazer();
     });
 
-    await expect(rodarMigration()).rejects.toThrow(/cursos_orfaos/);
-    expect(await colunas("TB_Pre_Curso")).toEqual(expect.arrayContaining(["CD_Ofertante", "CD_Verba", "VL_Curso_Alocado"]));
-    expect(await colunas("TB_Pos_Curso")).toEqual(expect.arrayContaining(["Criado_Por", "Data_Criacao"]));
+    // CUR-16: um curso a mais do que pré-cursos também diverge - só a
+    // contagem pega esse caso, porque todo pré-curso tem o seu curso certo.
+    it("aborta com cursos_divergentes quando a contagem de cursos não bate", async () => {
+      const extra =
+        "FROM `TB_Pre_Curso` UNION ALL " +
+        COPIA.replace("`CD_Curso`,", "99999,") +
+        " FROM `TB_Pre_Curso` WHERE `CD_Curso` = (SELECT MIN(`CD_Curso`) FROM `TB_Pre_Curso`);";
 
-    await reverter();
-    const depois = await tabelas();
-    expect(depois).not.toContain("TB_Curso");
-    expect(depois).not.toContain("_Conferencia_Tabela_Curso");
+      await expect(rodarMigration(trocar(FIM_DA_COPIA, extra))).rejects.toThrow(/cursos_divergentes/);
+
+      expect(await colunas("TB_Pre_Curso")).toEqual(colunasAntes.pre);
+      await desfazer();
+    });
+
+    // CUR-17: pós-curso e avaliação sem curso, cada um por si.
+    it.each([
+      ["um pós-curso", "INSERT INTO TB_Pos_Curso (CD_Curso, Status, Criado_Por, Data_Ultima_Atualizacao) VALUES (99999, 'EM_ANDAMENTO', ?, NOW(3))", CNPJ_GO, "DELETE FROM TB_Pos_Curso WHERE CD_Curso = 99999"],
+      ["uma avaliação", "INSERT INTO TB_Avaliacao_Aluno (CPF, CD_Curso, Status) VALUES (?, 99999, 'EM_ANDAMENTO')", CPF_ALUNO, "DELETE FROM TB_Avaliacao_Aluno WHERE CD_Curso = 99999"],
+    ])("aborta com cursos_orfaos quando %s não tem curso", async (_etapa, inserir, documento, apagar) => {
+      // Na mesma conexão: desligar as FKs só vale para a sessão que o fez.
+      await banco!.$transaction(async (tx) => {
+        await tx.$executeRawUnsafe("SET FOREIGN_KEY_CHECKS = 0");
+        await tx.$executeRawUnsafe(inserir, documento);
+        await tx.$executeRawUnsafe("SET FOREIGN_KEY_CHECKS = 1");
+      });
+
+      await expect(rodarMigration()).rejects.toThrow(/cursos_orfaos/);
+
+      expect(await colunas("TB_Pre_Curso")).toEqual(colunasAntes.pre);
+      expect(await colunas("TB_Pos_Curso")).toEqual(colunasAntes.pos);
+      await banco!.$executeRawUnsafe(apagar);
+      await desfazer();
+    });
+
+    // CUR-23: depois de cada reversão, nada da tentativa sobra.
+    it("a reversão não deixa TB_Curso nem a tabela de conferência", async () => {
+      const depois = await tabelas();
+      expect(depois).not.toContain("TB_Curso");
+      expect(depois).not.toContain("_Conferencia_Tabela_Curso");
+    });
   });
 });

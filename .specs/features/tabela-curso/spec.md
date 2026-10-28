@@ -74,7 +74,7 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 
 1. The system SHALL devolver nas rotas de pré-curso, pós-curso e avaliação os campos `cdOfertante`, `cdVerba`, `vlCursoAlocado`, `criadoPor` e `dataCriacao` que já devolvia, com os mesmos nomes, lidos de `TB_Curso`. (CUR-11)
 2. The system SHALL calcular o saldo de uma verba como o valor da verba menos a soma de `VL_Curso_Alocado` dos cursos dela. (CUR-12)
-3. The system SHALL manter, sem alteração de asserção, o comportamento já especificado de criação de curso, saldo, escopo por Ofertante, formulários, encerramento e autorização. (CUR-13)
+3. The system SHALL manter o comportamento já especificado de criação de curso, saldo, escopo por Ofertante, formulários, encerramento e autorização, sem alteração de asserção; a única mudança admitida é uma asserção sobre ofertante, verba, valor, criador ou data de criação passar a ler o mesmo valor esperado em `TB_Curso`, porque a coluna de origem deixou de existir (CUR-03). (CUR-13)
 
 **Independent Test**: a suíte existente (unit, integration e e2e) passa sem mudar asserções.
 
@@ -122,7 +122,7 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 
 **Acceptance Criteria**:
 
-1. The system SHALL registrar em `.specs/STATE.md` a AD-052, com a divisão de campos entre curso e etapa e a cópia do nome. (CUR-22)
+1. The system SHALL registrar em `.specs/STATE.md` a AD-052, com a divisão de campos entre curso e etapa e o nome do curso mantido na P8 do pré-curso. (CUR-22)
 2. The system SHALL descrever em `docs/DEPLOY_PRODUCAO.md` o backup antes do deploy, a aplicação de `views-bi.sql` logo depois e a reversão de uma migration abortada. (CUR-23)
 
 **Independent Test**: leitura dos dois arquivos.
@@ -153,14 +153,14 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 | CUR-13 | P1: Sem regressão | Execute | Implementing (T5) |
 | CUR-14 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
 | CUR-15 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
-| CUR-16 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
-| CUR-17 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
+| CUR-16 | P1: Migração dos cursos existentes | Execute | Implementing (T7) |
+| CUR-17 | P1: Migração dos cursos existentes | Execute | Implementing (T7) |
 | CUR-18 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
 | CUR-19 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
 | CUR-20 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
 | CUR-21 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
 | CUR-22 | P2: Decisão e deploy registrados | Execute | Implementing (T6) |
-| CUR-23 | P2: Decisão e deploy registrados | Execute | Implementing (T6) |
+| CUR-23 | P2: Decisão e deploy registrados | Execute | Implementing (T7) |
 
 **Coverage:** 21 total (CUR-09 e CUR-10 retirados), 0 mapped to tasks, 21 unmapped ⚠️
 

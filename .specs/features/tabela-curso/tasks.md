@@ -56,6 +56,12 @@ T1 → T2 → T3
 T3 → T4 → T5 → T6
 ```
 
+### Phase 4: Correções da validação (iteração 1)
+
+```
+T6 → T7 → T8 → T9
+```
+
 ---
 
 ## Task Breakdown
@@ -224,6 +230,81 @@ T3 → T4 → T5 → T6
 
 ---
 
+### T7: Cada ramo da conferência provocado (Fix 1 e Fix 2)
+
+**What**: Corromper no teste da migration cada coluna comparada, separadamente; provocar a contagem com um curso a mais; semear um pós-curso órfão e uma avaliação órfã em cenários próprios; desfazer cada tentativa com o `reversao.sql`.
+**Where**: `src/lib/cursos/tabela-curso-migracao.integration.test.ts`
+**Depends on**: T6
+**Reuses**: relatório do Verifier, `validation.md` (iteração 1)
+**Requirement**: CUR-16, CUR-17, CUR-23
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] Os mutantes M2b (comparação sem `Data_Criacao`) e M9 (`cursos_orfaos` sem a avaliação) são mortos, e também a retirada do ramo de contagem e a do `Criado_Por`
+- [x] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+
+**Status**: Done
+
+**Tests**: integration
+**Gate**: full
+
+**Commit**: `test(cursos): provoke every branch of the migration self-check`
+
+---
+
+### T8: Asserções menores (iteração 1)
+
+**What**: Exigir o erro de chave estrangeira (`P2003`) no teste do CUR-08 e testar `posCursoLiberado(null)`.
+**Where**: `src/lib/cursos/curso.integration.test.ts`, `src/lib/pos-curso/liberacao.test.ts`
+**Depends on**: T7
+**Reuses**: relatório do Verifier, `validation.md` (iteração 1)
+**Requirement**: CUR-08, CUR-13
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+
+**Tests**: integration
+**Gate**: full
+
+**Commit**: `test(cursos): pin the delete refusal and the closed post-course`
+
+---
+
+### T9: Precisão da spec e campo a mais do pós
+
+**What**: Ressalvar no CUR-13 a leitura de colunas movidas em `TB_Curso`; tirar do CUR-22 a cópia do nome; documentar no design e na AD-052 o `cdOfertante` a mais no `PATCH` e no `encerrar` do pós; registrar as lições do Verifier.
+**Where**: `.specs/`
+**Depends on**: T8
+**Reuses**: relatório do Verifier, `validation.md` (iteração 1)
+**Requirement**: CUR-11, CUR-13, CUR-22
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] Gate check passes: `npm run lint && npm run typecheck && npm run build`
+
+**Tests**: none
+**Gate**: build
+
+**Commit**: `docs(cursos): clarify cur-13 and the extra post-course field`
+
+---
+
 ## Diagram-Definition Cross-Check
 
 | Task | Depends On (task body) | Diagram Shows | Status |
@@ -234,6 +315,9 @@ T3 → T4 → T5 → T6
 | T4 | T3 | T3 → T4 | ✅ Match |
 | T5 | T4 | T4 → T5 | ✅ Match |
 | T6 | T5 | T5 → T6 | ✅ Match |
+| T7 | T6 | T6 → T7 | ✅ Match |
+| T8 | T7 | T7 → T8 | ✅ Match |
+| T9 | T8 | T8 → T9 | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -245,3 +329,6 @@ T3 → T4 → T5 → T6
 | T4 | VIEWs do `bi` | unit | unit | ✅ OK |
 | T5 | Rotas e telas | e2e | e2e | ✅ OK |
 | T6 | Documentação | none | none | ✅ OK |
+| T7 | Migration SQL | integration | integration | ✅ OK |
+| T8 | Persistência do curso + liberação do pós | integration / unit | integration | ✅ OK |
+| T9 | Documentação | none | none | ✅ OK |
