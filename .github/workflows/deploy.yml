@@ -60,6 +60,8 @@ jobs:
           cp -r .next/static .next/standalone/.next/
           mkdir -p .next/standalone/prisma
           cp -r prisma/migrations prisma/schema.prisma .next/standalone/prisma/
+          # VIEWs do banco `bi` (Power BI), aplicadas à mão depois do deploy.
+          cp scripts/views-bi.sql .next/standalone/prisma/
           cp prisma.config.ts .next/standalone/
           tar -czf spma.tgz -C .next/standalone .
 
