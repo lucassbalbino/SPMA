@@ -151,11 +151,11 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 | CUR-11 | P1: Sem regressão | Execute | Implementing (T1) |
 | CUR-12 | P1: Sem regressão | Execute | Implementing (T1) |
 | CUR-13 | P1: Sem regressão | Design | Pending |
-| CUR-14 | P1: Migração dos cursos existentes | Design | Pending |
-| CUR-15 | P1: Migração dos cursos existentes | Design | Pending |
-| CUR-16 | P1: Migração dos cursos existentes | Design | Pending |
-| CUR-17 | P1: Migração dos cursos existentes | Design | Pending |
-| CUR-18 | P1: Migração dos cursos existentes | Design | Pending |
+| CUR-14 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
+| CUR-15 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
+| CUR-16 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
+| CUR-17 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
+| CUR-18 | P1: Migração dos cursos existentes | Execute | Implementing (T2) |
 | CUR-19 | P2: VIEWs do Power BI | Design | Pending |
 | CUR-20 | P2: VIEWs do Power BI | Design | Pending |
 | CUR-21 | P2: VIEWs do Power BI | Design | Pending |

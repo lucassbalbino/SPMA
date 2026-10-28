@@ -103,9 +103,11 @@ T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] `prisma migrate diff` do banco migrado contra o schema = vazio
-- [ ] A suíte de integração existente passa contra o banco migrado
-- [ ] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+- [x] `prisma migrate diff` do banco migrado contra o schema = vazio
+- [x] A suíte de integração existente passa contra o banco migrado
+- [x] Gate check passes: `npm run db:test:reset && npm run test:unit && npm run test:integration`
+
+**Status**: Done
 
 **Tests**: integration
 **Gate**: full
