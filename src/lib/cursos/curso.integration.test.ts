@@ -154,7 +154,8 @@ describe("curso em TB_Curso (integration)", () => {
     const cdCurso = preCurso.cdCurso;
     await prisma.avaliacaoAluno.create({ data: { cpf: CPF_ALUNO, cdCurso } });
 
-    await expect(prisma.curso.delete({ where: { cdCurso } })).rejects.toThrow();
+    // P2003: violação de chave estrangeira - a avaliação impede a exclusão.
+    await expect(prisma.curso.delete({ where: { cdCurso } })).rejects.toMatchObject({ code: "P2003" });
 
     expect(await prisma.curso.count({ where: { cdCurso } })).toBe(1);
     expect(await prisma.preCurso.count({ where: { cdCurso } })).toBe(1);
