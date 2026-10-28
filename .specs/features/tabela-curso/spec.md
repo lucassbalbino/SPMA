@@ -159,8 +159,8 @@ O curso não tem tabela própria. Ele nasce como uma linha de `TB_Pre_Curso`, qu
 | CUR-19 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
 | CUR-20 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
 | CUR-21 | P2: VIEWs do Power BI | Execute | Implementing (T4) |
-| CUR-22 | P2: Decisão e deploy registrados | Design | Pending |
-| CUR-23 | P2: Decisão e deploy registrados | Design | Pending |
+| CUR-22 | P2: Decisão e deploy registrados | Execute | Implementing (T6) |
+| CUR-23 | P2: Decisão e deploy registrados | Execute | Implementing (T6) |
 
 **Coverage:** 21 total (CUR-09 e CUR-10 retirados), 0 mapped to tasks, 21 unmapped ⚠️
 

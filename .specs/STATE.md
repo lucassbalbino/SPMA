@@ -385,3 +385,16 @@ Feature `respostas-por-coluna`. Pedido do usuário: "cada pergunta deve ser um a
 6. **Migração.** `20261027120000_respostas_por_coluna`: expand, backfill (texto → letra, múltipla → 1/0), conferência por `CHECK` nomeado por formulário e só então o contract. Se uma contagem divergir ou um texto não corresponder a nenhuma opção, aborta com `respostas_<formulario>_divergentes` antes de qualquer `DROP`. Respostas de chaves que já tinham saído dos questionários são descartadas e ficam só no backup. Backup e reversão em `docs/DEPLOY_PRODUCAO.md`.
 
 **Custo aceito.** A imunidade a migration que a AD-034 tinha e a AD-041 preservou em parte acaba: toda mudança de pergunta ou de ordem de opção passa a ser DDL ou conversão de dado. Em troca, cada formulário é uma linha com uma coluna por pergunta, que é o formato que o Power BI filtra e cruza sem tratamento.
+
+**AD-052 (2026-10-28) — O curso é uma tabela própria, `TB_Curso`. O ofertante, a verba, o valor alocado, o criador e a data de criação saem de `TB_Pre_Curso` (o criador e a data, também de `TB_Pos_Curso`) e vivem só nela. O pré-curso, o pós-curso e a avaliação apontam para ela pelo mesmo `CD_Curso`.**
+
+Feature `tabela-curso`. Pedido do usuário: "eu preciso de uma tb_curso, que está ligado tanto ao seu pré e pós curso", com "tudo que já existe e é comum tanto no pré e pós que não sejam perguntas dos questionários" e "os dois questionários devem ser tratados como um só, todas as infos referentes ao curso devem ser únicas e ligadas aos dois".
+
+1. **Divisão.** Fica em `TB_Curso` o que vale para o curso inteiro: `CD_Curso` (gerado ali), `CD_Ofertante`, `CD_Verba`, `VL_Curso_Alocado`, `Criado_Por` e `Data_Criacao`. Fica em cada etapa o que é dela: `Status`, `Data_Encerramento` e, no pós, `Data_Ultima_Atualizacao`, além das respostas `P*`.
+2. **Nome do curso.** Continua sendo só a resposta P8 de `TB_Pre_Curso`. `TB_Curso` não tem coluna de nome, por decisão do usuário ("NM_Curso deve permanecer no pré-curso").
+3. **Ligações.** Pré e pós têm FK para `TB_Curso` com `ON DELETE CASCADE`. A avaliação também tem, mas sem cascata: um curso com avaliação não pode ser apagado. Todas têm `ON UPDATE CASCADE`, então trocar o documento de um GO continua propagando sozinho.
+4. **Contrato HTTP inalterado.** As rotas devolvem `cdOfertante`, `cdVerba`, `vlCursoAlocado`, `criadoPor` e `dataCriacao` no registro da etapa, como antes. `src/lib/cursos/curso.ts` (`comCurso`, `incluirCurso`) é a única tradução.
+5. **Migração.** `20261028120000_tabela_curso`, na mesma ordem da AD-051: cria a tabela, copia um curso por pré-curso, confere com dois `CHECK` nomeados (`cursos_divergentes`, `cursos_orfaos`) e só então remove as colunas antigas e troca as FKs. O criador e a data próprios do pós, que só podem divergir em dado antigo, ficam no backup. `reversao.sql` desfaz uma tentativa abortada e se recusa a rodar depois do contract.
+6. **Power BI.** `bi.TB_Curso` nova. `bi.TB_Pre_Curso` e `bi.TB_Pos_Curso` passam a espelhar só as próprias colunas: ofertante e verba vêm da `TB_Curso` pelo relacionamento em `CD_Curso`. As VIEWs quebram entre o deploy e a aplicação de `scripts/views-bi.sql`.
+
+**Custo aceito.** Relatórios do Power BI que liam ofertante, verba ou valor em `TB_Pre_Curso` precisam passar a ler na `TB_Curso`.
