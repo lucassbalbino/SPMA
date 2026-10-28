@@ -11,6 +11,7 @@ import { exigirMutacao } from "@/lib/api/guardas";
 import { idPositivo } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
 import { encerrarFormulario } from "@/lib/respostas/encerramento";
+import { comCurso, incluirCurso } from "@/lib/cursos/curso";
 
 type Contexto = { params: Promise<{ id: string }> };
 
@@ -18,13 +19,16 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
   const sessao = await exigirMutacao(request);
   const cdCurso = idPositivo((await params).id);
 
-  const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso } });
+  const preCurso = await prisma.preCurso.findUnique({
+    where: { cdCurso },
+    include: { curso: { select: { cdOfertante: true } } },
+  });
 
   if (!preCurso) {
     throw erroHttp(404, "Pré-curso não encontrado");
   }
 
-  if (!podeGerenciarPreCurso(sessao.usuario, preCurso.cdOfertante)) {
+  if (!podeGerenciarPreCurso(sessao.usuario, preCurso.curso.cdOfertante)) {
     throw erroHttp(403, "Acesso negado");
   }
 
@@ -46,10 +50,11 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
     alvo: { formulario: "preCurso", cdCurso },
     normalizar: normalizarCondicionaisPreCurso,
     validarCompletude: validarCompletudePreCurso,
-    encerrarRegistro: (tx, data) => tx.preCurso.update({ where: { cdCurso }, data }),
+    encerrarRegistro: (tx, data) =>
+      tx.preCurso.update({ where: { cdCurso }, data, include: incluirCurso("preCurso") }),
   });
 
-  return NextResponse.json({ preCurso: { ...registro, respostas } });
+  return NextResponse.json({ preCurso: { ...comCurso("preCurso", registro), respostas } });
 }
 
 export const POST = comTratamentoDeErro(encerrarPreCurso);

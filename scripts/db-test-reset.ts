@@ -19,6 +19,7 @@ const DOMAIN_TABLES = [
   "TB_Avaliacao_Aluno",
   "TB_Pos_Curso",
   "TB_Pre_Curso",
+  "TB_Curso",
   "TB_Verba",
   "TB_Sessao",
   "TB_Usuario",

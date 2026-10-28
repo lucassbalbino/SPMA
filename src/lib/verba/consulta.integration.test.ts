@@ -22,7 +22,7 @@ let cdVerbaASemCurso: number;
 let cdVerbaB: number;
 
 async function limpar() {
-  await prisma.preCurso.deleteMany({ where: { cdOfertante: { in: CNPJS } } });
+  await prisma.curso.deleteMany({ where: { cdOfertante: { in: CNPJS } } });
   await prisma.verba.deleteMany({ where: { cdOfertante: { in: CNPJS } } });
   await prisma.usuario.deleteMany({ where: { documento: { in: [CPF_VO_A, CPF_AM, CPF_AL] } } });
   await prisma.usuario.deleteMany({ where: { documento: { in: CNPJS } } });
@@ -49,8 +49,9 @@ describe("listarVerbasDoEscopo (integration)", () => {
     cdVerbaB = (await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante: CNPJ_GO_B, vlVerba: 700 } }))
       .cdVerba;
 
-    await prisma.preCurso.create({
+    await prisma.curso.create({
       data: {
+        preCurso: { create: {} },
         cdOfertante: CNPJ_GO_A,
         cdVerba: cdVerbaAComCurso,
         vlCursoAlocado: 4000,

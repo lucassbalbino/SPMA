@@ -75,9 +75,11 @@ T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] `comCurso` coberto por teste unitário (achatamento e lista de campos do pós)
-- [ ] Nenhum acesso a `preCurso.cdOfertante`, `.cdVerba`, `.vlCursoAlocado`, `.criadoPor`, `.dataCriacao` ou `posCurso.preCurso` fora do model `Curso`
-- [ ] Gate check passes: `npm run typecheck && npm run test:unit && npm run build`
+- [x] `comCurso` coberto por teste unitário (achatamento e lista de campos do pós)
+- [x] Nenhum acesso a `preCurso.cdOfertante`, `.cdVerba`, `.vlCursoAlocado`, `.criadoPor`, `.dataCriacao` ou `posCurso.preCurso` fora do model `Curso`
+- [x] Gate check passes: `npm run typecheck && npm run test:unit && npm run build`
+
+**Status**: Done
 
 **Tests**: unit
 **Gate**: quick

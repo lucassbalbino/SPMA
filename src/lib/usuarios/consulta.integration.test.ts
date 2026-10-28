@@ -50,7 +50,7 @@ const editorAm: UsuarioComEscopo = { tipo: "AM", documento: AM, cdOfertante: nul
 /** Apaga filhos antes dos pais, e VOs antes do GO a que se vinculam. */
 async function limpar(documentos: string[]) {
   await prisma.avaliacaoAluno.deleteMany({ where: { cpf: { in: documentos } } });
-  await prisma.preCurso.deleteMany({ where: { cdOfertante: { in: documentos } } });
+  await prisma.curso.deleteMany({ where: { cdOfertante: { in: documentos } } });
   await prisma.verba.deleteMany({ where: { cdOfertante: { in: documentos } } });
   await prisma.usuario.deleteMany({ where: { documento: { in: documentos }, tipo: "VO" } });
   await prisma.usuario.deleteMany({ where: { documento: { in: documentos } } });
@@ -59,8 +59,9 @@ async function limpar(documentos: string[]) {
 /** Matricula o Aluno num curso novo do GO (verba + pré-curso + avaliação). */
 async function matricular(cpfAluno: string, cnpjGo: string) {
   const verba = await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante: cnpjGo, vlVerba: 1000 } });
-  const curso = await prisma.preCurso.create({
+  const curso = await prisma.curso.create({
     data: {
+      preCurso: { create: {} },
       cdOfertante: cnpjGo,
       cdVerba: verba.cdVerba,
       vlCursoAlocado: 100,

@@ -76,8 +76,8 @@ const DOCUMENTOS = USUARIOS.map((u) => u.documento);
 
 async function limpar(prisma: PrismaClient) {
   await prisma.avaliacaoAluno.deleteMany({ where: { cpf: CPF_AL } });
-  // PosCurso cai por cascade junto com o PreCurso.
-  await prisma.preCurso.deleteMany({ where: { cdOfertante: CNPJ_GO } });
+  // Pré e pós caem por cascade junto com o curso (AD-052).
+  await prisma.curso.deleteMany({ where: { cdOfertante: CNPJ_GO } });
   await prisma.verba.deleteMany({ where: { cdOfertante: CNPJ_GO } });
   await prisma.sessao.deleteMany({ where: { cpfUsuario: { in: DOCUMENTOS } } });
   // Criado_Por e CD_Ofertante são ON DELETE SET NULL: apagar a cascata
@@ -125,11 +125,11 @@ async function semear(prisma: PrismaClient) {
   // Um curso só: é nele que ficam o Pós-Curso e a matrícula do Aluno, para
   // que as três telas de formulário falem do mesmo curso.
   const curso =
-    (await prisma.preCurso.findFirst({
+    (await prisma.curso.findFirst({
       where: { cdOfertante: CNPJ_GO },
       orderBy: { cdCurso: "asc" },
     })) ??
-    (await prisma.preCurso.create({
+    (await prisma.curso.create({
       data: {
         cdOfertante: CNPJ_GO,
         cdVerba: verba.cdVerba,
@@ -138,13 +138,11 @@ async function semear(prisma: PrismaClient) {
       },
     }));
 
-  const posExistente = await prisma.posCurso.findUnique({
-    where: { cdCurso: curso.cdCurso },
-  });
-  if (!posExistente) {
-    await prisma.posCurso.create({
-      data: { cdCurso: curso.cdCurso, criadoPor: CNPJ_GO },
-    });
+  if (!(await prisma.preCurso.findUnique({ where: { cdCurso: curso.cdCurso } }))) {
+    await prisma.preCurso.create({ data: { cdCurso: curso.cdCurso } });
+  }
+  if (!(await prisma.posCurso.findUnique({ where: { cdCurso: curso.cdCurso } }))) {
+    await prisma.posCurso.create({ data: { cdCurso: curso.cdCurso } });
   }
 
   // Matrícula EM_ANDAMENTO e sem respostas: é o que deixa o formulário do

@@ -2,9 +2,8 @@
 //
 // Listagem escopada por Ofertante: mesma regra de GET /api/pos-cursos,
 // consultada direto via Prisma (Server Component só precisa da sessão via
-// requireSession, sem passar por fetch interno - ver design.md). PosCurso
-// não tem CD_Ofertante próprio - o filtro é aplicado via o PreCurso pai
-// (relação). O escopo em si vem de `escopoDeLeitura`, a mesma função que a
+// requireSession, sem passar por fetch interno - ver design.md). O
+// Ofertante é do curso (`TB_Curso`, AD-052) - o filtro vai pela relação. O escopo em si vem de `escopoDeLeitura`, a mesma função que a
 // rota usa. Antes de o pré-curso ser encerrado o pós-curso continua listado,
 // como "Aguardando pré-curso" (AD-050).
 import Link from "next/link";
@@ -20,11 +19,11 @@ export default async function PosCursosPage() {
   const posCursos = await prisma.posCurso.findMany({
     where: whereDeEscopo(
       escopoDeLeitura(usuario),
-      (cdOfertante) => ({ preCurso: { cdOfertante } }),
+      (cdOfertante) => ({ curso: { cdOfertante } }),
       // AL não tem escopo por Ofertante (AD-012) - lista vazia, não 403.
-      () => ({ preCurso: { cdOfertante: "" } }),
+      () => ({ curso: { cdOfertante: "" } }),
     ),
-    include: { preCurso: { select: { status: true } } },
+    include: { curso: { select: { preCurso: { select: { status: true } } } } },
     orderBy: { cdCurso: "asc" },
   });
 
@@ -48,7 +47,7 @@ export default async function PosCursosPage() {
                   <span data-testid={`status-pos-curso-${posCurso.cdCurso}`}>
                     {posCurso.status === "ENCERRADO"
                       ? "Encerrado"
-                      : posCursoLiberado(posCurso.preCurso)
+                      : posCursoLiberado(posCurso.curso.preCurso)
                         ? "Em andamento"
                         : "Aguardando pré-curso"}
                   </span>

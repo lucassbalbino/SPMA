@@ -28,8 +28,14 @@ describe("cruzamento por pergunta (integration)", () => {
       { qualifModalidade: "Presencial", qualifRegiao: "Zona Urbana", publicoPerfil: ["Mulheres"] },
     ];
     for (const patch of respostas) {
-      const curso = await prisma.preCurso.create({
-        data: { cdOfertante, cdVerba: verba.cdVerba, vlCursoAlocado: 100, criadoPor: CPF_GO },
+      const curso = await prisma.curso.create({
+        data: {
+          cdOfertante,
+          cdVerba: verba.cdVerba,
+          vlCursoAlocado: 100,
+          criadoPor: CPF_GO,
+          preCurso: { create: {} },
+        },
       });
       cursos.push(curso.cdCurso);
       await gravarRespostas(prisma, { formulario: "preCurso", cdCurso: curso.cdCurso }, patch);
@@ -37,7 +43,7 @@ describe("cruzamento por pergunta (integration)", () => {
   });
 
   afterAll(async () => {
-    await prisma.preCurso.deleteMany({ where: { cdOfertante } });
+    await prisma.curso.deleteMany({ where: { cdOfertante } });
     await prisma.verba.deleteMany({ where: { cdOfertante } });
     await prisma.usuario.deleteMany({ where: { documento: CPF_GO } });
     cursos = [];

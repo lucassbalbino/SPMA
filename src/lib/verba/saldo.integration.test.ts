@@ -39,8 +39,9 @@ describe("saldo da verba (integration)", () => {
     });
     cdVerbaComCurso = verbaComCurso.cdVerba;
 
-    await prisma.preCurso.create({
+    await prisma.curso.create({
       data: {
+        preCurso: { create: {} },
         cdOfertante,
         cdVerba: cdVerbaComCurso,
         vlCursoAlocado: 4000,
@@ -50,7 +51,7 @@ describe("saldo da verba (integration)", () => {
   });
 
   afterAll(async () => {
-    await prisma.preCurso.deleteMany({ where: { cdOfertante } });
+    await prisma.curso.deleteMany({ where: { cdOfertante } });
     await prisma.verba.deleteMany({ where: { cdOfertante } });
     await prisma.usuario.deleteMany({ where: { documento: CPF_GO_SALDO } });
     await prisma.$disconnect();

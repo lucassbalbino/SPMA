@@ -73,13 +73,19 @@ describe("repositório de respostas por coluna (integration)", () => {
     });
 
     const novoCurso = () =>
-      prisma.preCurso.create({
-        data: { cdOfertante, cdVerba: verba.cdVerba, vlCursoAlocado: 1000, criadoPor: CPF_GO },
+      prisma.curso.create({
+        data: {
+          cdOfertante,
+          cdVerba: verba.cdVerba,
+          vlCursoAlocado: 1000,
+          criadoPor: CPF_GO,
+          preCurso: { create: {} },
+        },
       });
     cdCursoA = (await novoCurso()).cdCurso;
     cdCursoB = (await novoCurso()).cdCurso;
 
-    await prisma.posCurso.create({ data: { cdCurso: cdCursoA, criadoPor: CPF_GO } });
+    await prisma.posCurso.create({ data: { cdCurso: cdCursoA } });
     await prisma.avaliacaoAluno.create({ data: { cpf: CPF_ALUNO, cdCurso: cdCursoA } });
   });
 
@@ -101,7 +107,7 @@ describe("repositório de respostas por coluna (integration)", () => {
   afterAll(async () => {
     await prisma.avaliacaoAluno.deleteMany({ where: { cpf: CPF_ALUNO } });
     await prisma.posCurso.deleteMany({ where: { cdCurso: cdCursoA } });
-    await prisma.preCurso.deleteMany({ where: { cdOfertante } });
+    await prisma.curso.deleteMany({ where: { cdOfertante } });
     await prisma.verba.deleteMany({ where: { cdOfertante } });
     await prisma.usuario.deleteMany({
       where: { documento: { in: [CPF_GO, CPF_ALUNO, CPF_ALUNO_DESCARTAVEL] } },

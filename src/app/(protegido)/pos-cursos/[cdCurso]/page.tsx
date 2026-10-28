@@ -1,7 +1,7 @@
 // /pos-cursos/[cdCurso] (REQ-PO-04 a REQ-PO-11, tela).
 //
 // Server Component: `requireSession` + `podeAcessarOfertante` (contra o
-// `cdOfertante` do PreCurso pai) decidem se o pós-curso é visível
+// `cdOfertante` do curso) decidem se o pós-curso é visível
 // (notFound() se não), `podeGerenciarPosCurso` + `status` decidem se é
 // editável. Antes de o pré-curso ser encerrado, a página mostra só um aviso
 // no lugar do formulário (AD-050).
@@ -30,14 +30,14 @@ export default async function PosCursoPage({ params }: Props) {
 
   const posCurso = await prisma.posCurso.findUnique({
     where: { cdCurso },
-    include: { preCurso: { select: { cdOfertante: true, status: true } } },
+    include: { curso: { select: { cdOfertante: true, preCurso: { select: { status: true } } } } },
   });
 
-  if (!posCurso || !podeAcessarOfertante(usuario, posCurso.preCurso.cdOfertante)) {
+  if (!posCurso || !podeAcessarOfertante(usuario, posCurso.curso.cdOfertante)) {
     notFound();
   }
 
-  if (!posCursoLiberado(posCurso.preCurso)) {
+  if (!posCursoLiberado(posCurso.curso.preCurso)) {
     return (
       <Card className="w-full max-w-3xl" data-testid="aviso-pre-curso-em-andamento">
         <CardHeader>
@@ -58,7 +58,7 @@ export default async function PosCursoPage({ params }: Props) {
 
   const podeEditar =
     posCurso.status === "EM_ANDAMENTO" &&
-    podeGerenciarPosCurso(usuario, posCurso.preCurso.cdOfertante);
+    podeGerenciarPosCurso(usuario, posCurso.curso.cdOfertante);
 
   const respostasIniciais = (await lerRespostas(prisma, {
     formulario: "posCurso",

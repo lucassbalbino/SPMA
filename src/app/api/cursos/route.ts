@@ -18,6 +18,7 @@ import { comTratamentoDeErro } from "@/lib/errors/api-error";
 import { exigirMutacao } from "@/lib/api/guardas";
 import { corpoValidado } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
+import { comCurso, incluirCurso } from "@/lib/cursos/curso";
 
 async function criarCurso(request: Request) {
   const sessao = await exigirMutacao(request);
@@ -48,18 +49,18 @@ async function criarCurso(request: Request) {
   }
 
   // O CURSO É OS DOIS QUESTIONÁRIOS (decisão do usuário, 2026-10-09).
-  // Pré-Curso e Pós-Curso não são dois cursos - `PosCurso.CD_Curso` é PK e FK
-  // 1:1 para `PreCurso.CD_Curso`, sem identidade própria (AD-040) -, então
-  // criar um curso grava os dois, e nenhum dos dois tem rota de criação
-  // própria: `/pre-cursos/novo`, `POST /api/pre-cursos`, `/pos-cursos/novo` e
+  // Pré-Curso e Pós-Curso não são dois cursos: o curso é `TB_Curso` (AD-052),
+  // e o pré e o pós são as duas etapas dele, com o mesmo `CD_Curso`. Criar um
+  // curso grava os três, e nenhuma etapa tem rota de criação própria:
+  // `/pre-cursos/novo`, `POST /api/pre-cursos`, `/pos-cursos/novo` e
   // `POST /api/pos-cursos` foram todos removidos.
   //
   // Transação pelo mesmo motivo de POST /api/usuarios, que cria usuário +
   // verba + matrícula num passo só: um erro no meio não pode deixar curso pela
-  // metade. Como esta é a ÚNICA origem de um PreCurso e de um PosCurso, mexer
-  // aqui é mexer na criação de curso do sistema inteiro.
+  // metade (CUR-06). Como esta é a ÚNICA origem de um curso, mexer aqui é
+  // mexer na criação de curso do sistema inteiro.
   const { preCurso, posCurso } = await prisma.$transaction(async (tx) => {
-    const preCursoCriado = await tx.preCurso.create({
+    const curso = await tx.curso.create({
       data: {
         cdOfertante: verba.cdOfertante,
         cdVerba: dados.cdVerba,
@@ -68,11 +69,19 @@ async function criarCurso(request: Request) {
       },
     });
 
+    const preCursoCriado = await tx.preCurso.create({
+      data: { cdCurso: curso.cdCurso },
+      include: incluirCurso("preCurso"),
+    });
     const posCursoCriado = await tx.posCurso.create({
-      data: { cdCurso: preCursoCriado.cdCurso, criadoPor: sessao.usuario.documento },
+      data: { cdCurso: curso.cdCurso },
+      include: incluirCurso("posCurso"),
     });
 
-    return { preCurso: preCursoCriado, posCurso: posCursoCriado };
+    return {
+      preCurso: comCurso("preCurso", preCursoCriado),
+      posCurso: comCurso("posCurso", posCursoCriado),
+    };
   });
 
   // Os dois nascem sem nenhuma linha de resposta - `null`, como a coluna

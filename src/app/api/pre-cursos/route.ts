@@ -10,6 +10,7 @@ import { comTratamentoDeErro } from "@/lib/errors/api-error";
 import { exigirSessao } from "@/lib/api/guardas";
 import { erroHttp } from "@/lib/api/erro-http";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
+import { comCurso, incluirCurso } from "@/lib/cursos/curso";
 import {
   incluirRespostas,
   respostasOuNulo,
@@ -31,17 +32,18 @@ async function listarPreCursos(request: Request) {
   const registros = await prisma.preCurso.findMany({
     where: whereDeEscopo(
       escopo,
-      (cdOfertante) => ({ cdOfertante }),
-      () => ({ cdOfertante: "" }),
+      (cdOfertante) => ({ curso: { cdOfertante } }),
+      () => ({ curso: { cdOfertante: "" } }),
     ),
     orderBy: { cdCurso: "asc" },
     omit: incluirRespostas("preCurso"),
+    include: incluirCurso("preCurso"),
   });
 
   return NextResponse.json({
     preCursos: registros.map((registro) => {
       const { registro: preCurso, respostas } = separarRespostas("preCurso", registro);
-      return { ...preCurso, respostas: respostasOuNulo(respostas) };
+      return { ...comCurso("preCurso", preCurso), respostas: respostasOuNulo(respostas) };
     }),
   });
 }

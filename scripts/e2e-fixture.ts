@@ -21,6 +21,7 @@ import {
   type AlvoRespostas,
 } from "../src/lib/respostas/repositorio";
 import type { TipoUsuario } from "../src/generated/prisma/enums";
+import { comCurso, incluirCurso } from "../src/lib/cursos/curso";
 
 loadEnv({ path: ".env.test" });
 
@@ -225,12 +226,12 @@ async function executar(
 
     case "getPreCurso": {
       const cdCurso = argumento as number;
-      const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso } });
+      const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso }, include: incluirCurso("preCurso") });
 
       if (!preCurso) return null;
 
       return {
-        ...preCurso,
+        ...comCurso("preCurso", preCurso),
         respostas: await respostasDoBanco(prisma, { formulario: "preCurso", cdCurso }),
       };
     }
@@ -240,13 +241,19 @@ async function executar(
     // sem depender da rota de encerramento (T7) já estar implementada.
     case "encerrarPreCursoFixture": {
       const cdCurso = argumento as number;
-      return prisma.preCurso.update({
-        where: { cdCurso },
-        data: { status: "ENCERRADO", dataEncerramento: new Date() },
-      });
+      return comCurso(
+        "preCurso",
+        await prisma.preCurso.update({
+          where: { cdCurso },
+          data: { status: "ENCERRADO", dataEncerramento: new Date() },
+          include: incluirCurso("preCurso"),
+        }),
+      );
     }
 
-    // Respostas opcionais entram pelo repositório, como em `criarAvaliacao`.
+    // Cria o curso (`TB_Curso`, AD-052) e o pré-curso dele, com a mesma
+    // assinatura de antes. Respostas opcionais entram pelo repositório, como
+    // em `criarAvaliacao`.
     case "criarPreCurso": {
       const { respostas, ...dados } = argumento as {
         cdOfertante: string;
@@ -256,22 +263,26 @@ async function executar(
         respostas?: Record<string, unknown>;
       };
       return prisma.$transaction(async (tx) => {
-        const preCurso = await tx.preCurso.create({ data: dados });
+        const curso = await tx.curso.create({ data: dados });
+        const preCurso = await tx.preCurso.create({
+          data: { cdCurso: curso.cdCurso },
+          include: incluirCurso("preCurso"),
+        });
         if (respostas !== undefined) {
-          await gravarRespostas(tx, { formulario: "preCurso", cdCurso: preCurso.cdCurso }, respostas);
+          await gravarRespostas(tx, { formulario: "preCurso", cdCurso: curso.cdCurso }, respostas);
         }
-        return preCurso;
+        return comCurso("preCurso", preCurso);
       });
     }
 
-    // Limpa PreCurso de teste antes de `deleteUsuarios` - `PreCurso.criadoPor`
-    // é FK para Usuario, então um PreCurso de fixture bloquearia a exclusão
-    // do usuário de teste que o criou. `PosCurso.cdCurso` tem `onDelete:
-    // Cascade` para `PreCurso.cdCurso` - apagar o PreCurso já remove o
-    // PosCurso associado, sem precisar de um comando de limpeza próprio.
+    // Limpa os cursos de teste antes de `deleteUsuarios` - `Curso.criadoPor`
+    // é FK para Usuario, então um curso de fixture bloquearia a exclusão do
+    // usuário de teste que o criou. O pré e o pós têm `onDelete: Cascade`
+    // para `TB_Curso` (AD-052) - apagar o curso já remove os dois. Nome do
+    // comando mantido para os specs.
     case "deletePreCursosPorOfertante": {
       const cdOfertantes = argumento as string[];
-      const { count } = await prisma.preCurso.deleteMany({
+      const { count } = await prisma.curso.deleteMany({
         where: { cdOfertante: { in: cdOfertantes } },
       });
       return { count };
@@ -294,12 +305,12 @@ async function executar(
 
     case "getPosCurso": {
       const cdCurso = argumento as number;
-      const posCurso = await prisma.posCurso.findUnique({ where: { cdCurso } });
+      const posCurso = await prisma.posCurso.findUnique({ where: { cdCurso }, include: incluirCurso("posCurso") });
 
       if (!posCurso) return null;
 
       return {
-        ...posCurso,
+        ...comCurso("posCurso", posCurso),
         respostas: await respostasDoBanco(prisma, { formulario: "posCurso", cdCurso }),
       };
     }
@@ -309,24 +320,30 @@ async function executar(
     // sem depender da rota de encerramento (T6) já estar implementada.
     case "encerrarPosCursoFixture": {
       const cdCurso = argumento as number;
-      return prisma.posCurso.update({
-        where: { cdCurso },
-        data: { status: "ENCERRADO", dataEncerramento: new Date() },
-      });
+      return comCurso(
+        "posCurso",
+        await prisma.posCurso.update({
+          where: { cdCurso },
+          data: { status: "ENCERRADO", dataEncerramento: new Date() },
+          include: incluirCurso("posCurso"),
+        }),
+      );
     }
 
     case "criarPosCurso": {
-      const { respostas, ...dados } = argumento as {
+      // `criadoPor` segue na assinatura dos specs, mas o criador é o do curso
+      // (AD-052): o pós-curso não tem criador próprio.
+      const { cdCurso, respostas } = argumento as {
         cdCurso: number;
         criadoPor: string;
         respostas?: Record<string, unknown>;
       };
       return prisma.$transaction(async (tx) => {
-        const posCurso = await tx.posCurso.create({ data: dados });
+        const posCurso = await tx.posCurso.create({ data: { cdCurso }, include: incluirCurso("posCurso") });
         if (respostas !== undefined) {
-          await gravarRespostas(tx, { formulario: "posCurso", cdCurso: dados.cdCurso }, respostas);
+          await gravarRespostas(tx, { formulario: "posCurso", cdCurso }, respostas);
         }
-        return posCurso;
+        return comCurso("posCurso", posCurso);
       });
     }
 

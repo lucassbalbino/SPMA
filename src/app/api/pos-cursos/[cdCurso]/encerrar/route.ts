@@ -10,6 +10,7 @@ import { exigirMutacao } from "@/lib/api/guardas";
 import { idPositivo } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
 import { encerrarFormulario } from "@/lib/respostas/encerramento";
+import { comCurso, incluirCurso, INCLUIR_CURSO_DO_POS } from "@/lib/cursos/curso";
 import {
   MENSAGEM_PRE_CURSO_EM_ANDAMENTO,
   posCursoLiberado,
@@ -23,19 +24,19 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
 
   const posCurso = await prisma.posCurso.findUnique({
     where: { cdCurso },
-    include: { preCurso: { select: { cdOfertante: true, status: true } } },
+    include: INCLUIR_CURSO_DO_POS,
   });
 
   if (!posCurso) {
     throw erroHttp(404, "Pós-curso não encontrado");
   }
 
-  if (!podeGerenciarPosCurso(sessao.usuario, posCurso.preCurso.cdOfertante)) {
+  if (!podeGerenciarPosCurso(sessao.usuario, posCurso.curso.cdOfertante)) {
     throw erroHttp(403, "Acesso negado");
   }
 
   // AD-050: o pós-curso só encerra depois do pré-curso.
-  if (!posCursoLiberado(posCurso.preCurso)) {
+  if (!posCursoLiberado(posCurso.curso.preCurso)) {
     throw erroHttp(409, MENSAGEM_PRE_CURSO_EM_ANDAMENTO);
   }
 
@@ -54,10 +55,11 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
     alvo: { formulario: "posCurso", cdCurso },
     normalizar: normalizarCondicionaisPosCurso,
     validarCompletude: validarCompletudePosCurso,
-    encerrarRegistro: (tx, data) => tx.posCurso.update({ where: { cdCurso }, data }),
+    encerrarRegistro: (tx, data) =>
+      tx.posCurso.update({ where: { cdCurso }, data, include: incluirCurso("posCurso") }),
   });
 
-  return NextResponse.json({ posCurso: { ...registro, respostas } });
+  return NextResponse.json({ posCurso: { ...comCurso("posCurso", registro), respostas } });
 }
 
 export const POST = comTratamentoDeErro(encerrarPosCurso);

@@ -50,12 +50,12 @@ export default async function GestaoUsuariosPage() {
   // todos.
   const cursos =
     usuario.tipo === "AM"
-      ? await prisma.preCurso.findMany({
+      ? await prisma.curso.findMany({
           orderBy: { cdCurso: "asc" },
           select: { cdCurso: true },
         })
       : usuario.tipo === "GO"
-        ? await prisma.preCurso.findMany({
+        ? await prisma.curso.findMany({
             where: { cdOfertante: resolverEscopoOfertante(usuario) ?? "" },
             orderBy: { cdCurso: "asc" },
             select: { cdCurso: true },

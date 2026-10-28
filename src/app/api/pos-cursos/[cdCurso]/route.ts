@@ -14,6 +14,7 @@ import { corpoValidado, idPositivo } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
 import { lerRespostasParaApi } from "@/lib/respostas/repositorio";
 import { aplicarPatchRespostas } from "@/lib/respostas/patch";
+import { comCurso, incluirCurso, INCLUIR_CURSO_DO_POS } from "@/lib/cursos/curso";
 import {
   MENSAGEM_PRE_CURSO_EM_ANDAMENTO,
   posCursoLiberado,
@@ -21,37 +22,26 @@ import {
 
 type Contexto = { params: Promise<{ cdCurso: string }> };
 
-/**
- * PosCurso não tem CD_Ofertante próprio - o escopo vem do PreCurso pai. O
- * status do pai decide se a gravação já está liberada (AD-050).
- */
-const COM_OFERTANTE_DO_PAI = {
-  preCurso: { select: { cdOfertante: true, status: true } },
-} as const;
-
 async function consultarPosCurso(_request: Request, { params }: Contexto) {
   const sessao = await exigirSessao();
   const cdCurso = idPositivo((await params).cdCurso);
 
   const posCurso = await prisma.posCurso.findUnique({
     where: { cdCurso },
-    include: COM_OFERTANTE_DO_PAI,
+    include: INCLUIR_CURSO_DO_POS,
   });
 
   if (!posCurso) {
     throw erroHttp(404, "Pós-curso não encontrado");
   }
 
-  if (!podeAcessarOfertante(sessao.usuario, posCurso.preCurso.cdOfertante)) {
+  if (!podeAcessarOfertante(sessao.usuario, posCurso.curso.cdOfertante)) {
     throw erroHttp(403, "Acesso negado");
   }
 
-  const { preCurso, ...dados } = posCurso;
   const respostas = await lerRespostasParaApi(prisma, { formulario: "posCurso", cdCurso });
 
-  return NextResponse.json({
-    posCurso: { ...dados, cdOfertante: preCurso.cdOfertante, respostas },
-  });
+  return NextResponse.json({ posCurso: { ...comCurso("posCurso", posCurso), respostas } });
 }
 
 async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
@@ -60,19 +50,19 @@ async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
 
   const posCursoExistente = await prisma.posCurso.findUnique({
     where: { cdCurso },
-    include: COM_OFERTANTE_DO_PAI,
+    include: INCLUIR_CURSO_DO_POS,
   });
 
   if (!posCursoExistente) {
     throw erroHttp(404, "Pós-curso não encontrado");
   }
 
-  if (!podeGerenciarPosCurso(sessao.usuario, posCursoExistente.preCurso.cdOfertante)) {
+  if (!podeGerenciarPosCurso(sessao.usuario, posCursoExistente.curso.cdOfertante)) {
     throw erroHttp(403, "Acesso negado");
   }
 
   // AD-050: antes de o pré-curso ser encerrado, nada é gravado aqui.
-  if (!posCursoLiberado(posCursoExistente.preCurso)) {
+  if (!posCursoLiberado(posCursoExistente.curso.preCurso)) {
     throw erroHttp(409, MENSAGEM_PRE_CURSO_EM_ANDAMENTO);
   }
 
@@ -95,10 +85,11 @@ async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
         throw erroHttp(400, "Data de término não pode ser anterior à data de início");
       }
     },
-    gravarRegistro: (tx) => tx.posCurso.findUniqueOrThrow({ where: { cdCurso } }),
+    gravarRegistro: (tx) =>
+      tx.posCurso.findUniqueOrThrow({ where: { cdCurso }, include: incluirCurso("posCurso") }),
   });
 
-  return NextResponse.json({ posCurso: { ...registro, respostas } });
+  return NextResponse.json({ posCurso: { ...comCurso("posCurso", registro), respostas } });
 }
 
 export const GET = comTratamentoDeErro(consultarPosCurso);
