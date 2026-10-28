@@ -184,11 +184,15 @@ T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] Nenhuma asserção e2e alterada
-- [ ] Gate check passes: `npm run lint && npm run typecheck && npm run build && npm run test:unit && npm run test:integration && npm run test:e2e`
+- [x] Nenhuma asserção e2e alterada
+- [x] Gate check passes: `npm run lint && npm run typecheck && npm run build && npm run test:unit && npm run test:integration && npm run test:e2e`
+
+**Status**: Done
 
 **Tests**: e2e
 **Gate**: build
+
+**Resultado e2e**: 296 de 296 na suíte completa (11,3 min). Nenhum arquivo em `e2e/` mudou nesta feature; só o fixture (`scripts/e2e-fixture.ts`, T1), que manteve as assinaturas.
 
 **Commit**: `test(e2e): run the suite against tb_curso`
 
