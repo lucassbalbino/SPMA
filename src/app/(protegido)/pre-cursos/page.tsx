@@ -16,11 +16,11 @@ export default async function PreCursosPage() {
   const preCursos = await prisma.preCurso.findMany({
     where: whereDeEscopo(
       escopoDeLeitura(usuario),
-      (cdOfertante) => ({ cdOfertante }),
+      (cdOfertante) => ({ curso: { cdOfertante } }),
       // AL não tem escopo por Ofertante (AD-012); "" nunca casa com um
       // documento real, então a lista sai vazia em vez de 403 - numa TELA,
       // diferente da rota, uma lista vazia é a resposta útil.
-      () => ({ cdOfertante: "" }),
+      () => ({ curso: { cdOfertante: "" } }),
     ),
     orderBy: { cdCurso: "asc" },
   });

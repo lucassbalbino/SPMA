@@ -40,8 +40,8 @@ const DOCUMENTOS = [
 async function limpar() {
   const em = { in: DOCUMENTOS };
   await prisma.avaliacaoAluno.deleteMany({ where: { cpf: em } });
-  await prisma.posCurso.deleteMany({ where: { criadoPor: em } });
-  await prisma.preCurso.deleteMany({ where: { OR: [{ cdOfertante: em }, { criadoPor: em }] } });
+  // Pré e pós caem por cascata junto com o curso (AD-052).
+  await prisma.curso.deleteMany({ where: { OR: [{ cdOfertante: em }, { criadoPor: em }] } });
   await prisma.verba.deleteMany({ where: { cdOfertante: em } });
   await prisma.usuario.updateMany({
     where: { documento: em },
@@ -84,15 +84,16 @@ async function criarGoComFilhos(documentoGo: string, documentoVo: string) {
     },
   });
   const verba = await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante: documentoGo, vlVerba: 1000 } });
-  const curso = await prisma.preCurso.create({
+  const curso = await prisma.curso.create({
     data: {
+      preCurso: { create: {} },
       cdOfertante: documentoGo,
       cdVerba: verba.cdVerba,
       vlCursoAlocado: 100,
       criadoPor: documentoGo,
     },
   });
-  await prisma.posCurso.create({ data: { cdCurso: curso.cdCurso, criadoPor: documentoGo } });
+  await prisma.posCurso.create({ data: { cdCurso: curso.cdCurso } });
   await novaSessao(documentoGo);
 
   return { cdVerba: verba.cdVerba, cdCurso: curso.cdCurso };
@@ -152,21 +153,18 @@ describe("atualizarCadastro (integration)", () => {
     expect(voDepois.criadoPor).toBe(novo);
     expect(voDepois.cdOfertante).toBe(novo);
     expect((await prisma.verba.findUniqueOrThrow({ where: { cdVerba } })).cdOfertante).toBe(novo);
-    const cursoDepois = await prisma.preCurso.findUniqueOrThrow({ where: { cdCurso } });
+    // Ofertante e criador são do curso, um só para o pré e o pós (AD-052).
+    const cursoDepois = await prisma.curso.findUniqueOrThrow({ where: { cdCurso } });
     expect(cursoDepois.cdOfertante).toBe(novo);
     expect(cursoDepois.criadoPor).toBe(novo);
-    expect((await prisma.posCurso.findUniqueOrThrow({ where: { cdCurso } })).criadoPor).toBe(
-      novo,
-    );
 
     // ...e não sobra nenhuma linha com o antigo, em nenhuma tabela.
     expect(await prisma.usuario.count({ where: { documento: antigo } })).toBe(0);
     expect(await prisma.usuario.count({ where: { criadoPor: antigo } })).toBe(0);
     expect(await prisma.usuario.count({ where: { cdOfertante: antigo } })).toBe(0);
     expect(await prisma.verba.count({ where: { cdOfertante: antigo } })).toBe(0);
-    expect(await prisma.preCurso.count({ where: { cdOfertante: antigo } })).toBe(0);
-    expect(await prisma.preCurso.count({ where: { criadoPor: antigo } })).toBe(0);
-    expect(await prisma.posCurso.count({ where: { criadoPor: antigo } })).toBe(0);
+    expect(await prisma.curso.count({ where: { cdOfertante: antigo } })).toBe(0);
+    expect(await prisma.curso.count({ where: { criadoPor: antigo } })).toBe(0);
     expect(await prisma.sessao.count({ where: { cpfUsuario: antigo } })).toBe(0);
 
     // GU-34: a sessão migrada pela cascata foi encerrada.
@@ -190,8 +188,14 @@ describe("atualizarCadastro (integration)", () => {
       },
     });
     const verba = await prisma.verba.create({ data: { dsVerba: "Verba teste", cdOfertante: go, vlVerba: 1000 } });
-    const curso = await prisma.preCurso.create({
-      data: { cdOfertante: go, cdVerba: verba.cdVerba, vlCursoAlocado: 100, criadoPor: go },
+    const curso = await prisma.curso.create({
+      data: {
+        cdOfertante: go,
+        cdVerba: verba.cdVerba,
+        vlCursoAlocado: 100,
+        criadoPor: go,
+        preCurso: { create: {} },
+      },
     });
     // As respostas são colunas da própria avaliação e da linha de dados
     // pessoais (AD-051): trocar o documento leva as duas linhas inteiras.

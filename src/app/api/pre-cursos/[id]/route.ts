@@ -14,6 +14,7 @@ import { corpoValidado, idPositivo } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
 import { lerRespostasParaApi } from "@/lib/respostas/repositorio";
 import { aplicarPatchRespostas } from "@/lib/respostas/patch";
+import { comCurso, incluirCurso } from "@/lib/cursos/curso";
 
 type Contexto = { params: Promise<{ id: string }> };
 
@@ -21,32 +22,35 @@ async function consultarPreCurso(_request: Request, { params }: Contexto) {
   const sessao = await exigirSessao();
   const cdCurso = idPositivo((await params).id);
 
-  const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso } });
+  const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso }, include: incluirCurso("preCurso") });
 
   if (!preCurso) {
     throw erroHttp(404, "Pré-curso não encontrado");
   }
 
-  if (!podeAcessarOfertante(sessao.usuario, preCurso.cdOfertante)) {
+  if (!podeAcessarOfertante(sessao.usuario, preCurso.curso.cdOfertante)) {
     throw erroHttp(403, "Acesso negado");
   }
 
   const respostas = await lerRespostasParaApi(prisma, { formulario: "preCurso", cdCurso });
 
-  return NextResponse.json({ preCurso: { ...preCurso, respostas } });
+  return NextResponse.json({ preCurso: { ...comCurso("preCurso", preCurso), respostas } });
 }
 
 async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
   const sessao = await exigirMutacao(request);
   const cdCurso = idPositivo((await params).id);
 
-  const preCursoExistente = await prisma.preCurso.findUnique({ where: { cdCurso } });
+  const preCursoExistente = await prisma.preCurso.findUnique({
+    where: { cdCurso },
+    include: { curso: { select: { cdOfertante: true } } },
+  });
 
   if (!preCursoExistente) {
     throw erroHttp(404, "Pré-curso não encontrado");
   }
 
-  if (!podeGerenciarPreCurso(sessao.usuario, preCursoExistente.cdOfertante)) {
+  if (!podeGerenciarPreCurso(sessao.usuario, preCursoExistente.curso.cdOfertante)) {
     throw erroHttp(403, "Acesso negado");
   }
 
@@ -70,10 +74,11 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
         throw erroHttp(400, "Data de término não pode ser anterior à data de início");
       }
     },
-    gravarRegistro: (tx) => tx.preCurso.findUniqueOrThrow({ where: { cdCurso } }),
+    gravarRegistro: (tx) =>
+      tx.preCurso.findUniqueOrThrow({ where: { cdCurso }, include: incluirCurso("preCurso") }),
   });
 
-  return NextResponse.json({ preCurso: { ...registro, respostas } });
+  return NextResponse.json({ preCurso: { ...comCurso("preCurso", registro), respostas } });
 }
 
 export const GET = comTratamentoDeErro(consultarPreCurso);

@@ -131,7 +131,7 @@ async function criarUsuario(request: Request) {
   }
 
   const curso = dados.cdCurso
-    ? await prisma.preCurso.findUnique({ where: { cdCurso: dados.cdCurso } })
+    ? await prisma.curso.findUnique({ where: { cdCurso: dados.cdCurso } })
     : null;
 
   if (dados.cdCurso && !curso) {

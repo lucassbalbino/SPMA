@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 59,
+  "next_id": 62,
   "lessons": [
     {
       "id": "L-014",
@@ -405,6 +405,60 @@
       ],
       "created": "2026-10-28T10:13:40Z",
       "last_seen": "2026-10-28T10:13:40Z"
+    },
+    {
+      "id": "L-059",
+      "key": "surviving_mutant::provoke every branch of a migration self check check with its own abort scenario not just one representative branch",
+      "text": "Provoke every branch of a migration self-check CHECK with its own abort scenario, not just one representative branch",
+      "signal": "surviving_mutant",
+      "scope": "migrations",
+      "status": "candidate",
+      "features": [
+        "tabela-curso"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "validation.md M9 prisma/migrations/20261028120000_tabela_curso/migration.sql:60 (migrations)"
+      ],
+      "created": "2026-10-28T14:25:25Z",
+      "last_seen": "2026-10-28T14:25:25Z"
+    },
+    {
+      "id": "L-060",
+      "key": "surviving_mutant::corrupt each compared column separately when testing a backfill divergence check",
+      "text": "Corrupt each compared column separately when testing a backfill divergence check",
+      "signal": "surviving_mutant",
+      "scope": "migrations",
+      "status": "candidate",
+      "features": [
+        "tabela-curso"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "validation.md M2b prisma/migrations/20261028120000_tabela_curso/migration.sql:57 (migrations)"
+      ],
+      "created": "2026-10-28T14:25:25Z",
+      "last_seen": "2026-10-28T14:25:25Z"
+    },
+    {
+      "id": "L-061",
+      "key": "spec_precision_gap::when a spec removes columns state how existing assertions on those columns may be retargeted instead of promising no assertion changes",
+      "text": "When a spec removes columns, state how existing assertions on those columns may be retargeted instead of promising no assertion changes",
+      "signal": "spec_precision_gap",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "tabela-curso"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CUR-13 src/lib/usuarios/gestao.integration.test.ts:156 (spec)"
+      ],
+      "created": "2026-10-28T14:25:26Z",
+      "last_seen": "2026-10-28T14:25:26Z"
     }
   ]
 }

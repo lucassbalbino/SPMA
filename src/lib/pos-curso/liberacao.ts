@@ -8,6 +8,8 @@ import type { StatusFormulario } from "../../generated/prisma/enums";
 export const MENSAGEM_PRE_CURSO_EM_ANDAMENTO =
   "Encerre o pré-curso antes de preencher o pós-curso";
 
-export function posCursoLiberado(preCurso: { status: StatusFormulario }): boolean {
-  return preCurso.status === "ENCERRADO";
+// O status chega pelo curso (`curso.preCurso`, AD-052), que o Prisma tipa
+// como opcional; sem pré-curso, o pós continua fechado.
+export function posCursoLiberado(preCurso: { status: StatusFormulario } | null): boolean {
+  return preCurso?.status === "ENCERRADO";
 }

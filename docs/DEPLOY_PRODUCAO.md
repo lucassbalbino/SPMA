@@ -354,6 +354,44 @@ faltam depois de `-- 4. Contract` no `migration.sql` e marque a migration com
 
 Fora desse caso, corrija o dado (ou o código) e publique de novo.
 
+### Migração da tabela de curso (AD-052)
+
+A migration `20261028120000_tabela_curso` cria `TB_Curso`, copia para ela o
+ofertante, a verba, o valor, o criador e a data de cada curso, confere o
+resultado e só então remove essas colunas de `TB_Pre_Curso` e `TB_Pos_Curso`.
+Vale o mesmo cuidado da AD-051: **merge num horário sem uso** e **backup na
+hora** antes do merge na `main`:
+
+```bash
+sudo /opt/spma/backup.sh && ls -lh /opt/spma/backups | tail -1
+```
+
+**Logo depois do deploy, aplique as VIEWs do `bi`.** Até lá, `bi.TB_Pre_Curso`
+e `bi.TB_Pos_Curso` ficam quebradas, porque apontam para colunas que saíram, e
+`bi.TB_Curso` não existe (seção seguinte).
+
+**Se o deploy parar em "Aplicando migrations"**, as colunas antigas seguem
+intactas. O log diz qual conferência falhou:
+
+| Erro | Causa |
+|---|---|
+| `Check constraint 'cursos_divergentes' is violated` | Algum curso copiado difere do pré-curso de origem, ou a contagem não bate. |
+| `Check constraint 'cursos_orfaos' is violated` | Algum pós-curso ou avaliação aponta para um curso que não existe. |
+
+Reverta a tentativa e avise o Prisma, como na AD-051:
+
+```bash
+mysql spma < /opt/spma/migrator/prisma/migrations/20261028120000_tabela_curso/reversao.sql
+cd /opt/spma/migrator && set -a && . /opt/spma/shared/.env.production && set +a   && npx --no-install prisma migrate resolve --rolled-back 20261028120000_tabela_curso
+```
+
+A reversão só apaga `TB_Curso` e a tabela de conferência. A trava dela confere
+as seis chaves estrangeiras antigas: se o contract já começou, ela para com
+`contract_ja_comecou` sem apagar nada. Nesse caso a conferência já passou, os
+dados do curso estão em `TB_Curso`, e o caminho é rodar à mão os comandos que
+faltam depois de `-- 4. Contract` e marcar a migration com
+`prisma migrate resolve --applied 20261028120000_tabela_curso`.
+
 ### VIEWs do banco `bi` (Power BI)
 
 O Power BI do cliente não lê o banco `spma`: ele lê o banco `bi`, que tem uma

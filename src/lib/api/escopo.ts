@@ -15,8 +15,8 @@
 // só o efeito dela em cada rota.
 //
 // Esta função devolve a DECISÃO, não a cláusula `where`: cada tabela endereça
-// o Ofertante por um caminho diferente (`cdOfertante` direto no PreCurso/Verba,
-// `preCurso.cdOfertante` no PosCurso, `curso.cdOfertante` na AvaliacaoAluno).
+// o Ofertante por um caminho diferente (`cdOfertante` direto na Verba,
+// `curso.cdOfertante` no PreCurso, no PosCurso e na AvaliacaoAluno - AD-052).
 // Unificar o `where` acoplaria os quatro models; unificar a decisão não.
 import type { TipoUsuario } from "../../generated/prisma/enums";
 import { resolverEscopoOfertante } from "../auth/permissoes";

@@ -33,8 +33,10 @@ const urlDoBanco = () => {
 const pastas = readdirSync(RAIZ)
   .filter((nome) => /^\d+_/.test(nome))
   .sort();
-const anteriores = pastas.filter((nome) => !nome.endsWith(NOVA));
 const nova = pastas.find((nome) => nome.endsWith(NOVA));
+// O estado antigo é o de antes desta migration, mesmo depois que outras
+// entraram na fila depois dela (como a da AD-052).
+const anteriores = pastas.slice(0, pastas.indexOf(nova!));
 
 let banco: PrismaClient | undefined;
 let temporario: string | undefined;
@@ -291,9 +293,8 @@ describe("migration respostas_por_coluna (integration)", { timeout: PREPARO_MS }
     await prisma.$disconnect();
   });
 
-  it("existe uma única migration nova, depois de todas as anteriores", () => {
-    expect(nova).toBeDefined();
-    expect(pastas.at(-1)).toBe(nova);
+  it("existe uma única migration respostas_por_coluna", () => {
+    expect(pastas.filter((nome) => nome.endsWith(NOVA))).toEqual([nova]);
   });
 
   describe("com respostas válidas", () => {

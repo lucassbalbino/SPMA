@@ -2,10 +2,8 @@
 // AD-015, AD-016). O teto é só de VALOR - uma Verba pode custear quantos
 // cursos couberem dentro do seu valor total, sem limite de quantidade.
 //
-// `PreCurso` já existe no schema (desenhado antecipadamente), mesmo sem
-// nenhuma rota de criação de curso ainda (isso é escopo de
-// `formulario-pre-curso`) - por isso as funções aqui são consumidas por
-// integration test direto via Prisma, não por uma rota própria.
+// O valor alocado é do curso (`TB_Curso`, AD-052): o saldo soma os cursos da
+// verba, não os pré-cursos.
 import { prisma } from "../db/prisma";
 import { Prisma } from "../../generated/prisma/client";
 
@@ -16,7 +14,7 @@ export interface SaldoVerba {
 }
 
 async function obterTotalAlocado(cdVerba: number): Promise<Prisma.Decimal> {
-  const agregado = await prisma.preCurso.aggregate({
+  const agregado = await prisma.curso.aggregate({
     where: { cdVerba },
     _sum: { vlCursoAlocado: true },
   });
@@ -42,7 +40,7 @@ export async function saldosDasVerbas(
     return new Map();
   }
 
-  const agregados = await prisma.preCurso.groupBy({
+  const agregados = await prisma.curso.groupBy({
     by: ["cdVerba"],
     where: { cdVerba: { in: cdVerbas } },
     _sum: { vlCursoAlocado: true },

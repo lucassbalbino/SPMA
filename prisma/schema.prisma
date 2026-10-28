@@ -95,9 +95,8 @@ model Usuario {
   // Relações de domínio
   avaliacoes       AvaliacaoAluno[] @relation("AlunoAvaliacoes")
   dadosPessoais    DadoPessoalAluno?
-  cursosCriados    PreCurso[]       @relation("GoCursos")
-  cursosOfertados  PreCurso[]       @relation("PreCursoOfertante")
-  posCursosCriados PosCurso[]       @relation("GoPosCursos")
+  cursosCriados    Curso[]          @relation("CursoCriador")
+  cursosOfertados  Curso[]          @relation("CursoOfertante")
   verbas           Verba[]
   sessoes          Sessao[]
 
@@ -160,38 +159,55 @@ model Verba {
   dataCriacao    DateTime   @default(now()) @map("Data_Criacao")
 
   // 1 verba : N cursos (a FK fica no curso). AD-015.
-  cursos         PreCurso[]
+  cursos         Curso[]
 
   @@index([cdOfertante])
   @@map("TB_Verba")
 }
 
 // ─────────────────────────────────────────────────────────────
-// PRÉ-CURSO  (AD-017, AD-018, AD-019)
-// CD_Curso é PK autoincremento — NÃO é FK (bug corrigido).
+// CURSO  (AD-052)
+// Dono do código e dos dados que valem para o curso inteiro. O pré-curso,
+// o pós-curso e a avaliação apontam para ele pelo mesmo CD_Curso. O nome do
+// curso não fica aqui: é a resposta P8 do pré-curso.
 // ─────────────────────────────────────────────────────────────
 
-model PreCurso {
+model Curso {
   cdCurso        Int              @id @default(autoincrement()) @map("CD_Curso")
   // Aponta para o CNPJ (Usuario.documento) de um GO, não mais para um
   // `Ofertante` autônomo (AD-043). Nome de campo mantido.
   cdOfertante    String           @map("CD_Ofertante") @db.VarChar(14)
-  ofertante      Usuario          @relation("PreCursoOfertante", fields: [cdOfertante], references: [documento])
+  ofertante      Usuario          @relation("CursoOfertante", fields: [cdOfertante], references: [documento])
 
   // Verba que custeia este curso + valor alocado (AD-015, AD-016)
   cdVerba        Int              @map("CD_Verba")
   verba          Verba            @relation(fields: [cdVerba], references: [cdVerba])
   vlCursoAlocado Decimal          @map("VL_Curso_Alocado") @db.Decimal(10, 2)
 
-  status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
+  dataCriacao    DateTime         @default(now()) @map("Data_Criacao")
+  criadoPor      String           @map("Criado_Por") @db.VarChar(14)
+  criador        Usuario          @relation("CursoCriador", fields: [criadoPor], references: [documento])
 
-  dataCriacao       DateTime      @default(now()) @map("Data_Criacao")
-  criadoPor         String        @map("Criado_Por") @db.VarChar(14)
-  criador           Usuario       @relation("GoCursos", fields: [criadoPor], references: [documento])
-  dataEncerramento  DateTime?     @map("Data_Encerramento")
-
+  preCurso       PreCurso?
   posCurso       PosCurso?
   avaliacoes     AvaliacaoAluno[]
+
+  @@index([cdOfertante])
+  @@index([cdVerba])
+  @@map("TB_Curso")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PRÉ-CURSO  (AD-017, AD-018, AD-019)
+// Uma linha por curso; os dados do curso ficam em TB_Curso (AD-052).
+// ─────────────────────────────────────────────────────────────
+
+model PreCurso {
+  cdCurso        Int              @id @map("CD_Curso")
+  curso          Curso            @relation(fields: [cdCurso], references: [cdCurso], onDelete: Cascade)
+
+  status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
+  dataEncerramento  DateTime?     @map("Data_Encerramento")
 
   // Respostas, uma coluna por pergunta (AD-051, `src/lib/respostas/colunas.ts`).
   p1       String?   @map("P1") @db.Char(2)
@@ -318,8 +334,6 @@ model PreCurso {
   p32Qual  String?   @map("P32Qual") @db.Text
 
 
-  @@index([cdOfertante])
-  @@index([cdVerba])
   @@map("TB_Pre_Curso")
 }
 
@@ -329,13 +343,10 @@ model PreCurso {
 
 model PosCurso {
   cdCurso        Int              @id @map("CD_Curso")
-  preCurso       PreCurso         @relation(fields: [cdCurso], references: [cdCurso], onDelete: Cascade)
+  curso          Curso            @relation(fields: [cdCurso], references: [cdCurso], onDelete: Cascade)
 
   status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
 
-  dataCriacao          DateTime   @default(now()) @map("Data_Criacao")
-  criadoPor            String     @map("Criado_Por") @db.VarChar(14)
-  criador              Usuario    @relation("GoPosCursos", fields: [criadoPor], references: [documento])
   dataUltimaAtualizacao DateTime  @updatedAt @map("Data_Ultima_Atualizacao")
   dataEncerramento     DateTime?  @map("Data_Encerramento")
 
@@ -405,7 +416,7 @@ model AvaliacaoAluno {
   cdCurso        Int              @map("CD_Curso")
 
   aluno          Usuario          @relation("AlunoAvaliacoes", fields: [cpf], references: [documento])
-  curso          PreCurso         @relation(fields: [cdCurso], references: [cdCurso])
+  curso          Curso            @relation(fields: [cdCurso], references: [cdCurso])
 
   status         StatusFormulario @default(EM_ANDAMENTO) @map("Status")
 

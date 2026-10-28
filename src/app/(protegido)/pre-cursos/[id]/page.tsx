@@ -23,15 +23,18 @@ export default async function PreCursoPage({ params }: Props) {
     notFound();
   }
 
-  const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso } });
+  const preCurso = await prisma.preCurso.findUnique({
+    where: { cdCurso },
+    include: { curso: { select: { cdOfertante: true } } },
+  });
 
-  if (!preCurso || !podeAcessarOfertante(usuario, preCurso.cdOfertante)) {
+  if (!preCurso || !podeAcessarOfertante(usuario, preCurso.curso.cdOfertante)) {
     notFound();
   }
 
   const podeEditar =
     preCurso.status === "EM_ANDAMENTO" &&
-    podeGerenciarPreCurso(usuario, preCurso.cdOfertante);
+    podeGerenciarPreCurso(usuario, preCurso.curso.cdOfertante);
 
   const respostasIniciais = (await lerRespostas(prisma, {
     formulario: "preCurso",
