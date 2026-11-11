@@ -69,9 +69,8 @@ export function ListaVerbas({
                 {verba.nomeOfertante ?? formatarDocumento(verba.cdOfertante)}
               </span>
               <span>{formatarDocumento(verba.cdOfertante)}</span>
-              <span>
-                #{verba.cdVerba} · {verba.dsVerba}
-              </span>
+              {/* RU-16: só o nome, sem número, mesmo quando o nome repete. */}
+              <span>{verba.dsVerba}</span>
               <span>Valor {moeda(verba.vlVerba)}</span>
               <span>Saldo {moeda(verba.saldoDisponivel)}</span>
               <span className="text-muted-foreground">{dataBr(verba.dtVerba)}</span>

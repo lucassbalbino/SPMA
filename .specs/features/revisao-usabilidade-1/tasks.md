@@ -371,11 +371,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e `verbas-page`: nome visível, `#<cdVerba>` ausente; asserções antigas de `#n ·` atualizadas
-- [ ] Gate E2E passa
+- [x] e2e `verbas-page`: nome visível, `#<cdVerba>` ausente; asserções antigas de `#n ·` atualizadas
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(verbas): list resources by name`
 

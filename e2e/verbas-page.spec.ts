@@ -101,8 +101,9 @@ test("GV-11/GV-14: GO vê só a própria verba, com GO, CNPJ, valor, saldo e dat
   const linha = page.getByTestId(`verba-${cdVerbaA}`);
   await expect(linha).toContainText("GO Verbas Página A");
   await expect(linha).toContainText(formatarDocumento(CNPJ_GO_A));
-  // IDV-09: número e identificação, também para quem só lê.
-  await expect(linha).toContainText(`#${cdVerbaA} · Capacitação A`);
+  // RU-16 (supera IDV-09): só o nome da verba, sem o número.
+  await expect(linha).toContainText("Capacitação A");
+  await expect(linha).not.toContainText(`#${cdVerbaA}`);
   await expect(linha).toContainText("Valor R$ 5000.00");
   // GV-16 na tela: 5000 - 1200 alocados a um curso.
   await expect(linha).toContainText("Saldo R$ 3800.00");
@@ -215,7 +216,8 @@ test("GV-01/GV-02/GV-07/IDV-01/IDV-02: AM cria uma segunda verba para um GO que 
   await expect(page.getByTestId(`verba-${cdVerbaB}`)).toContainText("Valor R$ 700.00");
   const linhaNova = page.getByTestId(`verba-${nova.cdVerba}`);
   await expect(linhaNova).toContainText("GO Verbas Página B");
-  await expect(linhaNova).toContainText(`#${nova.cdVerba} · Repasse Maio`);
+  await expect(linhaNova).toContainText("Repasse Maio");
+  await expect(linhaNova).not.toContainText(`#${nova.cdVerba}`);
   await expect(linhaNova).toContainText("Valor R$ 1500.75");
   await expect(linhaNova).toContainText("01/05/2026");
 });
@@ -307,7 +309,8 @@ test("IDV-06/IDV-07/IDV-08: GT edita a identificação na linha - vazia é recus
   // IDV-07: grava e a lista mostra o novo nome sem recarregar.
   await campo.fill("Repasse Março");
   await linha.getByRole("button", { name: "Salvar" }).click();
-  await expect(linha).toContainText(`#${cdVerbaE} · Repasse Março`);
+  await expect(linha).toContainText("Repasse Março");
+  await expect(linha).not.toContainText(`#${cdVerbaE}`);
   await expect(linha.getByLabel("Identificação")).toHaveCount(0);
   expect(getVerba(cdVerbaE)?.dsVerba).toBe("Repasse Março");
 });
