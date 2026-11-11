@@ -480,11 +480,12 @@ T31
 
 **Done when**:
 
-- [ ] `exclusao.integration.test.ts`: some curso, pré e pós; saldo volta ao valor anterior à criação; com 1 avaliação → 409 e as 3 linhas continuam; pré concluído → 409 e nada some; GO de outro ofertante → 403; inexistente → 404
-- [ ] Gate Full passa
+- [x] `exclusao.integration.test.ts`: some curso, pré e pós; saldo volta ao valor anterior à criação; com 1 avaliação → 409 e as 3 linhas continuam; pré concluído → 409 e nada some; GO de outro ofertante → 403; inexistente → 404
+- [x] Gate Full passa
 
 **Tests**: integration
 **Gate**: full
+**Status**: Done
 
 **Commit**: `feat(cursos): delete a course without students`
 

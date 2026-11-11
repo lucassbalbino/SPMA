@@ -303,11 +303,11 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-20 | P1: Concluir | T12 | Implementing |
 | RU-21 | P1: Excluir formação | Tasks | Pending |
 | RU-22 | P1: Excluir formação | Tasks | Pending |
-| RU-23 | P1: Excluir formação | Tasks | Pending |
-| RU-24 | P1: Excluir formação | Tasks | Pending |
-| RU-25 | P1: Excluir formação | Tasks | Pending |
-| RU-26 | P1: Excluir formação | Tasks | Pending |
-| RU-27 | P1: Excluir formação | Tasks | Pending |
+| RU-23 | P1: Excluir formação | T13 | Implementing |
+| RU-24 | P1: Excluir formação | T13 | Implementing |
+| RU-25 | P1: Excluir formação | T13 | Implementing |
+| RU-26 | P1: Excluir formação | T13 | Implementing |
+| RU-27 | P1: Excluir formação | T13 | Implementing |
 | RU-28 | P1: Excluir aluno | Tasks | Pending |
 | RU-29 | P1: Excluir aluno | Tasks | Pending |
 | RU-30 | P1: Excluir aluno | Tasks | Pending |
