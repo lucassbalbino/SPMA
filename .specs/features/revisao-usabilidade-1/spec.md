@@ -301,8 +301,8 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-18 | P1: Concluir | T12 | Implementing |
 | RU-19 | P1: Concluir | T12 | Implementing |
 | RU-20 | P1: Concluir | T12 | Implementing |
-| RU-21 | P1: Excluir formação | Tasks | Pending |
-| RU-22 | P1: Excluir formação | Tasks | Pending |
+| RU-21 | P1: Excluir formação | T15 | Implementing |
+| RU-22 | P1: Excluir formação | T15 | Implementing |
 | RU-23 | P1: Excluir formação | T13 | Implementing |
 | RU-24 | P1: Excluir formação | T13 | Implementing |
 | RU-25 | P1: Excluir formação | T13 | Implementing |

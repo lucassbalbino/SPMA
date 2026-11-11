@@ -532,11 +532,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e `pre-cursos-formulario`: excluir formação sem aluno → volta à lista e ela some; com aluno → mensagem de RU-25 e continua; botão ausente em concluído e para VO
-- [ ] Gate E2E passa
+- [x] e2e `pre-cursos-formulario`: excluir formação sem aluno → volta à lista e ela some; com aluno → mensagem de RU-25 e continua; botão ausente em concluído e para VO
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(pre-curso): delete button on the course form`
 

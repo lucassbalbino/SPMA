@@ -37,6 +37,7 @@ export function CascaFormulario({
   aoSalvar,
   aoEncerrar,
   podeConcluir,
+  acaoExtra,
   children,
 }: {
   /** Sufixo dos `data-testid` - "pre-curso", "pos-curso" ou "avaliacao". */
@@ -58,6 +59,8 @@ export function CascaFormulario({
   aoEncerrar: () => void;
   /** Checagem antes de abrir a confirmação (alteração não salva bloqueia, RU-02). */
   podeConcluir?: () => boolean;
+  /** Ação a mais ao lado de Salvar/Concluir (o Excluir do Cadastro de Formação). */
+  acaoExtra?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -119,6 +122,7 @@ export function CascaFormulario({
               podeAbrir={podeConcluir}
               disabled={salvando || encerrando}
             />
+            {acaoExtra}
           </div>
         )}
       </CardContent>

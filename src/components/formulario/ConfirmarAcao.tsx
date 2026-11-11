@@ -15,6 +15,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+// Texto literal do documento do cliente (doc 10), o mesmo nas duas
+// exclusões: formação (RU-22) e aluno (RU-29).
+export const PERGUNTA_EXCLUSAO =
+  "Tem certeza que deseja excluir o cadastro? Após a exclusão não será possível recuperar os dados.";
+
 export function ConfirmarAcao({
   rotulo,
   pergunta,
