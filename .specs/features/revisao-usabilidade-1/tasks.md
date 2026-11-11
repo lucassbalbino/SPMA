@@ -610,11 +610,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e `usuarios-gestao`: excluir aluno vazio → some da lista; aluno com dados → mensagem de RU-31; botão ausente para VO
-- [ ] Gate E2E passa
+- [x] e2e `usuarios-page` (é o spec da tela; `usuarios-gestao` é de API): excluir aluno vazio → some da lista; aluno com dados → mensagem de RU-31; botão ausente na linha de outro perfil
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(usuarios): delete button for students`
 

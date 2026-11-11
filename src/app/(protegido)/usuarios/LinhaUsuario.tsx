@@ -10,6 +10,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { ConfirmarAcao, PERGUNTA_EXCLUSAO } from "@/components/formulario/ConfirmarAcao";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { headerCSRF } from "@/lib/security/csrf-client";
@@ -151,6 +152,16 @@ function EdicaoUsuario({
     if (ok) setAviso(SENHA_RESETADA);
   }
 
+  // RU-30 (doc 13): só sai o aluno que ainda não respondeu nada - a regra é
+  // do servidor, que recusa com a mensagem que aparece na linha.
+  async function excluirAluno() {
+    const ok = await enviar("/api/usuarios/excluir", "POST", {
+      documento: usuario.documento,
+    });
+
+    if (ok) aoSalvar();
+  }
+
   return (
     <form onSubmit={salvar} noValidate>
       <FieldGroup>
@@ -215,6 +226,16 @@ function EdicaoUsuario({
             >
               Resetar senha
             </Button>
+            {/* RU-28: excluir é só para aluno; os demais perfis não têm a ação. */}
+            {usuario.tipo === "AL" && (
+              <ConfirmarAcao
+                rotulo="Excluir"
+                pergunta={PERGUNTA_EXCLUSAO}
+                aoConfirmar={excluirAluno}
+                disabled={enviando}
+                variant="destructive"
+              />
+            )}
           </div>
         )}
       </FieldGroup>
