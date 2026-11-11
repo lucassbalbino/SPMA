@@ -11,6 +11,7 @@ import { podeAcessarOfertante, podeGerenciarPreCurso, requireSession } from "@/l
 import { prisma } from "@/lib/db/prisma";
 import type { RespostasPreCursoParcial } from "@/lib/validation/schemas/pre-curso.schema";
 import { lerRespostas } from "@/lib/respostas/repositorio";
+import { nomeDaFormacao } from "@/lib/cursos/nome";
 import { PreCursoForm } from "./PreCursoForm";
 
 type Props = { params: Promise<{ id: string }> };
@@ -45,6 +46,7 @@ export default async function PreCursoPage({ params }: Props) {
     <>
       <PreCursoForm
         cdCurso={preCurso.cdCurso}
+        nomeFormacao={nomeDaFormacao(respostasIniciais.qualifNomeCurso, preCurso.cdCurso)}
         status={preCurso.status}
         respostasIniciais={respostasIniciais}
         podeEditar={podeEditar}

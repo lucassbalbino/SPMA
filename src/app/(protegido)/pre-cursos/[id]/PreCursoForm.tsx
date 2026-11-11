@@ -463,11 +463,14 @@ function acionaOutro(campo: CampoDef, respostas: RespostasPreCursoParcial): bool
 
 export function PreCursoForm({
   cdCurso,
+  nomeFormacao,
   status,
   respostasIniciais,
   podeEditar,
 }: {
   cdCurso: number;
+  /** Nome exibido no título (RU-12), já resolvido por `nomeDaFormacao`. */
+  nomeFormacao: string;
   status: StatusFormulario;
   respostasIniciais: RespostasPreCursoParcial;
   podeEditar: boolean;
@@ -486,7 +489,7 @@ export function PreCursoForm({
   return (
     <CascaFormulario
       testid="pre-curso"
-      titulo={`Pré-curso #${cdCurso}`}
+      titulo={`Cadastro de Formação - ${nomeFormacao}`}
       status={form.statusAtual}
       somenteLeitura={form.somenteLeitura}
       erro={form.erro}

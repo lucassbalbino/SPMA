@@ -233,11 +233,14 @@ const ROTULOS: Partial<Record<Chave, string>> = Object.fromEntries(
 
 export function PosCursoForm({
   cdCurso,
+  nomeFormacao,
   status,
   respostasIniciais,
   podeEditar,
 }: {
   cdCurso: number;
+  /** Nome exibido no título (RU-13), já resolvido por `nomeDaFormacao`. */
+  nomeFormacao: string;
   status: StatusFormulario;
   respostasIniciais: RespostasPosCursoParcial;
   podeEditar: boolean;
@@ -256,7 +259,7 @@ export function PosCursoForm({
   return (
     <CascaFormulario
       testid="pos-curso"
-      titulo={`Pós-curso #${cdCurso}`}
+      titulo={`Avaliação de Formação - ${nomeFormacao}`}
       status={form.statusAtual}
       somenteLeitura={form.somenteLeitura}
       erro={form.erro}

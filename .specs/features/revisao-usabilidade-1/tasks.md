@@ -319,11 +319,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e `pre-cursos-id`, `pos-cursos-id`, `avaliacoes-id`: cada título exato
-- [ ] Gate E2E passa
+- [x] e2e `pre-cursos-formulario`, `pos-cursos-formulario`, `avaliacoes-formulario`: cada título exato (os specs `*-id` são de API, sem tela)
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(cursos): course name in form titles`
 

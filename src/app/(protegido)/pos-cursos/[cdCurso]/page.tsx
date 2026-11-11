@@ -16,6 +16,7 @@ import {
   posCursoLiberado,
 } from "@/lib/pos-curso/liberacao";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { nomeDaFormacao } from "@/lib/cursos/nome";
 import { PosCursoForm } from "./PosCursoForm";
 
 type Props = { params: Promise<{ cdCurso: string }> };
@@ -30,18 +31,23 @@ export default async function PosCursoPage({ params }: Props) {
 
   const posCurso = await prisma.posCurso.findUnique({
     where: { cdCurso },
-    include: { curso: { select: { cdOfertante: true, preCurso: { select: { status: true } } } } },
+    include: {
+      curso: { select: { cdOfertante: true, preCurso: { select: { status: true, p8: true } } } },
+    },
   });
 
   if (!posCurso || !podeAcessarOfertante(usuario, posCurso.curso.cdOfertante)) {
     notFound();
   }
 
+  // O nome da formação é a P8 do pré (RU-13), liberado ou não.
+  const nomeFormacao = nomeDaFormacao(posCurso.curso.preCurso?.p8, posCurso.cdCurso);
+
   if (!posCursoLiberado(posCurso.curso.preCurso)) {
     return (
       <Card className="w-full max-w-3xl" data-testid="aviso-pre-curso-em-andamento">
         <CardHeader>
-          <CardTitle>Pós-curso #{posCurso.cdCurso}</CardTitle>
+          <CardTitle>Avaliação de Formação - {nomeFormacao}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm">
           <p>{MENSAGEM_PRE_CURSO_EM_ANDAMENTO}.</p>
@@ -49,7 +55,7 @@ export default async function PosCursoPage({ params }: Props) {
             O pós-curso abre quando o pré-curso deste curso estiver terminado e encerrado.
           </p>
           <Link href={`/pre-cursos/${posCurso.cdCurso}`} className="w-fit underline">
-            Ir para o pré-curso #{posCurso.cdCurso}
+            Ir para o Cadastro de Formação
           </Link>
         </CardContent>
       </Card>
@@ -69,6 +75,7 @@ export default async function PosCursoPage({ params }: Props) {
     <>
       <PosCursoForm
         cdCurso={posCurso.cdCurso}
+        nomeFormacao={nomeFormacao}
         status={posCurso.status}
         respostasIniciais={respostasIniciais}
         podeEditar={podeEditar}

@@ -345,6 +345,7 @@ const ROTULOS: Partial<Record<Chave, string>> = Object.fromEntries(
 export function AvaliacaoForm({
   cpf,
   cdCurso,
+  nomeFormacao,
   status,
   parte1CompletaInicial,
   respostasIniciais,
@@ -352,6 +353,8 @@ export function AvaliacaoForm({
 }: {
   cpf: string;
   cdCurso: number;
+  /** Nome exibido no título (RU-14), já resolvido por `nomeDaFormacao`. */
+  nomeFormacao: string;
   status: StatusFormulario;
   parte1CompletaInicial: boolean;
   respostasIniciais: RespostasAvaliacaoParcial;
@@ -443,7 +446,7 @@ export function AvaliacaoForm({
   return (
     <CascaFormulario
       testid="avaliacao"
-      titulo={`Avaliação #${cdCurso} - CPF ${formatarDocumento(cpf)}`}
+      titulo={`${nomeFormacao} - CPF ${formatarDocumento(cpf)}`}
       status={form.statusAtual}
       somenteLeitura={form.somenteLeitura}
       erro={form.erro}

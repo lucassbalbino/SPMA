@@ -227,9 +227,34 @@ test("AD-050: com o pré-curso em andamento, a página mostra o aviso no lugar d
     "Encerre o pré-curso antes de preencher o pós-curso",
   );
   await expect(page.getByTestId("form-pos-curso")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: `Ir para o pré-curso #${cdCurso}` })).toHaveAttribute(
+  // RU-13: o título do aviso também usa o nome (aqui, o de reserva, sem P8)
+  // e o link não mostra mais o número.
+  await expect(
+    page.getByTestId("aviso-pre-curso-em-andamento").locator('[data-slot="card-title"]'),
+  ).toHaveText(`Avaliação de Formação - Formação sem nome (nº ${cdCurso})`);
+  await expect(page.getByRole("link", { name: "Ir para o Cadastro de Formação" })).toHaveAttribute(
     "href",
     `/pre-cursos/${cdCurso}`,
+  );
+});
+
+// RU-13 (doc 8): o título do formulário liberado traz o nome da formação.
+test("RU-13: o título da Avaliação de Formação traz o nome da formação", async ({ page }) => {
+  const cdCurso = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+    respostas: { qualifNomeCurso: "Recepção Hoteleira" },
+  }).cdCurso;
+  criarPosCurso({ cdCurso, criadoPor: CNPJ_GO_A });
+  encerrarPreCursoFixture(cdCurso);
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pos-cursos/${cdCurso}`);
+
+  await expect(page.getByTestId("form-pos-curso").locator('[data-slot="card-title"]')).toHaveText(
+    "Avaliação de Formação - Recepção Hoteleira",
   );
 });
 

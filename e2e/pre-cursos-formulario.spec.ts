@@ -298,6 +298,24 @@ async function preencherTodosOsCampos(
   await fecharBloco(page, 12);
 }
 
+// RU-12 (doc 8): o título do Cadastro de Formação traz o nome, não o número.
+test("RU-12: o título do Cadastro de Formação traz o nome da formação", async ({ page }) => {
+  const { cdCurso } = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+    respostas: { qualifNomeCurso: "Guia de Turismo Local" },
+  });
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pre-cursos/${cdCurso}`);
+
+  await expect(page.getByTestId("form-pre-curso").locator('[data-slot="card-title"]')).toHaveText(
+    "Cadastro de Formação - Guia de Turismo Local",
+  );
+});
+
 test("GO salva um bloco parcial e o dado persiste após reload", async ({ page }) => {
   const { cdCurso } = criarPreCurso({
     cdOfertante: CNPJ_GO_A,

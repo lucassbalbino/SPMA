@@ -320,6 +320,26 @@ test("MTUR-08: a tela de avaliação não renderiza os 3 blocos que seguem remov
   ).toBeVisible();
 });
 
+// RU-14 (doc 15): o título traz o nome da formação e o CPF, não "#N Avaliação".
+test("RU-14: o título da avaliação é '<nome da formação> - CPF <cpf>'", async ({ page }) => {
+  const cdCurso = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+    respostas: { qualifNomeCurso: "Artesanato Local" },
+  }).cdCurso;
+  criarAvaliacao({ cpf: CPF_AL_A, cdCurso });
+  const cpfFormatado = CPF_AL_A.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+
+  await login(page, CPF_AL_A);
+  await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
+
+  await expect(page.getByTestId("form-avaliacao").locator('[data-slot="card-title"]')).toHaveText(
+    `Artesanato Local - CPF ${cpfFormatado}`,
+  );
+});
+
 test("Aluno salva um bloco parcial de Parte 1 e o dado persiste após reload", async ({ page }) => {
   const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
 

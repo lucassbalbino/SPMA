@@ -13,6 +13,7 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import type { RespostasAvaliacaoParcial } from "@/lib/validation/schemas/avaliacao.schema";
 import { lerRespostas } from "@/lib/respostas/repositorio";
+import { nomeDaFormacao } from "@/lib/cursos/nome";
 import { AvaliacaoForm } from "./AvaliacaoForm";
 
 type Props = { params: Promise<{ cpf: string; cdCurso: string }> };
@@ -28,7 +29,8 @@ export default async function AvaliacaoPage({ params }: Props) {
 
   const avaliacao = await prisma.avaliacaoAluno.findUnique({
     where: { cpf_cdCurso: { cpf, cdCurso } },
-    include: { curso: { select: { cdOfertante: true } } },
+    // A P8 do pré é o nome da formação, usado no título (RU-14).
+    include: { curso: { select: { cdOfertante: true, preCurso: { select: { p8: true } } } } },
   });
 
   // As guardas de Avaliação continuam recebendo `cpf` (é sempre a
@@ -61,6 +63,7 @@ export default async function AvaliacaoPage({ params }: Props) {
       <AvaliacaoForm
         cpf={avaliacao.cpf}
         cdCurso={avaliacao.cdCurso}
+        nomeFormacao={nomeDaFormacao(avaliacao.curso.preCurso?.p8, avaliacao.cdCurso)}
         status={avaliacao.status}
         parte1CompletaInicial={avaliacao.parte1Completa}
         respostasIniciais={respostasIniciais}
