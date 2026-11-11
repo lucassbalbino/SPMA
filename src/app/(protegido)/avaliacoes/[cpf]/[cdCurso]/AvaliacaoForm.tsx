@@ -1,7 +1,7 @@
 // Formulário de preenchimento/encerramento da avaliação (AVAL-07 a AVAL-19),
 // colocado junto de `page.tsx` (T9). Mesmo padrão orientado a metadados de
 // `PosCursoForm.tsx`/`PreCursoForm.tsx`: os blocos do questionário fonte
-// (`docs/Questionario_do_Aluno_1.md`, Q14-Q21 = Parte 1, Q22-Q38 = Parte 2)
+// (`docs/Questionario_do_Aluno_1.md`, Q10-Q21 = Parte 1, Q22-Q38 = Parte 2)
 // viram tabelas `BLOCOS_PARTE_1`/`BLOCOS_PARTE_2` interpretadas genericamente
 // por `CampoResposta`. Os rótulos carregam a numeração do papel.
 //
@@ -14,7 +14,7 @@
 // descartar essas respostas quando o aluno declara não ter concluído, para a
 // tela não bloquear um conjunto de campos e o servidor tratar outro.
 // Bloquear é diferente de `visivelSe`, que ESCONDE um campo que só existe
-// quando outra pergunta o revela, como `avalExperienciaTipoCursoAnterior`.
+// quando outra pergunta o revela, como `avalProfissAtividadeEspecifica`.
 //
 // Q22 e Q23 NÃO levam `bloqueadoSe`: são do bloco "Participação", que todo
 // aluno responde. O cabeçalho "Avaliação do curso (apenas para quem
@@ -38,7 +38,10 @@ import type {
 } from "@/components/formulario/tipos";
 import {
   OPCOES_AMPLIACAO_CONHECIMENTO,
+  OPCOES_ATIVIDADE_TURISMO,
+  OPCOES_CONDICAO_TRABALHO,
   OPCOES_EXPECTATIVA_RENDA,
+  OPCOES_FAIXA_RENDA,
   OPCOES_FORMA_CONHECIMENTO,
   OPCOES_MOTIVACOES_POS,
   OPCOES_MOTIVOS_PARTICIPACAO,
@@ -89,10 +92,41 @@ const somenteConcluinte = new Set<string>(CHAVES_SOMENTE_CONCLUINTE);
 // As 7 perguntas de dados pessoais (Q3-Q9) saíram deste formulário
 // (PESSOAL-11): são atributo do Aluno, coletado uma vez fora do curso. Com
 // isso os `data-testid` dos blocos, gerados por posição no array, deslocam um
-// índice. A revisão do MTur (MTUR-08) tirou também Situação Profissional
-// (Q10-Q13): "Experiência" passa a ser `bloco-parte1-1`. Os rótulos mantêm a
+// índice. Situação Profissional (Q10-Q13) saiu com a revisão do MTur
+// (MTUR-08) e voltou a pedido do cliente (AD-053, SPR-01): é de novo
+// `bloco-parte1-1`, e "Experiência" é `bloco-parte1-2`. Os rótulos mantêm a
 // numeração original do papel (MTUR-12).
 const BLOCOS_PARTE_1: BlocoDef[] = [
+  {
+    titulo: "Situação Profissional",
+    campos: [
+      {
+        chave: "avalProfissCondicaoTrabalho",
+        rotulo: "10. Qual sua condição atual de trabalho?",
+        tipo: "select",
+        opcoes: OPCOES_CONDICAO_TRABALHO,
+      },
+      {
+        chave: "avalProfissAtuaTurismo",
+        rotulo: "11. Atualmente você trabalha na área de Turismo?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
+      },
+      {
+        chave: "avalProfissAtividadeEspecifica",
+        rotulo: "12. Se sim, em qual atividade?",
+        tipo: "select",
+        opcoes: OPCOES_ATIVIDADE_TURISMO,
+        visivelSe: condicaoAvaliacao("avalProfissAtividadeEspecifica"),
+      },
+      {
+        chave: "avalProfissFaixaRenda",
+        rotulo: "13. Qual a sua faixa de renda mensal",
+        tipo: "select",
+        opcoes: OPCOES_FAIXA_RENDA,
+      },
+    ],
+  },
   {
     titulo: "Experiência",
     campos: [
@@ -420,7 +454,7 @@ export function AvaliacaoForm({
       aoEncerrar={form.encerrar}
     >
       <h2 className="text-sm font-semibold">
-        Parte 1 — Experiência e Motivação
+        Parte 1 — Situação Profissional e Motivação
       </h2>
       {renderBlocos(BLOCOS_PARTE_1, "parte1", false)}
 

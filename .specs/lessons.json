@@ -46,24 +46,6 @@
       "last_seen": "2026-10-20T12:33:39Z"
     },
     {
-      "id": "L-039",
-      "key": "spec_deviation::when an entity absorbs the table it used to point at its own copy of that foreign key must be null on creation never a value still required from the request payload",
-      "text": "When an entity absorbs the table it used to point at, its own copy of that foreign key must be null on creation, never a value still required from the request payload.",
-      "signal": "spec_deviation",
-      "scope": "routes",
-      "status": "candidate",
-      "features": [
-        "unificacao-ofertante-go"
-      ],
-      "recurrence": 1,
-      "harmful": 0,
-      "evidence": [
-        "src/app/api/usuarios/route.ts:113 (SPEC_DEVIATION: cdOfertante do proprio GO criado fica sempre null) (routes)"
-      ],
-      "created": "2026-09-12T23:51:04Z",
-      "last_seen": "2026-09-12T23:51:04Z"
-    },
-    {
       "id": "L-040",
       "key": "surviving_mutant::assert every conjunct of a multi part criterion proving the action succeeded leaves the resulting state half unverified",
       "text": "Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.",

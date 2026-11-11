@@ -2,14 +2,10 @@ import { describe, expect, it } from "vitest";
 import { CHAVES_DADOS_PESSOAIS } from "./dados-pessoais.schema";
 import { CHAVES_PARTE_1, respostasAvaliacaoSchema } from "./avaliacao.schema";
 
-// As 11 chaves dos blocos removidos (Q10-Q13, Q28, Q30, Q30.j, Q31-Q34),
+// As 7 chaves dos blocos que continuam removidos (Q28, Q30, Q30.j, Q31-Q34),
 // escritas aqui em vez de derivadas do código: o teste tem de quebrar se
-// alguma delas voltar ao schema.
+// alguma delas voltar ao schema. Q10-Q13 voltaram (AD-053).
 const CHAVES_REMOVIDAS_MTUR = [
-  "avalProfissCondicaoTrabalho",
-  "avalProfissAtuaTurismo",
-  "avalProfissAtividadeEspecifica",
-  "avalProfissFaixaRenda",
   "avalContinuidadeRetomadaEstudos",
   "avalOportunSituacaoTrabalho",
   "avalOportunSituacaoTrabalhoOutra",
@@ -19,12 +15,18 @@ const CHAVES_REMOVIDAS_MTUR = [
   "avalEfetivMelhoriaPadraoVida",
 ];
 
-// Fixture com as 27 chaves do questionário fonte
+// Fixture com as 31 chaves do questionário fonte
 // (`docs/Questionario_do_Aluno_1.md`) preenchidas com valores válidos,
 // incluindo os condicionais aplicáveis - usada como base para os testes de
 // campo individual (spread + override). Valores transcritos literalmente do
 // papel, sem importar as constantes de opções do schema.
 const RESPOSTA_VALIDA = {
+  // Parte 1 - Situação Profissional (Q10-Q13)
+  avalProfissCondicaoTrabalho: "Trabalhador(a) Formal (CLT)",
+  avalProfissAtuaTurismo: "Sim",
+  avalProfissAtividadeEspecifica: "Guiamento e Condução",
+  avalProfissFaixaRenda: "Entre 01 e 03 salários mínimos",
+
   // Parte 1 - Experiência (Q14-Q16)
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
@@ -81,13 +83,13 @@ describe("respostasAvaliacaoSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("tem exatamente 27 chaves (8 na Parte 1, 19 na Parte 2)", () => {
-    expect(Object.keys(respostasAvaliacaoSchema.shape)).toHaveLength(27);
+  it("tem exatamente 31 chaves (12 na Parte 1, 19 na Parte 2)", () => {
+    expect(Object.keys(respostasAvaliacaoSchema.shape)).toHaveLength(31);
   });
 
-  // MTUR-09: os 4 blocos que o aluno só responde depois do certificado
-  // (Alteracoes_MTur_1, itens 3.3 a 3.6) saíram do schema.
-  it("não tem nenhuma das 11 chaves removidas pelo MTur", () => {
+  // MTUR-09: os 3 blocos que o aluno só responde depois do certificado
+  // (Alteracoes_MTur_1, itens 3.4 a 3.6) continuam fora do schema.
+  it("não tem nenhuma das 7 chaves que seguem removidas pelo MTur", () => {
     const chaves = Object.keys(respostasAvaliacaoSchema.shape);
     for (const chave of CHAVES_REMOVIDAS_MTUR) {
       expect(chaves).not.toContain(chave);
@@ -272,10 +274,79 @@ describe("respostasAvaliacaoSchema", () => {
   });
 });
 
+describe("Situação Profissional (Q10-Q13, AD-053)", () => {
+  // SPR-02: as opções do questionário original, na ordem do papel. Escritas
+  // aqui, não importadas: o teste quebra se alguém mudar uma opção só no
+  // código de produção.
+  it.each([
+    [
+      "avalProfissCondicaoTrabalho",
+      [
+        "Estagiário(a).",
+        "Microempreendedor Individual (MEI)",
+        "Pessoa Jurídica – PJ (empresário)",
+        "Profissional Liberal",
+        "Trabalhador(a) Autônomo/Freelancer",
+        "Trabalhador(a) Informal (sem vínculo contratual)",
+        "Trabalhador(a) Formal (CLT)",
+        "Estudante",
+        "Desempregado",
+      ],
+    ],
+    ["avalProfissAtuaTurismo", ["Sim", "Não"]],
+    [
+      "avalProfissAtividadeEspecifica",
+      [
+        "Serviços de Alimentação",
+        "Alojamento (meios de hospedagem)",
+        "Transporte (aéreo, terrestre, aquaviário)",
+        "Aluguel de Transportes",
+        "Cultura e Lazer (atrações turísticas, museus, parques)",
+        "Agências de Viagem e Operadoras",
+        "Eventos",
+        "Guiamento e Condução",
+        "Turismo de Base Comunitária",
+        "Outro",
+      ],
+    ],
+    [
+      "avalProfissFaixaRenda",
+      [
+        "Sem renda",
+        "Até 01 salário mínimo",
+        "Entre 01 e 03 salários mínimos",
+        "Entre 03 e 05 salários mínimos",
+        "Entre 05 e 07 salários mínimos",
+        "Entre 07 e 10 salários mínimos",
+        "Acima de 10 salários mínimos",
+      ],
+    ],
+  ] as const)("%s aceita exatamente as opções do papel, nessa ordem", (chave, opcoes) => {
+    expect(respostasAvaliacaoSchema.shape[chave].unwrap().options).toEqual(opcoes);
+    for (const opcao of opcoes) {
+      expect(respostasAvaliacaoSchema.safeParse({ [chave]: opcao }).success).toBe(true);
+    }
+  });
+
+  // SPR-03: valor fora da lista é recusado.
+  it.each([
+    "avalProfissCondicaoTrabalho",
+    "avalProfissAtuaTurismo",
+    "avalProfissAtividadeEspecifica",
+    "avalProfissFaixaRenda",
+  ])("%s recusa um valor fora das opções", (chave) => {
+    expect(respostasAvaliacaoSchema.safeParse({ [chave]: "Talvez" }).success).toBe(false);
+  });
+});
+
 describe("CHAVES_PARTE_1", () => {
-  // Sem Situação Profissional (Q10-Q13, MTUR-08), a Parte 1 é Q14-Q21.
-  it("lista exatamente as 8 chaves de Q14-Q21", () => {
+  // Com Situação Profissional de volta (AD-053), a Parte 1 é Q10-Q21.
+  it("lista exatamente as 12 chaves de Q10-Q21", () => {
     expect([...CHAVES_PARTE_1]).toEqual([
+      "avalProfissCondicaoTrabalho",
+      "avalProfissAtuaTurismo",
+      "avalProfissAtividadeEspecifica",
+      "avalProfissFaixaRenda",
       "avalExperienciaTrabalhoPrevio",
       "avalExperienciaCursoAnterior",
       "avalExperienciaTipoCursoAnterior",

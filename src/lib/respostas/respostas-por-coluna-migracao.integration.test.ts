@@ -37,6 +37,11 @@ const nova = pastas.find((nome) => nome.endsWith(NOVA));
 // O estado antigo é o de antes desta migration, mesmo depois que outras
 // entraram na fila depois dela (como a da AD-052).
 const anteriores = pastas.slice(0, pastas.indexOf(nova!));
+// Migrations posteriores que acrescentam colunas de resposta. O repositório
+// atual lê essas colunas, então o banco descartável precisa delas depois da
+// migration nova. A da AD-052 (tabela_curso) não mexe em coluna de resposta
+// e fica de fora.
+const posterioresComColunas = pastas.filter((nome) => nome.endsWith("_situacao_profissional"));
 
 let banco: PrismaClient | undefined;
 let temporario: string | undefined;
@@ -79,7 +84,7 @@ async function deploy(migrations: string[]): Promise<{ ok: boolean; saida: strin
 
 /** Aplica a migration nova; lança com a saída do Prisma se ela abortar. */
 async function rodarMigration(): Promise<void> {
-  const { ok, saida } = await deploy([nova!]);
+  const { ok, saida } = await deploy([nova!, ...posterioresComColunas]);
   if (!ok) throw new Error(saida);
 }
 
@@ -197,6 +202,18 @@ async function semearTodos(cursoComRespostas: number, extras: { pre?: Respostas;
   await semearLinhas("TB_Dado_Pessoal_Aluno", { CPF: CPF_ALUNO }, { ...DADOS_PESSOAIS, ...extras.pessoal });
 }
 
+// Perguntas que entraram no mapa depois desta migration. Ela não as conhece,
+// então não entram na semeadura nem na leitura esperada: Situação
+// Profissional (P10-P13) voltou na AD-053, com as colunas vazias.
+const POSTERIORES = new Set([
+  "avalProfissCondicaoTrabalho",
+  "avalProfissAtuaTurismo",
+  "avalProfissAtividadeEspecifica",
+  "avalProfissFaixaRenda",
+]);
+const mapaDaMigration = (formulario: Formulario) =>
+  MAPA[formulario].filter((entrada) => !POSTERIORES.has(entrada.chave));
+
 // Semeadura que passa por todas as opções do mapa (COL-17): na rodada k,
 // cada escolha única e cada múltipla recebem a opção k da lista (módulo o
 // tamanho dela) e cada escalar um valor próprio da rodada. Uma letra trocada
@@ -230,7 +247,7 @@ function valorDaRodada(entrada: Entrada, k: number): unknown {
 }
 
 const rodada = (formulario: Formulario, k: number): Respostas =>
-  Object.fromEntries(MAPA[formulario].map((entrada) => [entrada.chave, valorDaRodada(entrada, k)]));
+  Object.fromEntries(mapaDaMigration(formulario).map((entrada) => [entrada.chave, valorDaRodada(entrada, k)]));
 
 const cpfDaRodada = (k: number) => String(50000000000 + k);
 

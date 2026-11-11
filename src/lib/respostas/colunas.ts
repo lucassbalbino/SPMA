@@ -155,6 +155,10 @@ export const MAPA: Record<Formulario, readonly Entrada[]> = {
     multipla("posContEstrategias", "P26", pos.OPCOES_ESTRATEGIAS_CONTINUIDADE),
   ],
   avaliacao: [
+    unica("avalProfissCondicaoTrabalho", "P10", aval.OPCOES_CONDICAO_TRABALHO),
+    unica("avalProfissAtuaTurismo", "P11", aval.OPCOES_SIM_NAO),
+    unica("avalProfissAtividadeEspecifica", "P12", aval.OPCOES_ATIVIDADE_TURISMO),
+    unica("avalProfissFaixaRenda", "P13", aval.OPCOES_FAIXA_RENDA),
     unica("avalExperienciaTrabalhoPrevio", "P14", aval.OPCOES_SIM_NAO),
     unica("avalExperienciaCursoAnterior", "P15", aval.OPCOES_SIM_NAO),
     unica("avalExperienciaTipoCursoAnterior", "P16", aval.OPCOES_TIPO_CURSO_ANTERIOR),

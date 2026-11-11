@@ -392,6 +392,24 @@ dados do curso estão em `TB_Curso`, e o caminho é rodar à mão os comandos qu
 faltam depois de `-- 4. Contract` e marcar a migration com
 `prisma migrate resolve --applied 20261028120000_tabela_curso`.
 
+### Situação Profissional de volta (AD-053)
+
+A migration `20261111120000_situacao_profissional` acrescenta as colunas
+`P10` a `P13` em `TB_Avaliacao_Aluno`, vazias, e põe `Parte1_Completa = false`
+em toda avaliação em andamento. Ela não remove nada, então nenhuma VIEW do
+`bi` quebra. Faça o backup antes do merge na `main`, como de costume:
+
+```bash
+sudo /opt/spma/backup.sh && ls -lh /opt/spma/backups | tail -1
+```
+
+**Depois do deploy, aplique as VIEWs do `bi`** (seção seguinte). Sem isso, o
+Power BI não vê `P10` a `P13`.
+
+Depois do deploy, todo aluno com avaliação em andamento precisa responder as
+perguntas 10 a 13 antes de voltar à Parte 2 ou encerrar. As respostas que ele
+já tinha ficam como estão. As avaliações encerradas não mudam.
+
 ### VIEWs do banco `bi` (Power BI)
 
 O Power BI do cliente não lê o banco `spma`: ele lê o banco `bi`, que tem uma
@@ -404,12 +422,16 @@ BI depois que a VIEW é refeita.
 As VIEWs das tabelas de formulário estão versionadas em `scripts/views-bi.sql`,
 geradas a partir do mapa de perguntas (`npm run bi:views`). Um teste unitário
 falha se o arquivo ficar para trás do código. Depois de todo deploy que mude
-essas tabelas, aplique o arquivo com um usuário que tenha `SELECT` no `spma`,
-o mesmo que criou as VIEWs:
+essas tabelas, aplique o arquivo com o root do MySQL, que criou as VIEWs. O
+`--no-defaults` é obrigatório: sem ele, o `mysql` lê o `/root/.my.cnf` do
+backup e entra como `spma`, que não pode criar VIEW no `bi` (`ERROR 1142 ...
+CREATE VIEW command denied to user 'spma'@'localhost'`):
 
 ```bash
-mysql < /opt/spma/migrator/prisma/views-bi.sql
+mysql --no-defaults -u root < /opt/spma/migrator/prisma/views-bi.sql
 ```
+
+Se o root do MySQL pedir senha, acrescente `-p`.
 
 Para conferir se alguma VIEW ficou quebrada:
 

@@ -29,6 +29,22 @@ describe("VIEWs do banco bi", () => {
     }
   });
 
+  // SPR-13: P10-P13 entram na VIEW da avaliação entre Data_Encerramento e P14.
+  it("expõe P10-P13 em bi.TB_Avaliacao_Aluno depois de Data_Encerramento e antes de P14", () => {
+    const colunas = viewDe("TB_Avaliacao_Aluno");
+    const inicio = colunas.indexOf("Data_Encerramento");
+
+    expect(inicio).toBeGreaterThan(-1);
+    expect(colunas.slice(inicio, inicio + 6)).toEqual([
+      "Data_Encerramento",
+      "P10",
+      "P11",
+      "P12",
+      "P13",
+      "P14",
+    ]);
+  });
+
   // CUR-19: a dimensão de curso, com todas as colunas de TB_Curso.
   it("cria bi.TB_Curso com todas as colunas de TB_Curso", () => {
     expect(viewDe("TB_Curso")).toEqual([
