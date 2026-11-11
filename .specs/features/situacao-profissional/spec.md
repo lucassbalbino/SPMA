@@ -108,22 +108,22 @@ Outras dimensões implícitas: N/A neste escopo. Autorização, concorrência e 
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| SPR-01 | P1: Aluno responde | Execute | Implementing |
-| SPR-02 | P1: Aluno responde | Execute | Implementing |
-| SPR-03 | P1: Aluno responde | Execute | Implementing |
-| SPR-04 | P1: Aluno responde | Execute | Implementing |
-| SPR-05 | P1: Aluno responde | Execute | Implementing |
-| SPR-06 | P1: Aluno responde | Execute | Implementing |
-| SPR-07 | P1: Aluno responde | Execute | Implementing |
-| SPR-08 | P1: Aluno responde | Execute | Implementing |
-| SPR-09 | P1: Aluno responde | Execute | Implementing |
-| SPR-10 | P1: Aluno responde | Execute | Implementing |
-| SPR-11 | P1: Banco e Power BI | Execute | Implementing |
-| SPR-12 | P1: Banco e Power BI | Execute | Implementing |
-| SPR-13 | P1: Banco e Power BI | Execute | Implementing |
-| SPR-14 | P1: Avaliações existentes | Execute | Implementing |
-| SPR-15 | P1: Avaliações existentes | Execute | Implementing |
-| SPR-16 | P1: Avaliações existentes | Execute | Implementing |
+| SPR-01 | P1: Aluno responde | Execute | Verified |
+| SPR-02 | P1: Aluno responde | Execute | Verified |
+| SPR-03 | P1: Aluno responde | Execute | Verified |
+| SPR-04 | P1: Aluno responde | Execute | Verified |
+| SPR-05 | P1: Aluno responde | Execute | Verified |
+| SPR-06 | P1: Aluno responde | Execute | Verified |
+| SPR-07 | P1: Aluno responde | Execute | Verified |
+| SPR-08 | P1: Aluno responde | Execute | Verified |
+| SPR-09 | P1: Aluno responde | Execute | Verified |
+| SPR-10 | P1: Aluno responde | Execute | Verified |
+| SPR-11 | P1: Banco e Power BI | Execute | Verified |
+| SPR-12 | P1: Banco e Power BI | Execute | Verified |
+| SPR-13 | P1: Banco e Power BI | Execute | Verified |
+| SPR-14 | P1: Avaliações existentes | Execute | Verified |
+| SPR-15 | P1: Avaliações existentes | Execute | Verified |
+| SPR-16 | P1: Avaliações existentes | Execute | Verified |
 
 **Coverage:** 16 total, 16 mapped to tasks, 0 unmapped.
 
