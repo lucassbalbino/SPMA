@@ -426,11 +426,12 @@ T31
 
 **Done when**:
 
-- [ ] Nenhuma cor literal no `.tsx` (AD-039)
-- [ ] Gate Build passa
+- [x] Nenhuma cor literal no `.tsx` (AD-039)
+- [x] Gate Build passa
 
 **Tests**: none
 **Gate**: build
+**Status**: Done
 
 **Commit**: `feat(ui): confirmation dialog`
 
