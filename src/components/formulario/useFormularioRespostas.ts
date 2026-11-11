@@ -129,16 +129,26 @@ export function useFormularioRespostas<C extends string, R extends Record<string
     }
   }
 
-  async function encerrar() {
+  /**
+   * O servidor encerra o que está GRAVADO. Com alteração só na tela, ele
+   * acusaria como pendente o que a pessoa acabou de preencher (doc 12):
+   * bloquear até salvar, por decisão do usuário (RU-02). Chamado antes de
+   * abrir a confirmação do Concluir e de novo dentro de `encerrar`.
+   */
+  function podeConcluir(): boolean {
     setErro(null);
     setCampoDoErro(null);
     setMensagem(null);
 
-    // O servidor encerra o que está GRAVADO. Com alteração só na tela, ele
-    // acusaria como pendente o que a pessoa acabou de preencher (doc 12):
-    // bloquear até salvar, por decisão do usuário (RU-02).
     if (alterados.size > 0) {
       setErro("Salve antes de concluir.");
+      return false;
+    }
+    return true;
+  }
+
+  async function encerrar() {
+    if (!podeConcluir()) {
       return;
     }
 
@@ -175,6 +185,7 @@ export function useFormularioRespostas<C extends string, R extends Record<string
     setCampo,
     toggleCheckbox,
     salvarRascunho,
+    podeConcluir,
     encerrar,
   };
 }

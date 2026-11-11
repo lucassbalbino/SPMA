@@ -271,6 +271,7 @@ export function PosCursoForm({
       encerrando={form.encerrando}
       aoSalvar={form.salvarRascunho}
       aoEncerrar={form.encerrar}
+      podeConcluir={form.podeConcluir}
     >
       <Accordion>
         {BLOCOS.map((bloco, indice) => (

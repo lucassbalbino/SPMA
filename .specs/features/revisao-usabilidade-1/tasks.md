@@ -452,13 +452,14 @@ T31
 
 **Done when**:
 
-- [ ] e2e `*-formulario` (3 specs): seletores `name: "Encerrar"` → `"Concluir"` + clique em "Sim"; as asserções `toHaveText("Encerrado")` ficam como estão
-- [ ] e2e novo: "Não" mantém "Em andamento" e nenhuma requisição de conclusão sai
-- [ ] e2e: aviso visível quando editável e ausente em somente leitura
-- [ ] Gate E2E passa nos 3 specs
+- [x] e2e `*-formulario` (3 specs): seletores `name: "Encerrar"` → `"Concluir"` + clique em "Sim"; as asserções `toHaveText("Encerrado")` ficam como estão
+- [x] e2e novo: "Não" mantém "Em andamento" e nenhuma requisição de conclusão sai
+- [x] e2e: aviso visível quando editável e ausente em somente leitura
+- [x] Gate E2E passa nos 3 specs
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(formulario): confirm before closing and warn there is no autosave`
 

@@ -146,12 +146,14 @@ async function salvarRascunho(page: Page) {
   return resposta;
 }
 
+// RU-17/RU-18: o botão é "Concluir" e a conclusão só sai depois do "Sim".
 async function encerrar(page: Page) {
+  await page.getByRole("button", { name: "Concluir" }).click();
   const [resposta] = await Promise.all([
     page.waitForResponse(
       (res) => res.url().includes("/encerrar") && res.request().method() === "POST",
     ),
-    page.getByRole("button", { name: "Encerrar" }).click(),
+    page.getByTestId("confirmacao").getByRole("button", { name: "Sim" }).click(),
   ]);
   return resposta;
 }
@@ -330,8 +332,10 @@ test("RU-01/02/03: com alteração não salva o encerramento é bloqueado; salva
       pedidosDeEncerramento += 1;
     }
   });
-  await page.getByRole("button", { name: "Encerrar" }).click();
+  await page.getByRole("button", { name: "Concluir" }).click();
   await expect(page.getByTestId("erro-pos-curso")).toHaveText("Salve antes de concluir.");
+  // Nem a confirmação abre enquanto há alteração só na tela.
+  await expect(page.getByTestId("confirmacao")).toHaveCount(0);
   await expect(page.getByTestId("status-pos-curso")).toHaveText("Em andamento");
   expect(pedidosDeEncerramento).toBe(0);
 
@@ -363,7 +367,7 @@ test("GO preenche os 26 campos e encerra o pós-curso de forma irreversível", a
   await expect(page.getByTestId("status-pos-curso")).toHaveText("Encerrado");
   await expect(page.getByTestId("lista-pendencias")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 
   await abrirBloco(page, 2);
   await expect(page.getByTestId("campo-posExecDificuldadesEnfrentadas")).toBeDisabled();
@@ -378,7 +382,7 @@ test("pós-curso encerrado é somente leitura, sem botões de ação", async ({ 
 
   await expect(page.getByTestId("status-pos-curso")).toHaveText("Encerrado");
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 
   await abrirBloco(page, 2);
   await expect(page.getByTestId("campo-posExecDificuldadesEnfrentadas")).toBeDisabled();
@@ -392,7 +396,7 @@ test("VO visualiza os dados sem controles de edição", async ({ page }) => {
 
   await expect(page.getByTestId("form-pos-curso")).toBeVisible();
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 });
 
 test("GO de outro Ofertante tentando acessar diretamente recebe não encontrado", async ({

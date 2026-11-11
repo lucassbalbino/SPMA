@@ -297,10 +297,10 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-14 | P1: Nome da formação | T8 | Implementing |
 | RU-15 | P1: Nome da formação | T9 | Implementing |
 | RU-16 | P1: Nome da formação | T9 | Implementing |
-| RU-17 | P1: Concluir | Tasks | Pending |
-| RU-18 | P1: Concluir | Tasks | Pending |
-| RU-19 | P1: Concluir | Tasks | Pending |
-| RU-20 | P1: Concluir | Tasks | Pending |
+| RU-17 | P1: Concluir | T12 | Implementing |
+| RU-18 | P1: Concluir | T12 | Implementing |
+| RU-19 | P1: Concluir | T12 | Implementing |
+| RU-20 | P1: Concluir | T12 | Implementing |
 | RU-21 | P1: Excluir formação | Tasks | Pending |
 | RU-22 | P1: Excluir formação | Tasks | Pending |
 | RU-23 | P1: Excluir formação | Tasks | Pending |

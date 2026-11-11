@@ -121,12 +121,14 @@ async function salvarRascunho(page: Page) {
   return resposta;
 }
 
+// RU-17/RU-18: o botão é "Concluir" e a conclusão só sai depois do "Sim".
 async function encerrar(page: Page) {
+  await page.getByRole("button", { name: "Concluir" }).click();
   const [resposta] = await Promise.all([
     page.waitForResponse(
       (res) => res.url().includes("/encerrar") && res.request().method() === "POST",
     ),
-    page.getByRole("button", { name: "Encerrar" }).click(),
+    page.getByTestId("confirmacao").getByRole("button", { name: "Sim" }).click(),
   ]);
   return resposta;
 }
@@ -484,7 +486,7 @@ test("Parte 1 completa + Parte 2 completa (Concluiu='Sim') encerra de forma irre
   await expect(page.getByTestId("status-avaliacao")).toHaveText("Encerrado");
   await expect(page.getByTestId("lista-pendencias")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 
   await abrirBloco(blocoParte1(page, 2), "bloco-parte1-2");
   await expect(page.getByTestId("campo-avalExperienciaTipoCursoAnterior-select")).toBeDisabled();
@@ -505,7 +507,7 @@ test("avaliação encerrada é somente leitura, sem botões de ação", async ({
 
   await expect(page.getByTestId("status-avaliacao")).toHaveText("Encerrado");
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 });
 
 test("um GO do Ofertante do curso abre a tela -> vê os dados, sem controles de edição", async ({
@@ -518,7 +520,7 @@ test("um GO do Ofertante do curso abre a tela -> vê os dados, sem controles de 
 
   await expect(page.getByTestId("form-avaliacao")).toBeVisible();
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 });
 
 test("outro Aluno tentando acessar a URL diretamente recebe não encontrado", async ({ page }) => {

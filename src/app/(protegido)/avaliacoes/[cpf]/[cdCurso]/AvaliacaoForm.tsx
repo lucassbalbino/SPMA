@@ -458,6 +458,7 @@ export function AvaliacaoForm({
       encerrando={form.encerrando}
       aoSalvar={form.salvarRascunho}
       aoEncerrar={form.encerrar}
+      podeConcluir={form.podeConcluir}
     >
       <h2 className="text-sm font-semibold">
         Parte 1 — Situação Profissional e Motivação
