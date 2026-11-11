@@ -584,11 +584,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e request em `e2e/usuarios-gestao.spec.ts`: 200, 409, 400 não-aluno, 403 fora do escopo, 404 para AM com alvo inexistente, sem CSRF → recusado
-- [ ] Gate E2E passa
+- [x] e2e request em `e2e/usuarios-gestao.spec.ts`: 200, 409, 400 não-aluno, 403 fora do escopo, 404 para AM com alvo inexistente, sem CSRF → recusado
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(api): add the student delete route`
 
