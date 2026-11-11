@@ -156,7 +156,10 @@ async function encerrar(page: Page) {
   return resposta;
 }
 
-async function preencherTodosOsCampos(page: Page, opcoes: { omitirDetalheAlteracao?: boolean } = {}) {
+async function preencherTodosOsCampos(
+  page: Page,
+  opcoes: { omitirDetalheAlteracao?: boolean; omitirContinuidade?: boolean } = {},
+) {
   // Durante o Curso - Acompanhamento Pedagógico (Q1-Q6)
   await abrirBloco(page, 1);
   await marcarOpcao(page, "posAcompanhProblemasEstudo", 0);
@@ -205,9 +208,11 @@ async function preencherTodosOsCampos(page: Page, opcoes: { omitirDetalheAlterac
   await fecharBloco(page, 4);
 
   // Ações para Continuidade do Curso (Q26)
-  await abrirBloco(page, 5);
-  await marcarOpcao(page, "posContEstrategias", 0);
-  await fecharBloco(page, 5);
+  if (!opcoes.omitirContinuidade) {
+    await abrirBloco(page, 5);
+    await marcarOpcao(page, "posContEstrategias", 0);
+    await fecharBloco(page, 5);
+  }
 }
 
 test("AD-050: com o pré-curso em andamento, a página mostra o aviso no lugar do formulário", async ({
@@ -272,6 +277,47 @@ test("encerramento bloqueado por campo condicional pendente referencia o campo",
   await expect(page.getByTestId("lista-pendencias")).toBeVisible();
   await expect(page.getByTestId("pendencia-posExecAlteracaoDetalhe")).toBeVisible();
   await expect(page.getByTestId("lista-pendencias").locator("li")).toHaveCount(1);
+});
+
+// Doc 12 da revisão de usabilidade: a pessoa encerrava, viu a 26 pendente,
+// preenchia a 26 e encerrava de novo sem salvar - o servidor (que encerra o
+// que está gravado) acusava a 26 outra vez, e salvar não limpava a lista.
+test("RU-01/02/03: com alteração não salva o encerramento é bloqueado; salvar limpa as pendências", async ({
+  page,
+}) => {
+  const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A);
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pos-cursos/${cdCurso}`);
+
+  await preencherTodosOsCampos(page, { omitirContinuidade: true });
+  expect((await salvarRascunho(page)).ok()).toBe(true);
+  expect((await encerrar(page)).ok()).toBe(false);
+  await expect(page.getByTestId("pendencia-posContEstrategias")).toBeVisible();
+
+  await abrirBloco(page, 5);
+  await marcarOpcao(page, "posContEstrategias", 0);
+
+  // RU-02: nenhum POST de encerramento sai enquanto há alteração só na tela.
+  let pedidosDeEncerramento = 0;
+  page.on("request", (req) => {
+    if (req.url().includes("/encerrar") && req.method() === "POST") {
+      pedidosDeEncerramento += 1;
+    }
+  });
+  await page.getByRole("button", { name: "Encerrar" }).click();
+  await expect(page.getByTestId("erro-pos-curso")).toHaveText("Salve antes de concluir.");
+  await expect(page.getByTestId("status-pos-curso")).toHaveText("Em andamento");
+  expect(pedidosDeEncerramento).toBe(0);
+
+  // RU-01: salvar esvazia a lista e confirma a gravação.
+  expect((await salvarRascunho(page)).ok()).toBe(true);
+  await expect(page.getByTestId("lista-pendencias")).toHaveCount(0);
+  await expect(page.getByTestId("salvo-pos-curso")).toHaveText("Alterações salvas.");
+
+  // RU-03: depois de salvar, o encerramento volta a ser pedido e passa.
+  expect((await encerrar(page)).ok()).toBe(true);
+  await expect(page.getByTestId("status-pos-curso")).toHaveText("Encerrado");
 });
 
 test("GO preenche os 26 campos e encerra o pós-curso de forma irreversível", async ({ page }) => {

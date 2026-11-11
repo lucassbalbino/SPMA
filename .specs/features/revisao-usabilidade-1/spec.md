@@ -281,9 +281,9 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| RU-01 | P1: Salvar e concluir | Tasks | Pending |
-| RU-02 | P1: Salvar e concluir | Tasks | Pending |
-| RU-03 | P1: Salvar e concluir | Tasks | Pending |
+| RU-01 | P1: Salvar e concluir | T1 | Implementing |
+| RU-02 | P1: Salvar e concluir | T1 | Implementing |
+| RU-03 | P1: Salvar e concluir | T1 | Implementing |
 | RU-04 | P1: Mensagens | Tasks | Pending |
 | RU-05 | P1: Mensagens | Tasks | Pending |
 | RU-06 | P1: Mensagens | Tasks | Pending |

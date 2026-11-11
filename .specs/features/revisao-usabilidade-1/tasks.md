@@ -132,13 +132,14 @@ T31
 
 **Done when**:
 
-- [ ] `CascaFormulario` mostra "Alterações salvas." após 2xx (prop nova `mensagem`, `data-testid` `salvo-<sufixo>`)
-- [ ] e2e em `e2e/pos-cursos-formulario.spec.ts`: concluir com a 26 vazia → pendência; marcar a 26 e concluir sem salvar → "Salve antes de concluir.", status segue "Em andamento" e nenhum POST de conclusão sai (reproduz o doc 12)
-- [ ] e2e: após "Salvar" com sucesso, `lista-pendencias` tem contagem 0 e "Alterações salvas." visível (L-014: as duas metades); o Concluir seguinte conclui
-- [ ] Gate E2E passa: `npx playwright test e2e/pos-cursos-formulario.spec.ts`
+- [x] `CascaFormulario` mostra "Alterações salvas." após 2xx (prop nova `mensagem`, `data-testid` `salvo-<sufixo>`)
+- [x] e2e em `e2e/pos-cursos-formulario.spec.ts`: concluir com a 26 vazia → pendência; marcar a 26 e concluir sem salvar → "Salve antes de concluir.", status segue "Em andamento" e nenhum POST de conclusão sai (reproduz o doc 12)
+- [x] e2e: após "Salvar" com sucesso, `lista-pendencias` tem contagem 0 e "Alterações salvas." visível (L-014: as duas metades); o Concluir seguinte conclui
+- [x] Gate E2E passa: `npx playwright test e2e/pos-cursos-formulario.spec.ts`
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `fix(formulario): clear stale pending list and block closing with unsaved changes`
 

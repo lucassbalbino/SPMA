@@ -20,6 +20,7 @@ export function CascaFormulario({
   status,
   somenteLeitura,
   erro,
+  mensagem,
   pendentes,
   rotuloDaChave,
   salvando,
@@ -34,6 +35,8 @@ export function CascaFormulario({
   status: StatusFormulario;
   somenteLeitura: boolean;
   erro: string | null;
+  /** Confirmação de uma gravação bem-sucedida ("Alterações salvas."). */
+  mensagem: string | null;
   pendentes: string[];
   /** Traduz a chave crua devolvida pela API no rótulo que a pessoa leu na tela. */
   rotuloDaChave: (chave: string) => string;
@@ -61,6 +64,11 @@ export function CascaFormulario({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {erro && <FieldError data-testid={`erro-${testid}`}>{erro}</FieldError>}
+        {mensagem && (
+          <p role="status" className="text-sm text-muted-foreground" data-testid={`salvo-${testid}`}>
+            {mensagem}
+          </p>
+        )}
         {pendentes.length > 0 && (
           <div data-testid="lista-pendencias" className="text-sm text-destructive">
             <p>Campos pendentes:</p>

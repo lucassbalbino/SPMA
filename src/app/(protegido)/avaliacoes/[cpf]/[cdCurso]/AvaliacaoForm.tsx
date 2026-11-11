@@ -446,6 +446,7 @@ export function AvaliacaoForm({
       status={form.statusAtual}
       somenteLeitura={form.somenteLeitura}
       erro={form.erro}
+      mensagem={form.mensagem}
       pendentes={form.pendentes}
       rotuloDaChave={(chave) => ROTULOS[chave as Chave] ?? chave}
       salvando={form.salvando}
