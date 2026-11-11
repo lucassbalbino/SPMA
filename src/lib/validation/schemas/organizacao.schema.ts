@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "../zod-pt";
 import { OPCOES_UF } from "./pre-curso.schema";
 
 // Dados organizacionais do GO (AD-043/AD-044) - os 6 campos que o próprio GO

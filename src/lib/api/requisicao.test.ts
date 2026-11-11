@@ -63,4 +63,37 @@ describe("corpoValidado", () => {
       corpoValidado(pedido(undefined, "{nao-e-json"), schema),
     ).rejects.toBeInstanceOf(ErroHttp);
   });
+
+  // RU-05: os questionários pedem a chave da pergunta que falhou.
+  it("com informarCampo, o 400 traz a chave da primeira issue em `campo`", async () => {
+    await expect(
+      corpoValidado(pedido({ nome: "" }), schema, { informarCampo: true }),
+    ).rejects.toMatchObject({
+      status: 400,
+      corpo: { erro: "Nome é obrigatório", campo: "nome" },
+    });
+  });
+
+  // As demais rotas mantêm o corpo de sempre - `campo` não aparece.
+  it("sem informarCampo, o corpo do 400 é só `{ erro }`", async () => {
+    const recusa = await corpoValidado(pedido({ nome: "" }), schema).catch((e) => e);
+    expect((recusa as ErroHttp).corpo).toEqual({ erro: "Nome é obrigatório" });
+  });
+
+  // Issue sem caminho (o corpo inteiro é inválido): não há pergunta a nomear.
+  it("issue sem caminho não gera `campo`, mesmo com informarCampo", async () => {
+    const recusa = await corpoValidado(pedido(null), schema, { informarCampo: true }).catch(
+      (e) => e,
+    );
+    expect((recusa as ErroHttp).status).toBe(400);
+    expect((recusa as ErroHttp).corpo).not.toHaveProperty("campo");
+  });
+
+  // RU-04: regra sem mensagem própria sai na mensagem padrão em português.
+  it("mensagem padrão do Zod sai em português", async () => {
+    const numerico = z.object({ taxa: z.number().max(100) });
+    await expect(corpoValidado(pedido({ taxa: 150 }), numerico)).rejects.toMatchObject({
+      corpo: { erro: "Muito grande: esperado que number fosse <=100" },
+    });
+  });
 });

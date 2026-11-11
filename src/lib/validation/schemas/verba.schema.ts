@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "../zod-pt";
 
 // Campos próprios da Verba, sem o Ofertante. Reaproveitado onde o Ofertante
 // não vem no payload: na edição (AD-015: a verba pertence a exatamente um

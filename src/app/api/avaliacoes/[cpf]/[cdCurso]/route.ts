@@ -104,7 +104,7 @@ async function gravarRespostasAvaliacao(request: Request, { params }: Contexto) 
     throw erroHttp(400, "Dados inválidos");
   }
 
-  const patch = validado(corpo, respostasAvaliacaoParcialSchema);
+  const patch = validado(corpo, respostasAvaliacaoParcialSchema, { informarCampo: true });
 
   // AVAL-08: `parte1Completa` é recalculado a cada gravação, sobre o estado
   // MESCLADO completo - por isso o merge é lido aqui e não só dentro de

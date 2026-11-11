@@ -9,6 +9,7 @@
 // de tabela. Renomear seria custo sem benefício e quebraria o rastro para quem
 // ler a migration de descarte depois.
 import { z } from "zod";
+import "../zod-pt";
 import { OPCOES_UF } from "./pre-curso.schema";
 
 export { OPCOES_UF };

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "../zod-pt";
 import { normalizarDocumento, validarDocumento } from "../documento";
 
 // Aceita CPF (11 dígitos) ou CNPJ (14 dígitos) como documento de login

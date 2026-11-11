@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "../zod-pt";
 
 // ---- Constantes de opções ----
 //

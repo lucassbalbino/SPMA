@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "../zod-pt";
 import { multiplaComExclusiva } from "../multipla";
 
 // Criação do CURSO (REQ-PC-01): o corpo de POST /api/cursos, que grava

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "../zod-pt";
 import { TipoUsuario } from "../../../generated/prisma/enums";
 import { normalizarCPF, validarCPF } from "../cpf";
 import { normalizarCNPJ, validarCNPJ } from "../cnpj";

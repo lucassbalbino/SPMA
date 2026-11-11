@@ -59,7 +59,9 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
     throw erroHttp(409, "Pré-curso já encerrado, somente leitura");
   }
 
-  const patch = await corpoValidado(request, respostasPreCursoSchema.partial());
+  const patch = await corpoValidado(request, respostasPreCursoSchema.partial(), {
+    informarCampo: true,
+  });
 
   // REQ-PC-04: merge raso - só as chaves enviadas são alteradas (RESP-01,
   // RESP-03). Edge case da spec (Planejamento): a validação de ordem das

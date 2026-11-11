@@ -5,7 +5,17 @@
 // Prisma) pela mesma razão de `lib/auth/session-cookie.ts`: assim estes dois
 // helpers podem ser testados, e importados, sem um PrismaClient de carona.
 import type { z } from "zod";
+import "../validation/zod-pt";
 import { erroHttp } from "./erro-http";
+
+export interface OpcoesValidacao {
+  /**
+   * Inclui no 400 a chave da primeira issue (`campo`), para a tela dizer
+   * QUAL pergunta falhou (RU-05). Opt-in: os questionários pedem; as demais
+   * rotas mantêm o corpo `{ erro }` de sempre.
+   */
+  informarCampo?: boolean;
+}
 
 /**
  * JSON do corpo, ou `null` quando ausente/malformado - nunca uma exceção de
@@ -25,11 +35,21 @@ export async function corpoJson(request: Request): Promise<unknown> {
  * Valida um valor já lido, ou 400 com a primeira mensagem de issue - mesmo
  * formato que as 12 rotas já devolviam, escrito à mão em cada uma.
  */
-export function validado<S extends z.ZodType>(corpo: unknown, schema: S): z.output<S> {
+export function validado<S extends z.ZodType>(
+  corpo: unknown,
+  schema: S,
+  opcoes: OpcoesValidacao = {},
+): z.output<S> {
   const entrada = schema.safeParse(corpo);
 
   if (!entrada.success) {
-    throw erroHttp(400, entrada.error.issues[0]?.message ?? "Dados inválidos");
+    const issue = entrada.error.issues[0];
+    const campo = issue?.path[0];
+    throw erroHttp(
+      400,
+      issue?.message ?? "Dados inválidos",
+      opcoes.informarCampo && typeof campo === "string" ? { campo } : undefined,
+    );
   }
 
   return entrada.data;
@@ -39,8 +59,9 @@ export function validado<S extends z.ZodType>(corpo: unknown, schema: S): z.outp
 export async function corpoValidado<S extends z.ZodType>(
   request: Request,
   schema: S,
+  opcoes: OpcoesValidacao = {},
 ): Promise<z.output<S>> {
-  return validado(await corpoJson(request), schema);
+  return validado(await corpoJson(request), schema, opcoes);
 }
 
 /**

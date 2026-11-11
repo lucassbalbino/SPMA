@@ -160,12 +160,13 @@ T31
 
 **Done when**:
 
-- [ ] `src/lib/api/requisicao.test.ts`: issue com path → corpo traz `campo`; sem path → sem `campo`; mensagem padrão sai em português
-- [ ] Nenhum teste existente compara mensagem padrão em inglês (conferido: zero ocorrências hoje)
-- [ ] Gate Quick passa
+- [x] `src/lib/api/requisicao.test.ts`: issue com path → corpo traz `campo`; sem path → sem `campo`; mensagem padrão sai em português
+- [x] Nenhum teste existente compara mensagem padrão em inglês (conferido: zero ocorrências hoje)
+- [x] Gate Quick passa
 
 **Tests**: unit
 **Gate**: quick
+**Status**: Done
 
 **Commit**: `feat(api): return the failing field and Portuguese zod messages`
 

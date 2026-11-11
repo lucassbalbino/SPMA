@@ -71,7 +71,9 @@ async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
     throw erroHttp(409, "Pós-curso já encerrado, somente leitura");
   }
 
-  const patch = await corpoValidado(request, respostasPosCursoSchema.partial());
+  const patch = await corpoValidado(request, respostasPosCursoSchema.partial(), {
+    informarCampo: true,
+  });
 
   // REQ-PO-04: merge raso - só as chaves enviadas são alteradas (RESP-01,
   // RESP-03). REQ-PO-06: a validação roda contra o estado MESCLADO, não só o
