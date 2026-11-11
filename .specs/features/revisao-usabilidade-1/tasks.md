@@ -558,11 +558,12 @@ T31
 
 **Done when**:
 
-- [ ] `gestao.integration.test.ts`: aluno só com matrícula vazia → some usuário, matrícula e sessões; com dado pessoal → 409; com uma resposta gravada → 409; com avaliação concluída → 409; em todo 409 nada some; alvo GO → 400
-- [ ] Gate Full passa
+- [x] `excluir-aluno.integration.test.ts` (arquivo próprio: os índices de documento de `gestao.integration.test.ts` já estão em uso): aluno só com matrícula vazia → some usuário, matrícula e sessões; com dado pessoal → 409; com uma resposta gravada → 409; com avaliação concluída → 409; em todo 409 nada some; alvo GO → 400
+- [x] Gate Full passa
 
 **Tests**: integration
 **Gate**: full
+**Status**: Done
 
 **Commit**: `feat(usuarios): delete a student with no answers`
 
