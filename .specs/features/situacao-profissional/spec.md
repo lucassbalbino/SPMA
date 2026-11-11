@@ -108,16 +108,16 @@ Outras dimensões implícitas: N/A neste escopo. Autorização, concorrência e 
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| SPR-01 | P1: Aluno responde | Execute | Pending |
+| SPR-01 | P1: Aluno responde | Execute | Implementing |
 | SPR-02 | P1: Aluno responde | Execute | Implementing |
 | SPR-03 | P1: Aluno responde | Execute | Implementing |
-| SPR-04 | P1: Aluno responde | Execute | Pending |
+| SPR-04 | P1: Aluno responde | Execute | Implementing |
 | SPR-05 | P1: Aluno responde | Execute | Implementing |
 | SPR-06 | P1: Aluno responde | Execute | Implementing |
 | SPR-07 | P1: Aluno responde | Execute | Implementing |
 | SPR-08 | P1: Aluno responde | Execute | Implementing |
 | SPR-09 | P1: Aluno responde | Execute | Implementing |
-| SPR-10 | P1: Aluno responde | Execute | Pending |
+| SPR-10 | P1: Aluno responde | Execute | Implementing |
 | SPR-11 | P1: Banco e Power BI | Execute | Implementing |
 | SPR-12 | P1: Banco e Power BI | Execute | Implementing |
 | SPR-13 | P1: Banco e Power BI | Execute | Implementing |

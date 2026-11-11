@@ -73,7 +73,7 @@ async function login(page: Page, documento: string) {
 // `data-slot="accordion-item"` (dois Accordion na página, renderizados em
 // sequência) - escopar por índice absoluto evita colisão de rótulos de
 // opção repetidos entre blocos num `getByRole` sem escopo.
-const TOTAL_BLOCOS_PARTE_1 = 3;
+const TOTAL_BLOCOS_PARTE_1 = 4;
 
 function blocoParte1(page: Page, indice: number): Locator {
   return page.locator('[data-slot="accordion-item"]').nth(indice - 1);
@@ -132,11 +132,23 @@ async function encerrar(page: Page) {
 }
 
 async function preencherParte1(page: Page) {
-  // Experiência (Q14-Q16) - primeiro bloco desde que as 7 perguntas de dados
-  // pessoais (PESSOAL-11) e Situação Profissional (MTUR-08) saíram deste
-  // formulário.
+  // Situação Profissional (Q10-Q13) - primeiro bloco desde que as 7 perguntas
+  // de dados pessoais saíram deste formulário (PESSOAL-11). Voltou na AD-053.
   const b1 = blocoParte1(page, 1);
   await abrirBloco(b1, "bloco-parte1-1");
+  await selecionar(page, "campo-avalProfissCondicaoTrabalho-select", "Desempregado");
+  await marcarOpcao(page, "avalProfissAtuaTurismo", 0); // Sim
+  await selecionar(
+    page,
+    "campo-avalProfissAtividadeEspecifica-select",
+    "Alojamento (meios de hospedagem)",
+  );
+  await selecionar(page, "campo-avalProfissFaixaRenda-select", "Até 01 salário mínimo");
+  await abrirBloco(b1, "bloco-parte1-1");
+
+  // Experiência (Q14-Q16)
+  const b2 = blocoParte1(page, 2);
+  await abrirBloco(b2, "bloco-parte1-2");
   await marcarOpcao(page, "avalExperienciaTrabalhoPrevio", 1); // Não
   await marcarOpcao(page, "avalExperienciaCursoAnterior", 0); // Sim
   await selecionar(
@@ -144,22 +156,22 @@ async function preencherParte1(page: Page) {
     "campo-avalExperienciaTipoCursoAnterior-select",
     "Atualização profissional",
   );
-  await abrirBloco(b1, "bloco-parte1-1");
+  await abrirBloco(b2, "bloco-parte1-2");
 
   // Motivação (Q17-Q18)
-  const b2 = blocoParte1(page, 2);
-  await abrirBloco(b2, "bloco-parte1-2");
-  await marcarOpcao(page, "avalMotivMotivosParticipacao", 0); // Conseguir um emprego
-  await marcarOpcao(page, "avalMotivFormaConhecimento", 1); // pelas Redes Sociais
-  await abrirBloco(b2, "bloco-parte1-2");
-
-  // Expectativas (Q19-Q21)
   const b3 = blocoParte1(page, 3);
   await abrirBloco(b3, "bloco-parte1-3");
+  await marcarOpcao(page, "avalMotivMotivosParticipacao", 0); // Conseguir um emprego
+  await marcarOpcao(page, "avalMotivFormaConhecimento", 1); // pelas Redes Sociais
+  await abrirBloco(b3, "bloco-parte1-3");
+
+  // Expectativas (Q19-Q21)
+  const b4 = blocoParte1(page, 4);
+  await abrirBloco(b4, "bloco-parte1-4");
   await marcarOpcao(page, "avalExpectAtendimento", 0); // Sim
   await marcarOpcao(page, "avalExpectEmprego", 1); // Talvez
   await marcarOpcao(page, "avalExpectRenda", 2); // Média
-  await abrirBloco(b3, "bloco-parte1-3");
+  await abrirBloco(b4, "bloco-parte1-4");
 }
 
 async function preencherParte2Concluiu(page: Page) {
@@ -235,9 +247,40 @@ test("PESSOAL-11: a tela de avaliação não renderiza nenhuma das 7 perguntas d
   await expect(page.getByText("Dados Pessoais")).toHaveCount(0);
 });
 
-// MTUR-08/MTUR-12: os 4 blocos que o aluno só responde depois do certificado
+// SPR-01/SPR-10: Situação Profissional é o primeiro bloco da Parte 1, antes de
+// Experiência, com as 4 perguntas numeradas como no papel.
+test("SPR-01: a Parte 1 abre com Situação Profissional, perguntas 10 a 13", async ({ page }) => {
+  const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
+
+  await login(page, CPF_AL_A);
+  await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
+
+  await expect(
+    page.getByText("Parte 1 — Situação Profissional e Motivação", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByTestId("bloco-parte1-1")).toHaveText("Situação Profissional");
+  await expect(page.getByTestId("bloco-parte1-2")).toHaveText("Experiência");
+
+  await abrirBloco(blocoParte1(page, 1), "bloco-parte1-1");
+  await expect(
+    page.getByText("10. Qual sua condição atual de trabalho?", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("11. Atualmente você trabalha na área de Turismo?", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("13. Qual a sua faixa de renda mensal", { exact: true })).toBeVisible();
+
+  // SPR-04: a 12 só aparece quando a 11 é "Sim".
+  await expect(page.getByText("12. Se sim, em qual atividade?", { exact: true })).toHaveCount(0);
+  await marcarOpcao(page, "avalProfissAtuaTurismo", 0); // Sim
+  await expect(page.getByText("12. Se sim, em qual atividade?", { exact: true })).toBeVisible();
+  await marcarOpcao(page, "avalProfissAtuaTurismo", 1); // Não
+  await expect(page.getByText("12. Se sim, em qual atividade?", { exact: true })).toHaveCount(0);
+});
+
+// MTUR-08/MTUR-12: os 3 blocos que o aluno só responde depois do certificado
 // não são renderizados, e as perguntas restantes mantêm o número do papel.
-test("MTUR-08: a tela de avaliação não renderiza os 4 blocos removidos pelo MTur", async ({
+test("MTUR-08: a tela de avaliação não renderiza os 3 blocos que seguem removidos pelo MTur", async ({
   page,
 }) => {
   const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
@@ -245,13 +288,12 @@ test("MTUR-08: a tela de avaliação não renderiza os 4 blocos removidos pelo M
   await login(page, CPF_AL_A);
   await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
 
-  await expect(page.getByTestId("bloco-parte1-1")).toHaveText(/Experiência/);
+  await expect(page.getByTestId("bloco-parte1-2")).toHaveText(/Experiência/);
   await expect(page.getByTestId("bloco-parte2-4")).toHaveText(/Motivações após o Curso/);
   await expect(page.getByTestId("bloco-parte2-5")).toHaveText(/Avaliação geral/);
   await expect(page.getByTestId("bloco-parte2-6")).toHaveCount(0);
 
   for (const titulo of [
-    "Situação Profissional",
     "Continuidade nos Estudos",
     "Oportunidades Reais de Trabalho e Emprego",
     "Efetivação no Emprego e Aumento da Renda",
@@ -259,7 +301,7 @@ test("MTUR-08: a tela de avaliação não renderiza os 4 blocos removidos pelo M
     await expect(page.getByText(titulo)).toHaveCount(0);
   }
 
-  await abrirBloco(blocoParte1(page, 1), "bloco-parte1-1");
+  await abrirBloco(blocoParte1(page, 2), "bloco-parte1-2");
   await expect(
     page.getByText("14. Já trabalhou no setor de Turismo?", { exact: true }),
   ).toBeVisible();
@@ -284,15 +326,15 @@ test("Aluno salva um bloco parcial de Parte 1 e o dado persiste após reload", a
   await login(page, CPF_AL_A);
   await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
 
-  const b1 = blocoParte1(page, 1);
-  await abrirBloco(b1, "bloco-parte1-1");
+  const b2 = blocoParte1(page, 2);
+  await abrirBloco(b2, "bloco-parte1-2");
   await marcarOpcao(page, "avalExperienciaTrabalhoPrevio", 0); // Sim
   const resposta = await salvarRascunho(page);
   expect(resposta.ok()).toBe(true);
   await expect(page.getByTestId("erro-avaliacao")).toHaveCount(0);
 
   await page.reload();
-  await abrirBloco(blocoParte1(page, 1), "bloco-parte1-1");
+  await abrirBloco(blocoParte1(page, 2), "bloco-parte1-2");
   await expect(page.getByTestId("campo-avalExperienciaTrabalhoPrevio-opcao-0")).toBeChecked();
 });
 
@@ -388,7 +430,7 @@ test("Parte 1 completa + Parte 2 completa (Concluiu='Sim') encerra de forma irre
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
 
-  await abrirBloco(blocoParte1(page, 1), "bloco-parte1-1");
+  await abrirBloco(blocoParte1(page, 2), "bloco-parte1-2");
   await expect(page.getByTestId("campo-avalExperienciaTipoCursoAnterior-select")).toBeDisabled();
 });
 
