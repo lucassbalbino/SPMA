@@ -320,6 +320,28 @@ test("GO salva um bloco parcial e o dado persiste após reload", async ({ page }
   await expect(page.getByTestId("campo-identifMunicipio")).toHaveValue("Cidade Rascunho");
 });
 
+// RU-06 (doc 14): o erro de validação diz QUAL pergunta falhou, em português.
+test("RU-06: valor recusado pelo servidor aparece com o rótulo da pergunta", async ({ page }) => {
+  const { cdCurso } = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+  });
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pre-cursos/${cdCurso}`);
+
+  await abrirBloco(page, 3);
+  await page.getByTestId("campo-planejTaxaEvasaoEsperada").fill("150");
+  const resposta = await salvarRascunho(page);
+  expect(resposta.status()).toBe(400);
+
+  await expect(page.getByTestId("erro-pre-curso")).toHaveText(
+    "18. Taxa de evasão esperada (%): Muito grande: esperado que number fosse <=100",
+  );
+});
+
 test("encerramento bloqueado por campo condicional pendente referencia o campo", async ({
   page,
 }) => {

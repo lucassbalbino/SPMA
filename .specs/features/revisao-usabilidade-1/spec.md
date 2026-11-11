@@ -286,7 +286,7 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-03 | P1: Salvar e concluir | T1 | Implementing |
 | RU-04 | P1: Mensagens | T2 | Implementing |
 | RU-05 | P1: Mensagens | T2 | Implementing |
-| RU-06 | P1: Mensagens | Tasks | Pending |
+| RU-06 | P1: Mensagens | T3 | Implementing |
 | RU-07 | P1: Mensagens | Tasks | Pending |
 | RU-08 | P1: Mensagens | Tasks | Pending |
 | RU-09 | P1: Mensagens | Tasks | Pending |

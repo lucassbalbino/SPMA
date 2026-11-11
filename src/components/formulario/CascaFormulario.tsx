@@ -20,6 +20,7 @@ export function CascaFormulario({
   status,
   somenteLeitura,
   erro,
+  campoDoErro = null,
   mensagem,
   pendentes,
   rotuloDaChave,
@@ -35,6 +36,8 @@ export function CascaFormulario({
   status: StatusFormulario;
   somenteLeitura: boolean;
   erro: string | null;
+  /** Chave da pergunta recusada pelo servidor: o erro sai com o rótulo dela na frente. */
+  campoDoErro?: string | null;
   /** Confirmação de uma gravação bem-sucedida ("Alterações salvas."). */
   mensagem: string | null;
   pendentes: string[];
@@ -63,7 +66,11 @@ export function CascaFormulario({
         )}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {erro && <FieldError data-testid={`erro-${testid}`}>{erro}</FieldError>}
+        {erro && (
+          <FieldError data-testid={`erro-${testid}`}>
+            {campoDoErro ? `${rotuloDaChave(campoDoErro)}: ${erro}` : erro}
+          </FieldError>
+        )}
         {mensagem && (
           <p role="status" className="text-sm text-muted-foreground" data-testid={`salvo-${testid}`}>
             {mensagem}

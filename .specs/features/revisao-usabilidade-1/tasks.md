@@ -187,11 +187,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e em `e2e/pre-cursos-formulario.spec.ts`: valor fora do limite na 18 (taxa > 100) mostra "18. Taxa de evasão esperada (%): <mensagem em pt>"
-- [ ] Gate E2E passa
+- [x] e2e em `e2e/pre-cursos-formulario.spec.ts`: valor fora do limite na 18 (taxa > 100) mostra "18. Taxa de evasão esperada (%): <mensagem em pt>"
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(formulario): name the question in validation errors`
 

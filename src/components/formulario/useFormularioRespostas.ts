@@ -51,6 +51,8 @@ export function useFormularioRespostas<C extends string, R extends Record<string
   // PATCH enviar apenas o bloco alterado, não o questionário inteiro.
   const [alterados, setAlterados] = useState<Set<C>>(new Set());
   const [erro, setErro] = useState<string | null>(null);
+  // Chave da pergunta que o servidor recusou (`campo` do 400, RU-06).
+  const [campoDoErro, setCampoDoErro] = useState<string | null>(null);
   // Confirmação de "Salvar" (RU-01): sem ela a pessoa não sabia se gravou.
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [pendentes, setPendentes] = useState<string[]>([]);
@@ -90,6 +92,7 @@ export function useFormularioRespostas<C extends string, R extends Record<string
 
   async function salvarRascunho() {
     setErro(null);
+    setCampoDoErro(null);
     setMensagem(null);
     setSalvando(true);
     try {
@@ -109,6 +112,7 @@ export function useFormularioRespostas<C extends string, R extends Record<string
 
       if (!res.ok) {
         setErro(resposta.erro ?? "Não foi possível salvar");
+        setCampoDoErro(typeof resposta.campo === "string" ? resposta.campo : null);
         return;
       }
 
@@ -127,6 +131,7 @@ export function useFormularioRespostas<C extends string, R extends Record<string
 
   async function encerrar() {
     setErro(null);
+    setCampoDoErro(null);
     setMensagem(null);
 
     // O servidor encerra o que está GRAVADO. Com alteração só na tela, ele
@@ -159,6 +164,7 @@ export function useFormularioRespostas<C extends string, R extends Record<string
   return {
     respostas,
     erro,
+    campoDoErro,
     mensagem,
     pendentes,
     salvando,

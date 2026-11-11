@@ -260,6 +260,7 @@ export function PosCursoForm({
       status={form.statusAtual}
       somenteLeitura={form.somenteLeitura}
       erro={form.erro}
+      campoDoErro={form.campoDoErro}
       mensagem={form.mensagem}
       pendentes={form.pendentes}
       rotuloDaChave={(chave) => ROTULOS[chave as Chave] ?? chave}
