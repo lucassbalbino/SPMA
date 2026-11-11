@@ -392,6 +392,24 @@ dados do curso estão em `TB_Curso`, e o caminho é rodar à mão os comandos qu
 faltam depois de `-- 4. Contract` e marcar a migration com
 `prisma migrate resolve --applied 20261028120000_tabela_curso`.
 
+### Situação Profissional de volta (AD-053)
+
+A migration `20261111120000_situacao_profissional` acrescenta as colunas
+`P10` a `P13` em `TB_Avaliacao_Aluno`, vazias, e põe `Parte1_Completa = false`
+em toda avaliação em andamento. Ela não remove nada, então nenhuma VIEW do
+`bi` quebra. Faça o backup antes do merge na `main`, como de costume:
+
+```bash
+sudo /opt/spma/backup.sh && ls -lh /opt/spma/backups | tail -1
+```
+
+**Depois do deploy, aplique as VIEWs do `bi`** (seção seguinte). Sem isso, o
+Power BI não vê `P10` a `P13`.
+
+Depois do deploy, todo aluno com avaliação em andamento precisa responder as
+perguntas 10 a 13 antes de voltar à Parte 2 ou encerrar. As respostas que ele
+já tinha ficam como estão. As avaliações encerradas não mudam.
+
 ### VIEWs do banco `bi` (Power BI)
 
 O Power BI do cliente não lê o banco `spma`: ele lê o banco `bi`, que tem uma

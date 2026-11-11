@@ -50,6 +50,48 @@
 - a) Não sou uma Pessoa com Deficiência.
 - b) Sim.
 
+## SITUAÇÃO PROFISSIONAL
+
+**10.** Qual sua condição atual de trabalho?
+
+- a) Estagiário(a).
+- b) Microempreendedor Individual (MEI)
+- c) Pessoa Jurídica – PJ (empresário)
+- d) Profissional Liberal
+- e) Trabalhador(a) Autônomo/Freelancer
+- f) Trabalhador(a) Informal (sem vínculo contratual)
+- g) Trabalhador(a) Formal (CLT)
+- h) Estudante
+- i) Desempregado
+
+**11.** Atualmente você trabalha na área de Turismo?
+
+- a) Sim
+- b) Não
+
+**12.** Se sim, em qual atividade?
+
+- a) Serviços de Alimentação
+- b) Alojamento (meios de hospedagem)
+- c) Transporte (aéreo, terrestre, aquaviário)
+- d) Aluguel de Transportes
+- e) Cultura e Lazer (atrações turísticas, museus, parques)
+- f) Agências de Viagem e Operadoras
+- g) Eventos
+- h) Guiamento e Condução
+- i) Turismo de Base Comunitária
+- j) Outro
+
+**13.** Qual a sua faixa de renda mensal:
+
+- a) Sem renda
+- b) Até 01 salário mínimo
+- c) Entre 01 e 03 salários mínimos
+- d) Entre 03 e 05 salários mínimos
+- e) Entre 05 e 07 salários mínimos
+- f) Entre 07 e 10 salários mínimos
+- g) Acima de 10 salários mínimos
+
 ## SEÇÃO 4: EXPERIÊNCIA
 
 **14.** Já trabalhou no setor de Turismo?

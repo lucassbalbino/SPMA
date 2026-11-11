@@ -24,12 +24,6 @@ Corroborated across multiple features. Safe to apply as guidance.
 
 Seen once or not yet corroborated. Tracked, not trusted.
 
-### L-039 - When an entity absorbs the table it used to point at, its own copy of that foreign key must be null on creation, never a value still required from the request payload.
-- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
-- features: unificacao-ofertante-go
-- evidence: src/app/api/usuarios/route.ts:113 (SPEC_DEVIATION: cdOfertante do proprio GO criado fica sempre null) (routes)
-- last seen: 2026-09-12T23:51:04Z
-
 ### L-040 - Assert every conjunct of a multi-part criterion; proving the action succeeded leaves the resulting-state half unverified.
 - signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
 - features: primeiro-acesso-senha-em-branco
