@@ -422,12 +422,16 @@ BI depois que a VIEW é refeita.
 As VIEWs das tabelas de formulário estão versionadas em `scripts/views-bi.sql`,
 geradas a partir do mapa de perguntas (`npm run bi:views`). Um teste unitário
 falha se o arquivo ficar para trás do código. Depois de todo deploy que mude
-essas tabelas, aplique o arquivo com um usuário que tenha `SELECT` no `spma`,
-o mesmo que criou as VIEWs:
+essas tabelas, aplique o arquivo com o root do MySQL, que criou as VIEWs. O
+`--no-defaults` é obrigatório: sem ele, o `mysql` lê o `/root/.my.cnf` do
+backup e entra como `spma`, que não pode criar VIEW no `bi` (`ERROR 1142 ...
+CREATE VIEW command denied to user 'spma'@'localhost'`):
 
 ```bash
-mysql < /opt/spma/migrator/prisma/views-bi.sql
+mysql --no-defaults -u root < /opt/spma/migrator/prisma/views-bi.sql
 ```
+
+Se o root do MySQL pedir senha, acrescente `-p`.
 
 Para conferir se alguma VIEW ficou quebrada:
 
