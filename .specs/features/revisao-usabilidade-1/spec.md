@@ -287,7 +287,7 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-04 | P1: Mensagens | T2 | Implementing |
 | RU-05 | P1: Mensagens | T2 | Implementing |
 | RU-06 | P1: Mensagens | T3 | Implementing |
-| RU-07 | P1: Mensagens | Tasks | Pending |
+| RU-07 | P1: Mensagens | T4 | Implementing |
 | RU-08 | P1: Mensagens | Tasks | Pending |
 | RU-09 | P1: Mensagens | Tasks | Pending |
 | RU-10 | P1: Nome da formação | Tasks | Pending |

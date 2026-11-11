@@ -180,7 +180,7 @@ export const respostasAvaliacaoSchema = z.object({
   avalMotivMotivosParticipacao: z
     .array(z.enum(OPCOES_MOTIVOS_PARTICIPACAO))
     .min(1)
-    .max(3)
+    .max(3, { message: "Selecione no máximo 3 motivos" })
     .optional(),
   avalMotivFormaConhecimento: z.enum(OPCOES_FORMA_CONHECIMENTO).optional(),
 

@@ -213,11 +213,12 @@ T31
 
 **Done when**:
 
-- [ ] `avaliacao.schema.test.ts`: 4 motivos → issue com a mensagem exata e path `avalMotivMotivosParticipacao`; 3 passa
-- [ ] Gate Quick passa
+- [x] `avaliacao.schema.test.ts`: 4 motivos → issue com a mensagem exata e path `avalMotivMotivosParticipacao`; 3 passa
+- [x] Gate Quick passa
 
 **Tests**: unit
 **Gate**: quick
+**Status**: Done
 
 **Commit**: `fix(avaliacao): Portuguese message for the three-reason limit`
 
