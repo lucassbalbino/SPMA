@@ -78,6 +78,15 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
     }
   }
 
+  // RU-15/RU-16: o mesmo texto na opção e no campo fechado - sem `items`, o
+  // Select do Base UI mostra o `value` cru (o número) depois da escolha.
+  // Só o nome da verba, sem número, mesmo quando o nome repete (decisão do
+  // usuário, 2026-11-11).
+  const itens = opcoesVerba.map((opcao) => ({
+    value: String(opcao.cdVerba),
+    label: `${opcao.nomeOfertante ? `${opcao.nomeOfertante} — ` : ""}${opcao.dsVerba} — saldo R$ ${opcao.saldoDisponivel.toFixed(2)}`,
+  }));
+
   if (opcoesVerba.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -101,20 +110,22 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
         </Field>
         <Field data-invalid={!!erro}>
           <FieldLabel htmlFor="cdVerba">Verba</FieldLabel>
-          <Select value={cdVerba} onValueChange={(valor) => setCdVerba(valor as string)}>
+          <Select
+            items={itens}
+            value={cdVerba}
+            onValueChange={(valor) => setCdVerba(valor as string)}
+          >
             <SelectTrigger id="cdVerba" data-testid="select-verba" disabled={enviando}>
               <SelectValue placeholder="Selecione uma verba" />
             </SelectTrigger>
             <SelectContent>
-              {opcoesVerba.map((opcao) => (
+              {itens.map((item) => (
                 <SelectItem
-                  key={opcao.cdVerba}
-                  value={String(opcao.cdVerba)}
-                  data-testid={`opcao-verba-${opcao.cdVerba}`}
+                  key={item.value}
+                  value={item.value}
+                  data-testid={`opcao-verba-${item.value}`}
                 >
-                  {/* IDV-12/13: o número fica ao lado do nome, que pode repetir. */}
-                  {opcao.nomeOfertante ? `${opcao.nomeOfertante} — ` : ""}
-                  {`#${opcao.cdVerba} · ${opcao.dsVerba} — saldo R$ ${opcao.saldoDisponivel.toFixed(2)}`}
+                  {item.label}
                 </SelectItem>
               ))}
             </SelectContent>

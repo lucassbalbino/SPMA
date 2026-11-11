@@ -295,8 +295,8 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-12 | P1: Nome da formação | T8 | Implementing |
 | RU-13 | P1: Nome da formação | T8 | Implementing |
 | RU-14 | P1: Nome da formação | T8 | Implementing |
-| RU-15 | P1: Nome da formação | Tasks | Pending |
-| RU-16 | P1: Nome da formação | Tasks | Pending |
+| RU-15 | P1: Nome da formação | T9 | Implementing |
+| RU-16 | P1: Nome da formação | T9 | Implementing |
 | RU-17 | P1: Concluir | Tasks | Pending |
 | RU-18 | P1: Concluir | Tasks | Pending |
 | RU-19 | P1: Concluir | Tasks | Pending |

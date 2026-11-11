@@ -92,10 +92,27 @@ test("IDV-13: seletor de Verba mostra só as Verbas do Ofertante do GO autentica
   await expect(page.getByTestId(`opcao-verba-${cdVerba}`)).toBeVisible();
   await expect(page.getByTestId(`opcao-verba-${cdVerbaOutro}`)).toHaveCount(0);
 
-  // IDV-13: para o GO, número e identificação, sem o nome do Ofertante.
+  // RU-16 (supera IDV-13): para o GO, só o nome da verba e o saldo - sem o
+  // número e sem o nome do Ofertante.
   await expect(page.getByTestId(`opcao-verba-${cdVerba}`)).toHaveText(
-    `#${cdVerba} · Capacitação GO — saldo R$ 1000.00`,
+    "Capacitação GO — saldo R$ 1000.00",
   );
+});
+
+// RU-15 (doc 5): depois da escolha, o campo fechado mostrava só o número.
+test("RU-15: o campo fechado mostra o mesmo texto da opção escolhida, não o número", async ({
+  page,
+}) => {
+  await login(page);
+  await page.goto("/cursos/novo");
+
+  await page.getByTestId("select-verba").click();
+  await page.getByTestId(`opcao-verba-${cdVerba}`).click();
+
+  // O valor exibido, sem o ícone de seta que o gatilho também carrega.
+  await expect(
+    page.getByTestId("select-verba").locator('[data-slot="select-value"]'),
+  ).toHaveText("Capacitação GO — saldo R$ 1000.00");
 });
 
 test("AD-040/IDV-12: seletor de Verba do AM mostra as Verbas de TODOS os Ofertantes, com o nome do Ofertante", async ({
@@ -105,12 +122,12 @@ test("AD-040/IDV-12: seletor de Verba do AM mostra as Verbas de TODOS os Ofertan
   await page.goto("/cursos/novo");
 
   await page.getByTestId("select-verba").click();
-  // IDV-12: nome do Ofertante, número, identificação e saldo.
+  // RU-16 (supera IDV-12): nome do Ofertante, nome da verba e saldo, sem número.
   await expect(page.getByTestId(`opcao-verba-${cdVerba}`)).toHaveText(
-    `Ofertante Novo Pré-Curso — #${cdVerba} · Capacitação GO — saldo R$ 1000.00`,
+    "Ofertante Novo Pré-Curso — Capacitação GO — saldo R$ 1000.00",
   );
   await expect(page.getByTestId(`opcao-verba-${cdVerbaOutro}`)).toHaveText(
-    `Ofertante Novo Pré-Curso Outro — #${cdVerbaOutro} · Capacitação Outro — saldo R$ 1000.00`,
+    "Ofertante Novo Pré-Curso Outro — Capacitação Outro — saldo R$ 1000.00",
   );
 });
 

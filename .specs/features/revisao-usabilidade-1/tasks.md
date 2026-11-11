@@ -345,11 +345,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e `cursos-novo`: após escolher, o campo fechado mostra o texto da opção e não o número; nenhuma opção contém `#`
-- [ ] Gate E2E passa
+- [x] e2e `cursos-novo`: após escolher, o campo fechado mostra o texto da opção e não o número; nenhuma opção contém `#`
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `fix(cursos): show the chosen resource name in the selector`
 
