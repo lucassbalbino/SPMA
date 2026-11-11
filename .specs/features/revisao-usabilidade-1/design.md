@@ -147,10 +147,10 @@ graph TD
 
 | Decision | Choice | Rationale |
 | --- | --- | --- |
-| Escopo das renomeações | Só texto visível | Ver Architecture Overview; vira AD-053 |
+| Escopo das renomeações | Só texto visível | Ver Architecture Overview; vira AD-054 |
 | Mensagens de validação | `campo` no 400 + rótulo resolvido no cliente | O servidor não conhece os rótulos; o cliente já tem `rotuloDaChave` (`CascaFormulario`) |
 | Zod em português | `z.config(z.locales.pt())` num módulo importado pelos schemas | Cobre mensagens padrão restantes sem tocar em cada campo |
 | Nome da formação | Função única `nomeDaFormacao` | Mesma regra nas 3 listas e 4 títulos |
 | Limite de seleção | `maxSelecoes` no `CampoDef` genérico | Vale para qualquer múltipla com teto, sem caso especial na tela da avaliação |
 
-> AD-053 (a registrar em T31): nomenclatura do cliente só na camada visível; exclusões de formação e de aluno com regra de "filho"; telefone de todos os perfis em `Usuario.telefone`.
+> AD-054 (a registrar em T31): nomenclatura do cliente só na camada visível; exclusões de formação e de aluno com regra de "filho"; telefone de todos os perfis em `Usuario.telefone`.

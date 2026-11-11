@@ -912,9 +912,9 @@ T31
 
 ---
 
-### T31: AD-053 e nota de deploy
+### T31: AD-054 e nota de deploy
 
-**What**: AD-053 em `.specs/STATE.md`; nota em `docs/DEPLOY_PRODUCAO.md`: sem migration; cadastros em andamento com 17b ≥ 13 gravam normalmente e só não concluem até corrigir as datas (consulta para contá-los).
+**What**: AD-054 em `.specs/STATE.md`; nota em `docs/DEPLOY_PRODUCAO.md`: sem migration; cadastros em andamento com 17b ≥ 13 gravam normalmente e só não concluem até corrigir as datas (consulta para contá-los).
 **Where**: `.specs/STATE.md`
 **Depends on**: None
 **Reuses**: formato das AD-048 a AD-052
@@ -933,7 +933,7 @@ T31
 **Tests**: none
 **Gate**: build
 
-**Commit**: `docs(revisao-usabilidade): record AD-053 and deploy note`
+**Commit**: `docs(revisao-usabilidade): record AD-054 and deploy note`
 
 ---
 
