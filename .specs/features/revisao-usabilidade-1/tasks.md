@@ -506,11 +506,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e request em `e2e/cursos-novo.spec.ts` (ou spec novo `cursos-excluir.spec.ts`): 200, 409 com aluno, 409 concluído, 403, 404, sem CSRF → recusado
-- [ ] Gate E2E passa
+- [x] e2e request no spec novo `e2e/cursos-excluir.spec.ts`: 200, 409 com aluno, 409 concluído, 403, 404, sem CSRF → recusado
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(api): DELETE /api/cursos/[cdCurso]`
 
