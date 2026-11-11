@@ -315,7 +315,7 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-31 | P1: Excluir aluno | T16 | Implementing |
 | RU-32 | P1: Excluir aluno | T16 | Implementing |
 | RU-33 | P1: Excluir aluno | T17 | Implementing |
-| RU-34 | P2: Nomes | Tasks | Pending |
+| RU-34 | P2: Nomes | T20 | Implementing |
 | RU-35 | P2: Nomes | T19 | Implementing |
 | RU-36 | P2: Nomes | T19 | Implementing |
 | RU-37 | P2: Nomes | Tasks | Pending |

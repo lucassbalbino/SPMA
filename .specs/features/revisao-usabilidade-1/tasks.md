@@ -663,11 +663,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e `painel`: "Você está no perfil de Administrador Master" e "Portanto, está apto a realizar:"; asserção antiga `Perfil: AM` atualizada
-- [ ] Gate E2E passa
+- [x] e2e `painel`: "Você está no perfil de Administrador Master" e "Portanto, está apto a realizar:"; asserção antiga `Perfil: AM` atualizada
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(painel): spell out the profile and its modules`
 
