@@ -15,6 +15,8 @@ import {
 import { geradorDeCnpj } from "./helpers/cnpj";
 
 const SENHA = "SenhaValida123";
+// RU-11: a lista mostra o nome da formação (P8), não o número.
+const NOME_CURSO_GO = "Turismo de Base Comunitária";
 
 const gerarCnpjValido = geradorDeCnpj("30");
 
@@ -25,6 +27,7 @@ const CNPJ_GO_2 = gerarCnpjValido(2);
 const CPFS = [CPF_GT, CNPJ_GO, CNPJ_GO_2];
 
 let cdCursoDoGo: number;
+let cdCursoDoGo2: number;
 
 test.beforeAll(() => {
   deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
@@ -57,13 +60,14 @@ test.beforeAll(() => {
     cdVerba: verba.cdVerba,
     vlCursoAlocado: 100,
     criadoPor: CNPJ_GO,
+    respostas: { qualifNomeCurso: NOME_CURSO_GO },
   }).cdCurso;
-  criarPreCurso({
+  cdCursoDoGo2 = criarPreCurso({
     cdOfertante: CNPJ_GO_2,
     cdVerba: verba2.cdVerba,
     vlCursoAlocado: 100,
     criadoPor: CPF_GT,
-  });
+  }).cdCurso;
 });
 
 test.afterAll(() => {
@@ -83,7 +87,7 @@ test("REQ-PC-14: GO só vê os pré-cursos do próprio Ofertante", async ({ page
 
   const itens = await page.getByTestId("lista-pre-cursos").getByRole("listitem").count();
   expect(itens).toBe(1);
-  await expect(page.getByText(`Pré-curso #${cdCursoDoGo}`)).toBeVisible();
+  await expect(page.getByText(NOME_CURSO_GO)).toBeVisible();
 
   // A listagem não tem mais atalho de criação: o ÚNICO link para criar curso
   // nesta página é o "Novo curso" da navbar. Contar os links para /cursos/novo
@@ -118,6 +122,22 @@ test("cada item lista o status e linka para a tela de detalhe", async ({ page })
   // que o link aponta para a URL correta, sem navegar (evita depender de
   // uma rota que só a próxima tarefa cria).
   await expect(
-    page.getByText(`Pré-curso #${cdCursoDoGo}`).locator("xpath=ancestor::a"),
+    page.getByText(NOME_CURSO_GO).locator("xpath=ancestor::a"),
   ).toHaveAttribute("href", `/pre-cursos/${cdCursoDoGo}`);
+});
+
+// RU-11 (docs 6 e 7): cada linha mostra o nome da formação; a que não tem P8
+// mostra o texto de reserva; nenhuma mostra o número como identificador.
+test("RU-11: a lista mostra o nome da formação no lugar de #número", async ({ page }) => {
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento: CPF_GT, senha: SENHA },
+  });
+  expect(login.ok()).toBe(true);
+
+  await page.goto("/pre-cursos");
+  const lista = page.getByTestId("lista-pre-cursos");
+
+  await expect(lista.getByText(NOME_CURSO_GO)).toBeVisible();
+  await expect(lista.getByText(`Formação sem nome (nº ${cdCursoDoGo2})`)).toBeVisible();
+  await expect(lista).not.toContainText("Pré-curso #");
 });

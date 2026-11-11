@@ -292,12 +292,13 @@ T31
 
 **Done when**:
 
-- [ ] e2e `pre-cursos-page`, `pos-cursos-page`, `avaliacoes-page`: nome visível e `#<cdCurso>` ausente; formação sem P8 mostra `Formação sem nome (nº X)` (L-030: texto, não só testid)
-- [ ] Nenhuma lista devolve colunas `P*` além da P8 do pré
-- [ ] Gate E2E passa
+- [x] e2e `pre-cursos-page`, `pos-cursos-page`, `avaliacoes-page`: nome visível e `#<cdCurso>` ausente; formação sem P8 mostra `Formação sem nome (nº X)` (L-030: texto, não só testid)
+- [x] Nenhuma lista devolve colunas `P*` além da P8 do pré
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(cursos): list courses by name instead of number`
 

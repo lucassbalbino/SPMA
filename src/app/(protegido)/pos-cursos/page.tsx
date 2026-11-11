@@ -10,6 +10,7 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth/guards";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import { prisma } from "@/lib/db/prisma";
+import { nomeDaFormacao } from "@/lib/cursos/nome";
 import { posCursoLiberado } from "@/lib/pos-curso/liberacao";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -23,7 +24,8 @@ export default async function PosCursosPage() {
       // AL não tem escopo por Ofertante (AD-012) - lista vazia, não 403.
       () => ({ curso: { cdOfertante: "" } }),
     ),
-    include: { curso: { select: { preCurso: { select: { status: true } } } } },
+    // O nome da formação é a P8 do pré (RU-11).
+    include: { curso: { select: { preCurso: { select: { status: true, p8: true } } } } },
     orderBy: { cdCurso: "asc" },
   });
 
@@ -43,7 +45,7 @@ export default async function PosCursosPage() {
                   href={`/pos-cursos/${posCurso.cdCurso}`}
                   className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent"
                 >
-                  <span>Pós-curso #{posCurso.cdCurso}</span>
+                  <span>{nomeDaFormacao(posCurso.curso.preCurso?.p8, posCurso.cdCurso)}</span>
                   <span data-testid={`status-pos-curso-${posCurso.cdCurso}`}>
                     {posCurso.status === "ENCERRADO"
                       ? "Encerrado"

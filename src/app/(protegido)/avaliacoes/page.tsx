@@ -9,6 +9,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { nomeDaFormacao } from "@/lib/cursos/nome";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatarDocumento } from "@/lib/validation/mascara-documento";
 
@@ -24,6 +25,8 @@ export default async function AvaliacoesPage() {
       (cdOfertante) => ({ curso: { cdOfertante } }),
       () => ({ cpf: escopo.tipo === "proprioAluno" ? escopo.cpf : "" }),
     ),
+    // O nome da formação é a P8 do pré (RU-11).
+    include: { curso: { select: { preCurso: { select: { p8: true } } } } },
     orderBy: [{ cdCurso: "asc" }, { cpf: "asc" }],
   });
 
@@ -44,7 +47,8 @@ export default async function AvaliacoesPage() {
                   className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent"
                 >
                   <span>
-                    Avaliação #{avaliacao.cdCurso} - CPF {formatarDocumento(avaliacao.cpf)}
+                    {nomeDaFormacao(avaliacao.curso.preCurso?.p8, avaliacao.cdCurso)} - CPF{" "}
+                    {formatarDocumento(avaliacao.cpf)}
                   </span>
                   <span data-testid={`status-avaliacao-${avaliacao.cpf}-${avaliacao.cdCurso}`}>
                     {avaliacao.status === "ENCERRADO" ? "Encerrado" : "Em andamento"}

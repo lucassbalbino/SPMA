@@ -8,6 +8,7 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth/guards";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import { prisma } from "@/lib/db/prisma";
+import { nomeDaFormacao } from "@/lib/cursos/nome";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function PreCursosPage() {
@@ -22,6 +23,8 @@ export default async function PreCursosPage() {
       // diferente da rota, uma lista vazia é a resposta útil.
       () => ({ curso: { cdOfertante: "" } }),
     ),
+    // A P8 (nome da formação, RU-11) é a única resposta que a lista lê.
+    omit: { p8: false },
     orderBy: { cdCurso: "asc" },
   });
 
@@ -41,7 +44,7 @@ export default async function PreCursosPage() {
                   href={`/pre-cursos/${preCurso.cdCurso}`}
                   className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent"
                 >
-                  <span>Pré-curso #{preCurso.cdCurso}</span>
+                  <span>{nomeDaFormacao(preCurso.p8, preCurso.cdCurso)}</span>
                   <span data-testid={`status-pre-curso-${preCurso.cdCurso}`}>
                     {preCurso.status === "ENCERRADO" ? "Encerrado" : "Em andamento"}
                   </span>

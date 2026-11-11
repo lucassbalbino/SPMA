@@ -291,7 +291,7 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-08 | P1: Mensagens | T5 | Implementing |
 | RU-09 | P1: Mensagens | T5 | Implementing |
 | RU-10 | P1: Nome da formação | T6 | Implementing |
-| RU-11 | P1: Nome da formação | Tasks | Pending |
+| RU-11 | P1: Nome da formação | T7 | Implementing |
 | RU-12 | P1: Nome da formação | Tasks | Pending |
 | RU-13 | P1: Nome da formação | Tasks | Pending |
 | RU-14 | P1: Nome da formação | Tasks | Pending |
