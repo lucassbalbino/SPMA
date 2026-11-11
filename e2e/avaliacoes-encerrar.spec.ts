@@ -45,10 +45,13 @@ async function logarComCsrf(documento: string): Promise<{ idSessao: string; idCs
   return { idSessao, idCsrf };
 }
 
-// As 8 chaves de Parte 1 completas. As 7 de dados pessoais saíram deste
-// formulário (PESSOAL-11) e Situação Profissional saiu com a revisão do MTur
-// (MTUR-08).
+// As 12 chaves de Parte 1 completas. As 7 de dados pessoais saíram deste
+// formulário (PESSOAL-11); Situação Profissional (Q10-Q13) voltou na AD-053.
 const PARTE_1_COMPLETA = {
+  avalProfissCondicaoTrabalho: "Desempregado",
+  avalProfissAtuaTurismo: "Sim",
+  avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
+  avalProfissFaixaRenda: "Até 01 salário mínimo",
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
   avalExperienciaTipoCursoAnterior: "Atualização profissional",

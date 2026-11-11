@@ -33,6 +33,29 @@ describe("CHAVES_SOMENTE_CONCLUINTE", () => {
 });
 
 describe("normalizarCondicionaisAvaliacao", () => {
+  // SPR-09: Q12 órfã é descartada no encerramento, como a Q16.
+  it("Q11='Não' com Q12 respondida -> Q12 descartada", () => {
+    const respostas = {
+      avalProfissAtuaTurismo: "Não",
+      avalProfissAtividadeEspecifica: "Eventos",
+      avalProfissFaixaRenda: "Sem renda",
+    };
+
+    expect(normalizarCondicionaisAvaliacao(respostas)).toEqual({
+      avalProfissAtuaTurismo: "Não",
+      avalProfissFaixaRenda: "Sem renda",
+    });
+  });
+
+  it("Q11='Sim' com Q12 respondida -> Q12 fica", () => {
+    const respostas = {
+      avalProfissAtuaTurismo: "Sim",
+      avalProfissAtividadeEspecifica: "Eventos",
+    };
+
+    expect(normalizarCondicionaisAvaliacao(respostas)).toEqual(respostas);
+  });
+
   it("Q15='Não' com Q16 respondida -> Q16 descartada", () => {
     const respostas = {
       avalExperienciaCursoAnterior: "Não",
@@ -98,7 +121,13 @@ describe("normalizarCondicionaisAvaliacao", () => {
 });
 
 describe("pendências condicionais", () => {
-  // Q16 é a única condicional que sobrou na Parte 1 (Q12 saiu com MTUR-08).
+  // Q12 e Q16 são as condicionais da Parte 1 (Q12 voltou na AD-053).
+  it("Q11='Sim' sem Q12 -> só ela pendente na Parte 1", () => {
+    expect(pendenciasCondicionaisParte1({ avalProfissAtuaTurismo: "Sim" })).toEqual([
+      "avalProfissAtividadeEspecifica",
+    ]);
+  });
+
   it("Q15='Sim' sem Q16 -> só ela pendente na Parte 1", () => {
     const pendentes = pendenciasCondicionaisParte1({
       avalExperienciaCursoAnterior: "Sim",

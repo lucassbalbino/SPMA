@@ -41,6 +41,7 @@ const CPF_AL_ENCERRADA = "60000095931";
 const CPF_AL_ACESSO = "60000109665";
 const CPF_AL_OUTRO = "60000123307";
 const CPF_AL_PRESERVA = "60000424773";
+const CPF_AL_SEM_SITUACAO = "60000601225";
 
 const CPFS = [
   CPF_GT,
@@ -55,19 +56,23 @@ const CPFS = [
   CPF_AL_ACESSO,
   CPF_AL_OUTRO,
   CPF_AL_PRESERVA,
+  CPF_AL_SEM_SITUACAO,
 ];
 
-// Os 2 primeiros campos de Parte 1 (usados na gravação parcial inicial).
-// As 7 perguntas de dados pessoais saíram deste formulário (PESSOAL-11) e
-// Situação Profissional saiu com a revisão do MTur (MTUR-08), então a Parte 1
-// começa em Q14.
+// Os 2 primeiros campos de Experiência (usados na gravação parcial inicial).
+// As 7 perguntas de dados pessoais saíram deste formulário (PESSOAL-11).
 const PARTE_1_INICIO = {
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
 };
 
-// As 6 chaves restantes de Parte 1 (completam as 8 no total).
+// As 10 chaves restantes de Parte 1 (completam as 12 no total), com
+// Situação Profissional (Q10-Q13, AD-053).
 const PARTE_1_RESTANTE = {
+  avalProfissCondicaoTrabalho: "Desempregado",
+  avalProfissAtuaTurismo: "Sim",
+  avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
+  avalProfissFaixaRenda: "Até 01 salário mínimo",
   avalExperienciaTipoCursoAnterior: "Atualização profissional",
   avalMotivMotivosParticipacao: ["Conseguir um emprego/trabalho"],
   avalMotivFormaConhecimento: "pelas Redes Sociais",
@@ -120,6 +125,7 @@ test.beforeAll(() => {
   upsertUsuario({ cpf: CPF_AL_ACESSO, tipo: "AL", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_AL_OUTRO, tipo: "AL", senha: SENHA, primeiraVez: false });
   upsertUsuario({ cpf: CPF_AL_PRESERVA, tipo: "AL", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_AL_SEM_SITUACAO, tipo: "AL", senha: SENHA, primeiraVez: false });
 
   const cdVerba = criarVerba({ cdOfertante: CNPJ_GO, vlVerba: 10000 }).cdVerba;
 
@@ -140,6 +146,22 @@ test.beforeAll(() => {
     cdCurso,
     parte1Completa: true,
     respostas: { ...PARTE_1_INICIO, ...PARTE_1_RESTANTE },
+  });
+  // O aluno que já tinha passado da Parte 1 antes da AD-053: as 8 chaves de
+  // Q14-Q21 e uma resposta da Parte 2, sem Q10-Q13, e com a Parte 1
+  // incompleta, como a migration deixa (SPR-14).
+  const {
+    avalProfissCondicaoTrabalho: _q10,
+    avalProfissAtuaTurismo: _q11,
+    avalProfissAtividadeEspecifica: _q12,
+    avalProfissFaixaRenda: _q13,
+    ...semSituacao
+  } = PARTE_1_RESTANTE;
+  criarAvaliacao({
+    cpf: CPF_AL_SEM_SITUACAO,
+    cdCurso,
+    parte1Completa: false,
+    respostas: { ...PARTE_1_INICIO, ...semSituacao, avalCursoDinamicasInclusao: 5 },
   });
 });
 
@@ -258,6 +280,28 @@ test("AVAL-10: chave de Parte 2 rejeitada com 400 enquanto parte1Completa result
   expect(res.status()).toBe(400);
   const depois = getAvaliacao(CPF_AL_GATE_FECHADO, cdCurso);
   expect(depois?.respostas).toEqual(antes?.respostas);
+  expect(depois?.parte1Completa).toBe(false);
+
+  await cliente.dispose();
+});
+
+// SPR-08: sem Q10-Q13, a Parte 1 não está completa e a Parte 2 fica travada,
+// sem apagar a resposta da Parte 2 que o aluno já tinha.
+test("SPR-08: sem Situação Profissional, chave de Parte 2 rejeitada com 400 e nada persistido", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AL_SEM_SITUACAO);
+  const antes = getAvaliacao(CPF_AL_SEM_SITUACAO, cdCurso);
+
+  const cliente = await novoCliente();
+  const res = await cliente.patch(`/api/avaliacoes/${CPF_AL_SEM_SITUACAO}/${cdCurso}`, {
+    data: { avalCursoConteudo: 4 },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  expect((await res.json()).erro).toBe("Complete a Parte 1 antes de responder a avaliação do curso");
+  const depois = getAvaliacao(CPF_AL_SEM_SITUACAO, cdCurso);
+  expect(depois?.respostas).toEqual(antes?.respostas);
+  expect(depois?.respostas?.avalCursoDinamicasInclusao).toBe(5);
   expect(depois?.parte1Completa).toBe(false);
 
   await cliente.dispose();

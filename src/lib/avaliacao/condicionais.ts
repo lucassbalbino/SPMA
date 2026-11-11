@@ -1,7 +1,8 @@
-// As regras condicionais do questionário do Aluno: 2 perguntas reveladas
-// por outra pergunta (Q16, Q22.1) e o gate de bloco "Concluiu o curso?"
-// (Q22), que governa as 16 chaves de Q24-Q27, Q29 e Q35-Q38. Q12 e Q30.j
-// saíram com a revisão do MTur (MTUR-08).
+// As regras condicionais do questionário do Aluno: 3 perguntas reveladas
+// por outra pergunta (Q12, Q16, Q22.1) e o gate de bloco "Concluiu o curso?"
+// (Q22), que governa as 16 chaves de Q24-Q27, Q29 e Q35-Q38. Q30.j saiu com
+// a revisão do MTur (MTUR-08); Q12 voltou com a Situação Profissional
+// (AD-053).
 //
 // Fonte única das condições: `completude.ts` (exigência), `AvaliacaoForm.tsx`
 // (`visivelSe` e o bloqueio das chaves de "apenas para quem concluiu") e a
@@ -17,9 +18,14 @@ import {
   type RegraCondicional,
 } from "../validation/condicionais";
 
-// Q16 - Parte 1.
+// Q12 e Q16 - Parte 1.
 export const REGRAS_CONDICIONAIS_PARTE_1: readonly RegraCondicional<RespostasAvaliacaoParcial>[] =
   [
+    {
+      chave: "avalProfissAtividadeEspecifica",
+      dependeDe: ["avalProfissAtuaTurismo"],
+      exigidaQuando: (dados) => dados.avalProfissAtuaTurismo === "Sim",
+    },
     {
       chave: "avalExperienciaTipoCursoAnterior",
       dependeDe: ["avalExperienciaCursoAnterior"],
@@ -93,7 +99,7 @@ export function pendenciasCondicionaisParte2(respostas: unknown): string[] {
 }
 
 // Descarta as respostas que a própria avaliação tornou inaplicáveis: as
-// condicionais órfãs (Q16/Q22.1) e, quando o aluno declarou não ter
+// condicionais órfãs (Q12/Q16/Q22.1) e, quando o aluno declarou não ter
 // concluído, as 16 chaves de "apenas para quem concluiu".
 //
 // Chamada só no ENCERRAMENTO. No PATCH os valores são preservados de

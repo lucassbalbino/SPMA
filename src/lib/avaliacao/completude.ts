@@ -9,7 +9,7 @@
 // registrada em `.specs/LESSONS.md` a partir do que aconteceu em
 // `formulario-pre-curso`.
 //
-// As condições em si (Q16, Q22.1 e o gate de Q22) ficam em
+// As condições em si (Q12, Q16, Q22.1 e o gate de Q22) ficam em
 // `condicionais.ts`, compartilhadas com a tela e com a limpeza de órfãs do
 // encerramento.
 import { respostasAvaliacaoSchema } from "../validation/schemas/avaliacao.schema";
@@ -25,14 +25,17 @@ import {
 
 export type { ResultadoCompletude };
 
-// As 7 chaves de Parte 1 sempre-obrigatórias (as 8 chaves da Parte 1 menos
-// Q16, condicional checado à parte pelas regras de `condicionais.ts`).
+// As 10 chaves de Parte 1 sempre-obrigatórias (as 12 chaves da Parte 1 menos
+// Q12 e Q16, condicionais checados à parte pelas regras de `condicionais.ts`).
 //
 // As 7 perguntas de dados pessoais (Q3-Q9) saíram da Parte 1: são atributo do
 // Aluno, coletado uma vez fora do questionário do curso (PESSOAL-11,
 // PESSOAL-12). Situação Profissional (Q10-Q13) saiu com a revisão do MTur
-// (MTUR-08/10).
+// (MTUR-08/10) e voltou a pedido do cliente (AD-053, SPR-05).
 const parte1SchemaBase = respostasAvaliacaoSchema.pick({
+  avalProfissCondicaoTrabalho: true,
+  avalProfissAtuaTurismo: true,
+  avalProfissFaixaRenda: true,
   avalExperienciaTrabalhoPrevio: true,
   avalExperienciaCursoAnterior: true,
   avalMotivMotivosParticipacao: true,

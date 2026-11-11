@@ -427,6 +427,11 @@ model AvaliacaoAluno {
   dataEncerramento  DateTime?     @map("Data_Encerramento")
 
   // Respostas, uma coluna por pergunta (AD-051, `src/lib/respostas/colunas.ts`).
+  // P10-P13 (Situação Profissional) voltaram na AD-053.
+  p10      String?   @map("P10") @db.Char(1)
+  p11      String?   @map("P11") @db.Char(1)
+  p12      String?   @map("P12") @db.Char(1)
+  p13      String?   @map("P13") @db.Char(1)
   p14      String?   @map("P14") @db.Char(1)
   p15      String?   @map("P15") @db.Char(1)
   p16      String?   @map("P16") @db.Char(1)

@@ -6,8 +6,8 @@ import {
   validarCompletudeParte2,
 } from "./completude";
 
-// Parte 1 completa (7 sempre-obrigatórias + Q16, condicional satisfeito).
-// Situação Profissional (Q10-Q13) saiu com a revisão do MTur (MTUR-08).
+// Parte 1 completa (10 sempre-obrigatórias + Q12 e Q16, condicionais
+// satisfeitos). Situação Profissional (Q10-Q13) voltou na AD-053.
 // As 7 perguntas de dados pessoais (Q3-Q9) NÃO entram mais: saíram do
 // questionário do curso (PESSOAL-11/12) e são validadas em
 // `src/lib/dados-pessoais/completude.test.ts`.
@@ -15,6 +15,10 @@ import {
 // importar as constantes de opções do schema: o teste tem de quebrar se
 // alguém renomear uma opção só no código de produção.
 const PARTE_1_COMPLETA = {
+  avalProfissCondicaoTrabalho: "Desempregado",
+  avalProfissAtuaTurismo: "Sim",
+  avalProfissAtividadeEspecifica: "Alojamento (meios de hospedagem)",
+  avalProfissFaixaRenda: "Até 01 salário mínimo",
   avalExperienciaTrabalhoPrevio: "Não",
   avalExperienciaCursoAnterior: "Sim",
   avalExperienciaTipoCursoAnterior: "Atualização profissional",
@@ -49,10 +53,9 @@ const PARTE_2_COMPLETA_CONCLUIU = {
 };
 
 describe("validarCompletudeParte1", () => {
-  // MTUR-10: as 7 sempre-obrigatórias + Q16 bastam, sem nenhuma das 4 chaves
-  // de Situação Profissional.
-  it("as 7 chaves sempre-obrigatórias + Q16 -> completo=true, pendentes=[]", () => {
-    expect(Object.keys(PARTE_1_COMPLETA)).toHaveLength(8);
+  // SPR-05: as 10 sempre-obrigatórias + Q12 e Q16 completam a Parte 1.
+  it("as 10 chaves sempre-obrigatórias + Q12 e Q16 -> completo=true, pendentes=[]", () => {
+    expect(Object.keys(PARTE_1_COMPLETA)).toHaveLength(12);
     expect(validarCompletudeParte1(PARTE_1_COMPLETA)).toEqual({
       completo: true,
       pendentes: [],
@@ -68,8 +71,12 @@ describe("validarCompletudeParte1", () => {
     ).toEqual({ completo: true, pendentes: [] });
   });
 
-  // MTUR-10: cada uma das 7 sempre-obrigatórias continua exigida.
+  // MTUR-10 e SPR-05: cada uma das 10 sempre-obrigatórias é exigida, e a
+  // pendência é exatamente a chave que falta.
   it.each([
+    "avalProfissCondicaoTrabalho",
+    "avalProfissAtuaTurismo",
+    "avalProfissFaixaRenda",
     "avalExperienciaTrabalhoPrevio",
     "avalExperienciaCursoAnterior",
     "avalMotivMotivosParticipacao",
@@ -81,8 +88,27 @@ describe("validarCompletudeParte1", () => {
     const { [chave]: _omitido, ...semChave } = PARTE_1_COMPLETA;
     const resultado = validarCompletudeParte1(semChave);
 
-    expect(resultado.completo).toBe(false);
-    expect(resultado.pendentes).toContain(chave);
+    expect(resultado).toEqual({ completo: false, pendentes: [chave] });
+  });
+
+  // SPR-06: Q12 é exigida quando Q11 = "Sim".
+  it("avalProfissAtuaTurismo='Sim' sem avalProfissAtividadeEspecifica -> pendente e incompleto", () => {
+    const { avalProfissAtividadeEspecifica: _omitido, ...semAtividade } = PARTE_1_COMPLETA;
+
+    expect(validarCompletudeParte1(semAtividade)).toEqual({
+      completo: false,
+      pendentes: ["avalProfissAtividadeEspecifica"],
+    });
+  });
+
+  // SPR-07: com Q11 = "Não", a Q12 em branco não é cobrada.
+  it("avalProfissAtuaTurismo='Não' sem avalProfissAtividadeEspecifica -> completo=true", () => {
+    const { avalProfissAtividadeEspecifica: _omitido, ...base } = PARTE_1_COMPLETA;
+
+    expect(validarCompletudeParte1({ ...base, avalProfissAtuaTurismo: "Não" })).toEqual({
+      completo: true,
+      pendentes: [],
+    });
   });
 
   it("avalExperienciaCursoAnterior='Sim' sem avalExperienciaTipoCursoAnterior -> pendente e incompleto", () => {

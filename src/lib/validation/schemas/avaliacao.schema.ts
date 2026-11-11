@@ -16,12 +16,54 @@ export const OPCOES_SIM_NAO = ["Sim", "Não"] as const;
 // `dados-pessoais.schema.ts`, coletadas uma vez só, fora do questionário do
 // curso (PESSOAL-11).
 //
-// Q10-Q13 (Situação Profissional), Q28 (Continuidade nos Estudos) e Q30-Q34
-// (Oportunidades de Trabalho, Efetivação e Renda) saíram com a revisão do
-// MTur (`docs/Alteracoes_MTur_1.md`, itens 3.3 a 3.6): o aluno não tem essas
-// informações antes de obter o certificado. As perguntas restantes mantêm a
-// numeração original. As respostas já gravadas dessas chaves foram apagadas
-// pela migration `20261020120000_alteracoes_mtur_1`.
+// Q28 (Continuidade nos Estudos) e Q30-Q34 (Oportunidades de Trabalho,
+// Efetivação e Renda) saíram com a revisão do MTur (`docs/Alteracoes_MTur_1.md`,
+// itens 3.4 a 3.6): o aluno não tem essas informações antes de obter o
+// certificado. As perguntas restantes mantêm a numeração original. As
+// respostas já gravadas dessas chaves foram apagadas pela migration
+// `20261020120000_alteracoes_mtur_1`.
+//
+// Q10-Q13 (Situação Profissional) saíram na mesma revisão (item 3.3) e
+// voltaram a pedido do cliente (AD-053, SPR-02), com o texto e as opções do
+// questionário original.
+
+// Q10 - condição atual de trabalho.
+export const OPCOES_CONDICAO_TRABALHO = [
+  "Estagiário(a).",
+  "Microempreendedor Individual (MEI)",
+  "Pessoa Jurídica – PJ (empresário)",
+  "Profissional Liberal",
+  "Trabalhador(a) Autônomo/Freelancer",
+  "Trabalhador(a) Informal (sem vínculo contratual)",
+  "Trabalhador(a) Formal (CLT)",
+  "Estudante",
+  "Desempregado",
+] as const;
+
+// Q12 - atividade de Turismo em que atua (condicional de Q11).
+export const OPCOES_ATIVIDADE_TURISMO = [
+  "Serviços de Alimentação",
+  "Alojamento (meios de hospedagem)",
+  "Transporte (aéreo, terrestre, aquaviário)",
+  "Aluguel de Transportes",
+  "Cultura e Lazer (atrações turísticas, museus, parques)",
+  "Agências de Viagem e Operadoras",
+  "Eventos",
+  "Guiamento e Condução",
+  "Turismo de Base Comunitária",
+  "Outro",
+] as const;
+
+// Q13 - faixa de renda mensal.
+export const OPCOES_FAIXA_RENDA = [
+  "Sem renda",
+  "Até 01 salário mínimo",
+  "Entre 01 e 03 salários mínimos",
+  "Entre 03 e 05 salários mínimos",
+  "Entre 05 e 07 salários mínimos",
+  "Entre 07 e 10 salários mínimos",
+  "Acima de 10 salários mínimos",
+] as const;
 
 // Q16 - tipo de curso anterior na área (condicional de Q15).
 export const OPCOES_TIPO_CURSO_ANTERIOR = [
@@ -113,7 +155,7 @@ export const OPCOES_MOTIVACOES_POS = [
 // segue crescente, e é a UI que apresenta na ordem do papel.
 export const escalaAvaliacaoCurso = z.number().int().min(1).max(5);
 
-// ---- Forma das 27 chaves do questionário (8 na Parte 1, 19 na Parte 2) ----
+// ---- Forma das 31 chaves do questionário (12 na Parte 1, 19 na Parte 2) ----
 //
 // Diferente do Pré-Curso/Pós-Curso, TODAS as chaves ficam `.optional()`
 // aqui: a maior parte da Parte 2 só é exigida quando
@@ -122,6 +164,12 @@ export const escalaAvaliacaoCurso = z.number().int().min(1).max(5);
 // (Parte 1 sempre; Parte 2 condicional ao gate) é 100% responsabilidade de
 // `src/lib/avaliacao/completude.ts` - ver design.md Approach Exploration §2.
 export const respostasAvaliacaoSchema = z.object({
+  // Parte 1 - Situação Profissional (Q10-Q13)
+  avalProfissCondicaoTrabalho: z.enum(OPCOES_CONDICAO_TRABALHO).optional(),
+  avalProfissAtuaTurismo: z.enum(OPCOES_SIM_NAO).optional(),
+  avalProfissAtividadeEspecifica: z.enum(OPCOES_ATIVIDADE_TURISMO).optional(),
+  avalProfissFaixaRenda: z.enum(OPCOES_FAIXA_RENDA).optional(),
+
   // Parte 1 - Experiência (Q14-Q16)
   avalExperienciaTrabalhoPrevio: z.enum(OPCOES_SIM_NAO).optional(),
   avalExperienciaCursoAnterior: z.enum(OPCOES_SIM_NAO).optional(),
@@ -181,11 +229,15 @@ export const respostasAvaliacaoParcialSchema = respostasAvaliacaoSchema;
 
 export type RespostasAvaliacaoParcial = z.infer<typeof respostasAvaliacaoParcialSchema>;
 
-// As 8 chaves da Parte 1 (AD-023/RN-13). As 7 de dados pessoais saíram
-// para `dados-pessoais.schema.ts` (PESSOAL-11) e as 4 de Situação
-// Profissional com a revisão do MTur - usado pela rota de PATCH para
-// classificar cada chave recebida como Parte 1 ou Parte 2 (AVAL-10).
+// As 12 chaves da Parte 1 (AD-023/RN-13). As 7 de dados pessoais saíram
+// para `dados-pessoais.schema.ts` (PESSOAL-11); as 4 de Situação Profissional
+// voltaram (AD-053) - usado pela rota de PATCH para classificar cada chave
+// recebida como Parte 1 ou Parte 2 (AVAL-10).
 export const CHAVES_PARTE_1 = [
+  "avalProfissCondicaoTrabalho",
+  "avalProfissAtuaTurismo",
+  "avalProfissAtividadeEspecifica",
+  "avalProfissFaixaRenda",
   "avalExperienciaTrabalhoPrevio",
   "avalExperienciaCursoAnterior",
   "avalExperienciaTipoCursoAnterior",

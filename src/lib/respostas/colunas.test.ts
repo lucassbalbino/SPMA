@@ -32,7 +32,7 @@ describe("cobertura do mapa (COL-03)", () => {
   it.each([
     ["preCurso", 63, 122],
     ["posCurso", 26, 45],
-    ["avaliacao", 27, 46],
+    ["avaliacao", 31, 50],
     ["dadosPessoais", 7, 7],
   ] as const)("%s mapeia todas as chaves do schema em colunas únicas", (formulario, chaves, total) => {
     expect(MAPA[formulario].map((e) => e.chave)).toEqual(Object.keys(SCHEMAS[formulario].shape));
@@ -49,7 +49,7 @@ describe("cobertura do mapa (COL-03)", () => {
       ]),
     );
     expect(colunas("avaliacao")).toEqual(
-      expect.arrayContaining(["P14", "P22.1a", "P22.1j", "P24.1", "P24.8", "P29f", "P35", "P38"]),
+      expect.arrayContaining(["P10", "P11", "P12", "P13", "P14", "P22.1a", "P22.1j", "P24.1", "P24.8", "P29f", "P35", "P38"]),
     );
     expect(colunas("dadosPessoais")).toEqual(["P3", "P4", "P5", "P6", "P7", "P8", "P9"]);
     for (const formulario of Object.keys(MAPA) as Formulario[]) {
@@ -158,6 +158,26 @@ describe("gravação (paraColunas)", () => {
     expect(() => paraColunas("preCurso", { chaveInexistente: "x" })).toThrow(/chaveInexistente/);
     expect(() => paraColunas("preCurso", { qualifModalidade: "Teleporte" })).toThrow(/Teleporte/);
     expect(() => paraColunas("preCurso", { publicoPerfil: ["Marcianos"] })).toThrow(/Marcianos/);
+  });
+});
+
+// SPR-11/SPR-12: Situação Profissional (AD-053) grava a letra da opção nas
+// colunas P10-P13 e volta com o texto. A letra é a posição no papel.
+describe("Situação Profissional (P10-P13)", () => {
+  const RESPOSTAS = {
+    avalProfissCondicaoTrabalho: "Desempregado",
+    avalProfissAtuaTurismo: "Não",
+    avalProfissAtividadeEspecifica: "Serviços de Alimentação",
+    avalProfissFaixaRenda: "Acima de 10 salários mínimos",
+  };
+  const CAMPOS = { p10: "i", p11: "b", p12: "a", p13: "g" };
+
+  it("grava a letra da opção em P10, P11, P12 e P13", () => {
+    expect(paraColunas("avaliacao", RESPOSTAS)).toEqual(CAMPOS);
+  });
+
+  it("lê de volta o texto da opção gravada", () => {
+    expect(deColunas("avaliacao", CAMPOS)).toEqual(RESPOSTAS);
   });
 });
 
