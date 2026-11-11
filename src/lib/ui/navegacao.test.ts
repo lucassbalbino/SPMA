@@ -41,12 +41,19 @@ const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
 
 // Rótulos de módulo do painel de hoje (src/app/(protegido)/painel/page.tsx:10).
 // Asserção literal: é o contrato que segura e2e/painel.spec.ts.
+// RU-35 (revisão de usabilidade): nomes por extenso.
 const MODULOS_ESPERADOS: Record<TipoUsuario, string[]> = {
-  AM: ["Gestão de usuários", "Ofertantes", "Verbas", "Cursos", "Relatórios"],
-  GT: ["Gestão de usuários", "Ofertantes", "Verbas", "Cursos"],
-  VT: ["Cursos", "Relatórios"],
-  GO: ["Gestão de usuários", "Verbas", "Meus cursos"],
-  VO: ["Verbas", "Meus cursos"],
+  AM: [
+    "Gestão de Usuários",
+    "Gestão de Ofertante",
+    "Gestão de Recursos",
+    "Gestão de Formações",
+    "Visualização de Relatórios",
+  ],
+  GT: ["Gestão de Usuários", "Gestão de Ofertante", "Gestão de Recursos", "Gestão de Formações"],
+  VT: ["Gestão de Formações", "Visualização de Relatórios"],
+  GO: ["Gestão de Usuários", "Gestão de Recursos", "Minhas Formações"],
+  VO: ["Gestão de Recursos", "Minhas Formações"],
   AL: ["Minha avaliação"],
 };
 
@@ -85,9 +92,9 @@ describe("navegacaoDoPerfil", () => {
     expect(hrefs).not.toContain("/pos-cursos");
   });
 
-  it("GU-01: AM, GT e GO recebem 'Gestão de usuários' apontando para /usuarios", () => {
+  it("GU-01: AM, GT e GO recebem 'Gestão de Usuários' apontando para /usuarios", () => {
     for (const tipo of [TipoUsuario.AM, TipoUsuario.GT, TipoUsuario.GO]) {
-      expect(rotuloDe(tipo, "/usuarios")).toBe("Gestão de usuários");
+      expect(rotuloDe(tipo, "/usuarios")).toBe("Gestão de Usuários");
     }
   });
 
@@ -120,6 +127,19 @@ describe("navegacaoDoPerfil", () => {
     }
   });
 
+  // RU-36 (revisão de usabilidade): os rótulos do menu, pelos termos do cliente.
+  it("RU-36: o menu do AM usa os nomes por extenso, na ordem da tabela", () => {
+    expect(navegacaoDoPerfil(TipoUsuario.AM).map((item) => item.rotulo)).toEqual([
+      "Painel",
+      "Gestão de Usuários",
+      "Gestão de Recursos",
+      "Nova Formação",
+      "Cadastro de Formação",
+      "Avaliação de Formação",
+      "Avaliações Aluno",
+    ]);
+  });
+
   it("o item de /avaliacoes se chama 'Minha avaliação' para AL", () => {
     expect(rotuloDe(TipoUsuario.AL, "/avaliacoes")).toBe("Minha avaliação");
   });
@@ -130,9 +150,9 @@ describe("navegacaoDoPerfil", () => {
     }
   });
 
-  it("GV-27/GV-28: AM, GT, GO e VO recebem 'Verbas' apontando para /verbas", () => {
+  it("GV-27/GV-28: AM, GT, GO e VO recebem 'Gestão de Recursos' apontando para /verbas", () => {
     for (const tipo of [TipoUsuario.AM, TipoUsuario.GT, TipoUsuario.GO, TipoUsuario.VO]) {
-      expect(rotuloDe(tipo, "/verbas")).toBe("Verbas");
+      expect(rotuloDe(tipo, "/verbas")).toBe("Gestão de Recursos");
     }
   });
 

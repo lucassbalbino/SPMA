@@ -636,12 +636,13 @@ T31
 
 **Done when**:
 
-- [ ] `navegacao.test.ts` com os rótulos novos por perfil
-- [ ] e2e `identidade-visual`, `pre-cursos-page` e afins: seletores por nome de link atualizados
-- [ ] Gate E2E passa
+- [x] `navegacao.test.ts` com os rótulos novos por perfil
+- [x] e2e `identidade-visual`, `pre-cursos-page` e afins: seletores por nome de link atualizados
+- [x] Gate E2E passa
 
 **Tests**: unit, e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(ui): client terminology in menu and modules`
 
