@@ -32,6 +32,7 @@ type OpcaoVerba = {
 export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
   const router = useRouter();
 
+  const [nome, setNome] = useState("");
   const [cdVerba, setCdVerba] = useState<string | null>(null);
   const [vlCursoAlocado, setVlCursoAlocado] = useState("");
   const [erro, setErro] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
     setErro(null);
 
     const entrada = criarCursoSchema.safeParse({
+      nome,
       cdVerba: cdVerba ? Number(cdVerba) : undefined,
       vlCursoAlocado: vlCursoAlocado ? Number(vlCursoAlocado) : undefined,
     });
@@ -87,6 +89,16 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
   return (
     <form onSubmit={handleSubmit} noValidate>
       <FieldGroup>
+        <Field data-invalid={!!erro}>
+          <FieldLabel htmlFor="nome">Nome da formação</FieldLabel>
+          <Input
+            id="nome"
+            name="nome"
+            value={nome}
+            onChange={(event) => setNome(event.target.value)}
+            disabled={enviando}
+          />
+        </Field>
         <Field data-invalid={!!erro}>
           <FieldLabel htmlFor="cdVerba">Verba</FieldLabel>
           <Select value={cdVerba} onValueChange={(valor) => setCdVerba(valor as string)}>

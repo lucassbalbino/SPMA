@@ -149,6 +149,32 @@ test("REQ-PC-06: valor de infraestrutura fora de 0-5 é rejeitado com 400, nada 
   await cliente.dispose();
 });
 
+// RU-59: a pergunta 8 guarda o nome da formação e não pode ficar em branco.
+test("RU-59: pergunta 8 em branco -> 400 com a mensagem e o campo, nome anterior intacto", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
+  const cliente = await novoCliente();
+
+  const gravou = await cliente.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
+    data: { qualifNomeCurso: "Nome anterior" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect(gravou.status()).toBe(200);
+
+  const res = await cliente.patch(`/api/pre-cursos/${cdCursoEmAndamento}`, {
+    data: { qualifNomeCurso: "   " },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  expect(await res.json()).toEqual({
+    erro: "Nome da formação é obrigatório",
+    campo: "qualifNomeCurso",
+  });
+  expect(getPreCurso(cdCursoEmAndamento)?.respostas?.qualifNomeCurso).toBe("Nome anterior");
+
+  await cliente.dispose();
+});
+
 // RESP-20: seleção múltipla com lista vazia é barrada pelo `.min(1)` do Zod,
 // antes de chegar ao repositório. Uma lista vazia que escapasse da validação
 // gravaria 0 em todas as colunas P20* e apagaria a resposta já gravada. O

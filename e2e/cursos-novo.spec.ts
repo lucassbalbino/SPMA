@@ -120,12 +120,38 @@ test("GO cria curso dentro do saldo e é redirecionado para o questionário pré
   await login(page);
   await page.goto("/cursos/novo");
 
+  await page.getByLabel("Nome da formação").fill("Mecânica Básica");
   await page.getByTestId("select-verba").click();
   await page.getByTestId(`opcao-verba-${cdVerba}`).click();
   await page.getByLabel("Valor alocado ao curso").fill("500");
   await page.getByRole("button", { name: "Criar curso" }).click();
 
   await expect(page).toHaveURL(/\/pre-cursos\/\d+$/);
+
+  // RU-58: o nome digitado já está na pergunta 8 do questionário aberto.
+  await page.locator('[data-slot="accordion-item"]').nth(1).getByTestId("bloco-2").click();
+  await expect(page.getByTestId("campo-qualifNomeCurso")).toHaveValue("Mecânica Básica");
+});
+
+// RU-57: sem nome a tela recusa e nenhuma formação nasce.
+test("RU-57: criar sem nome mostra 'Nome da formação é obrigatório' e não cria a formação", async ({
+  page,
+}) => {
+  await login(page);
+  const contar = async () =>
+    (await (await page.request.get("/api/pre-cursos")).json()).preCursos.length as number;
+  const antes = await contar();
+
+  await page.goto("/cursos/novo");
+  await page.getByLabel("Nome da formação").fill("   ");
+  await page.getByTestId("select-verba").click();
+  await page.getByTestId(`opcao-verba-${cdVerba}`).click();
+  await page.getByLabel("Valor alocado ao curso").fill("100");
+  await page.getByRole("button", { name: "Criar curso" }).click();
+
+  await expect(page.getByTestId("erro-novo-curso")).toHaveText("Nome da formação é obrigatório");
+  await expect(page).toHaveURL(/\/cursos\/novo$/);
+  expect(await contar()).toBe(antes);
 });
 
 test("valor acima do saldo disponível exibe erro com o saldo informado, sem navegação", async ({
@@ -134,6 +160,7 @@ test("valor acima do saldo disponível exibe erro com o saldo informado, sem nav
   await login(page);
   await page.goto("/cursos/novo");
 
+  await page.getByLabel("Nome da formação").fill("Formação acima do saldo");
   await page.getByTestId("select-verba").click();
   await page.getByTestId(`opcao-verba-${cdVerba}`).click();
   await page.getByLabel("Valor alocado ao curso").fill("999999");

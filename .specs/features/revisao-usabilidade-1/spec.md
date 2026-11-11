@@ -337,9 +337,9 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-54 | P2: Editar Perfil | Tasks | Pending |
 | RU-55 | P2: Valor previsto | Tasks | Pending |
 | RU-56 | P2: Valor previsto | Tasks | Pending |
-| RU-57 | P1: Nome da formação | Tasks | Pending |
-| RU-58 | P1: Nome da formação | Tasks | Pending |
-| RU-59 | P1: Nome da formação | Tasks | Pending |
+| RU-57 | P1: Nome da formação | T32 | Implementing |
+| RU-58 | P1: Nome da formação | T32 | Implementing |
+| RU-59 | P1: Nome da formação | T32 | Implementing |
 | RU-60 | P1: Nome da formação | Tasks | Pending |
 | RU-61 | P2: Datas | Tasks | Pending |
 | RU-62 | P2: Datas | Tasks | Pending |

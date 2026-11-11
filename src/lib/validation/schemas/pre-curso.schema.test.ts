@@ -89,14 +89,19 @@ const RESPOSTA_VALIDA = {
 };
 
 describe("criarCursoSchema", () => {
+  // RU-57: o nome entrou no corpo; os casos abaixo o mandam válido para que
+  // cada recusa continue isolada no campo que ela testa.
+  const NOME = "Mecânica Básica";
+
   it("rejeita cdVerba ausente", () => {
-    const result = criarCursoSchema.safeParse({ vlCursoAlocado: 1000 });
+    const result = criarCursoSchema.safeParse({ nome: NOME, vlCursoAlocado: 1000 });
 
     expect(result.success).toBe(false);
   });
 
   it("rejeita cdVerba não-positivo", () => {
     const result = criarCursoSchema.safeParse({
+      nome: NOME,
       cdVerba: 0,
       vlCursoAlocado: 1000,
     });
@@ -106,6 +111,7 @@ describe("criarCursoSchema", () => {
 
   it("rejeita vlCursoAlocado não-positivo", () => {
     const result = criarCursoSchema.safeParse({
+      nome: NOME,
       cdVerba: 1,
       vlCursoAlocado: 0,
     });
@@ -115,11 +121,48 @@ describe("criarCursoSchema", () => {
 
   it("aceita payload válido", () => {
     const result = criarCursoSchema.safeParse({
+      nome: NOME,
       cdVerba: 1,
       vlCursoAlocado: 1000,
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it.each([
+    ["ausente", undefined],
+    ["vazio", ""],
+    ["só espaços", "   "],
+  ])("RU-57: nome %s recusa com 'Nome da formação é obrigatório'", (_caso, nome) => {
+    const result = criarCursoSchema.safeParse({ nome, cdVerba: 1, vlCursoAlocado: 1000 });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["nome"]);
+    expect(result.error?.issues[0]?.message).toBe("Nome da formação é obrigatório");
+  });
+
+  it("RU-58: tira os espaços das pontas do nome", () => {
+    const result = criarCursoSchema.safeParse({
+      nome: "  Mecânica Básica  ",
+      cdVerba: 1,
+      vlCursoAlocado: 1000,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.nome).toBe("Mecânica Básica");
+  });
+});
+
+describe("qualifNomeCurso (pergunta 8, RU-59)", () => {
+  it.each([
+    ["vazia", ""],
+    ["só espaços", "   "],
+  ])("pergunta 8 %s recusa com 'Nome da formação é obrigatório'", (_caso, valor) => {
+    const result = respostasPreCursoSchema.partial().safeParse({ qualifNomeCurso: valor });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["qualifNomeCurso"]);
+    expect(result.error?.issues[0]?.message).toBe("Nome da formação é obrigatório");
   });
 });
 

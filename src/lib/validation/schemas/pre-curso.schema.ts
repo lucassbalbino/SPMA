@@ -2,9 +2,21 @@ import { z } from "zod";
 import "../zod-pt";
 import { multiplaComExclusiva } from "../multipla";
 
+// Toda formação nasce com nome e não pode perdê-lo (RU-57, RU-59): a mesma
+// regra vale na criação e na pergunta 8, que é onde o nome mora (AD-052.2).
+export const MENSAGEM_NOME_FORMACAO = "Nome da formação é obrigatório";
+
+function nomeDaFormacaoObrigatorio() {
+  return z
+    .string({ error: MENSAGEM_NOME_FORMACAO })
+    .trim()
+    .min(1, { message: MENSAGEM_NOME_FORMACAO });
+}
+
 // Criação do CURSO (REQ-PC-01): o corpo de POST /api/cursos, que grava
-// PreCurso e PosCurso na mesma transação.
+// PreCurso e PosCurso na mesma transação. O nome vai para a P8 do pré.
 export const criarCursoSchema = z.object({
+  nome: nomeDaFormacaoObrigatorio(),
   cdVerba: z.number().int().positive({ message: "Verba é obrigatória" }),
   vlCursoAlocado: z.number().positive({ message: "Valor alocado deve ser positivo" }),
 });
@@ -237,7 +249,7 @@ export const respostasPreCursoSchema = z.object({
   qualifUf: z.enum(OPCOES_UF),
   qualifOutrosMunicipios: z.enum(OPCOES_SIM_NAO),
   qualifOutrosMunicipiosQuais: z.string().min(1).optional(),
-  qualifNomeCurso: z.string().min(1),
+  qualifNomeCurso: nomeDaFormacaoObrigatorio(),
   qualifVinculoPrograma: z.enum(OPCOES_SIM_NAO),
   qualifVinculoProgramaQual: z.string().min(1).optional(),
   qualifCaracteristicas: z.array(z.enum(OPCOES_CARACTERISTICAS)).min(1),

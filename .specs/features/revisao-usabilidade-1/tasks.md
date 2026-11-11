@@ -393,14 +393,15 @@ T31
 
 **Done when**:
 
-- [ ] `pre-curso.schema.test.ts`: `nome` ausente, `""` e `"   "` recusados com a mensagem exata; `"  Mecânica  "` vira `"Mecânica"`; `qualifNomeCurso: "  "` recusado
-- [ ] e2e `cursos-novo`: criar com nome → o Cadastro de Formação abre com a pergunta 8 preenchida (L-014: criação + estado); sem nome → mensagem e nenhuma formação nova; request sem `nome` → 400
-- [ ] e2e `pre-cursos-id`: `PATCH` com a 8 em branco → 400 com `campo: "qualifNomeCurso"`
-- [ ] Helpers e2e que criam curso por request passam a mandar `nome`
-- [ ] Gate E2E passa
+- [x] `pre-curso.schema.test.ts`: `nome` ausente, `""` e `"   "` recusados com a mensagem exata; `"  Mecânica  "` vira `"Mecânica"`; `qualifNomeCurso: "  "` recusado
+- [x] e2e `cursos-novo`: criar com nome → o Cadastro de Formação abre com a pergunta 8 preenchida (L-014: criação + estado); sem nome → mensagem e nenhuma formação nova; request sem `nome` → 400
+- [x] e2e `pre-cursos-id`: `PATCH` com a 8 em branco → 400 com `campo: "qualifNomeCurso"`
+- [x] Helpers e2e que criam curso por request passam a mandar `nome`
+- [x] Gate E2E passa
 
 **Tests**: unit, e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(cursos): require a name when creating a course`
 

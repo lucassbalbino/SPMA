@@ -35,7 +35,7 @@ const criarCurso = (vlCursoAlocado: number) =>
     new Request("http://localhost/api/cursos", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ cdVerba, vlCursoAlocado }),
+      body: JSON.stringify({ nome: "Formação de Teste", cdVerba, vlCursoAlocado }),
     }),
   );
 
@@ -111,9 +111,12 @@ describe("curso em TB_Curso (integration)", () => {
         criadoPor: CNPJ_GO,
         dataCriacao: expect.any(String),
         status: "EM_ANDAMENTO",
-        respostas: null,
+        // RU-58: o pré nasce com o nome da formação na pergunta 8.
+        respostas: { qualifNomeCurso: "Formação de Teste" },
       }),
     );
+    // A P8 chega pela tradução chave → coluna; a coluna crua não vaza no JSON.
+    expect(Object.keys(corpo.preCurso)).not.toContain("p8");
     expect(corpo.posCurso).toEqual(
       expect.objectContaining({
         cdCurso: corpo.preCurso.cdCurso,
