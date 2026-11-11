@@ -568,12 +568,12 @@ T31
 
 ---
 
-### T17: `DELETE /api/usuarios/[documento]`
+### T17: `POST /api/usuarios/excluir`
 
-**What**: rota fina; alvo por `buscarUsuarioVisivel` (404 fora do escopo), autoridade por `podeEditarUsuario` (403).
-**Where**: `src/app/api/usuarios/[documento]/route.ts`
+**What**: rota fina com o documento no corpo (AD-029, GU-48, como o reset de senha); alvo e autoridade por `exigirAlvoEditavel` (403; 404 só para o AM).
+**Where**: `src/app/api/usuarios/excluir/route.ts`
 **Depends on**: T16
-**Reuses**: `exigirMutacao`, `buscarUsuarioVisivel`, `podeEditarUsuario`
+**Reuses**: `exigirMutacao`, `exigirAlvoEditavel`, `resetarSenhaSchema` (mesmo corpo `{ documento }`)
 **Requirement**: RU-30, RU-31, RU-32, RU-33
 
 **Tools**:
@@ -583,13 +583,13 @@ T31
 
 **Done when**:
 
-- [ ] e2e request em `e2e/usuarios-gestao.spec.ts`: 200, 409, 400 não-aluno, 404 fora do escopo, 403, sem CSRF → recusado
+- [ ] e2e request em `e2e/usuarios-gestao.spec.ts`: 200, 409, 400 não-aluno, 403 fora do escopo, 404 para AM com alvo inexistente, sem CSRF → recusado
 - [ ] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
 
-**Commit**: `feat(api): DELETE /api/usuarios/[documento]`
+**Commit**: `feat(api): add the student delete route`
 
 ---
 

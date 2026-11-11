@@ -18,7 +18,7 @@ graph TD
     NOME[src/lib/cursos/nome.ts NOVO<br/>nomeDaFormacao] --> LISTAS[listas e títulos]
     VALID[src/lib/api/requisicao.ts<br/>erro + campo, Zod pt] --> TELAS
     TEL[src/lib/validation/telefone.ts NOVO] --> FORMS[ofertante, perfil, dados pessoais]
-    EXC[src/lib/cursos/exclusao.ts NOVO<br/>src/lib/usuarios/gestao.ts excluirAluno] --> ROTAS[DELETE /api/cursos/id<br/>DELETE /api/usuarios/documento]
+    EXC[src/lib/cursos/exclusao.ts NOVO<br/>src/lib/usuarios/gestao.ts excluirAluno] --> ROTAS[DELETE /api/cursos/id<br/>POST /api/usuarios/excluir]
 ```
 
 ---
@@ -43,7 +43,7 @@ graph TD
 | 10, obs. | Excluir formação | novo `src/lib/cursos/exclusao.ts`, nova `src/app/api/cursos/[cdCurso]/route.ts`, `PreCursoForm.tsx` | RU-21..27 |
 | 11 | Valor previsto | `pos-cursos/[cdCurso]/page.tsx` (já lê o curso), `PosCursoForm.tsx:176` | RU-55, RU-56 |
 | 12 | Pendência fantasma | `src/components/formulario/useFormularioRespostas.ts`: `salvarRascunho` limpa `erro` mas nunca `pendentes`; `encerrar` não envia o que está em `alterados`. Correção: bloquear o Concluir enquanto `alterados` não está vazio | RU-01..03 |
-| 13, obs. | Excluir aluno | `src/lib/usuarios/gestao.ts`, nova `src/app/api/usuarios/[documento]/route.ts`, `LinhaUsuario.tsx` | RU-28..33 |
+| 13, obs. | Excluir aluno | `src/lib/usuarios/gestao.ts`, nova `src/app/api/usuarios/excluir/route.ts`, `LinhaUsuario.tsx` | RU-28..33 |
 | 14 | Mensagem em inglês / Parte 1 | `src/lib/api/requisicao.ts:30` devolve `issues[0].message` (padrão do Zod em inglês, sem a pergunta); `AvaliacaoForm.tsx:430` | RU-04..06, RU-09 |
 | 15 | Limite de 3 | `avaliacao.schema.ts:182`, `CampoResposta.tsx` (checkbox), `components/formulario/tipos.ts` | RU-07, RU-08 |
 
@@ -114,7 +114,7 @@ graph TD
 | Rota | Guarda | Corpo / Resposta |
 | --- | --- | --- |
 | `DELETE /api/cursos/[cdCurso]` | `exigirMutacao` + `podeGerenciarPreCurso` | 200 `{ ok: true }`; 403/404/409 |
-| `DELETE /api/usuarios/[documento]` | `exigirMutacao` + `buscarUsuarioVisivel` + `podeEditarUsuario` | 200; 400 não-aluno; 403/404/409 |
+| `POST /api/usuarios/excluir` (documento no corpo, AD-029/GU-48) | `exigirMutacao` + `exigirAlvoEditavel` | 200; 400 não-aluno; 403 (404 só para AM); 409 |
 | `PATCH /api/usuarios/me/perfil` | `exigirMutacao`; AL → 403 | `{ nome, email, telefone? }` → `{ usuario }` |
 
 ---

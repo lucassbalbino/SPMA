@@ -50,7 +50,8 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | Excluir formação: o que some | `TB_Curso` + `TB_Pre_Curso` + `TB_Pos_Curso` da formação, numa transação. O saldo do recurso volta sozinho (é calculado dos cursos) | FKs de pré e pós já têm `ON DELETE CASCADE` (AD-052.3) | y |
 | Excluir aluno: o que conta como "dados" | Linha em `TB_Dado_Pessoal_Aluno`, ou qualquer avaliação dele concluída ou com alguma resposta gravada | Resposta do usuário ("ter respondido algo"). A matrícula vazia nasce com o aluno e não conta | y |
 | Excluir aluno: o que some | O usuário, as matrículas vazias e as sessões | Sem isso o FK de `TB_Avaliacao_Aluno` barra o `DELETE` | y |
-| Quem exclui aluno | Quem pode editá-lo hoje (`podeEditarUsuario` sobre alvo vindo da consulta escopada) | Mesma autoridade da edição; nenhuma regra nova de permissão | n |
+| Quem exclui aluno | Quem pode editá-lo hoje (`exigirAlvoEditavel`: consulta escopada + `podeEditarUsuario`) | Mesma autoridade da edição e do reset de senha; nenhuma regra nova de permissão | n |
+| Rota do excluir aluno | `POST /api/usuarios/excluir` com `{ documento }` no corpo, e não `DELETE /api/usuarios/<documento>` | Corrigido na execução (2026-11-11): CPF na URL fere a AD-029, e o reset de senha já segue a regra de documento no corpo (GU-48). Fora do escopo vira 403, não 404, para não revelar quem existe (GU-28/GU-43) | n |
 | Regra nova de datas | Início da inscrição estritamente anterior ao início do curso. Nada mais cruza inscrição com curso | Texto do documento: "deve ser anterior". A regra término ≥ início já existe para os dois pares (AD-049.4) | y |
 | Quando as regras de data rodam | No `PATCH` só quando o corpo traz uma das 4 datas (13, 14, 17b, 17c), conferindo contra o estado mesclado; e sempre na conclusão. Supera o AD-049.4, que conferia a cada `PATCH` | Decisão do usuário (2026-11-11): cadastro antigo com datas fora de ordem não pode travar a gravação de outras perguntas | y |
 
@@ -166,10 +167,10 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 
 1. WHILE a linha de um Aluno está aberta para edição e a pessoa pode editá-lo o sistema SHALL mostrar o botão "Excluir". (RU-28)
 2. WHEN a pessoa clica em "Excluir" THEN o sistema SHALL pedir a mesma confirmação de RU-22. (RU-29)
-3. WHEN a exclusão é confirmada e o aluno não tem dados THEN `DELETE /api/usuarios/<documento>` SHALL apagar, numa transação, o usuário, as matrículas e as sessões dele, e responder 200. (RU-30)
+3. WHEN a exclusão é confirmada e o aluno não tem dados THEN `POST /api/usuarios/excluir`, com o documento no corpo e nunca na URL (AD-029, GU-48), SHALL apagar, numa transação, o usuário, as matrículas e as sessões dele, e responder 200. (RU-30)
 4. IF o aluno tem linha em `TB_Dado_Pessoal_Aluno`, ou uma avaliação concluída ou com alguma resposta gravada THEN a API SHALL responder 409 "Este aluno já tem dados preenchidos e não pode ser excluído." e não SHALL apagar nada. (RU-31)
 5. IF o alvo não é Aluno THEN a API SHALL responder 400 "Só é possível excluir aluno." (RU-32)
-6. IF o alvo está fora do escopo de quem pede THEN a API SHALL responder 404, e IF está no escopo mas a pessoa não pode editá-lo THEN SHALL responder 403. (RU-33)
+6. IF o alvo está fora do escopo de quem pede, ou a pessoa não pode editá-lo, THEN a API SHALL responder 403 "Você não tem permissão para editar este usuário"; só para o AM um alvo inexistente SHALL responder 404 (mesma guarda do reset de senha, `exigirAlvoEditavel`, GU-28/GU-43). (RU-33)
 
 **Independent Test**: Criar aluno e excluí-lo: some da lista. Aluno com dados pessoais: 409 e continua na lista.
 
