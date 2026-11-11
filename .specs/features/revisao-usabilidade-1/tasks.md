@@ -266,11 +266,12 @@ T31
 
 **Done when**:
 
-- [ ] `nome.test.ts`: P8 preenchida, com espaços nas pontas, só espaços, `""`, `null`, `undefined`
-- [ ] Gate Quick passa
+- [x] `nome.test.ts`: P8 preenchida, com espaços nas pontas, só espaços, `""`, `null`, `undefined`
+- [x] Gate Quick passa
 
 **Tests**: unit
 **Gate**: quick
+**Status**: Done
 
 **Commit**: `feat(cursos): course display name from question 8`
 
