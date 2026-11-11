@@ -159,6 +159,7 @@ const BLOCOS_PARTE_1: BlocoDef[] = [
         rotulo: "17. Quais os três (03) principais motivos para participar do Curso?",
         tipo: "checkboxes",
         opcoes: OPCOES_MOTIVOS_PARTICIPACAO,
+        maxSelecoes: 3,
       },
       {
         chave: "avalMotivFormaConhecimento",
@@ -463,7 +464,7 @@ export function AvaliacaoForm({
       <h2 className="text-sm font-semibold">Parte 2 — Avaliação Pós-Curso</h2>
       {!parte1Completa && (
         <p className="text-sm text-muted-foreground" data-testid="aviso-parte2-bloqueada">
-          Complete a Parte 1 para responder esta seção.
+          Para liberar a Parte 2, responda todas as perguntas da Parte 1 e clique em Salvar.
         </p>
       )}
       {renderBlocos(BLOCOS_PARTE_2, "parte2", !parte1Completa)}

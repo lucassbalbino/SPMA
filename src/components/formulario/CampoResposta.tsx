@@ -153,26 +153,33 @@ export function CampoResposta<C extends string, R>({
         </RadioGroup>
       );
       break;
-    case "checkboxes":
+    case "checkboxes": {
+      const marcadas = (valor as string[] | undefined) ?? [];
+      const tetoAtingido =
+        campo.maxSelecoes !== undefined && marcadas.length >= campo.maxSelecoes;
       controle = (
         <div data-testid={`campo-${campo.chave}-grupo`} className="flex flex-col gap-2">
-          {campo.opcoes?.map((opcao, indice) => (
-            <FieldLabel key={opcao} htmlFor={`${campo.chave}-${indice}`}>
-              <Checkbox
-                id={`${campo.chave}-${indice}`}
-                data-testid={`campo-${campo.chave}-opcao-${indice}`}
-                checked={((valor as string[] | undefined) ?? []).includes(opcao)}
-                onCheckedChange={(marcado) =>
-                  aoAlternarOpcao(campo, opcao, marcado === true)
-                }
-                disabled={desabilitado}
-              />
-              {opcao}
-            </FieldLabel>
-          ))}
+          {campo.opcoes?.map((opcao, indice) => {
+            const marcada = marcadas.includes(opcao);
+            return (
+              <FieldLabel key={opcao} htmlFor={`${campo.chave}-${indice}`}>
+                <Checkbox
+                  id={`${campo.chave}-${indice}`}
+                  data-testid={`campo-${campo.chave}-opcao-${indice}`}
+                  checked={marcada}
+                  onCheckedChange={(marcado) =>
+                    aoAlternarOpcao(campo, opcao, marcado === true)
+                  }
+                  disabled={desabilitado || (tetoAtingido && !marcada)}
+                />
+                {opcao}
+              </FieldLabel>
+            );
+          })}
         </div>
       );
       break;
+    }
   }
 
   return (

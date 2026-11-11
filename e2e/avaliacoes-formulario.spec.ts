@@ -346,11 +346,47 @@ test("antes da Parte 1 completa, os controles de Parte 2 aparecem desabilitados 
   await login(page, CPF_AL_A);
   await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
 
-  await expect(page.getByTestId("aviso-parte2-bloqueada")).toBeVisible();
+  // RU-09 (doc 14): o aviso diz o que fazer para liberar a Parte 2.
+  await expect(page.getByTestId("aviso-parte2-bloqueada")).toHaveText(
+    "Para liberar a Parte 2, responda todas as perguntas da Parte 1 e clique em Salvar.",
+  );
   await abrirBloco(blocoParte2(page, 1), "bloco-parte2-1");
   await expect(
     page.getByTestId("campo-avalParticipConcluiuCurso-grupo").getByRole("radio").first(),
   ).toBeDisabled();
+});
+
+// RU-08 (doc 15): com 3 motivos marcados na 17, as outras opções travam.
+test("RU-08: na pergunta 17, marcar 3 motivos desabilita os restantes; desmarcar um libera", async ({
+  page,
+}) => {
+  const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
+
+  await login(page, CPF_AL_A);
+  await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
+  await abrirBloco(blocoParte1(page, 3), "bloco-parte1-3");
+
+  const opcao = (indice: number) =>
+    page.getByTestId(`campo-avalMotivMotivosParticipacao-opcao-${indice}`);
+
+  await marcarOpcao(page, "avalMotivMotivosParticipacao", 0);
+  await marcarOpcao(page, "avalMotivMotivosParticipacao", 1);
+  await expect(opcao(2)).toBeEnabled();
+  await marcarOpcao(page, "avalMotivMotivosParticipacao", 2);
+
+  for (const indice of [3, 4, 5]) {
+    await expect(opcao(indice)).toBeDisabled();
+    await expect(opcao(indice)).not.toBeChecked();
+  }
+  for (const indice of [0, 1, 2]) {
+    await expect(opcao(indice)).toBeEnabled();
+  }
+
+  await opcao(1).click();
+  await expect(opcao(1)).not.toBeChecked();
+  for (const indice of [3, 4, 5]) {
+    await expect(opcao(indice)).toBeEnabled();
+  }
 });
 
 test("Concluiu='Não' + motivo, sem preencher o restante da Parte 2, encerra com sucesso (AVAL-12)", async ({

@@ -239,12 +239,13 @@ T31
 
 **Done when**:
 
-- [ ] e2e em `e2e/avaliacoes-formulario.spec.ts`: com 3 marcados, as 3 restantes estão `disabled`; desmarcar uma reabilita
-- [ ] e2e: texto exato de RU-09 visível com Parte 1 incompleta
-- [ ] Gate E2E passa
+- [x] e2e em `e2e/avaliacoes-formulario.spec.ts`: com 3 marcados, as 3 restantes estão `disabled`; desmarcar uma reabilita
+- [x] e2e: texto exato de RU-09 visível com Parte 1 incompleta
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(avaliacao): cap reason selection at three and explain how to unlock part 2`
 
