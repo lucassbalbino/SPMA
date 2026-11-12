@@ -6,7 +6,7 @@
 import type { StatusFormulario } from "../../generated/prisma/enums";
 
 export const MENSAGEM_PRE_CURSO_EM_ANDAMENTO =
-  "Encerre o pré-curso antes de preencher o pós-curso";
+  "Conclua o Cadastro de Formação antes de preencher a Avaliação de Formação";
 
 // O status chega pelo curso (`curso.preCurso`, AD-052), que o Prisma tipa
 // como opcional; sem pré-curso, o pós continua fechado.

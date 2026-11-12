@@ -257,12 +257,14 @@ test.describe("casca comum", () => {
     const links = linksDoMenu(pagina);
     await expect(links).toHaveText([
       "Painel",
-      "Gestão de usuários",
-      // GV-27 (AD-046): o GT ganhou "Verbas".
-      "Verbas",
-      "Pré-cursos",
-      "Pós-cursos",
+      "Gestão de Usuários",
+      // GV-27 (AD-046): o GT ganhou "Verbas", hoje "Gestão de Recursos" (RU-36).
+      "Gestão de Recursos",
+      "Cadastro de Formação",
+      "Avaliação de Formação",
       "Avaliações Aluno",
+      // RU-47: Editar Perfil fecha o menu de todos os perfis.
+      "Editar Perfil",
     ]);
     await contexto.close();
   });
@@ -326,11 +328,13 @@ test.describe("menu de navegação por perfil", () => {
 
     await expect(linksDoMenu(page)).toHaveText([
       "Painel",
-      "Gestão de usuários",
-      "Verbas",
-      "Pré-cursos",
-      "Pós-cursos",
+      "Gestão de Usuários",
+      "Gestão de Recursos",
+      "Cadastro de Formação",
+      "Avaliação de Formação",
       "Avaliações Aluno",
+      // RU-47: Editar Perfil fecha o menu de todos os perfis.
+      "Editar Perfil",
     ]);
   });
 
@@ -342,7 +346,8 @@ test.describe("menu de navegação por perfil", () => {
     await logar(page, CPF_NAV_AL, SENHA);
     await page.goto("/painel");
 
-    await expect(linksDoMenu(page)).toHaveText(["Painel", "Minha avaliação", "Meus dados"]);
+    // RU-47: "Meus dados" passou a se chamar "Editar Perfil".
+    await expect(linksDoMenu(page)).toHaveText(["Painel", "Minha avaliação", "Editar Perfil"]);
   });
 
   test("UI-02: AL não vê Pré-cursos nem Pós-cursos", async ({ page }) => {
@@ -350,8 +355,8 @@ test.describe("menu de navegação por perfil", () => {
     await page.goto("/painel");
 
     const menu = menuDaCasca(page);
-    await expect(menu.getByRole("link", { name: "Pré-cursos" })).toHaveCount(0);
-    await expect(menu.getByRole("link", { name: "Pós-cursos" })).toHaveCount(0);
+    await expect(menu.getByRole("link", { name: "Cadastro de Formação" })).toHaveCount(0);
+    await expect(menu.getByRole("link", { name: "Avaliação de Formação" })).toHaveCount(0);
   });
 
   test("UI-02: VT não vê Gestão de usuários", async ({ page }) => {
@@ -359,7 +364,7 @@ test.describe("menu de navegação por perfil", () => {
     await page.goto("/painel");
 
     const menu = menuDaCasca(page);
-    await expect(menu.getByRole("link", { name: "Gestão de usuários" })).toHaveCount(0);
+    await expect(menu.getByRole("link", { name: "Gestão de Usuários" })).toHaveCount(0);
     // O menu renderizou: a ausência acima é do item, não do menu inteiro.
     await expect(menu.getByRole("link", { name: "Painel" })).toHaveCount(1);
   });
@@ -388,7 +393,7 @@ test.describe("menu de navegação por perfil", () => {
     await page.goto("/pre-cursos/999999999");
 
     const menu = menuDaCasca(page);
-    await expect(menu.getByRole("link", { name: "Pré-cursos" })).toHaveAttribute(
+    await expect(menu.getByRole("link", { name: "Cadastro de Formação" })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -403,9 +408,9 @@ test.describe("menu de navegação por perfil", () => {
     // Inclui as rotas-filhas, onde quem deve ficar marcado e o item pai.
     const esperado: Array<[string, string]> = [
       ["/painel", "Painel"],
-      ["/usuarios", "Gestão de usuários"],
-      ["/pre-cursos", "Pré-cursos"],
-      ["/pos-cursos", "Pós-cursos"],
+      ["/usuarios", "Gestão de Usuários"],
+      ["/pre-cursos", "Cadastro de Formação"],
+      ["/pos-cursos", "Avaliação de Formação"],
       ["/avaliacoes", "Avaliações Aluno"],
     ];
 
@@ -423,7 +428,7 @@ test.describe("menu de navegação por perfil", () => {
     await logar(page, CPF_NAV_GT, SENHA);
     await page.goto("/painel");
 
-    await linksDoMenu(page).filter({ hasText: "Pós-cursos" }).click();
+    await linksDoMenu(page).filter({ hasText: "Avaliação de Formação" }).click();
 
     await expect(page).toHaveURL(/\/pos-cursos$/);
   });
@@ -440,7 +445,7 @@ test.describe("menu de navegação por perfil", () => {
 
     await logar(page, CPF_NAV_GT, SENHA);
     await page.goto("/painel");
-    await linksDoMenu(page).filter({ hasText: "Pré-cursos" }).click();
+    await linksDoMenu(page).filter({ hasText: "Cadastro de Formação" }).click();
     await expect(page).toHaveURL(/\/pre-cursos$/);
 
     expect(erros.filter((e) => /hydrat|hidrat/i.test(e))).toEqual([]);

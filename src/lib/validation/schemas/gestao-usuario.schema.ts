@@ -7,6 +7,7 @@
 // O documento-alvo e a busca trafegam só no corpo (GU-48), por isso estes
 // schemas existem: nenhuma rota desta feature lê documento de URL.
 import { z } from "zod";
+import "../zod-pt";
 import { TipoUsuario } from "../../../generated/prisma/enums";
 import { normalizarDocumento } from "../documento";
 

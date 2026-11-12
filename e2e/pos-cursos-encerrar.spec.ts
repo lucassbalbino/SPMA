@@ -131,7 +131,7 @@ test("AD-050: com o pré-curso em andamento, gravar e encerrar o pós-curso resp
 
   for (const res of [resGravar, resEncerrar]) {
     expect(res.status()).toBe(409);
-    expect((await res.json()).erro).toBe("Encerre o pré-curso antes de preencher o pós-curso");
+    expect((await res.json()).erro).toBe("Conclua o Cadastro de Formação antes de preencher a Avaliação de Formação");
   }
   expect(getPosCurso(cdCurso)?.status).toBe("EM_ANDAMENTO");
 

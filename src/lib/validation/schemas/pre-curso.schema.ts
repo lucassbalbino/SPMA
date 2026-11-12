@@ -1,10 +1,23 @@
 import { z } from "zod";
+import "../zod-pt";
 import { multiplaComExclusiva } from "../multipla";
 
+// Toda formação nasce com nome e não pode perdê-lo (RU-57, RU-59): a mesma
+// regra vale na criação e na pergunta 8, que é onde o nome mora (AD-052.2).
+export const MENSAGEM_NOME_FORMACAO = "Nome da formação é obrigatório";
+
+function nomeDaFormacaoObrigatorio() {
+  return z
+    .string({ error: MENSAGEM_NOME_FORMACAO })
+    .trim()
+    .min(1, { message: MENSAGEM_NOME_FORMACAO });
+}
+
 // Criação do CURSO (REQ-PC-01): o corpo de POST /api/cursos, que grava
-// PreCurso e PosCurso na mesma transação.
+// PreCurso e PosCurso na mesma transação. O nome vai para a P8 do pré.
 export const criarCursoSchema = z.object({
-  cdVerba: z.number().int().positive({ message: "Verba é obrigatória" }),
+  nome: nomeDaFormacaoObrigatorio(),
+  cdVerba: z.number().int().positive({ message: "Recurso é obrigatório" }),
   vlCursoAlocado: z.number().positive({ message: "Valor alocado deve ser positivo" }),
 });
 
@@ -236,7 +249,7 @@ export const respostasPreCursoSchema = z.object({
   qualifUf: z.enum(OPCOES_UF),
   qualifOutrosMunicipios: z.enum(OPCOES_SIM_NAO),
   qualifOutrosMunicipiosQuais: z.string().min(1).optional(),
-  qualifNomeCurso: z.string().min(1),
+  qualifNomeCurso: nomeDaFormacaoObrigatorio(),
   qualifVinculoPrograma: z.enum(OPCOES_SIM_NAO),
   qualifVinculoProgramaQual: z.string().min(1).optional(),
   qualifCaracteristicas: z.array(z.enum(OPCOES_CARACTERISTICAS)).min(1),
@@ -341,16 +354,50 @@ export type RespostasPreCursoParcial = z.infer<
 // da requisição. Comparação lexicográfica é válida porque `z.iso.date()`
 // garante o formato `YYYY-MM-DD`. Vale para os dois pares: curso (Q13/Q14)
 // e inscrição (Q17b/Q17c, AD-049), cada um avaliado por si.
-export function ordemDatasValida(dados: {
+//
+// Revisão de usabilidade (doc 9, RU-40 a RU-42): cada regra tem a própria
+// mensagem, e entra uma terceira - a inscrição começa ANTES da formação.
+// Supera, nesse ponto, a AD-049.4 ("nenhuma regra cruza inscrição com início
+// do curso").
+type DatasPlanejamento = {
   planejDataInicioPrevista?: string;
   planejDataTerminoPrevista?: string;
   planejDataInicioInscricao?: string;
   planejDataTerminoInscricao?: string;
-}): boolean {
-  return (
-    parEmOrdem(dados.planejDataInicioPrevista, dados.planejDataTerminoPrevista) &&
-    parEmOrdem(dados.planejDataInicioInscricao, dados.planejDataTerminoInscricao)
-  );
+};
+
+/** As 4 datas do planejamento (Q13, Q14, Q17b, Q17c). */
+export const CHAVES_DATAS_PLANEJAMENTO = [
+  "planejDataInicioPrevista",
+  "planejDataTerminoPrevista",
+  "planejDataInicioInscricao",
+  "planejDataTerminoInscricao",
+] as const;
+
+export const MENSAGEM_TERMINO_FORMACAO =
+  "A data de término da formação não pode ser anterior à data de início.";
+export const MENSAGEM_TERMINO_INSCRICAO =
+  "A data de término da inscrição não pode ser anterior à data de início.";
+export const MENSAGEM_INSCRICAO_ANTES_DA_FORMACAO =
+  "A data de início da inscrição deve ser anterior à data de início da formação.";
+
+/** A mensagem da primeira regra de ordem violada, ou `null` se todas valem. */
+export function violacaoOrdemDatas(dados: DatasPlanejamento): string | null {
+  if (!parEmOrdem(dados.planejDataInicioPrevista, dados.planejDataTerminoPrevista)) {
+    return MENSAGEM_TERMINO_FORMACAO;
+  }
+  if (!parEmOrdem(dados.planejDataInicioInscricao, dados.planejDataTerminoInscricao)) {
+    return MENSAGEM_TERMINO_INSCRICAO;
+  }
+  const { planejDataInicioInscricao: inscricao, planejDataInicioPrevista: formacao } = dados;
+  if (inscricao && formacao && inscricao >= formacao) {
+    return MENSAGEM_INSCRICAO_ANTES_DA_FORMACAO;
+  }
+  return null;
+}
+
+export function ordemDatasValida(dados: DatasPlanejamento): boolean {
+  return violacaoOrdemDatas(dados) === null;
 }
 
 function parEmOrdem(inicio?: string, termino?: string): boolean {

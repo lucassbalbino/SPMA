@@ -11,6 +11,8 @@ import { exigirMutacao } from "@/lib/api/guardas";
 import { idPositivo } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
 import { encerrarFormulario } from "@/lib/respostas/encerramento";
+import { lerRespostas } from "@/lib/respostas/repositorio";
+import { violacaoOrdemDatas } from "@/lib/validation/schemas/pre-curso.schema";
 import { comCurso, incluirCurso } from "@/lib/cursos/curso";
 
 type Contexto = { params: Promise<{ id: string }> };
@@ -25,7 +27,7 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
   });
 
   if (!preCurso) {
-    throw erroHttp(404, "Pré-curso não encontrado");
+    throw erroHttp(404, "Cadastro de Formação não encontrado");
   }
 
   if (!podeGerenciarPreCurso(sessao.usuario, preCurso.curso.cdOfertante)) {
@@ -34,7 +36,16 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
 
   // AD-018/RN-09: transição irreversível - encerrar de novo é rejeitado.
   if (preCurso.status === "ENCERRADO") {
-    throw erroHttp(409, "Pré-curso já está encerrado");
+    throw erroHttp(409, "Cadastro de Formação já está encerrado");
+  }
+
+  // RU-62: a ordem das datas é conferida sempre na conclusão, mesmo que a
+  // gravação não a tenha conferido (o PATCH só confere quando recebe datas).
+  const violacao = violacaoOrdemDatas(
+    await lerRespostas(prisma, { formulario: "preCurso", cdCurso }),
+  );
+  if (violacao) {
+    throw erroHttp(400, violacao);
   }
 
   // Respostas de perguntas condicionais que a resposta-mãe tornou

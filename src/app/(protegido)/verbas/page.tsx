@@ -22,10 +22,10 @@ export default async function VerbasPage() {
     return (
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Verbas</CardTitle>
+          <CardTitle>Recursos</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Seu perfil não tem acesso a verbas.</p>
+          <p className="text-sm text-muted-foreground">Seu perfil não tem acesso a recursos.</p>
         </CardContent>
       </Card>
     );
@@ -50,7 +50,7 @@ export default async function VerbasPage() {
       {gerencia && (
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Nova verba</CardTitle>
+            <CardTitle>Novo recurso</CardTitle>
           </CardHeader>
           <CardContent>
             <NovaVerbaForm gos={gos} />
@@ -60,7 +60,8 @@ export default async function VerbasPage() {
 
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Verbas</CardTitle>
+          {/* RU-37 (doc 3): para o ofertante (GO/VO), o que chega são recursos recebidos. */}
+          <CardTitle>{gerencia ? "Recursos" : "Recursos Recebidos"}</CardTitle>
         </CardHeader>
         <CardContent>
           <ListaVerbas

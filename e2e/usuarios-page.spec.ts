@@ -11,6 +11,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   criarAvaliacao,
+  criarDadosPessoais,
   criarPreCurso,
   criarVerba,
   deleteAvaliacoesPorCpf,
@@ -241,12 +242,13 @@ test("AVAL-01: o GO só vê no seletor os cursos do próprio Ofertante e não en
 
   await page.locator("select#tipo").selectOption("AL");
   const opcoes = await page.locator("select#cdCurso option").allTextContents();
-  expect(opcoes).toEqual(["Selecione", `Curso #${cdCursoDoGo}`]);
+  // RU-11: sem P8, a formação aparece pelo texto de reserva, sem "#".
+  expect(opcoes).toEqual(["Selecione", `Formação sem nome (nº ${cdCursoDoGo})`]);
 
   await page.getByLabel("CPF").fill(CPF_NOVO_AL_SEM_CURSO);
   await page.getByRole("button", { name: "Criar usuário" }).click();
 
-  await expect(page.getByText("Curso é obrigatório")).toBeVisible();
+  await expect(page.getByText("Formação é obrigatória")).toBeVisible();
   expect(getUsuario(CPF_NOVO_AL_SEM_CURSO)).toBeNull();
 });
 
@@ -713,6 +715,8 @@ test.describe("edição na linha da Gestão de usuários", () => {
     page,
   }) => {
     await abrirListaDoGT(page);
+    // RU-38 (doc 4): o título da lista.
+    await expect(page.getByText("Usuários Cadastrados", { exact: true })).toBeVisible();
 
     const editar = { name: "Editar" };
     await expect(linhaDe(page, CPF_VT_EDICAO).getByRole("button", editar)).toHaveCount(1);
@@ -833,5 +837,73 @@ test.describe("edição na linha da Gestão de usuários", () => {
     expect(resetado?.primeiraVez).toBe(true);
     // GU-49: editar e resetar também não tocam a URL.
     expect(page.url()).toMatch(/\/usuarios$/);
+  });
+});
+
+// RU-28/RU-29 (doc 13): excluir aluno pela linha da gestão. Documentos
+// próprios (índices 320+); a regra em si tem teste de integração e de rota.
+test.describe("excluir aluno na linha da Gestão de usuários", () => {
+  const CPF_GT_EXCLUSAO = gerarCpfLista(320);
+  const CPF_AL_VAZIO = gerarCpfLista(321);
+  const CPF_AL_COM_DADOS = gerarCpfLista(322);
+  const CPF_VT_EXCLUSAO = gerarCpfLista(323);
+  const DOCS = [CPF_GT_EXCLUSAO, CPF_AL_VAZIO, CPF_AL_COM_DADOS, CPF_VT_EXCLUSAO];
+
+  test.beforeAll(() => {
+    deleteUsuarios(DOCS);
+    upsertUsuario({ cpf: CPF_GT_EXCLUSAO, tipo: "GT", senha: SENHA, primeiraVez: false, nome: "GU-E2E Excluir GT" });
+    upsertUsuario({ cpf: CPF_AL_VAZIO, tipo: "AL", nome: "GU-E2E Excluir AL Vazio" });
+    upsertUsuario({ cpf: CPF_AL_COM_DADOS, tipo: "AL", nome: "GU-E2E Excluir AL Dados" });
+    upsertUsuario({ cpf: CPF_VT_EXCLUSAO, tipo: "VT", nome: "GU-E2E Excluir VT" });
+    criarDadosPessoais(CPF_AL_COM_DADOS, {
+      avalPessoalEstado: "SP",
+      avalPessoalMunicipio: "São Paulo, SP",
+      avalPessoalGenero: "Masculino",
+      avalPessoalFaixaEtaria: "36 a 50 anos",
+      avalPessoalEscolaridade: "Ensino superior completo",
+      avalPessoalRacaEtnia: "Branco",
+      avalPessoalCondicaoPcd: "Não sou uma Pessoa com Deficiência.",
+    });
+  });
+
+  test.afterAll(() => deleteUsuarios(DOCS));
+
+  async function abrirLinha(page: Page, documento: string) {
+    await entrar(page, CPF_GT_EXCLUSAO);
+    await page.goto("/usuarios");
+    await page.getByLabel("Buscar usuários").fill("GU-E2E Excluir");
+    const linha = linhas(page).filter({ hasText: formatarDocumento(documento) });
+    await linha.getByRole("button", { name: "Editar" }).click();
+    return linha;
+  }
+
+  test("RU-28: o Excluir aparece na linha do aluno e não na de outro perfil", async ({ page }) => {
+    const vt = await abrirLinha(page, CPF_VT_EXCLUSAO);
+    await expect(vt.getByRole("button", { name: "Resetar senha" })).toBeVisible();
+    await expect(vt.getByRole("button", { name: "Excluir" })).toHaveCount(0);
+  });
+
+  test("RU-31 na tela: aluno com dados mostra a recusa na linha e continua", async ({ page }) => {
+    const linha = await abrirLinha(page, CPF_AL_COM_DADOS);
+
+    await linha.getByRole("button", { name: "Excluir" }).click();
+    await page.getByTestId("confirmacao").getByRole("button", { name: "Sim" }).click();
+
+    await expect(linha).toContainText("Este aluno já tem dados preenchidos e não pode ser excluído.");
+    expect(getUsuario(CPF_AL_COM_DADOS)).not.toBeNull();
+  });
+
+  test("RU-29/RU-30: Excluir pede a confirmação e, com 'Sim', o aluno some da lista", async ({ page }) => {
+    const linha = await abrirLinha(page, CPF_AL_VAZIO);
+
+    await linha.getByRole("button", { name: "Excluir" }).click();
+    const confirmacao = page.getByTestId("confirmacao");
+    await expect(confirmacao).toContainText(
+      "Tem certeza que deseja excluir o cadastro? Após a exclusão não será possível recuperar os dados.",
+    );
+    await confirmacao.getByRole("button", { name: "Sim" }).click();
+
+    await expect(linhas(page).filter({ hasText: formatarDocumento(CPF_AL_VAZIO) })).toHaveCount(0);
+    expect(getUsuario(CPF_AL_VAZIO)).toBeNull();
   });
 });

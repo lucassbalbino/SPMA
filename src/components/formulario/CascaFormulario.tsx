@@ -13,6 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldError } from "@/components/ui/field";
 import type { StatusFormulario } from "@/generated/prisma/enums";
+import { ConfirmarAcao } from "./ConfirmarAcao";
+
+// Textos literais do documento do cliente (doc 10), com "automático"
+// corrigido para "automaticamente".
+const AVISO_SALVAMENTO =
+  "O sistema não salva automaticamente. Salve o progresso do cadastramento.";
+const PERGUNTA_CONCLUSAO =
+  "Após a conclusão não será possível alterar os dados, tem certeza que deseja concluir?";
 
 export function CascaFormulario({
   testid,
@@ -20,12 +28,16 @@ export function CascaFormulario({
   status,
   somenteLeitura,
   erro,
+  campoDoErro = null,
+  mensagem,
   pendentes,
   rotuloDaChave,
   salvando,
   encerrando,
   aoSalvar,
   aoEncerrar,
+  podeConcluir,
+  acaoExtra,
   children,
 }: {
   /** Sufixo dos `data-testid` - "pre-curso", "pos-curso" ou "avaliacao". */
@@ -34,6 +46,10 @@ export function CascaFormulario({
   status: StatusFormulario;
   somenteLeitura: boolean;
   erro: string | null;
+  /** Chave da pergunta recusada pelo servidor: o erro sai com o rótulo dela na frente. */
+  campoDoErro?: string | null;
+  /** Confirmação de uma gravação bem-sucedida ("Alterações salvas."). */
+  mensagem: string | null;
   pendentes: string[];
   /** Traduz a chave crua devolvida pela API no rótulo que a pessoa leu na tela. */
   rotuloDaChave: (chave: string) => string;
@@ -41,6 +57,10 @@ export function CascaFormulario({
   encerrando: boolean;
   aoSalvar: () => void;
   aoEncerrar: () => void;
+  /** Checagem antes de abrir a confirmação (alteração não salva bloqueia, RU-02). */
+  podeConcluir?: () => boolean;
+  /** Ação a mais ao lado de Salvar/Concluir (o Excluir do Cadastro de Formação). */
+  acaoExtra?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -50,17 +70,32 @@ export function CascaFormulario({
         <p className="text-sm text-muted-foreground" data-testid={`status-${testid}`}>
           {status === "ENCERRADO" ? "Encerrado" : "Em andamento"}
         </p>
-        {somenteLeitura && (
+        {somenteLeitura ? (
           <p
             className="text-sm text-muted-foreground"
             data-testid={`somente-leitura-${testid}`}
           >
             Somente leitura.
           </p>
+        ) : (
+          // RU-20 (doc 10): não há salvamento automático, e a pessoa precisa
+          // saber disso enquanto ainda pode perder o que digitou.
+          <p className="text-sm font-medium" data-testid={`aviso-salvamento-${testid}`}>
+            {AVISO_SALVAMENTO}
+          </p>
         )}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {erro && <FieldError data-testid={`erro-${testid}`}>{erro}</FieldError>}
+        {erro && (
+          <FieldError data-testid={`erro-${testid}`}>
+            {campoDoErro ? `${rotuloDaChave(campoDoErro)}: ${erro}` : erro}
+          </FieldError>
+        )}
+        {mensagem && (
+          <p role="status" className="text-sm text-muted-foreground" data-testid={`salvo-${testid}`}>
+            {mensagem}
+          </p>
+        )}
         {pendentes.length > 0 && (
           <div data-testid="lista-pendencias" className="text-sm text-destructive">
             <p>Campos pendentes:</p>
@@ -79,14 +114,15 @@ export function CascaFormulario({
             <Button type="button" onClick={aoSalvar} disabled={salvando || encerrando}>
               Salvar
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={aoEncerrar}
+            {/* RU-17/RU-18: a conclusão é irreversível (AD-018) - só com "Sim". */}
+            <ConfirmarAcao
+              rotulo="Concluir"
+              pergunta={PERGUNTA_CONCLUSAO}
+              aoConfirmar={aoEncerrar}
+              podeAbrir={podeConcluir}
               disabled={salvando || encerrando}
-            >
-              Encerrar
-            </Button>
+            />
+            {acaoExtra}
           </div>
         )}
       </CardContent>

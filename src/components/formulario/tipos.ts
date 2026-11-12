@@ -49,6 +49,12 @@ export interface CampoDef<C extends string, R> {
    */
   exclusiva?: string;
   /**
+   * Teto de opções marcadas num campo `checkboxes` ("os três principais
+   * motivos"). Atingido o teto, as opções não marcadas ficam desabilitadas
+   * (RU-08); o servidor recusa o excesso de qualquer forma (RU-07).
+   */
+  maxSelecoes?: number;
+  /**
    * Notas de um campo `escala` que não usa a escala do formulário (a nota de
    * 0 a 10 da avaliação, ao lado das de Ótimo a Péssimo).
    */

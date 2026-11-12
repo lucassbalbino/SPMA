@@ -15,10 +15,16 @@ Corroborated across multiple features. Safe to apply as guidance.
 - last seen: 2026-10-13T13:02:07Z
 
 ### L-030 - When a spec AC lists multiple visible facts for one UI element (name, number, balance, etc.), assert each fact's rendered text individually - a testid match or a single field checked is not evidence for the others.
-- signal: `ac_gap` · recurrence: 2 feature(s) · scope: `e2e` · harmful: 0
+- signal: `ac_gap` · recurrence: 2 feature(s) · scope: `e2e` · harmful: 1
 - features: criacao-curso-por-am, alteracoes-mtur-1
 - evidence: CURSO-02 (e2e/pre-cursos-novo.spec.ts:73-84) (e2e) (+1 more)
-- last seen: 2026-10-20T12:33:39Z
+- last seen: 2026-11-12T20:20:03Z
+
+### L-045 - Give each spec edge case its own row in the Test Coverage Matrix; unmapped edge cases ship untested.
+- signal: `ac_gap` · recurrence: 2 feature(s) · scope: `tests` · harmful: 0
+- features: gestao-de-usuarios, revisao-usabilidade-1
+- evidence: spec.md Edge Cases: last row emptied after edit; empty GO list (tests) (+1 more)
+- last seen: 2026-11-12T20:20:02Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -52,12 +58,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - signal: `ac_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
 - features: gestao-de-usuarios
 - evidence: GU-48 e2e/usuarios-gestao.spec.ts:157 (UI requests unobserved) (e2e)
-- last seen: 2026-10-13T13:02:05Z
-
-### L-045 - Give each spec edge case its own row in the Test Coverage Matrix; unmapped edge cases ship untested.
-- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
-- features: gestao-de-usuarios
-- evidence: spec.md Edge Cases: last row emptied after edit; empty GO list (tests)
 - last seen: 2026-10-13T13:02:05Z
 
 ### L-046 - When an AC states a layout order, assert the order, not just that both elements render.
@@ -155,6 +155,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: tabela-curso
 - evidence: CUR-13 src/lib/usuarios/gestao.integration.test.ts:156 (spec)
 - last seen: 2026-10-28T14:25:26Z
+
+### L-062 - Cover every route a feature rewrites, including list endpoints, with an assertion on the response field the AC names.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: revisao-usabilidade-1
+- evidence: M14 src/app/api/avaliacoes/[cpf]/[cdCurso]/route.ts:107 (routes)
+- last seen: 2026-11-12T20:20:01Z
+
+### L-063 - When an AC says a label shows only one field, enumerate every extra the planned label carries or forbid extras explicitly.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: revisao-usabilidade-1
+- evidence: RU-16 e2e/cursos-novo.spec.ts:126 (spec)
+- last seen: 2026-11-12T20:20:02Z
+
+### L-064 - Bound an every-visible-text terminology criterion with an explicit include and exclude list, such as questionnaire question texts.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: revisao-usabilidade-1
+- evidence: RU-39 src/app/(protegido)/avaliacoes/[cpf]/[cdCurso]/AvaliacaoForm.tsx:468 (spec)
+- last seen: 2026-11-12T20:20:03Z
 
 ## Quarantined (failed when applied - ignore)
 

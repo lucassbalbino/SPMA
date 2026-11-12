@@ -570,7 +570,7 @@ test("AVAL-01: criar Aluno sem curso recebe 400 e o usuário não é criado", as
   });
 
   expect(res.status()).toBe(400);
-  expect((await res.json()).erro).toBe("Curso é obrigatório para Aluno");
+  expect((await res.json()).erro).toBe("Formação é obrigatória para Aluno");
   expect(getUsuario(CPF_NOVO_AL_SEM_CURSO)).toBeNull();
 
   await cliente.dispose();
@@ -610,7 +610,7 @@ test("criar Aluno com cdCurso inexistente recebe 404 e nada é criado", async ()
   });
 
   expect(res.status()).toBe(404);
-  expect((await res.json()).erro).toBe("Curso não encontrado");
+  expect((await res.json()).erro).toBe("Formação não encontrada");
   expect(getUsuario(CPF_NOVO_AL_CURSO_INEXISTENTE)).toBeNull();
 
   await cliente.dispose();
@@ -630,7 +630,7 @@ test("curso informado na criação de quem não é Aluno é rejeitado com 400", 
   });
 
   expect(res.status()).toBe(400);
-  expect((await res.json()).erro).toBe("Curso só se aplica à criação de Aluno");
+  expect((await res.json()).erro).toBe("Formação só se aplica à criação de Aluno");
   expect(getUsuario(CPF_NOVO_AL_SEM_CURSO)).toBeNull();
 
   await cliente.dispose();

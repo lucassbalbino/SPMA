@@ -19,6 +19,7 @@ import { exigirMutacao } from "@/lib/api/guardas";
 import { corpoValidado } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
 import { comCurso, incluirCurso } from "@/lib/cursos/curso";
+import { paraColunas } from "@/lib/respostas/colunas";
 
 async function criarCurso(request: Request) {
   const sessao = await exigirMutacao(request);
@@ -27,7 +28,7 @@ async function criarCurso(request: Request) {
   const verba = await prisma.verba.findUnique({ where: { cdVerba: dados.cdVerba } });
 
   if (!verba) {
-    throw erroHttp(400, "Verba informada não existe");
+    throw erroHttp(400, "Recurso informado não existe");
   }
 
   // REQ-PC-01/03: só o GO vinculado ao Ofertante da Verba cria o curso (e o
@@ -43,7 +44,7 @@ async function criarCurso(request: Request) {
   );
 
   if (!valido) {
-    throw erroHttp(400, "Valor alocado excede o saldo disponível da verba", {
+    throw erroHttp(400, "Valor alocado excede o saldo disponível do recurso", {
       saldoDisponivel,
     });
   }
@@ -69,8 +70,13 @@ async function criarCurso(request: Request) {
       },
     });
 
+    // RU-58: o nome da formação nasce na pergunta 8, que é onde ele mora
+    // (AD-052.2) - pela tradução chave → coluna de sempre, não pela P8 crua.
     const preCursoCriado = await tx.preCurso.create({
-      data: { cdCurso: curso.cdCurso },
+      data: {
+        cdCurso: curso.cdCurso,
+        ...paraColunas("preCurso", { qualifNomeCurso: dados.nome }),
+      },
       include: incluirCurso("preCurso"),
     });
     const posCursoCriado = await tx.posCurso.create({
@@ -84,11 +90,11 @@ async function criarCurso(request: Request) {
     };
   });
 
-  // Os dois nascem sem nenhuma linha de resposta - `null`, como a coluna
-  // JSON devolvia.
+  // O pré nasce só com o nome (pergunta 8); o pós, sem nenhuma resposta -
+  // `null`, como a coluna JSON devolvia.
   return NextResponse.json(
     {
-      preCurso: { ...preCurso, respostas: null },
+      preCurso: { ...preCurso, respostas: { qualifNomeCurso: dados.nome } },
       posCurso: { ...posCurso, respostas: null },
     },
     { status: 201 },

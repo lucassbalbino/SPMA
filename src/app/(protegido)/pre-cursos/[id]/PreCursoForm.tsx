@@ -15,11 +15,15 @@
 // `CampoResposta`.
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { headerCSRF } from "@/lib/security/csrf-client";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { CampoResposta } from "@/components/formulario/CampoResposta";
 import { CascaFormulario } from "@/components/formulario/CascaFormulario";
+import { ConfirmarAcao, PERGUNTA_EXCLUSAO } from "@/components/formulario/ConfirmarAcao";
 import { MatrizEscala, segmentarCampos } from "@/components/formulario/MatrizEscala";
 import { useFormularioRespostas } from "@/components/formulario/useFormularioRespostas";
 import type {
@@ -463,11 +467,14 @@ function acionaOutro(campo: CampoDef, respostas: RespostasPreCursoParcial): bool
 
 export function PreCursoForm({
   cdCurso,
+  nomeFormacao,
   status,
   respostasIniciais,
   podeEditar,
 }: {
   cdCurso: number;
+  /** Nome exibido no título (RU-12), já resolvido por `nomeDaFormacao`. */
+  nomeFormacao: string;
   status: StatusFormulario;
   respostasIniciais: RespostasPreCursoParcial;
   podeEditar: boolean;
@@ -482,20 +489,60 @@ export function PreCursoForm({
     // pergunta-mãe e o campo sumiu da tela) não vai no PATCH.
     naoAplicaveis: (respostas) => chavesOrfas(REGRAS_CONDICIONAIS_PRE_CURSO, respostas),
   });
+  const router = useRouter();
+  const [erroExclusao, setErroExclusao] = useState<string | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
+
+  // RU-23: a exclusão apaga a formação inteira (curso, pré e pós). As regras
+  // - aluno matriculado, cadastro concluído, quem pode - são do servidor.
+  async function excluirFormacao() {
+    setErroExclusao(null);
+    setExcluindo(true);
+    try {
+      const res = await fetch(`/api/cursos/${cdCurso}`, {
+        method: "DELETE",
+        headers: { ...headerCSRF() },
+      });
+      if (!res.ok) {
+        const corpo = await res.json();
+        setErroExclusao(corpo.erro ?? "Não foi possível excluir a formação");
+        return;
+      }
+      router.push("/pre-cursos");
+    } finally {
+      setExcluindo(false);
+    }
+  }
 
   return (
     <CascaFormulario
       testid="pre-curso"
-      titulo={`Pré-curso #${cdCurso}`}
+      titulo={`Cadastro de Formação - ${nomeFormacao}`}
       status={form.statusAtual}
       somenteLeitura={form.somenteLeitura}
-      erro={form.erro}
+      erro={erroExclusao ?? form.erro}
+      campoDoErro={erroExclusao ? null : form.campoDoErro}
+      mensagem={form.mensagem}
       pendentes={form.pendentes}
       rotuloDaChave={(chave) => ROTULOS[chave as Chave] ?? chave}
       salvando={form.salvando}
       encerrando={form.encerrando}
       aoSalvar={form.salvarRascunho}
       aoEncerrar={form.encerrar}
+      podeConcluir={form.podeConcluir}
+      // RU-21: `podeEditar` já é "em andamento + pode gerenciar"; a casca só
+      // mostra as ações enquanto o questionário não está encerrado.
+      acaoExtra={
+        podeEditar ? (
+          <ConfirmarAcao
+            rotulo="Excluir"
+            pergunta={PERGUNTA_EXCLUSAO}
+            aoConfirmar={excluirFormacao}
+            disabled={excluindo || form.salvando || form.encerrando}
+            variant="destructive"
+          />
+        ) : undefined
+      }
     >
       <Accordion>
         {BLOCOS.map((bloco, indice) => (

@@ -180,7 +180,8 @@ test("UGO-01/02: GO com dados organizacionais incompletos é barrado, completa p
     nome: NOME_ORGANIZACAO,
     responsavel: "Responsavel via UI",
     email: "ui@exemplo.dev",
-    telefone: "11 4000-0002",
+    // RU-46: digitado "11 4000-0002", gravado só com os dígitos.
+    telefone: "1140000002",
     uf: "SP",
     municipio: "Santos",
     dadosOrganizacionaisCompletos: true,
@@ -379,3 +380,45 @@ async function lerCsrfDoContexto(page: import("@playwright/test").Page): Promise
   if (!csrf) throw new Error("Cookie CSRF não encontrado - login não emitiu o token");
   return csrf.value;
 }
+
+// RU-43/RU-44/RU-45 (doc 2): o campo diz que é WhatsApp com DDD, formata
+// enquanto digita e recusa número sem DDD antes de enviar.
+test("RU-43/44/45: Telefone/WhatsApp com DDD - rótulo, máscara e recusa sem DDD", async ({ page }) => {
+  // GO pendente só deste teste: os de cima concluem o cadastro e saem da tela.
+  const cnpj = gerarCnpjValido(20);
+  deleteUsuarios([cnpj]);
+  upsertUsuario({
+    cpf: cnpj,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    dadosOrganizacionaisCompletos: false,
+    nome: "Ofertante Telefone",
+  });
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento: cnpj, senha: SENHA },
+  });
+  expect(login.ok()).toBe(true);
+  await page.goto("/cadastro-ofertante");
+
+  const campo = page.getByLabel("Telefone/WhatsApp (com DDD)", { exact: true });
+  await campo.fill("61999281374");
+  await expect(campo).toHaveValue("(61) 99928-1374");
+
+  await page.getByLabel("Responsável").fill("Responsavel Telefone");
+  await page.getByLabel("E-mail").fill("telefone@exemplo.dev");
+  await page.getByLabel("UF").fill("DF");
+  await page.getByLabel("Município").fill("Brasília");
+  await campo.fill("999281374");
+
+  let enviou = false;
+  page.on("request", (req) => {
+    if (req.url().includes("/api/usuarios/me/organizacao")) enviou = true;
+  });
+  await page.getByRole("button", { name: "Cadastrar" }).click();
+
+  await expect(page.getByText("Informe o telefone com DDD, ex.: (61) 99999-9999")).toBeVisible();
+  expect(enviou).toBe(false);
+
+  deleteUsuarios([cnpj]);
+});

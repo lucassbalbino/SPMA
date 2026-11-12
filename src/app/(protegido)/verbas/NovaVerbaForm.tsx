@@ -54,7 +54,7 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
       const corpo = await res.json();
 
       if (!res.ok) {
-        setErro(corpo.erro ?? "Não foi possível criar a verba");
+        setErro(corpo.erro ?? "Não foi possível criar o recurso");
         return;
       }
 
@@ -64,7 +64,7 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
       setDtVerba("");
       router.refresh();
     } catch {
-      setErro("Não foi possível criar a verba");
+      setErro("Não foi possível criar o recurso");
     } finally {
       setEnviando(false);
     }
@@ -94,12 +94,12 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
           </select>
           {semGo && (
             <p className="text-sm text-muted-foreground">
-              Nenhum Ofertante cadastrado - cadastre um GO antes de criar uma verba.
+              Nenhum Ofertante cadastrado - cadastre um GO antes de criar um recurso.
             </p>
           )}
         </Field>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="dsVerba">Identificação</FieldLabel>
+          <FieldLabel htmlFor="dsVerba">Nome do recurso</FieldLabel>
           <Input
             id="dsVerba"
             name="dsVerba"
@@ -111,7 +111,7 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
           />
         </Field>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="vlVerba">Valor da verba</FieldLabel>
+          <FieldLabel htmlFor="vlVerba">Valor do recurso</FieldLabel>
           <Input
             id="vlVerba"
             name="vlVerba"
@@ -136,7 +136,7 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
         </Field>
         {erro && <FieldError>{erro}</FieldError>}
         <Button type="submit" disabled={enviando || semGo}>
-          Criar verba
+          Criar recurso
         </Button>
       </FieldGroup>
     </form>

@@ -1,6 +1,7 @@
 // e2e da edição posterior dos dados pessoais pelo perfil do Aluno
 // (PESSOAL-16 a 20), pela UI real.
 import { expect, test, type Page } from "@playwright/test";
+import { geradorDeCnpj } from "./helpers/cnpj";
 import {
   criarDadosPessoais,
   deleteUsuarios,
@@ -14,8 +15,13 @@ const SENHA = "SenhaValida123";
 const CPF_AL_A = "70050060031";
 const CPF_AL_B = "70060070030";
 const CPF_GO = "70070080038";
+// Editar Perfil dos outros perfis (RU-47 a RU-53).
+const CPF_GT_PERFIL = "62730405402";
+const CNPJ_GO_PERFIL = geradorDeCnpj("62")(2);
+const CPF_GT_TELEFONE_ANTIGO = "62730405593";
+const TELEFONE_ANTIGO = "(61) 3333-4444 ramal 2";
 
-const CPFS = [CPF_AL_A, CPF_AL_B, CPF_GO];
+const CPFS = [CPF_AL_A, CPF_AL_B, CPF_GO, CPF_GT_PERFIL, CNPJ_GO_PERFIL, CPF_GT_TELEFONE_ANTIGO];
 
 const RESPOSTAS_A = {
   avalPessoalEstado: "SP",
@@ -56,6 +62,8 @@ test.beforeAll(() => {
     tipo: "AL",
     // AD-050: o e-mail entra na completude dos dados pessoais.
     email: "aluno-b@exemplo.dev",
+    // Telefone antigo, gravado antes da regra de DDD (edge case da spec).
+    telefone: TELEFONE_ANTIGO,
     senha: SENHA,
     primeiraVez: false,
     dadosPessoaisCompletos: true,
@@ -66,6 +74,33 @@ test.beforeAll(() => {
   // /painel - um GO pendente cairia no gate (não relacionado) de
   // requireDadosOrganizacionaisCompletos, contaminando o teste de PESSOAL-20.
   upsertUsuario({ cpf: CPF_GO, tipo: "AM", senha: SENHA, primeiraVez: false });
+  upsertUsuario({
+    cpf: CPF_GT_PERFIL,
+    tipo: "GT",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "GT Editar Perfil",
+    email: "gt.perfil@exemplo.dev",
+  });
+  upsertUsuario({
+    cpf: CPF_GT_TELEFONE_ANTIGO,
+    tipo: "GT",
+    senha: SENHA,
+    primeiraVez: false,
+    nome: "GT Telefone Antigo",
+    email: "gt.antigo@exemplo.dev",
+    telefone: TELEFONE_ANTIGO,
+  });
+  upsertUsuario({
+    cpf: CNPJ_GO_PERFIL,
+    tipo: "GO",
+    senha: SENHA,
+    primeiraVez: false,
+    dadosOrganizacionaisCompletos: true,
+    nome: "GO Editar Perfil",
+    email: "go.perfil@exemplo.dev",
+    telefone: "6133334444",
+  });
 });
 
 test.afterAll(() => {
@@ -134,11 +169,106 @@ test("PESSOAL-19: a edição de um Aluno nunca afeta o dado pessoal de outro", a
   expect(getDadosPessoais(CPF_AL_B)).toEqual(RESPOSTAS_B);
 });
 
-test("PESSOAL-20: um não-Aluno acessando /meus-dados diretamente recebe não encontrado", async ({
+// RU-47/RU-48 (comentário 2) substituem o PESSOAL-20: o não-Aluno deixou de
+// receber 404 e passou a ter o próprio Editar Perfil.
+test("RU-48/RU-53: o AM abre /meus-dados e vê o Editar Perfil, sem o aviso de senha", async ({
   page,
 }) => {
   await login(page, CPF_GO);
   const res = await page.goto("/meus-dados");
 
-  expect(res?.status()).toBe(404);
+  expect(res?.status()).toBe(200);
+  await expect(page.getByTestId("form-perfil")).toBeVisible();
+  await expect(page.getByTestId("form-dados-pessoais")).toHaveCount(0);
+  await expect(page.getByTestId("aviso-senha")).toHaveCount(0);
+});
+
+// RU-52 (comentário 2): o Aluno informa o telefone pelos próprios dados,
+// opcional, com a mesma regra de DDD do resto do sistema.
+test("RU-52: Aluno grava o telefone com DDD; sem DDD é recusado; vazio apaga", async ({ page }) => {
+  await login(page, CPF_AL_A);
+  await page.goto("/meus-dados");
+  const campo = page.getByTestId("campo-telefone");
+  const salvar = page.getByTestId("botao-salvar-dados-pessoais");
+
+  await campo.fill("61999281374");
+  await expect(campo).toHaveValue("(61) 99928-1374");
+  await salvar.click();
+  await expect(page.getByTestId("sucesso-dados-pessoais")).toBeVisible();
+  expect(getUsuario(CPF_AL_A)?.telefone).toBe("61999281374");
+
+  await campo.fill("99928-1374");
+  await salvar.click();
+  await expect(page.getByTestId("erro-dados-pessoais")).toHaveText(
+    "Informe o telefone com DDD, ex.: (61) 99999-9999",
+  );
+  expect(getUsuario(CPF_AL_A)?.telefone).toBe("61999281374");
+
+  await campo.fill("");
+  await salvar.click();
+  await expect(page.getByTestId("sucesso-dados-pessoais")).toBeVisible();
+  expect(getUsuario(CPF_AL_A)?.telefone).toBeNull();
+});
+
+test("RU-48: o GT edita nome, e-mail e telefone e vê os valores novos ao recarregar", async ({ page }) => {
+  await login(page, CPF_GT_PERFIL);
+  await page.goto("/meus-dados");
+
+  await expect(page.getByLabel("Nome", { exact: true })).toHaveValue("GT Editar Perfil");
+  await page.getByLabel("Nome", { exact: true }).fill("GT Perfil Novo");
+  await page.getByLabel("E-mail").fill("gt.novo@exemplo.dev");
+  await page.getByLabel("Telefone/WhatsApp (com DDD)").fill("61999281374");
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByTestId("salvo-perfil")).toHaveText("Perfil salvo.");
+
+  await page.reload();
+  await expect(page.getByLabel("Nome", { exact: true })).toHaveValue("GT Perfil Novo");
+  await expect(page.getByLabel("E-mail")).toHaveValue("gt.novo@exemplo.dev");
+  await expect(page.getByLabel("Telefone/WhatsApp (com DDD)")).toHaveValue("(61) 99928-1374");
+  expect(getUsuario(CPF_GT_PERFIL)?.telefone).toBe("61999281374");
+});
+
+test("RU-53: GO e Aluno veem que a troca de senha é pedida ao gestor", async ({ page }) => {
+  const aviso = "A troca de senha deve ser pedida ao gestor do seu curso.";
+
+  await login(page, CNPJ_GO_PERFIL);
+  await page.goto("/meus-dados");
+  await expect(page.getByTestId("form-perfil")).toBeVisible();
+  await expect(page.getByTestId("aviso-senha")).toHaveText(aviso);
+
+  await login(page, CPF_AL_B);
+  await page.goto("/meus-dados");
+  await expect(page.getByTestId("form-dados-pessoais")).toBeVisible();
+  await expect(page.getByTestId("aviso-senha")).toHaveText(aviso);
+});
+
+// Edge case da spec (Fix 2 da validação): telefone gravado antes da regra de
+// DDD aparece como foi gravado e não é reescrito por quem só muda outro campo.
+test("telefone antigo: o GT o vê como gravado e, trocando só o nome, ele não muda", async ({ page }) => {
+  await login(page, CPF_GT_TELEFONE_ANTIGO);
+  await page.goto("/meus-dados");
+
+  await expect(page.getByLabel("Telefone/WhatsApp (com DDD)")).toHaveValue(TELEFONE_ANTIGO);
+  await page.getByLabel("Nome", { exact: true }).fill("GT Telefone Antigo Renomeado");
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByTestId("salvo-perfil")).toHaveText("Perfil salvo.");
+
+  const gt = getUsuario(CPF_GT_TELEFONE_ANTIGO);
+  expect(gt?.nome).toBe("GT Telefone Antigo Renomeado");
+  expect(gt?.telefone).toBe(TELEFONE_ANTIGO);
+});
+
+test("telefone antigo: o Aluno o vê como gravado e, trocando só o município, ele não muda", async ({
+  page,
+}) => {
+  await login(page, CPF_AL_B);
+  await page.goto("/meus-dados");
+
+  await expect(page.getByTestId("campo-telefone")).toHaveValue(TELEFONE_ANTIGO);
+  await page.getByTestId("campo-avalPessoalMunicipio").fill("Feira de Santana, BA");
+  await page.getByTestId("botao-salvar-dados-pessoais").click();
+  await expect(page.getByTestId("sucesso-dados-pessoais")).toBeVisible();
+
+  expect(getDadosPessoais(CPF_AL_B)?.avalPessoalMunicipio).toBe("Feira de Santana, BA");
+  expect(getUsuario(CPF_AL_B)?.telefone).toBe(TELEFONE_ANTIGO);
 });

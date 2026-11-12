@@ -118,7 +118,7 @@ export function GestaoUsuarios({
       {resultado && (
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>Usuários</CardTitle>
+            <CardTitle>Usuários Cadastrados</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div role="group" aria-label="Filtrar por tipo" className="flex flex-wrap gap-2">

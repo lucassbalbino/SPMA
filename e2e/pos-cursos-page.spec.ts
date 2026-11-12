@@ -16,6 +16,8 @@ import {
 import { geradorDeCnpj } from "./helpers/cnpj";
 
 const SENHA = "SenhaValida123";
+// RU-11: a lista mostra o nome da formação (P8), não o número.
+const NOME_CURSO_GO = "Gastronomia Regional";
 
 const gerarCnpjValido = geradorDeCnpj("36");
 
@@ -26,6 +28,7 @@ const CNPJ_GO_2 = gerarCnpjValido(2);
 const CPFS = [CPF_GT, CNPJ_GO, CNPJ_GO_2];
 
 let cdCursoDoGo: number;
+let cdCursoDoGo2: number;
 
 test.beforeAll(() => {
   deletePreCursosPorOfertante([CNPJ_GO, CNPJ_GO_2]);
@@ -58,10 +61,11 @@ test.beforeAll(() => {
     cdVerba: verba.cdVerba,
     vlCursoAlocado: 100,
     criadoPor: CNPJ_GO,
+    respostas: { qualifNomeCurso: NOME_CURSO_GO },
   }).cdCurso;
   criarPosCurso({ cdCurso: cdCursoDoGo, criadoPor: CNPJ_GO });
 
-  const cdCursoDoGo2 = criarPreCurso({
+  cdCursoDoGo2 = criarPreCurso({
     cdOfertante: CNPJ_GO_2,
     cdVerba: verba2.cdVerba,
     vlCursoAlocado: 100,
@@ -87,7 +91,7 @@ test("REQ-PO-12: GO só vê os pós-cursos do próprio Ofertante", async ({ page
 
   const itens = await page.getByTestId("lista-pos-cursos").getByRole("listitem").count();
   expect(itens).toBe(1);
-  await expect(page.getByText(`Pós-curso #${cdCursoDoGo}`)).toBeVisible();
+  await expect(page.getByText(NOME_CURSO_GO)).toBeVisible();
 
   // A listagem não tem mais atalho de criação - o pós-curso nasce junto do
   // curso, na transação de POST /api/cursos.
@@ -117,13 +121,29 @@ test("cada item lista o status e linka para a tela de detalhe", async ({ page })
   // AD-050: o pré-curso deste curso segue em andamento, então o pós-curso
   // aparece na lista, mas aguardando.
   await expect(page.getByTestId(`status-pos-curso-${cdCursoDoGo}`)).toHaveText(
-    "Aguardando pré-curso",
+    "Aguardando Cadastro de Formação",
   );
 
   // A tela de detalhe em si (T9) ainda não existe nesta tarefa - checa só
   // que o link aponta para a URL correta, sem navegar (evita depender de
   // uma rota que só a próxima tarefa cria).
   await expect(
-    page.getByText(`Pós-curso #${cdCursoDoGo}`).locator("xpath=ancestor::a"),
+    page.getByText(NOME_CURSO_GO).locator("xpath=ancestor::a"),
   ).toHaveAttribute("href", `/pos-cursos/${cdCursoDoGo}`);
+});
+
+// RU-11 (docs 6 e 7): cada linha mostra o nome da formação; a que não tem P8
+// mostra o texto de reserva; nenhuma mostra o número como identificador.
+test("RU-11: a lista mostra o nome da formação no lugar de #número", async ({ page }) => {
+  const login = await page.request.post("/api/auth/login", {
+    data: { documento: CPF_GT, senha: SENHA },
+  });
+  expect(login.ok()).toBe(true);
+
+  await page.goto("/pos-cursos");
+  const lista = page.getByTestId("lista-pos-cursos");
+
+  await expect(lista.getByText(NOME_CURSO_GO)).toBeVisible();
+  await expect(lista.getByText(`Formação sem nome (nº ${cdCursoDoGo2})`)).toBeVisible();
+  await expect(lista).not.toContainText("Pós-curso #");
 });

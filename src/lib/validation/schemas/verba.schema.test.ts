@@ -87,27 +87,27 @@ describe("verbaSchema - mensagens e limites do valor (gestao-de-verbas)", () => 
     ]);
   });
 
-  it("GV-04: vlVerba ausente → 'Valor da verba é obrigatório'", () => {
+  it("GV-04: vlVerba ausente → 'Valor do recurso é obrigatório'", () => {
     expect(mensagens(verbaSchema.safeParse({ cdOfertante: CNPJ_GO, dsVerba: DS_VERBA }))).toEqual([
-      "Valor da verba é obrigatório",
+      "Valor do recurso é obrigatório",
     ]);
   });
 
-  it("GV-05: vlVerba zero → 'Valor da verba deve ser positivo'", () => {
+  it("GV-05: vlVerba zero → 'Valor do recurso deve ser positivo'", () => {
     expect(mensagens(verbaSchema.safeParse({ cdOfertante: CNPJ_GO, dsVerba: DS_VERBA, vlVerba: 0 }))).toEqual([
-      "Valor da verba deve ser positivo",
+      "Valor do recurso deve ser positivo",
     ]);
   });
 
-  it("GV-05: vlVerba negativo → 'Valor da verba deve ser positivo'", () => {
+  it("GV-05: vlVerba negativo → 'Valor do recurso deve ser positivo'", () => {
     expect(mensagens(verbaSchema.safeParse({ cdOfertante: CNPJ_GO, dsVerba: DS_VERBA, vlVerba: -1 }))).toEqual([
-      "Valor da verba deve ser positivo",
+      "Valor do recurso deve ser positivo",
     ]);
   });
 
-  it("GV-06: vlVerba acima de 99999999.99 → 'Valor da verba excede o máximo permitido'", () => {
+  it("GV-06: vlVerba acima de 99999999.99 → 'Valor do recurso excede o máximo permitido'", () => {
     expect(mensagens(verbaSchema.safeParse({ cdOfertante: CNPJ_GO, dsVerba: DS_VERBA, vlVerba: 100000000 }))).toEqual([
-      "Valor da verba excede o máximo permitido",
+      "Valor do recurso excede o máximo permitido",
     ]);
   });
 
@@ -118,9 +118,9 @@ describe("verbaSchema - mensagens e limites do valor (gestao-de-verbas)", () => 
     expect(resultado.data?.vlVerba).toBe(99999999.99);
   });
 
-  it("GV-06: vlVerba com 3 casas decimais → 'Valor da verba aceita no máximo 2 casas decimais'", () => {
+  it("GV-06: vlVerba com 3 casas decimais → 'Valor do recurso aceita no máximo 2 casas decimais'", () => {
     expect(mensagens(verbaSchema.safeParse({ cdOfertante: CNPJ_GO, dsVerba: DS_VERBA, vlVerba: 10.123 }))).toEqual([
-      "Valor da verba aceita no máximo 2 casas decimais",
+      "Valor do recurso aceita no máximo 2 casas decimais",
     ]);
   });
 
@@ -133,13 +133,13 @@ describe("verbaSchema - mensagens e limites do valor (gestao-de-verbas)", () => 
 describe("edicaoVerbaSchema - limites do valor (GV-21)", () => {
   it("rejeita vlVerba acima de 99999999.99 com a mesma mensagem da criação", () => {
     expect(mensagens(edicaoVerbaSchema.safeParse({ dsVerba: DS_VERBA, vlVerba: 100000000 }))).toEqual([
-      "Valor da verba excede o máximo permitido",
+      "Valor do recurso excede o máximo permitido",
     ]);
   });
 
   it("rejeita vlVerba com 3 casas decimais com a mesma mensagem da criação", () => {
     expect(mensagens(edicaoVerbaSchema.safeParse({ dsVerba: DS_VERBA, vlVerba: 10.123 }))).toEqual([
-      "Valor da verba aceita no máximo 2 casas decimais",
+      "Valor do recurso aceita no máximo 2 casas decimais",
     ]);
   });
 });
@@ -154,17 +154,17 @@ describe("dsVerba - identificação da verba (identificacao-verba)", () => {
     expect(criacao("  Capacitação 2026  ").data?.dsVerba).toBe("Capacitação 2026");
   });
 
-  it("IDV-03: ausente, vazia ou só com espaços → 'Identificação é obrigatória'", () => {
+  it("IDV-03: ausente, vazia ou só com espaços → 'Nome do recurso é obrigatório'", () => {
     for (const dsVerba of [undefined, "", "   "]) {
       expect(mensagens(criacao(dsVerba)), `dsVerba=${JSON.stringify(dsVerba)}`).toEqual([
-        "Identificação é obrigatória",
+        "Nome do recurso é obrigatório",
       ]);
     }
   });
 
-  it("IDV-04: 61 caracteres → 'Identificação deve ter no máximo 60 caracteres'", () => {
+  it("IDV-04: 61 caracteres → 'Nome do recurso deve ter no máximo 60 caracteres'", () => {
     expect(mensagens(criacao("a".repeat(61)))).toEqual([
-      "Identificação deve ter no máximo 60 caracteres",
+      "Nome do recurso deve ter no máximo 60 caracteres",
     ]);
   });
 
@@ -174,9 +174,9 @@ describe("dsVerba - identificação da verba (identificacao-verba)", () => {
   });
 
   it("IDV-08: a edição aplica as mesmas mensagens e o mesmo trim", () => {
-    expect(mensagens(edicao("   "))).toEqual(["Identificação é obrigatória"]);
+    expect(mensagens(edicao("   "))).toEqual(["Nome do recurso é obrigatório"]);
     expect(mensagens(edicao("a".repeat(61)))).toEqual([
-      "Identificação deve ter no máximo 60 caracteres",
+      "Nome do recurso deve ter no máximo 60 caracteres",
     ]);
     expect(edicao(" Repasse Março ").data?.dsVerba).toBe("Repasse Março");
   });
@@ -184,8 +184,8 @@ describe("dsVerba - identificação da verba (identificacao-verba)", () => {
   it("com o formulário vazio, a primeira mensagem segue sendo a do GO, e a de identificação vem antes da de valor", () => {
     expect(mensagens(verbaSchema.safeParse({}))).toEqual([
       "Ofertante é obrigatório",
-      "Identificação é obrigatória",
-      "Valor da verba é obrigatório",
+      "Nome do recurso é obrigatório",
+      "Valor do recurso é obrigatório",
     ]);
   });
 });

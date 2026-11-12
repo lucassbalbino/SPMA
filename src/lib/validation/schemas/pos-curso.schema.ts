@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "../zod-pt";
 import { multiplaComExclusiva } from "../multipla";
 
 // ---- Constantes de opções ----

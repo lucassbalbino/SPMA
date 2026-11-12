@@ -8,6 +8,7 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth/guards";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
 import { prisma } from "@/lib/db/prisma";
+import { nomeDaFormacao } from "@/lib/cursos/nome";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function PreCursosPage() {
@@ -22,17 +23,19 @@ export default async function PreCursosPage() {
       // diferente da rota, uma lista vazia é a resposta útil.
       () => ({ curso: { cdOfertante: "" } }),
     ),
+    // A P8 (nome da formação, RU-11) é a única resposta que a lista lê.
+    omit: { p8: false },
     orderBy: { cdCurso: "asc" },
   });
 
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>Pré-cursos</CardTitle>
+        <CardTitle>Cadastro de Formação</CardTitle>
       </CardHeader>
       <CardContent>
         {preCursos.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum pré-curso cadastrado.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma formação cadastrada.</p>
         ) : (
           <ul data-testid="lista-pre-cursos" className="flex flex-col gap-2">
             {preCursos.map((preCurso) => (
@@ -41,7 +44,7 @@ export default async function PreCursosPage() {
                   href={`/pre-cursos/${preCurso.cdCurso}`}
                   className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent"
                 >
-                  <span>Pré-curso #{preCurso.cdCurso}</span>
+                  <span>{nomeDaFormacao(preCurso.p8, preCurso.cdCurso)}</span>
                   <span data-testid={`status-pre-curso-${preCurso.cdCurso}`}>
                     {preCurso.status === "ENCERRADO" ? "Encerrado" : "Em andamento"}
                   </span>

@@ -17,6 +17,8 @@ import { geradorDeCnpj } from "./helpers/cnpj";
 import { cabecalhosAutenticados, idCsrfDaResposta, idSessaoDaResposta, novoCliente } from "./helpers/http";
 
 const SENHA = "SenhaValida123";
+// RU-57: toda formação nasce com nome.
+const NOME_FORMACAO = "Formação de Teste e2e";
 
 const gerarCnpjValido = geradorDeCnpj("29");
 
@@ -87,19 +89,22 @@ test.afterAll(() => {
   deleteUsuarios(CPFS);
 });
 
-test("GO cria curso com valor dentro do saldo -> 201, pré e pós nascem EM_ANDAMENTO com respostas nulas", async () => {
+// RU-58 mudou o nascimento do pré: antes, sem nenhuma resposta; agora, só com
+// a pergunta 8 (o nome da formação, sem espaços nas pontas).
+test("GO cria curso com valor dentro do saldo -> 201, pré nasce só com o nome e pós sem respostas", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/cursos", {
-    data: { cdVerba, vlCursoAlocado: 1000 },
+    data: { nome: `  ${NOME_FORMACAO}  `, cdVerba, vlCursoAlocado: 1000 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
   expect(res.status()).toBe(201);
   const corpo = await res.json();
   expect(corpo.preCurso.status).toBe("EM_ANDAMENTO");
-  expect(corpo.preCurso.respostas).toBeNull();
+  expect(corpo.preCurso.respostas).toEqual({ qualifNomeCurso: NOME_FORMACAO });
+  expect(corpo.posCurso.respostas).toBeNull();
 
   // O pós-curso nasce junto do curso, na mesma transação (decisão do usuário,
   // 2026-10-09): o 201 traz os dois.
@@ -107,29 +112,73 @@ test("GO cria curso com valor dentro do saldo -> 201, pré e pós nascem EM_ANDA
 
   const persistido = getPreCurso(corpo.preCurso.cdCurso);
   expect(persistido?.status).toBe("EM_ANDAMENTO");
-  expect(persistido?.respostas).toBeNull();
+  expect(persistido?.respostas).toEqual({ qualifNomeCurso: NOME_FORMACAO });
   expect(persistido?.criadoPor).toBe(CNPJ_GO);
 
-  // O GET tem de devolver `null` igual ao POST. Afirmação separada de
-  // propósito: o POST devolve `respostas: null` literal, enquanto o GET passa
-  // por `respostasOuNulo` sobre as linhas. Sem esta linha, trocar essa função
-  // por uma que devolvesse `{}` não quebrava teste nenhum - foi o mutante que
-  // sobreviveu a 83 specs no sensor do Verifier.
   const consulta = await cliente.get(`/api/pre-cursos/${corpo.preCurso.cdCurso}`, {
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
   expect(consulta.status()).toBe(200);
-  expect((await consulta.json()).preCurso.respostas).toBeNull();
+  expect((await consulta.json()).preCurso.respostas).toEqual({ qualifNomeCurso: NOME_FORMACAO });
+
+  // O GET do pós tem de devolver `null` igual ao POST. Afirmação separada de
+  // propósito: o POST devolve `respostas: null` literal, enquanto o GET passa
+  // por `respostasOuNulo` sobre as colunas. Sem esta linha, trocar essa função
+  // por uma que devolvesse `{}` não quebrava teste nenhum - foi o mutante que
+  // sobreviveu a 83 specs no sensor do Verifier. Desde RU-58 o pré nasce com
+  // o nome, então a guarda mora no pós, que continua nascendo vazio.
+  const consultaPos = await cliente.get(`/api/pos-cursos/${corpo.preCurso.cdCurso}`, {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  expect(consultaPos.status()).toBe(200);
+  expect((await consultaPos.json()).posCurso.respostas).toBeNull();
 
   await cliente.dispose();
 });
+
+// RU-57: sem nome, a formação não nasce.
+test.describe("RU-57: POST /api/cursos sem nome", () => {
+  for (const [caso, nome] of [
+    ["ausente", undefined],
+    ["vazio", ""],
+    ["só espaços", "   "],
+  ] as const) {
+    test(`nome ${caso} -> 400 "Nome da formação é obrigatório", nada criado`, async () => {
+      const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
+      const cliente = await novoCliente();
+      const antes = await contarPreCursosDoGo(cliente, idSessao, idCsrf);
+
+      const res = await cliente.post("/api/cursos", {
+        data: { nome, cdVerba, vlCursoAlocado: 100 },
+        headers: cabecalhosAutenticados(idSessao, idCsrf),
+      });
+
+      expect(res.status()).toBe(400);
+      expect((await res.json()).erro).toBe("Nome da formação é obrigatório");
+      expect(await contarPreCursosDoGo(cliente, idSessao, idCsrf)).toBe(antes);
+
+      await cliente.dispose();
+    });
+  }
+});
+
+async function contarPreCursosDoGo(
+  cliente: Awaited<ReturnType<typeof novoCliente>>,
+  idSessao: string,
+  idCsrf: string,
+): Promise<number> {
+  const res = await cliente.get("/api/pre-cursos", {
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+  return (await res.json()).preCursos.length;
+}
 
 test("REQ-PC-02: valor acima do saldo disponível é rejeitado com 400 e o saldo é informado", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/cursos", {
-    data: { cdVerba: cdVerbaPequena, vlCursoAlocado: 999999 },
+    data: { nome: NOME_FORMACAO, cdVerba: cdVerbaPequena, vlCursoAlocado: 999999 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -145,7 +194,7 @@ test("AD-016: valor exatamente igual ao saldo disponível é aceito", async () =
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/cursos", {
-    data: { cdVerba: cdVerbaPequena, vlCursoAlocado: 500 },
+    data: { nome: NOME_FORMACAO, cdVerba: cdVerbaPequena, vlCursoAlocado: 500 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -159,7 +208,7 @@ test("AD-040: AM cria curso para Ofertante ao qual não está vinculado -> 201, 
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/cursos", {
-    data: { cdVerba: cdVerba2Am, vlCursoAlocado: 100 },
+    data: { nome: NOME_FORMACAO, cdVerba: cdVerba2Am, vlCursoAlocado: 100 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -187,7 +236,7 @@ test("REQ-PC-03: Verba de outro Ofertante é rejeitada com 403, nenhum registro 
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO_2);
   const cliente = await novoCliente();
   const res = await cliente.post("/api/cursos", {
-    data: { cdVerba, vlCursoAlocado: 100 },
+    data: { nome: NOME_FORMACAO, cdVerba, vlCursoAlocado: 100 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 
@@ -210,7 +259,7 @@ test("AL não pode criar curso", async () => {
 
   const cliente = await novoCliente();
   const res = await cliente.post("/api/cursos", {
-    data: { cdVerba, vlCursoAlocado: 100 },
+    data: { nome: NOME_FORMACAO, cdVerba, vlCursoAlocado: 100 },
     headers: cabecalhosAutenticados(idSessao, idCsrf),
   });
 

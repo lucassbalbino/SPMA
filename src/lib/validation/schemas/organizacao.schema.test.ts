@@ -39,6 +39,20 @@ describe("organizacaoSchema", () => {
     expect(primeiraMensagem({ ...VALIDO, [campo]: "" })).toBe(mensagem);
   });
 
+  // RU-45 (doc 2): o caso da imagem 2, "999281374", não tem DDD.
+  it("rejeita telefone sem DDD com a orientação de formato", () => {
+    expect(primeiraMensagem({ ...VALIDO, telefone: "999281374" })).toBe(
+      "Informe o telefone com DDD, ex.: (61) 99999-9999",
+    );
+  });
+
+  // RU-46: com máscara ou sem, o banco recebe só os dígitos.
+  it("devolve o telefone só com os dígitos", () => {
+    const result = organizacaoSchema.safeParse({ ...VALIDO, telefone: "(61) 99928-1374" });
+    expect(result.success).toBe(true);
+    expect(result.data?.telefone).toBe("61999281374");
+  });
+
   it("rejeita email ausente e vazio", () => {
     expect(primeiraMensagem(sem("email"))).toBe("Email é obrigatório");
     expect(primeiraMensagem({ ...VALIDO, email: "" })).toBe("Email é obrigatório");

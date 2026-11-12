@@ -410,6 +410,25 @@ Depois do deploy, todo aluno com avaliação em andamento precisa responder as
 perguntas 10 a 13 antes de voltar à Parte 2 ou encerrar. As respostas que ele
 já tinha ficam como estão. As avaliações encerradas não mudam.
 
+### Revisão de usabilidade (AD-054)
+
+Sem migration: o deploy é só de código, e as VIEWs do `bi` não mudam.
+
+Depois do deploy, o Cadastro de Formação passa a exigir que a inscrição
+(pergunta 17b) comece antes da formação (13). Quem já tem um cadastro em
+andamento com essas datas fora de ordem continua salvando as outras perguntas,
+mas não consegue concluir até corrigir as datas. Para saber quantos são, antes
+ou depois do deploy:
+
+```sql
+SELECT CD_Curso, P8 AS Nome, P13 AS Inicio_Formacao, P17b AS Inicio_Inscricao
+FROM TB_Pre_Curso
+WHERE Status = 'EM_ANDAMENTO' AND P13 IS NOT NULL AND P17b IS NOT NULL AND P17b >= P13;
+```
+
+Formações criadas antes do deploy sem a pergunta 8 respondida aparecem nas
+listas como "Formação sem nome (nº X)" até alguém preenchê-la.
+
 ### VIEWs do banco `bi` (Power BI)
 
 O Power BI do cliente não lê o banco `spma`: ele lê o banco `bi`, que tem uma

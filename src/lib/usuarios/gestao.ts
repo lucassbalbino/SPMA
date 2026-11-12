@@ -11,6 +11,7 @@ import { validarCNPJ } from "../validation/cnpj";
 import { validarCPF } from "../validation/cpf";
 import { normalizarDocumento } from "../validation/documento";
 import { COLUNAS_LISTADAS, type UsuarioListado } from "./consulta";
+import { lerRespostas } from "../respostas/repositorio";
 
 const DOCUMENTO_JA_CADASTRADO = "Documento já cadastrado";
 
@@ -145,4 +146,55 @@ export async function resetarSenha(documento: string): Promise<void> {
     }),
     prisma.sessao.deleteMany({ where: { cpfUsuario: documento } }),
   ]);
+}
+
+export const MENSAGEM_ALUNO_COM_DADOS =
+  "Este aluno já tem dados preenchidos e não pode ser excluído.";
+export const MENSAGEM_SO_ALUNO = "Só é possível excluir aluno.";
+
+/**
+ * Exclui um Aluno cadastrado por engano (RU-30 a RU-32, doc 13).
+ *
+ * Só sai quem ainda não respondeu nada (decisão do usuário, 2026-11-11): sem
+ * linha em `TB_Dado_Pessoal_Aluno` e sem avaliação concluída ou com alguma
+ * resposta gravada. A matrícula vazia, que nasce junto com o Aluno
+ * (AVAL-01), não conta como dado e sai com ele; as sessões caem por cascata.
+ *
+ * A checagem e o `DELETE` estão na mesma transação: uma resposta gravada no
+ * meio não escapa. Quem pode excluir é decidido antes, por
+ * `exigirAlvoEditavel` - a mesma guarda da edição e do reset de senha.
+ */
+export async function excluirAluno(documento: string): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const aluno = await tx.usuario.findUnique({
+      where: { documento },
+      select: {
+        tipo: true,
+        dadosPessoais: { select: { cpf: true } },
+        avaliacoes: { select: { cdCurso: true, status: true } },
+      },
+    });
+
+    if (!aluno) {
+      throw erroHttp(404, "Usuário não encontrado");
+    }
+
+    if (aluno.tipo !== "AL") {
+      throw erroHttp(400, MENSAGEM_SO_ALUNO);
+    }
+
+    if (aluno.dadosPessoais || aluno.avaliacoes.some((a) => a.status === "ENCERRADO")) {
+      throw erroHttp(409, MENSAGEM_ALUNO_COM_DADOS);
+    }
+
+    for (const { cdCurso } of aluno.avaliacoes) {
+      const respostas = await lerRespostas(tx, { formulario: "avaliacao", cpf: documento, cdCurso });
+      if (Object.keys(respostas).length > 0) {
+        throw erroHttp(409, MENSAGEM_ALUNO_COM_DADOS);
+      }
+    }
+
+    await tx.avaliacaoAluno.deleteMany({ where: { cpf: documento } });
+    await tx.usuario.delete({ where: { documento } });
+  });
 }

@@ -32,6 +32,7 @@ type OpcaoVerba = {
 export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
   const router = useRouter();
 
+  const [nome, setNome] = useState("");
   const [cdVerba, setCdVerba] = useState<string | null>(null);
   const [vlCursoAlocado, setVlCursoAlocado] = useState("");
   const [erro, setErro] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
     setErro(null);
 
     const entrada = criarCursoSchema.safeParse({
+      nome,
       cdVerba: cdVerba ? Number(cdVerba) : undefined,
       vlCursoAlocado: vlCursoAlocado ? Number(vlCursoAlocado) : undefined,
     });
@@ -63,7 +65,7 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
         setErro(
           corpo.saldoDisponivel !== undefined
             ? `${corpo.erro} (saldo disponível: ${corpo.saldoDisponivel})`
-            : (corpo.erro ?? "Não foi possível criar o curso"),
+            : (corpo.erro ?? "Não foi possível criar a formação"),
         );
         return;
       }
@@ -76,10 +78,19 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
     }
   }
 
+  // RU-15/RU-16: o mesmo texto na opção e no campo fechado - sem `items`, o
+  // Select do Base UI mostra o `value` cru (o número) depois da escolha.
+  // Só o nome da verba, sem número, mesmo quando o nome repete (decisão do
+  // usuário, 2026-11-11).
+  const itens = opcoesVerba.map((opcao) => ({
+    value: String(opcao.cdVerba),
+    label: `${opcao.nomeOfertante ? `${opcao.nomeOfertante} — ` : ""}${opcao.dsVerba} — saldo R$ ${opcao.saldoDisponivel.toFixed(2)}`,
+  }));
+
   if (opcoesVerba.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Nenhuma verba disponível para criar um curso.
+        Nenhum recurso disponível para criar uma formação.
       </p>
     );
   }
@@ -88,28 +99,40 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
     <form onSubmit={handleSubmit} noValidate>
       <FieldGroup>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="cdVerba">Verba</FieldLabel>
-          <Select value={cdVerba} onValueChange={(valor) => setCdVerba(valor as string)}>
+          <FieldLabel htmlFor="nome">Nome da formação</FieldLabel>
+          <Input
+            id="nome"
+            name="nome"
+            value={nome}
+            onChange={(event) => setNome(event.target.value)}
+            disabled={enviando}
+          />
+        </Field>
+        <Field data-invalid={!!erro}>
+          <FieldLabel htmlFor="cdVerba">Recurso</FieldLabel>
+          <Select
+            items={itens}
+            value={cdVerba}
+            onValueChange={(valor) => setCdVerba(valor as string)}
+          >
             <SelectTrigger id="cdVerba" data-testid="select-verba" disabled={enviando}>
-              <SelectValue placeholder="Selecione uma verba" />
+              <SelectValue placeholder="Selecione um recurso" />
             </SelectTrigger>
             <SelectContent>
-              {opcoesVerba.map((opcao) => (
+              {itens.map((item) => (
                 <SelectItem
-                  key={opcao.cdVerba}
-                  value={String(opcao.cdVerba)}
-                  data-testid={`opcao-verba-${opcao.cdVerba}`}
+                  key={item.value}
+                  value={item.value}
+                  data-testid={`opcao-verba-${item.value}`}
                 >
-                  {/* IDV-12/13: o número fica ao lado do nome, que pode repetir. */}
-                  {opcao.nomeOfertante ? `${opcao.nomeOfertante} — ` : ""}
-                  {`#${opcao.cdVerba} · ${opcao.dsVerba} — saldo R$ ${opcao.saldoDisponivel.toFixed(2)}`}
+                  {item.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </Field>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="vlCursoAlocado">Valor alocado ao curso</FieldLabel>
+          <FieldLabel htmlFor="vlCursoAlocado">Valor alocado à formação</FieldLabel>
           <Input
             id="vlCursoAlocado"
             name="vlCursoAlocado"
@@ -122,7 +145,7 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
         </Field>
         {erro && <FieldError data-testid="erro-novo-curso">{erro}</FieldError>}
         <Button type="submit" disabled={enviando}>
-          Criar curso
+          Criar formação
         </Button>
       </FieldGroup>
     </form>

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "../zod-pt";
 
 export const primeiroAcessoSchema = z
   .object({

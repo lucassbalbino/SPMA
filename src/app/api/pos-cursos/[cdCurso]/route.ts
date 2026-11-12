@@ -32,7 +32,7 @@ async function consultarPosCurso(_request: Request, { params }: Contexto) {
   });
 
   if (!posCurso) {
-    throw erroHttp(404, "Pós-curso não encontrado");
+    throw erroHttp(404, "Avaliação de Formação não encontrada");
   }
 
   if (!podeAcessarOfertante(sessao.usuario, posCurso.curso.cdOfertante)) {
@@ -54,7 +54,7 @@ async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
   });
 
   if (!posCursoExistente) {
-    throw erroHttp(404, "Pós-curso não encontrado");
+    throw erroHttp(404, "Avaliação de Formação não encontrada");
   }
 
   if (!podeGerenciarPosCurso(sessao.usuario, posCursoExistente.curso.cdOfertante)) {
@@ -68,10 +68,12 @@ async function gravarRespostasPosCurso(request: Request, { params }: Contexto) {
 
   // REQ-PO-08: somente leitura depois de encerrado, sem exceção.
   if (posCursoExistente.status === "ENCERRADO") {
-    throw erroHttp(409, "Pós-curso já encerrado, somente leitura");
+    throw erroHttp(409, "Avaliação de Formação já encerrada, somente leitura");
   }
 
-  const patch = await corpoValidado(request, respostasPosCursoSchema.partial());
+  const patch = await corpoValidado(request, respostasPosCursoSchema.partial(), {
+    informarCampo: true,
+  });
 
   // REQ-PO-04: merge raso - só as chaves enviadas são alteradas (RESP-01,
   // RESP-03). REQ-PO-06: a validação roda contra o estado MESCLADO, não só o

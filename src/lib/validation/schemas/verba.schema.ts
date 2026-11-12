@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "../zod-pt";
 
 // Campos próprios da Verba, sem o Ofertante. Reaproveitado onde o Ofertante
 // não vem no payload: na edição (AD-015: a verba pertence a exatamente um
@@ -26,18 +27,18 @@ const TAMANHO_MAXIMO_IDENTIFICACAO = 60;
 
 export const camposVerbaSchema = z.object({
   dsVerba: z
-    .string({ error: "Identificação é obrigatória" })
+    .string({ error: "Nome do recurso é obrigatório" })
     .trim()
-    .min(1, { message: "Identificação é obrigatória" })
+    .min(1, { message: "Nome do recurso é obrigatório" })
     .max(TAMANHO_MAXIMO_IDENTIFICACAO, {
-      message: "Identificação deve ter no máximo 60 caracteres",
+      message: "Nome do recurso deve ter no máximo 60 caracteres",
     }),
   vlVerba: z
-    .number({ error: "Valor da verba é obrigatório" })
-    .positive({ message: "Valor da verba deve ser positivo" })
-    .max(VALOR_MAXIMO_VERBA, { message: "Valor da verba excede o máximo permitido" })
+    .number({ error: "Valor do recurso é obrigatório" })
+    .positive({ message: "Valor do recurso deve ser positivo" })
+    .max(VALOR_MAXIMO_VERBA, { message: "Valor do recurso excede o máximo permitido" })
     .refine(temNoMaximoDuasCasas, {
-      message: "Valor da verba aceita no máximo 2 casas decimais",
+      message: "Valor do recurso aceita no máximo 2 casas decimais",
     }),
   dtVerba: z.coerce.date().optional(),
 });

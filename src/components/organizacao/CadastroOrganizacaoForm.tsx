@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { organizacaoSchema } from "@/lib/validation/schemas/organizacao.schema";
+import { mascaraTelefone } from "@/lib/validation/telefone";
 import { headerCSRF } from "@/lib/security/csrf-client";
 
 export function CadastroOrganizacaoForm({ nomeInicial }: { nomeInicial: string }) {
@@ -106,12 +107,15 @@ export function CadastroOrganizacaoForm({ nomeInicial }: { nomeInicial: string }
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="telefone">Telefone</FieldLabel>
+                <FieldLabel htmlFor="telefone">Telefone/WhatsApp (com DDD)</FieldLabel>
                 <Input
                   id="telefone"
                   name="telefone"
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="(61) 99999-9999"
                   value={telefone}
-                  onChange={(event) => setTelefone(event.target.value)}
+                  onChange={(event) => setTelefone(mascaraTelefone(event.target.value))}
                   disabled={enviando}
                 />
               </Field>

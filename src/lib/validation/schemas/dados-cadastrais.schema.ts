@@ -4,6 +4,7 @@
 // informam em /dados-cadastrais e o Aluno junto dos dados pessoais; o GO já
 // os declarava nos dados organizacionais (AD-044) e segue por lá.
 import { z } from "zod";
+import "../zod-pt";
 
 export const dadosCadastraisSchema = z.object({
   nome: z.string().trim().min(1, { message: "Nome é obrigatório" }),

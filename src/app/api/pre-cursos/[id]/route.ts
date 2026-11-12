@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { podeAcessarOfertante, podeGerenciarPreCurso } from "@/lib/auth/guards";
 import {
-  ordemDatasValida,
+  CHAVES_DATAS_PLANEJAMENTO,
+  violacaoOrdemDatas,
   respostasPreCursoSchema,
 } from "@/lib/validation/schemas/pre-curso.schema";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
@@ -25,7 +26,7 @@ async function consultarPreCurso(_request: Request, { params }: Contexto) {
   const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso }, include: incluirCurso("preCurso") });
 
   if (!preCurso) {
-    throw erroHttp(404, "Pré-curso não encontrado");
+    throw erroHttp(404, "Cadastro de Formação não encontrado");
   }
 
   if (!podeAcessarOfertante(sessao.usuario, preCurso.curso.cdOfertante)) {
@@ -47,7 +48,7 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
   });
 
   if (!preCursoExistente) {
-    throw erroHttp(404, "Pré-curso não encontrado");
+    throw erroHttp(404, "Cadastro de Formação não encontrado");
   }
 
   if (!podeGerenciarPreCurso(sessao.usuario, preCursoExistente.curso.cdOfertante)) {
@@ -56,10 +57,12 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
 
   // REQ-PC-12: somente leitura depois de encerrado, sem exceção.
   if (preCursoExistente.status === "ENCERRADO") {
-    throw erroHttp(409, "Pré-curso já encerrado, somente leitura");
+    throw erroHttp(409, "Cadastro de Formação já encerrado, somente leitura");
   }
 
-  const patch = await corpoValidado(request, respostasPreCursoSchema.partial());
+  const patch = await corpoValidado(request, respostasPreCursoSchema.partial(), {
+    informarCampo: true,
+  });
 
   // REQ-PC-04: merge raso - só as chaves enviadas são alteradas (RESP-01,
   // RESP-03). Edge case da spec (Planejamento): a validação de ordem das
@@ -69,9 +72,16 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
   const { registro, respostas } = await aplicarPatchRespostas({
     alvo: { formulario: "preCurso", cdCurso },
     patch,
+    // RU-61 (decisão do usuário): a ordem só é conferida quando o PATCH traz
+    // uma das 4 datas. Um cadastro antigo com datas fora de ordem continua
+    // gravando as outras perguntas; a conclusão confere sempre (RU-62).
     validarMesclado: (mescladas) => {
-      if (!ordemDatasValida(mescladas)) {
-        throw erroHttp(400, "Data de término não pode ser anterior à data de início");
+      if (!CHAVES_DATAS_PLANEJAMENTO.some((chave) => chave in patch)) {
+        return;
+      }
+      const violacao = violacaoOrdemDatas(mescladas);
+      if (violacao) {
+        throw erroHttp(400, violacao);
       }
     },
     gravarRegistro: (tx) =>

@@ -197,6 +197,23 @@ describe("respostasAvaliacaoSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  // RU-07 (doc 15): a recusa dos 4 motivos sai em português, na pergunta 17.
+  it("avalMotivMotivosParticipacao com 4 itens recusa com 'Selecione no máximo 3 motivos'", () => {
+    const result = respostasAvaliacaoSchema.safeParse({
+      ...RESPOSTA_VALIDA,
+      avalMotivMotivosParticipacao: [
+        "Conseguir um emprego/trabalho",
+        "Abrir o meu próprio negócio",
+        "Aplicar o conhecimento adquirido",
+        "Contribuir com o turismo no meu território",
+      ],
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toHaveLength(1);
+    expect(result.error?.issues[0]?.path).toEqual(["avalMotivMotivosParticipacao"]);
+    expect(result.error?.issues[0]?.message).toBe("Selecione no máximo 3 motivos");
+  });
+
   describe("escala de Avaliação do Curso (Q24, 8 linhas, AD-020, 1 a 5)", () => {
     const camposEscala = [
       "avalCursoDinamicasInclusao",

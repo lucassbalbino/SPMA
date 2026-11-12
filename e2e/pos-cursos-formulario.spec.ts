@@ -146,17 +146,22 @@ async function salvarRascunho(page: Page) {
   return resposta;
 }
 
+// RU-17/RU-18: o botão é "Concluir" e a conclusão só sai depois do "Sim".
 async function encerrar(page: Page) {
+  await page.getByRole("button", { name: "Concluir" }).click();
   const [resposta] = await Promise.all([
     page.waitForResponse(
       (res) => res.url().includes("/encerrar") && res.request().method() === "POST",
     ),
-    page.getByRole("button", { name: "Encerrar" }).click(),
+    page.getByTestId("confirmacao").getByRole("button", { name: "Sim" }).click(),
   ]);
   return resposta;
 }
 
-async function preencherTodosOsCampos(page: Page, opcoes: { omitirDetalheAlteracao?: boolean } = {}) {
+async function preencherTodosOsCampos(
+  page: Page,
+  opcoes: { omitirDetalheAlteracao?: boolean; omitirContinuidade?: boolean } = {},
+) {
   // Durante o Curso - Acompanhamento Pedagógico (Q1-Q6)
   await abrirBloco(page, 1);
   await marcarOpcao(page, "posAcompanhProblemasEstudo", 0);
@@ -205,9 +210,11 @@ async function preencherTodosOsCampos(page: Page, opcoes: { omitirDetalheAlterac
   await fecharBloco(page, 4);
 
   // Ações para Continuidade do Curso (Q26)
-  await abrirBloco(page, 5);
-  await marcarOpcao(page, "posContEstrategias", 0);
-  await fecharBloco(page, 5);
+  if (!opcoes.omitirContinuidade) {
+    await abrirBloco(page, 5);
+    await marcarOpcao(page, "posContEstrategias", 0);
+    await fecharBloco(page, 5);
+  }
 }
 
 test("AD-050: com o pré-curso em andamento, a página mostra o aviso no lugar do formulário", async ({
@@ -219,12 +226,37 @@ test("AD-050: com o pré-curso em andamento, a página mostra o aviso no lugar d
   await page.goto(`/pos-cursos/${cdCurso}`);
 
   await expect(page.getByTestId("aviso-pre-curso-em-andamento")).toContainText(
-    "Encerre o pré-curso antes de preencher o pós-curso",
+    "Conclua o Cadastro de Formação antes de preencher a Avaliação de Formação",
   );
   await expect(page.getByTestId("form-pos-curso")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: `Ir para o pré-curso #${cdCurso}` })).toHaveAttribute(
+  // RU-13: o título do aviso também usa o nome (aqui, o de reserva, sem P8)
+  // e o link não mostra mais o número.
+  await expect(
+    page.getByTestId("aviso-pre-curso-em-andamento").locator('[data-slot="card-title"]'),
+  ).toHaveText(`Avaliação de Formação - Formação sem nome (nº ${cdCurso})`);
+  await expect(page.getByRole("link", { name: "Ir para o Cadastro de Formação" })).toHaveAttribute(
     "href",
     `/pre-cursos/${cdCurso}`,
+  );
+});
+
+// RU-13 (doc 8): o título do formulário liberado traz o nome da formação.
+test("RU-13: o título da Avaliação de Formação traz o nome da formação", async ({ page }) => {
+  const cdCurso = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+    respostas: { qualifNomeCurso: "Recepção Hoteleira" },
+  }).cdCurso;
+  criarPosCurso({ cdCurso, criadoPor: CNPJ_GO_A });
+  encerrarPreCursoFixture(cdCurso);
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pos-cursos/${cdCurso}`);
+
+  await expect(page.getByTestId("form-pos-curso").locator('[data-slot="card-title"]')).toHaveText(
+    "Avaliação de Formação - Recepção Hoteleira",
   );
 });
 
@@ -274,6 +306,49 @@ test("encerramento bloqueado por campo condicional pendente referencia o campo",
   await expect(page.getByTestId("lista-pendencias").locator("li")).toHaveCount(1);
 });
 
+// Doc 12 da revisão de usabilidade: a pessoa encerrava, viu a 26 pendente,
+// preenchia a 26 e encerrava de novo sem salvar - o servidor (que encerra o
+// que está gravado) acusava a 26 outra vez, e salvar não limpava a lista.
+test("RU-01/02/03: com alteração não salva o encerramento é bloqueado; salvar limpa as pendências", async ({
+  page,
+}) => {
+  const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A);
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pos-cursos/${cdCurso}`);
+
+  await preencherTodosOsCampos(page, { omitirContinuidade: true });
+  expect((await salvarRascunho(page)).ok()).toBe(true);
+  expect((await encerrar(page)).ok()).toBe(false);
+  await expect(page.getByTestId("pendencia-posContEstrategias")).toBeVisible();
+
+  await abrirBloco(page, 5);
+  await marcarOpcao(page, "posContEstrategias", 0);
+
+  // RU-02: nenhum POST de encerramento sai enquanto há alteração só na tela.
+  let pedidosDeEncerramento = 0;
+  page.on("request", (req) => {
+    if (req.url().includes("/encerrar") && req.method() === "POST") {
+      pedidosDeEncerramento += 1;
+    }
+  });
+  await page.getByRole("button", { name: "Concluir" }).click();
+  await expect(page.getByTestId("erro-pos-curso")).toHaveText("Salve antes de concluir.");
+  // Nem a confirmação abre enquanto há alteração só na tela.
+  await expect(page.getByTestId("confirmacao")).toHaveCount(0);
+  await expect(page.getByTestId("status-pos-curso")).toHaveText("Em andamento");
+  expect(pedidosDeEncerramento).toBe(0);
+
+  // RU-01: salvar esvazia a lista e confirma a gravação.
+  expect((await salvarRascunho(page)).ok()).toBe(true);
+  await expect(page.getByTestId("lista-pendencias")).toHaveCount(0);
+  await expect(page.getByTestId("salvo-pos-curso")).toHaveText("Alterações salvas.");
+
+  // RU-03: depois de salvar, o encerramento volta a ser pedido e passa.
+  expect((await encerrar(page)).ok()).toBe(true);
+  await expect(page.getByTestId("status-pos-curso")).toHaveText("Encerrado");
+});
+
 test("GO preenche os 26 campos e encerra o pós-curso de forma irreversível", async ({ page }) => {
   const cdCurso = criarPosCursoFixture(CNPJ_GO_A, CNPJ_GO_A);
 
@@ -292,7 +367,7 @@ test("GO preenche os 26 campos e encerra o pós-curso de forma irreversível", a
   await expect(page.getByTestId("status-pos-curso")).toHaveText("Encerrado");
   await expect(page.getByTestId("lista-pendencias")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 
   await abrirBloco(page, 2);
   await expect(page.getByTestId("campo-posExecDificuldadesEnfrentadas")).toBeDisabled();
@@ -307,7 +382,7 @@ test("pós-curso encerrado é somente leitura, sem botões de ação", async ({ 
 
   await expect(page.getByTestId("status-pos-curso")).toHaveText("Encerrado");
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 
   await abrirBloco(page, 2);
   await expect(page.getByTestId("campo-posExecDificuldadesEnfrentadas")).toBeDisabled();
@@ -321,7 +396,7 @@ test("VO visualiza os dados sem controles de edição", async ({ page }) => {
 
   await expect(page.getByTestId("form-pos-curso")).toBeVisible();
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 });
 
 test("GO de outro Ofertante tentando acessar diretamente recebe não encontrado", async ({
@@ -333,4 +408,32 @@ test("GO de outro Ofertante tentando acessar diretamente recebe não encontrado"
   const res = await page.goto(`/pos-cursos/${cdCurso}`);
 
   expect(res?.status()).toBe(404);
+});
+
+// RU-55/RU-56 (doc 11): a pergunta 19 lembra o valor previsto na criação, e o
+// valor realizado pode ser diferente dele.
+test("RU-55/56: a pergunta 19 mostra o valor previsto e aceita um valor diferente", async ({
+  page,
+}) => {
+  const cdCurso = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 60000,
+    criadoPor: CNPJ_GO_A,
+  }).cdCurso;
+  criarPosCurso({ cdCurso, criadoPor: CNPJ_GO_A });
+  encerrarPreCursoFixture(cdCurso);
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pos-cursos/${cdCurso}`);
+  await abrirBloco(page, 4);
+
+  await expect(page.getByTestId("valor-previsto")).toHaveText(
+    "Estava previsto inicialmente R$ 60.000,00",
+  );
+
+  await page.getByTestId("campo-posFinValorTotal").fill("400000");
+  const resposta = await salvarRascunho(page);
+  expect(resposta.ok()).toBe(true);
+  await expect(page.getByTestId("salvo-pos-curso")).toHaveText("Alterações salvas.");
 });

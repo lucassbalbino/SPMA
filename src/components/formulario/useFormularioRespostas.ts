@@ -51,6 +51,10 @@ export function useFormularioRespostas<C extends string, R extends Record<string
   // PATCH enviar apenas o bloco alterado, não o questionário inteiro.
   const [alterados, setAlterados] = useState<Set<C>>(new Set());
   const [erro, setErro] = useState<string | null>(null);
+  // Chave da pergunta que o servidor recusou (`campo` do 400, RU-06).
+  const [campoDoErro, setCampoDoErro] = useState<string | null>(null);
+  // Confirmação de "Salvar" (RU-01): sem ela a pessoa não sabia se gravou.
+  const [mensagem, setMensagem] = useState<string | null>(null);
   const [pendentes, setPendentes] = useState<string[]>([]);
   const [salvando, setSalvando] = useState(false);
   const [encerrando, setEncerrando] = useState(false);
@@ -62,6 +66,7 @@ export function useFormularioRespostas<C extends string, R extends Record<string
   function setCampo(chave: C, valor: unknown) {
     setRespostas((atual) => ({ ...atual, [chave]: valor }));
     setAlterados((atual) => new Set(atual).add(chave));
+    setMensagem(null);
   }
 
   /**
@@ -87,6 +92,8 @@ export function useFormularioRespostas<C extends string, R extends Record<string
 
   async function salvarRascunho() {
     setErro(null);
+    setCampoDoErro(null);
+    setMensagem(null);
     setSalvando(true);
     try {
       const excluidas = new Set<string>(naoAplicaveis?.(respostas) ?? []);
@@ -105,19 +112,46 @@ export function useFormularioRespostas<C extends string, R extends Record<string
 
       if (!res.ok) {
         setErro(resposta.erro ?? "Não foi possível salvar");
+        setCampoDoErro(typeof resposta.campo === "string" ? resposta.campo : null);
         return;
       }
 
       aoSalvar?.(resposta);
       setAlterados(new Set());
+      // A lista vinha da última tentativa de encerrar e não era refeita ao
+      // salvar: continuava acusando o que a pessoa acabara de preencher
+      // (doc 12, RU-01). A próxima tentativa de encerrar a recalcula.
+      setPendentes([]);
+      setMensagem("Alterações salvas.");
       router.refresh();
     } finally {
       setSalvando(false);
     }
   }
 
-  async function encerrar() {
+  /**
+   * O servidor encerra o que está GRAVADO. Com alteração só na tela, ele
+   * acusaria como pendente o que a pessoa acabou de preencher (doc 12):
+   * bloquear até salvar, por decisão do usuário (RU-02). Chamado antes de
+   * abrir a confirmação do Concluir e de novo dentro de `encerrar`.
+   */
+  function podeConcluir(): boolean {
     setErro(null);
+    setCampoDoErro(null);
+    setMensagem(null);
+
+    if (alterados.size > 0) {
+      setErro("Salve antes de concluir.");
+      return false;
+    }
+    return true;
+  }
+
+  async function encerrar() {
+    if (!podeConcluir()) {
+      return;
+    }
+
     setPendentes([]);
     setEncerrando(true);
     try {
@@ -140,6 +174,8 @@ export function useFormularioRespostas<C extends string, R extends Record<string
   return {
     respostas,
     erro,
+    campoDoErro,
+    mensagem,
     pendentes,
     salvando,
     encerrando,
@@ -149,6 +185,7 @@ export function useFormularioRespostas<C extends string, R extends Record<string
     setCampo,
     toggleCheckbox,
     salvarRascunho,
+    podeConcluir,
     encerrar,
   };
 }

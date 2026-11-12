@@ -4,6 +4,7 @@ import {
   OPCOES_CARACTERISTICAS,
   ordemDatasValida,
   respostasPreCursoSchema,
+  violacaoOrdemDatas,
 } from "./pre-curso.schema";
 
 // Fixture com as chaves do questionário fonte
@@ -89,14 +90,19 @@ const RESPOSTA_VALIDA = {
 };
 
 describe("criarCursoSchema", () => {
+  // RU-57: o nome entrou no corpo; os casos abaixo o mandam válido para que
+  // cada recusa continue isolada no campo que ela testa.
+  const NOME = "Mecânica Básica";
+
   it("rejeita cdVerba ausente", () => {
-    const result = criarCursoSchema.safeParse({ vlCursoAlocado: 1000 });
+    const result = criarCursoSchema.safeParse({ nome: NOME, vlCursoAlocado: 1000 });
 
     expect(result.success).toBe(false);
   });
 
   it("rejeita cdVerba não-positivo", () => {
     const result = criarCursoSchema.safeParse({
+      nome: NOME,
       cdVerba: 0,
       vlCursoAlocado: 1000,
     });
@@ -106,6 +112,7 @@ describe("criarCursoSchema", () => {
 
   it("rejeita vlCursoAlocado não-positivo", () => {
     const result = criarCursoSchema.safeParse({
+      nome: NOME,
       cdVerba: 1,
       vlCursoAlocado: 0,
     });
@@ -115,11 +122,48 @@ describe("criarCursoSchema", () => {
 
   it("aceita payload válido", () => {
     const result = criarCursoSchema.safeParse({
+      nome: NOME,
       cdVerba: 1,
       vlCursoAlocado: 1000,
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it.each([
+    ["ausente", undefined],
+    ["vazio", ""],
+    ["só espaços", "   "],
+  ])("RU-57: nome %s recusa com 'Nome da formação é obrigatório'", (_caso, nome) => {
+    const result = criarCursoSchema.safeParse({ nome, cdVerba: 1, vlCursoAlocado: 1000 });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["nome"]);
+    expect(result.error?.issues[0]?.message).toBe("Nome da formação é obrigatório");
+  });
+
+  it("RU-58: tira os espaços das pontas do nome", () => {
+    const result = criarCursoSchema.safeParse({
+      nome: "  Mecânica Básica  ",
+      cdVerba: 1,
+      vlCursoAlocado: 1000,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.nome).toBe("Mecânica Básica");
+  });
+});
+
+describe("qualifNomeCurso (pergunta 8, RU-59)", () => {
+  it.each([
+    ["vazia", ""],
+    ["só espaços", "   "],
+  ])("pergunta 8 %s recusa com 'Nome da formação é obrigatório'", (_caso, valor) => {
+    const result = respostasPreCursoSchema.partial().safeParse({ qualifNomeCurso: valor });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["qualifNomeCurso"]);
+    expect(result.error?.issues[0]?.message).toBe("Nome da formação é obrigatório");
   });
 });
 
@@ -578,5 +622,54 @@ describe("respostasPreCursoSchema", () => {
         }),
       ).toBe(false);
     });
+  });
+});
+
+// Revisão de usabilidade (doc 9): cada regra com a própria mensagem, e a
+// inscrição começando antes da formação (RU-40 a RU-42).
+describe("violacaoOrdemDatas", () => {
+  const formacao = { planejDataInicioPrevista: "2026-10-14", planejDataTerminoPrevista: "2027-01-28" };
+
+  it("RU-40: inscrição começando antes da formação passa", () => {
+    expect(violacaoOrdemDatas({ ...formacao, planejDataInicioInscricao: "2026-10-13" })).toBeNull();
+  });
+
+  it.each([
+    ["no mesmo dia", "2026-10-14"],
+    ["depois (o caso da imagem 9)", "2026-10-20"],
+  ])("RU-40: inscrição começando %s da formação recusa", (_caso, inicioInscricao) => {
+    expect(violacaoOrdemDatas({ ...formacao, planejDataInicioInscricao: inicioInscricao })).toBe(
+      "A data de início da inscrição deve ser anterior à data de início da formação.",
+    );
+  });
+
+  it("RU-40: sem a data 13 ou sem a 17b a regra não se aplica", () => {
+    expect(violacaoOrdemDatas({ planejDataInicioInscricao: "2026-10-20" })).toBeNull();
+    expect(violacaoOrdemDatas({ planejDataInicioPrevista: "2026-10-14" })).toBeNull();
+  });
+
+  it("RU-41: término da formação antes do início recusa com a mensagem da formação", () => {
+    expect(
+      violacaoOrdemDatas({ planejDataInicioPrevista: "2026-06-01", planejDataTerminoPrevista: "2026-03-01" }),
+    ).toBe("A data de término da formação não pode ser anterior à data de início.");
+  });
+
+  it("RU-42: término da inscrição antes do início recusa com a mensagem da inscrição", () => {
+    expect(
+      violacaoOrdemDatas({
+        planejDataInicioInscricao: "2026-02-15",
+        planejDataTerminoInscricao: "2026-02-14",
+      }),
+    ).toBe("A data de término da inscrição não pode ser anterior à data de início.");
+  });
+
+  it("tudo em ordem: null", () => {
+    expect(
+      violacaoOrdemDatas({
+        ...formacao,
+        planejDataInicioInscricao: "2026-09-01",
+        planejDataTerminoInscricao: "2026-09-30",
+      }),
+    ).toBeNull();
   });
 });

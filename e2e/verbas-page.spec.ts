@@ -101,8 +101,9 @@ test("GV-11/GV-14: GO vê só a própria verba, com GO, CNPJ, valor, saldo e dat
   const linha = page.getByTestId(`verba-${cdVerbaA}`);
   await expect(linha).toContainText("GO Verbas Página A");
   await expect(linha).toContainText(formatarDocumento(CNPJ_GO_A));
-  // IDV-09: número e identificação, também para quem só lê.
-  await expect(linha).toContainText(`#${cdVerbaA} · Capacitação A`);
+  // RU-16 (supera IDV-09): só o nome da verba, sem o número.
+  await expect(linha).toContainText("Capacitação A");
+  await expect(linha).not.toContainText(`#${cdVerbaA}`);
   await expect(linha).toContainText("Valor R$ 5000.00");
   // GV-16 na tela: 5000 - 1200 alocados a um curso.
   await expect(linha).toContainText("Saldo R$ 3800.00");
@@ -110,30 +111,33 @@ test("GV-11/GV-14: GO vê só a própria verba, com GO, CNPJ, valor, saldo e dat
 
   await expect(page.getByTestId(`verba-${cdVerbaB}`)).toHaveCount(0);
 
+  // RU-37 (doc 3): para o ofertante, a lista é dos recursos recebidos.
+  await expect(page.getByText("Recursos Recebidos", { exact: true })).toBeVisible();
+
   await expect(page.locator("form")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Editar" })).toHaveCount(0);
 });
 
-test("GV-15/GV-14: VO de um GO sem verbas vê 'Nenhuma verba cadastrada.' e nenhum formulário", async ({
+test("GV-15/GV-14: VO de um GO sem verbas vê 'Nenhum recurso cadastrado.' e nenhum formulário", async ({
   page,
 }) => {
   await logar(page, CPF_VO_DE_C);
   await page.goto("/verbas");
 
-  await expect(page.getByText("Nenhuma verba cadastrada.")).toBeVisible();
+  await expect(page.getByText("Nenhum recurso cadastrado.")).toBeVisible();
   await expect(page.locator('[data-testid^="verba-"]')).toHaveCount(0);
   await expect(page.locator("form")).toHaveCount(0);
 });
 
-test("GV-17: VT abre /verbas e vê 'Seu perfil não tem acesso a verbas.', sem nenhuma verba", async ({
+test("GV-17: VT abre /verbas e vê 'Seu perfil não tem acesso a recursos.', sem nenhuma verba", async ({
   page,
 }) => {
   await logar(page, CPF_VT);
   await page.goto("/verbas");
 
-  await expect(page.getByText("Seu perfil não tem acesso a verbas.")).toBeVisible();
+  await expect(page.getByText("Seu perfil não tem acesso a recursos.")).toBeVisible();
   await expect(page.locator('[data-testid^="verba-"]')).toHaveCount(0);
-  await expect(page.getByText("Nenhuma verba cadastrada.")).toHaveCount(0);
+  await expect(page.getByText("Nenhum recurso cadastrado.")).toHaveCount(0);
 });
 
 test("GV-11: verba sem data mostra '—', e GO sem nome aparece pelo CNPJ no lugar do nome", async ({
@@ -157,23 +161,23 @@ test("GV-03/IDV-03/GV-04/GV-05: AM envia o formulário incompleto e vê a mensag
   await logar(page, CPF_AM);
   await page.goto("/verbas");
 
-  const criar = page.getByRole("button", { name: "Criar verba" });
+  const criar = page.getByRole("button", { name: "Criar recurso" });
 
   await criar.click();
   await expect(page.getByText("Ofertante é obrigatório")).toBeVisible();
 
   await page.getByLabel("GO").selectOption(CNPJ_GO_C);
-  await page.getByLabel("Identificação").fill("   ");
+  await page.getByLabel("Nome do recurso").fill("   ");
   await criar.click();
-  await expect(page.getByText("Identificação é obrigatória")).toBeVisible();
+  await expect(page.getByText("Nome do recurso é obrigatório")).toBeVisible();
 
-  await page.getByLabel("Identificação").fill("Verba C");
+  await page.getByLabel("Nome do recurso").fill("Verba C");
   await criar.click();
-  await expect(page.getByText("Valor da verba é obrigatório")).toBeVisible();
+  await expect(page.getByText("Valor do recurso é obrigatório")).toBeVisible();
 
-  await page.getByLabel("Valor da verba").fill("0");
+  await page.getByLabel("Valor do recurso").fill("0");
   await criar.click();
-  await expect(page.getByText("Valor da verba deve ser positivo")).toBeVisible();
+  await expect(page.getByText("Valor do recurso deve ser positivo")).toBeVisible();
 
   expect(getVerbasPorOfertante(CNPJ_GO_C)).toEqual([]);
 });
@@ -186,18 +190,18 @@ test("GV-01/GV-02/GV-07/IDV-01/IDV-02: AM cria uma segunda verba para um GO que 
 
   // GV-01 + IDV-01: os campos do formulário.
   await expect(page.getByLabel("GO")).toBeVisible();
-  await expect(page.getByLabel("Identificação")).toBeVisible();
-  await expect(page.getByLabel("Valor da verba")).toBeVisible();
+  await expect(page.getByLabel("Nome do recurso")).toBeVisible();
+  await expect(page.getByLabel("Valor do recurso")).toBeVisible();
   await expect(page.getByLabel("Data de liberação")).toBeVisible();
 
   await page.getByLabel("GO").selectOption(CNPJ_GO_B);
-  await page.getByLabel("Identificação").fill("Repasse Maio");
-  await page.getByLabel("Valor da verba").fill("1500.75");
+  await page.getByLabel("Nome do recurso").fill("Repasse Maio");
+  await page.getByLabel("Valor do recurso").fill("1500.75");
   await page.getByLabel("Data de liberação").fill("2026-05-01");
 
   const [resposta] = await Promise.all([
     page.waitForResponse((res) => res.url().endsWith("/api/verbas") && res.request().method() === "POST"),
-    page.getByRole("button", { name: "Criar verba" }).click(),
+    page.getByRole("button", { name: "Criar recurso" }).click(),
   ]);
   expect(resposta.status()).toBe(201);
 
@@ -215,12 +219,13 @@ test("GV-01/GV-02/GV-07/IDV-01/IDV-02: AM cria uma segunda verba para um GO que 
   await expect(page.getByTestId(`verba-${cdVerbaB}`)).toContainText("Valor R$ 700.00");
   const linhaNova = page.getByTestId(`verba-${nova.cdVerba}`);
   await expect(linhaNova).toContainText("GO Verbas Página B");
-  await expect(linhaNova).toContainText(`#${nova.cdVerba} · Repasse Maio`);
+  await expect(linhaNova).toContainText("Repasse Maio");
+  await expect(linhaNova).not.toContainText(`#${nova.cdVerba}`);
   await expect(linhaNova).toContainText("Valor R$ 1500.75");
   await expect(linhaNova).toContainText("01/05/2026");
 });
 
-test("GV-09: o botão 'Criar verba' fica desabilitado enquanto o envio está em andamento", async ({
+test("GV-09: o botão 'Criar recurso' fica desabilitado enquanto o envio está em andamento", async ({
   page,
 }) => {
   await logar(page, CPF_GT);
@@ -235,10 +240,10 @@ test("GV-09: o botão 'Criar verba' fica desabilitado enquanto o envio está em 
   });
 
   await page.getByLabel("GO").selectOption(CNPJ_GO_B);
-  await page.getByLabel("Identificação").fill("Verba GV-09");
-  await page.getByLabel("Valor da verba").fill("10");
+  await page.getByLabel("Nome do recurso").fill("Verba GV-09");
+  await page.getByLabel("Valor do recurso").fill("10");
 
-  const criar = page.getByRole("button", { name: "Criar verba" });
+  const criar = page.getByRole("button", { name: "Criar recurso" });
   await criar.click();
   await expect(criar).toBeDisabled();
 
@@ -256,28 +261,28 @@ test("GV-18/GV-19/GV-20/GV-22: GT edita valor e data na linha - abaixo do alocad
   await linha.getByRole("button", { name: "Editar" }).click();
 
   // GV-22: a edição não oferece trocar o GO.
-  await expect(linha.getByLabel("Valor da verba")).toBeVisible();
+  await expect(linha.getByLabel("Valor do recurso")).toBeVisible();
   await expect(linha.getByLabel("Data de liberação")).toBeVisible();
   await expect(linha.locator("select")).toHaveCount(0);
   await expect(linha.getByLabel("GO", { exact: true })).toHaveCount(0);
 
   // GV-19: 300 < 400 alocados - recusado, o valor no banco não muda.
-  await linha.getByLabel("Valor da verba").fill("300");
+  await linha.getByLabel("Valor do recurso").fill("300");
   await linha.getByRole("button", { name: "Salvar" }).click();
   await expect(
-    linha.getByText("Novo valor não pode ser menor que o já alocado a cursos desta verba"),
+    linha.getByText("Novo valor não pode ser menor que o já alocado a formações deste recurso"),
   ).toBeVisible();
   expect(Number(getVerba(cdVerbaD)?.vlVerba)).toBe(1000);
 
   // GV-18 + GV-20: 400 = alocado é aceito; a linha mostra os valores novos.
-  await linha.getByLabel("Valor da verba").fill("400");
+  await linha.getByLabel("Valor do recurso").fill("400");
   await linha.getByLabel("Data de liberação").fill("2026-07-15");
   await linha.getByRole("button", { name: "Salvar" }).click();
 
   await expect(linha).toContainText("Valor R$ 400.00");
   await expect(linha).toContainText("Saldo R$ 0.00");
   await expect(linha).toContainText("15/07/2026");
-  await expect(linha.getByLabel("Valor da verba")).toHaveCount(0);
+  await expect(linha.getByLabel("Valor do recurso")).toHaveCount(0);
 
   const editada = getVerba(cdVerbaD);
   expect(Number(editada?.vlVerba)).toBe(400);
@@ -295,19 +300,32 @@ test("IDV-06/IDV-07/IDV-08: GT edita a identificação na linha - vazia é recus
   await linha.getByRole("button", { name: "Editar" }).click();
 
   // IDV-06: o campo abre com o valor atual.
-  const campo = linha.getByLabel("Identificação");
+  const campo = linha.getByLabel("Nome do recurso");
   await expect(campo).toHaveValue("Verba E original");
 
   // IDV-08: só espaços é recusado e o banco não muda.
   await campo.fill("   ");
   await linha.getByRole("button", { name: "Salvar" }).click();
-  await expect(linha.getByText("Identificação é obrigatória")).toBeVisible();
+  await expect(linha.getByText("Nome do recurso é obrigatório")).toBeVisible();
   expect(getVerba(cdVerbaE)?.dsVerba).toBe("Verba E original");
 
   // IDV-07: grava e a lista mostra o novo nome sem recarregar.
   await campo.fill("Repasse Março");
   await linha.getByRole("button", { name: "Salvar" }).click();
-  await expect(linha).toContainText(`#${cdVerbaE} · Repasse Março`);
-  await expect(linha.getByLabel("Identificação")).toHaveCount(0);
+  await expect(linha).toContainText("Repasse Março");
+  await expect(linha).not.toContainText(`#${cdVerbaE}`);
+  await expect(linha.getByLabel("Nome do recurso")).toHaveCount(0);
   expect(getVerba(cdVerbaE)?.dsVerba).toBe("Repasse Março");
+});
+
+// RU-37: AM e GT gerenciam recursos, não os recebem - o título é "Recursos".
+test("RU-37: para o AM, a lista se chama 'Recursos' e o formulário, 'Novo recurso'", async ({
+  page,
+}) => {
+  await logar(page, CPF_AM);
+  await page.goto("/verbas");
+
+  await expect(page.getByText("Recursos", { exact: true })).toBeVisible();
+  await expect(page.getByText("Novo recurso", { exact: true })).toBeVisible();
+  await expect(page.getByText("Recursos Recebidos", { exact: true })).toHaveCount(0);
 });

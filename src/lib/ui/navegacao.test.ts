@@ -12,6 +12,8 @@ import {
 // navegação"), não lida do módulo sob teste.
 // GV-27/GV-28 (gestao-de-verbas): "/verbas" para AM, GT, GO e VO, logo
 // depois de "Gestão de usuários" - a ordem dos módulos do painel.
+// RU-47 (revisão de usabilidade): "/meus-dados" (Editar Perfil) fecha o menu
+// dos seis perfis - antes era só do AL (PESSOAL-16).
 const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
   AM: [
     "/painel",
@@ -21,9 +23,10 @@ const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
     "/pre-cursos",
     "/pos-cursos",
     "/avaliacoes",
+    "/meus-dados",
   ],
-  GT: ["/painel", "/usuarios", "/verbas", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
-  VT: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
+  GT: ["/painel", "/usuarios", "/verbas", "/pre-cursos", "/pos-cursos", "/avaliacoes", "/meus-dados"],
+  VT: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes", "/meus-dados"],
   GO: [
     "/painel",
     "/usuarios",
@@ -32,22 +35,35 @@ const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
     "/pre-cursos",
     "/pos-cursos",
     "/avaliacoes",
+    "/meus-dados",
   ],
-  VO: ["/painel", "/verbas", "/pre-cursos", "/pos-cursos", "/avaliacoes"],
-  // PESSOAL-16: "/meus-dados" (edição do dado pessoal pelo perfil) some para
-  // todo perfil que não seja AL.
+  VO: ["/painel", "/verbas", "/pre-cursos", "/pos-cursos", "/avaliacoes", "/meus-dados"],
   AL: ["/painel", "/avaliacoes", "/meus-dados"],
 };
 
 // Rótulos de módulo do painel de hoje (src/app/(protegido)/painel/page.tsx:10).
 // Asserção literal: é o contrato que segura e2e/painel.spec.ts.
+// RU-35 (revisão de usabilidade): nomes por extenso.
 const MODULOS_ESPERADOS: Record<TipoUsuario, string[]> = {
-  AM: ["Gestão de usuários", "Ofertantes", "Verbas", "Cursos", "Relatórios"],
-  GT: ["Gestão de usuários", "Ofertantes", "Verbas", "Cursos"],
-  VT: ["Cursos", "Relatórios"],
-  GO: ["Gestão de usuários", "Verbas", "Meus cursos"],
-  VO: ["Verbas", "Meus cursos"],
-  AL: ["Minha avaliação"],
+  AM: [
+    "Gestão de Usuários",
+    "Gestão de Ofertante",
+    "Gestão de Recursos",
+    "Gestão de Formações",
+    "Visualização de Relatórios",
+    "Editar Perfil",
+  ],
+  GT: [
+    "Gestão de Usuários",
+    "Gestão de Ofertante",
+    "Gestão de Recursos",
+    "Gestão de Formações",
+    "Editar Perfil",
+  ],
+  VT: ["Gestão de Formações", "Visualização de Relatórios", "Editar Perfil"],
+  GO: ["Gestão de Usuários", "Gestão de Recursos", "Minhas Formações", "Editar Perfil"],
+  VO: ["Gestão de Recursos", "Minhas Formações", "Editar Perfil"],
+  AL: ["Minha avaliação", "Editar Perfil"],
 };
 
 // Rotas realmente implementadas em src/app/(protegido) (uma page.tsx cada).
@@ -85,9 +101,9 @@ describe("navegacaoDoPerfil", () => {
     expect(hrefs).not.toContain("/pos-cursos");
   });
 
-  it("GU-01: AM, GT e GO recebem 'Gestão de usuários' apontando para /usuarios", () => {
+  it("GU-01: AM, GT e GO recebem 'Gestão de Usuários' apontando para /usuarios", () => {
     for (const tipo of [TipoUsuario.AM, TipoUsuario.GT, TipoUsuario.GO]) {
-      expect(rotuloDe(tipo, "/usuarios")).toBe("Gestão de usuários");
+      expect(rotuloDe(tipo, "/usuarios")).toBe("Gestão de Usuários");
     }
   });
 
@@ -112,12 +128,25 @@ describe("navegacaoDoPerfil", () => {
     expect(hrefsDe(TipoUsuario.AL)).not.toContain("/cursos/novo");
   });
 
-  it("só AL recebe /meus-dados (PESSOAL-16, PESSOAL-20)", () => {
-    expect(hrefsDe(TipoUsuario.AL)).toContain("/meus-dados");
-
-    for (const tipo of TODOS_OS_TIPOS.filter((t) => t !== TipoUsuario.AL)) {
-      expect(hrefsDe(tipo)).not.toContain("/meus-dados");
+  // RU-47 supera PESSOAL-16/20: todo perfil gerencia o próprio cadastro.
+  it("RU-47: os seis perfis recebem 'Editar Perfil' apontando para /meus-dados", () => {
+    for (const tipo of TODOS_OS_TIPOS) {
+      expect(rotuloDe(tipo, "/meus-dados")).toBe("Editar Perfil");
     }
+  });
+
+  // RU-36 (revisão de usabilidade): os rótulos do menu, pelos termos do cliente.
+  it("RU-36: o menu do AM usa os nomes por extenso, na ordem da tabela", () => {
+    expect(navegacaoDoPerfil(TipoUsuario.AM).map((item) => item.rotulo)).toEqual([
+      "Painel",
+      "Gestão de Usuários",
+      "Gestão de Recursos",
+      "Nova Formação",
+      "Cadastro de Formação",
+      "Avaliação de Formação",
+      "Avaliações Aluno",
+      "Editar Perfil",
+    ]);
   });
 
   it("o item de /avaliacoes se chama 'Minha avaliação' para AL", () => {
@@ -130,9 +159,9 @@ describe("navegacaoDoPerfil", () => {
     }
   });
 
-  it("GV-27/GV-28: AM, GT, GO e VO recebem 'Verbas' apontando para /verbas", () => {
+  it("GV-27/GV-28: AM, GT, GO e VO recebem 'Gestão de Recursos' apontando para /verbas", () => {
     for (const tipo of [TipoUsuario.AM, TipoUsuario.GT, TipoUsuario.GO, TipoUsuario.VO]) {
-      expect(rotuloDe(tipo, "/verbas")).toBe("Verbas");
+      expect(rotuloDe(tipo, "/verbas")).toBe("Gestão de Recursos");
     }
   });
 

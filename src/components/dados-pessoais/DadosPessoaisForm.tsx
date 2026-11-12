@@ -36,6 +36,7 @@ import {
   type RespostasDadosPessoais,
 } from "@/lib/validation/schemas/dados-pessoais.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
+import { exibirTelefone, mascaraTelefone } from "@/lib/validation/telefone";
 
 type Chave = keyof RespostasDadosPessoais;
 type TipoCampo = "texto" | "select" | "radio";
@@ -83,8 +84,8 @@ export function DadosPessoaisForm({
   respostasIniciais,
   modo,
 }: {
-  /** Nome e e-mail já gravados em `TB_Usuario`, para editar ou completar. */
-  cadastroInicial: { nome: string; email: string };
+  /** Nome, e-mail e telefone já gravados em `TB_Usuario`, para editar ou completar. */
+  cadastroInicial: { nome: string; email: string; telefone?: string };
   respostasIniciais: Partial<RespostasDadosPessoais>;
   /**
    * "onboarding": primeira gravação obrigatória - sucesso libera a
@@ -96,6 +97,10 @@ export function DadosPessoaisForm({
   const router = useRouter();
   const [nome, setNome] = useState(cadastroInicial.nome);
   const [email, setEmail] = useState(cadastroInicial.email);
+  // RU-52: o Aluno também informa o telefone, opcional (Editar Perfil).
+  // Telefone antigo aparece como foi gravado e só vai no corpo se for alterado.
+  const [telefone, setTelefone] = useState(() => exibirTelefone(cadastroInicial.telefone ?? ""));
+  const [telefoneAlterado, setTelefoneAlterado] = useState(false);
   const [respostas, setRespostas] =
     useState<Partial<RespostasDadosPessoais>>(respostasIniciais);
   const [erro, setErro] = useState<string | null>(null);
@@ -116,7 +121,12 @@ export function DadosPessoaisForm({
       const res = await fetch("/api/usuarios/me/dados-pessoais", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...headerCSRF() },
-        body: JSON.stringify({ nome, email, ...respostas }),
+        body: JSON.stringify({
+          nome,
+          email,
+          ...(telefoneAlterado && { telefone }),
+          ...respostas,
+        }),
       });
       const corpo = await res.json();
 
@@ -176,6 +186,24 @@ export function DadosPessoaisForm({
                 onChange={(event) => {
                   setSucesso(false);
                   setEmail(event.target.value);
+                }}
+                disabled={enviando}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="telefone">Telefone/WhatsApp (com DDD)</FieldLabel>
+              <Input
+                id="telefone"
+                data-testid="campo-telefone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="(61) 99999-9999"
+                value={telefone}
+                onChange={(event) => {
+                  setSucesso(false);
+                  setTelefone(mascaraTelefone(event.target.value));
+                  setTelefoneAlterado(true);
                 }}
                 disabled={enviando}
               />

@@ -6,12 +6,15 @@
 // `upsertUsuario({ tipo: "GO", ... })`.
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
+  criarAvaliacao,
   criarPreCurso,
   criarVerba,
+  deleteAvaliacoesPorCpf,
   deletePreCursosPorOfertante,
   deleteUsuarios,
   deleteVerbasPorOfertante,
   encerrarPreCursoFixture,
+  getPreCurso,
   upsertUsuario,
 } from "./helpers/db";
 import { geradorDeCnpj } from "./helpers/cnpj";
@@ -23,13 +26,17 @@ const gerarCnpjValido = geradorDeCnpj("34");
 const CNPJ_GO_A = gerarCnpjValido(1);
 const CNPJ_GO_B = gerarCnpjValido(2);
 const CPF_VO_A = "52151004384";
+// Aluno só para matricular na formação que não pode ser excluída (RU-25).
+const CPF_AL_EXCLUSAO = "61720304777";
 
 let cdVerbaA: number;
 
 test.beforeAll(() => {
+  deleteAvaliacoesPorCpf([CPF_AL_EXCLUSAO]);
   deletePreCursosPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
   deleteVerbasPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
-  deleteUsuarios([CNPJ_GO_A, CNPJ_GO_B, CPF_VO_A]);
+  deleteUsuarios([CNPJ_GO_A, CNPJ_GO_B, CPF_VO_A, CPF_AL_EXCLUSAO]);
+  upsertUsuario({ cpf: CPF_AL_EXCLUSAO, tipo: "AL", senha: SENHA, primeiraVez: false });
 
   upsertUsuario({
     cpf: CNPJ_GO_A,
@@ -59,9 +66,10 @@ test.beforeAll(() => {
 });
 
 test.afterAll(() => {
+  deleteAvaliacoesPorCpf([CPF_AL_EXCLUSAO]);
   deletePreCursosPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
   deleteVerbasPorOfertante([CNPJ_GO_A, CNPJ_GO_B]);
-  deleteUsuarios([CNPJ_GO_A, CNPJ_GO_B, CPF_VO_A]);
+  deleteUsuarios([CNPJ_GO_A, CNPJ_GO_B, CPF_VO_A, CPF_AL_EXCLUSAO]);
 });
 
 async function login(page: Page, documento: string) {
@@ -100,12 +108,14 @@ async function salvarRascunho(page: Page) {
   return resposta;
 }
 
+// RU-17/RU-18: o botão é "Concluir" e a conclusão só sai depois do "Sim".
 async function encerrar(page: Page) {
+  await page.getByRole("button", { name: "Concluir" }).click();
   const [resposta] = await Promise.all([
     page.waitForResponse(
       (res) => res.url().includes("/encerrar") && res.request().method() === "POST",
     ),
-    page.getByRole("button", { name: "Encerrar" }).click(),
+    page.getByTestId("confirmacao").getByRole("button", { name: "Sim" }).click(),
   ]);
   return resposta;
 }
@@ -298,6 +308,24 @@ async function preencherTodosOsCampos(
   await fecharBloco(page, 12);
 }
 
+// RU-12 (doc 8): o título do Cadastro de Formação traz o nome, não o número.
+test("RU-12: o título do Cadastro de Formação traz o nome da formação", async ({ page }) => {
+  const { cdCurso } = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+    respostas: { qualifNomeCurso: "Guia de Turismo Local" },
+  });
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pre-cursos/${cdCurso}`);
+
+  await expect(page.getByTestId("form-pre-curso").locator('[data-slot="card-title"]')).toHaveText(
+    "Cadastro de Formação - Guia de Turismo Local",
+  );
+});
+
 test("GO salva um bloco parcial e o dado persiste após reload", async ({ page }) => {
   const { cdCurso } = criarPreCurso({
     cdOfertante: CNPJ_GO_A,
@@ -318,6 +346,28 @@ test("GO salva um bloco parcial e o dado persiste após reload", async ({ page }
   await page.reload();
   await abrirBloco(page, 1);
   await expect(page.getByTestId("campo-identifMunicipio")).toHaveValue("Cidade Rascunho");
+});
+
+// RU-06 (doc 14): o erro de validação diz QUAL pergunta falhou, em português.
+test("RU-06: valor recusado pelo servidor aparece com o rótulo da pergunta", async ({ page }) => {
+  const { cdCurso } = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+  });
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pre-cursos/${cdCurso}`);
+
+  await abrirBloco(page, 3);
+  await page.getByTestId("campo-planejTaxaEvasaoEsperada").fill("150");
+  const resposta = await salvarRascunho(page);
+  expect(resposta.status()).toBe(400);
+
+  await expect(page.getByTestId("erro-pre-curso")).toHaveText(
+    "18. Taxa de evasão esperada (%): Muito grande: esperado que number fosse <=100",
+  );
 });
 
 test("encerramento bloqueado por campo condicional pendente referencia o campo", async ({
@@ -373,10 +423,72 @@ test("GO preenche as 63 chaves e encerra o pré-curso de forma irreversível", a
   await expect(page.getByTestId("status-pre-curso")).toHaveText("Encerrado");
   await expect(page.getByTestId("lista-pendencias")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 
   await abrirBloco(page, 1);
   await expect(page.getByTestId("campo-identifMunicipio")).toBeDisabled();
+});
+
+// RU-18/RU-19 (doc 10): Concluir pergunta antes; "Não" não grava nem conclui.
+test("RU-18/19: Concluir abre a confirmação; 'Não' fecha sem concluir", async ({ page }) => {
+  const { cdCurso } = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+  });
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pre-cursos/${cdCurso}`);
+
+  let pedidos = 0;
+  page.on("request", (req) => {
+    if (req.url().includes(`/api/pre-cursos/${cdCurso}`) && req.method() !== "GET") {
+      pedidos += 1;
+    }
+  });
+
+  await page.getByRole("button", { name: "Concluir" }).click();
+  const confirmacao = page.getByTestId("confirmacao");
+  await expect(confirmacao).toContainText(
+    "Após a conclusão não será possível alterar os dados, tem certeza que deseja concluir?",
+  );
+  await expect(confirmacao.getByRole("button", { name: "Sim" })).toBeVisible();
+
+  await confirmacao.getByRole("button", { name: "Não" }).click();
+  await expect(confirmacao).toHaveCount(0);
+  await expect(page.getByTestId("status-pre-curso")).toHaveText("Em andamento");
+  expect(pedidos).toBe(0);
+});
+
+// RU-20 (doc 10): aviso fixo enquanto editável; some no somente leitura.
+test("RU-20: o aviso de que não há salvamento automático aparece só enquanto é editável", async ({
+  page,
+}) => {
+  const aberto = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+  }).cdCurso;
+  const encerrado = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+  }).cdCurso;
+  encerrarPreCursoFixture(encerrado);
+
+  await login(page, CNPJ_GO_A);
+
+  await page.goto(`/pre-cursos/${aberto}`);
+  await expect(page.getByTestId("aviso-salvamento-pre-curso")).toHaveText(
+    "O sistema não salva automaticamente. Salve o progresso do cadastramento.",
+  );
+
+  await page.goto(`/pre-cursos/${encerrado}`);
+  await expect(page.getByTestId("somente-leitura-pre-curso")).toBeVisible();
+  await expect(page.getByTestId("aviso-salvamento-pre-curso")).toHaveCount(0);
 });
 
 test("pré-curso encerrado é somente leitura, sem botões de ação", async ({ page }) => {
@@ -393,7 +505,7 @@ test("pré-curso encerrado é somente leitura, sem botões de ação", async ({ 
 
   await expect(page.getByTestId("status-pre-curso")).toHaveText("Encerrado");
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 
   await abrirBloco(page, 1);
   await expect(page.getByTestId("campo-identifMunicipio")).toBeDisabled();
@@ -412,7 +524,7 @@ test("VO visualiza os dados sem controles de edição", async ({ page }) => {
 
   await expect(page.getByTestId("form-pre-curso")).toBeVisible();
   await expect(page.getByRole("button", { name: "Salvar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Concluir" })).toHaveCount(0);
 });
 
 test("GO de outro Ofertante tentando acessar diretamente recebe não encontrado", async ({
@@ -429,4 +541,79 @@ test("GO de outro Ofertante tentando acessar diretamente recebe não encontrado"
   const res = await page.goto(`/pre-cursos/${cdCurso}`);
 
   expect(res?.status()).toBe(404);
+});
+
+// RU-21/RU-22/RU-23 (doc 10): excluir a formação pela tela.
+test("RU-22/23: Excluir pede confirmação e, com 'Sim', a formação some e a tela volta à lista", async ({
+  page,
+}) => {
+  const { cdCurso } = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+    respostas: { qualifNomeCurso: "Formação que sai" },
+  });
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pre-cursos/${cdCurso}`);
+
+  await page.getByRole("button", { name: "Excluir" }).click();
+  const confirmacao = page.getByTestId("confirmacao");
+  await expect(confirmacao).toContainText(
+    "Tem certeza que deseja excluir o cadastro? Após a exclusão não será possível recuperar os dados.",
+  );
+  await confirmacao.getByRole("button", { name: "Sim" }).click();
+
+  await expect(page).toHaveURL(/\/pre-cursos$/);
+  await expect(page.getByText("Formação que sai")).toHaveCount(0);
+  expect(getPreCurso(cdCurso)).toBeNull();
+});
+
+test("RU-25: formação com aluno mostra a recusa e continua existindo", async ({ page }) => {
+  const { cdCurso } = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+  });
+  criarAvaliacao({ cpf: CPF_AL_EXCLUSAO, cdCurso });
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pre-cursos/${cdCurso}`);
+
+  await page.getByRole("button", { name: "Excluir" }).click();
+  await page.getByTestId("confirmacao").getByRole("button", { name: "Sim" }).click();
+
+  await expect(page.getByTestId("erro-pre-curso")).toHaveText(
+    "Esta formação tem aluno cadastrado e não pode ser excluída.",
+  );
+  await expect(page).toHaveURL(new RegExp(`/pre-cursos/${cdCurso}$`));
+  expect(getPreCurso(cdCurso)).not.toBeNull();
+});
+
+test("RU-21: sem botão Excluir no cadastro concluído nem para quem só visualiza", async ({ page }) => {
+  const { cdCurso: aberto } = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+  });
+  const { cdCurso: concluido } = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO_A,
+  });
+  encerrarPreCursoFixture(concluido);
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pre-cursos/${concluido}`);
+  await expect(page.getByTestId("status-pre-curso")).toHaveText("Encerrado");
+  await expect(page.getByRole("button", { name: "Excluir" })).toHaveCount(0);
+
+  await login(page, CPF_VO_A);
+  await page.goto(`/pre-cursos/${aberto}`);
+  await expect(page.getByTestId("form-pre-curso")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Excluir" })).toHaveCount(0);
 });

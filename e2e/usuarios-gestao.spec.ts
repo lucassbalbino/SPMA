@@ -11,7 +11,18 @@
 // (os arquivos rodam em paralelo contra o mesmo `spma_test`, ver
 // `playwright.config.ts`). A integração usa "48"/"49".
 import { expect, test } from "@playwright/test";
-import { deleteUsuarios, getUsuario, upsertUsuario } from "./helpers/db";
+import {
+  criarAvaliacao,
+  criarDadosPessoais,
+  criarPreCurso,
+  criarVerba,
+  deleteAvaliacoesPorCpf,
+  deletePreCursosPorOfertante,
+  deleteUsuarios,
+  deleteVerbasPorOfertante,
+  getUsuario,
+  upsertUsuario,
+} from "./helpers/db";
 import { geradorDeCnpj } from "./helpers/cnpj";
 import {
   BASE_URL,
@@ -368,5 +379,115 @@ test.describe("POST /api/usuarios/resetar-senha", () => {
     expect(getUsuario(CPF_GT)?.senhaHash).not.toBeNull();
 
     await cliente.dispose();
+  });
+});
+
+// RU-30 a RU-33 (doc 13): excluir um aluno cadastrado por engano. O alvo vai
+// no corpo, como no reset de senha (GU-48, AD-029). Documentos próprios
+// (índices 20+), para não cruzar com os usuários dos blocos acima.
+test.describe("POST /api/usuarios/excluir", () => {
+  const CNPJ_GO_DONO = gerarCnpjValido(20);
+  const CNPJ_GO_ALHEIO = gerarCnpjValido(21);
+  const CPF_AM_EXCLUSAO = gerarCpfValido(20);
+  const CPF_AL_VAZIO = gerarCpfValido(21);
+  const CPF_AL_COM_DADOS = gerarCpfValido(22);
+  const CPF_VT_ALVO = gerarCpfValido(23);
+  const CPF_INEXISTENTE = gerarCpfValido(24);
+  const DOCS = [CNPJ_GO_DONO, CNPJ_GO_ALHEIO, CPF_AM_EXCLUSAO, CPF_AL_VAZIO, CPF_AL_COM_DADOS, CPF_VT_ALVO];
+
+  function limpar() {
+    deleteAvaliacoesPorCpf([CPF_AL_VAZIO, CPF_AL_COM_DADOS]);
+    deletePreCursosPorOfertante([CNPJ_GO_DONO]);
+    deleteVerbasPorOfertante([CNPJ_GO_DONO]);
+    deleteUsuarios([...DOCS, CPF_INEXISTENTE]);
+  }
+
+  test.beforeAll(() => {
+    limpar();
+    upsertUsuario({ cpf: CNPJ_GO_DONO, tipo: "GO", senha: SENHA, primeiraVez: false });
+    upsertUsuario({ cpf: CNPJ_GO_ALHEIO, tipo: "GO", senha: SENHA, primeiraVez: false });
+    upsertUsuario({ cpf: CPF_AM_EXCLUSAO, tipo: "AM", senha: SENHA, primeiraVez: false });
+    upsertUsuario({ cpf: CPF_VT_ALVO, tipo: "VT" });
+    upsertUsuario({ cpf: CPF_AL_VAZIO, tipo: "AL" });
+    upsertUsuario({ cpf: CPF_AL_COM_DADOS, tipo: "AL" });
+
+    const { cdVerba } = criarVerba({ cdOfertante: CNPJ_GO_DONO, vlVerba: 1000 });
+    const { cdCurso } = criarPreCurso({
+      cdOfertante: CNPJ_GO_DONO,
+      cdVerba,
+      vlCursoAlocado: 10,
+      criadoPor: CNPJ_GO_DONO,
+    });
+    criarAvaliacao({ cpf: CPF_AL_VAZIO, cdCurso });
+    criarAvaliacao({ cpf: CPF_AL_COM_DADOS, cdCurso });
+    criarDadosPessoais(CPF_AL_COM_DADOS, {
+      avalPessoalEstado: "SP",
+      avalPessoalMunicipio: "São Paulo, SP",
+      avalPessoalGenero: "Masculino",
+      avalPessoalFaixaEtaria: "36 a 50 anos",
+      avalPessoalEscolaridade: "Ensino superior completo",
+      avalPessoalRacaEtnia: "Branco",
+      avalPessoalCondicaoPcd: "Não sou uma Pessoa com Deficiência.",
+    });
+  });
+
+  test.afterAll(limpar);
+
+  async function excluir(quem: string, documento: string, comCsrf = true) {
+    const { idSessao, idCsrf } = await login(quem);
+    const cliente = await novoCliente();
+    const res = await cliente.post("/api/usuarios/excluir", {
+      data: { documento },
+      headers: comCsrf ? cabecalhosAutenticados(idSessao, idCsrf) : cabecalhoCookie(idSessao),
+    });
+    const corpo = await res.json().catch(() => null);
+    await cliente.dispose();
+    return { status: res.status(), corpo };
+  }
+
+  test("RU-31: aluno com dados pessoais -> 409 com a mensagem e ele continua", async () => {
+    const { status, corpo } = await excluir(CNPJ_GO_DONO, CPF_AL_COM_DADOS);
+
+    expect(status).toBe(409);
+    expect(corpo).toEqual({ erro: "Este aluno já tem dados preenchidos e não pode ser excluído." });
+    expect(getUsuario(CPF_AL_COM_DADOS)).not.toBeNull();
+  });
+
+  test("RU-32: alvo que não é Aluno -> 400 e ele continua", async () => {
+    const { status, corpo } = await excluir(CPF_AM_EXCLUSAO, CPF_VT_ALVO);
+
+    expect(status).toBe(400);
+    expect(corpo).toEqual({ erro: "Só é possível excluir aluno." });
+    expect(getUsuario(CPF_VT_ALVO)).not.toBeNull();
+  });
+
+  test("RU-33: GO de outro ofertante -> 403 e o aluno continua", async () => {
+    const { status, corpo } = await excluir(CNPJ_GO_ALHEIO, CPF_AL_VAZIO);
+
+    expect(status).toBe(403);
+    expect(corpo).toEqual({ erro: "Você não tem permissão para editar este usuário" });
+    expect(getUsuario(CPF_AL_VAZIO)).not.toBeNull();
+  });
+
+  test("RU-33: AM com alvo inexistente -> 404", async () => {
+    const { status } = await excluir(CPF_AM_EXCLUSAO, CPF_INEXISTENTE);
+
+    expect(status).toBe(404);
+  });
+
+  test("sem o token de CSRF -> 403 e o aluno continua", async () => {
+    const { status } = await excluir(CNPJ_GO_DONO, CPF_AL_VAZIO, false);
+
+    expect(status).toBe(403);
+    expect(getUsuario(CPF_AL_VAZIO)).not.toBeNull();
+  });
+
+  // Por último: é o único que apaga o aluno vazio.
+  test("RU-30: o GO do curso exclui o aluno sem dados -> 200 e ele some", async () => {
+    const { status, corpo } = await excluir(CNPJ_GO_DONO, CPF_AL_VAZIO);
+
+    expect(status).toBe(200);
+    expect(corpo).toEqual({ ok: true });
+    expect(getUsuario(CPF_AL_VAZIO)).toBeNull();
   });
 });

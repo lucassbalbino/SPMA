@@ -28,7 +28,7 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
   });
 
   if (!posCurso) {
-    throw erroHttp(404, "Pós-curso não encontrado");
+    throw erroHttp(404, "Avaliação de Formação não encontrada");
   }
 
   if (!podeGerenciarPosCurso(sessao.usuario, posCurso.curso.cdOfertante)) {
@@ -42,7 +42,7 @@ async function encerrarPosCurso(request: Request, { params }: Contexto) {
 
   // AD-018: transição irreversível - encerrar de novo é rejeitado.
   if (posCurso.status === "ENCERRADO") {
-    throw erroHttp(409, "Pós-curso já está encerrado");
+    throw erroHttp(409, "Avaliação de Formação já está encerrada");
   }
 
   // Q12 preenchida com Q11="Não" (o Gestor respondeu "Sim", detalhou e
