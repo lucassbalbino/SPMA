@@ -412,3 +412,18 @@ Feature `situacao-profissional`. O cliente reclamou que as perguntas 10 a 13 nã
 5. **Numeração.** Mantida a política da AD-048: as demais perguntas não são renumeradas.
 
 **Custo aceito.** As respostas de P10-P13 apagadas em 2026-10-20 não voltam: só existem no backup anterior ao deploy da AD-048. Alunos com avaliação em andamento ganham quatro perguntas obrigatórias no meio do preenchimento.
+
+**AD-054 (2026-11-12) — Revisão de usabilidade do cliente (`Verificacao_SPMA_07.11.26`): os termos do cliente valem só no texto visível; formação e aluno podem ser excluídos quando não têm "filho"; todo perfil edita o próprio nome, e-mail e telefone. Sem migration.**
+
+Feature `revisao-usabilidade-1`. Resumo das mudanças, item a item, em `docs/Revisao_Usabilidade_07.11.26.md`.
+
+1. **Nomenclatura só na camada visível.** Verba → Recurso, Curso → Formação, Pré-Curso → Cadastro de Formação, Pós-Curso → Avaliação de Formação, botão Encerrar → Concluir. Menus, títulos, botões e mensagens da API mudam. Rotas (`/pre-cursos`, `/verbas`), tabelas, colunas, enums, chaves JSON e `data-testid` ficam como estão, para não quebrar o Power BI nem o contrato. O status `ENCERRADO` continua exibido como "Encerrado" (decisão do usuário). O texto das perguntas e das opções dos questionários não muda (AD-035, AD-051).
+2. **Nome da formação.** É a P8 do Cadastro de Formação (AD-052.2), obrigatória desde a criação (`POST /api/cursos` exige `nome` e grava a P8 na mesma transação) e não pode ser apagada depois. Listas e títulos usam `nomeDaFormacao` (`src/lib/cursos/nome.ts`); formação antiga sem P8 aparece como "Formação sem nome (nº X)". O recurso aparece só pelo nome, sem número, mesmo repetido (supera IDV-09, IDV-12 e IDV-13).
+3. **Exclusões só sem "filho", conferidas dentro da transação.** Formação: só com o Cadastro de Formação em andamento e sem aluno matriculado (`DELETE /api/cursos/[cdCurso]`, `excluirCurso`); pré e pós caem por cascata e o saldo do recurso volta sozinho. Aluno: só sem dados pessoais e sem avaliação concluída ou com resposta (`POST /api/usuarios/excluir`, `excluirAluno`); a matrícula vazia sai com ele. O documento do aluno vai no corpo, nunca na URL (AD-029, GU-48), e a guarda é a mesma da edição (`exigirAlvoEditavel`).
+4. **Concluir.** Pede confirmação Sim/Não e fica bloqueado com "Salve antes de concluir." enquanto houver alteração não salva (decisão do usuário). Os três questionários mostram que não há salvamento automático.
+5. **Datas do planejamento.** Entra a regra "início da inscrição antes do início da formação" (supera a AD-049.4 nesse ponto). As três regras de ordem só são conferidas no `PATCH` quando o corpo traz uma das datas 13, 14, 17b ou 17c, e sempre na conclusão (decisão do usuário): cadastro antigo com datas fora de ordem continua salvando as outras perguntas.
+6. **Telefone.** Telefone/WhatsApp com DDD (10 ou 11 dígitos, DDD 11-99), gravado só com dígitos. Vale para o cadastro do ofertante e o Editar Perfil; a pergunta 6 do questionário fica como está. Os perfis que não são GO usam a mesma coluna `Usuario.telefone` (`Tel_Organizacao`), sem migration.
+7. **Editar Perfil.** `/meus-dados` para os seis perfis: o Aluno pelo formulário de dados pessoais (agora com telefone), os demais por `PATCH /api/usuarios/me/perfil`. Troca de senha não entra: a tela orienta pedir ao gestor (decisão do usuário).
+8. **Mensagens de validação.** Zod em português nos dois lados (`src/lib/validation/zod-pt.ts`), e os `PATCH` dos questionários devolvem `campo` no 400, que a tela mostra com o rótulo da pergunta.
+
+**Custo aceito.** A coluna `Tel_Organizacao` passa a guardar telefone de pessoa física; renomeá-la é pedido separado (migration + VIEWs do `bi`). Exclusão é definitiva, sem lixeira.

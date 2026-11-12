@@ -955,11 +955,12 @@ T31
 
 **Done when**:
 
-- [ ] Traceability do spec com todos os RU em Verified após o Verifier
-- [ ] Gate Build passa (suíte inteira)
+- [x] Traceability do spec com todos os RU implementados (passam a Verified após o Verifier)
+- [x] Gate Build passa (suíte inteira)
 
 **Tests**: none
 **Gate**: build
+**Status**: Done
 
 **Commit**: `docs(revisao-usabilidade): record AD-054 and deploy note`
 
