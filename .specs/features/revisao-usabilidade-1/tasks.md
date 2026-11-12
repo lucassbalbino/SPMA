@@ -796,12 +796,13 @@ T31
 
 **Done when**:
 
-- [ ] `organizacao.schema.test.ts`: `999281374` (sem DDD, o caso do doc 2) recusado com a mensagem de RU-45
-- [ ] e2e `organizacao`/`cadastro-ofertante-page`: rótulo novo; valor gravado só com dígitos
-- [ ] Gate E2E passa
+- [x] `organizacao.schema.test.ts`: `999281374` (sem DDD, o caso do doc 2) recusado com a mensagem de RU-45
+- [x] e2e `organizacao`/`cadastro-ofertante-page`: rótulo novo; valor gravado só com dígitos
+- [x] Gate E2E passa
 
 **Tests**: unit, e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(organizacao): phone/WhatsApp field with area code`
 
