@@ -111,7 +111,7 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 4. WHEN a Avaliação de Formação é aberta, liberada ou não, THEN o título SHALL ser `Avaliação de Formação - <nome>`. (RU-13)
 5. WHEN a avaliação de um aluno é aberta THEN o título SHALL ser `<nome> - CPF <cpf formatado>`. (RU-14)
 6. WHEN um recurso é escolhido no seletor de "Nova Formação" THEN o campo fechado SHALL mostrar o mesmo texto da opção, não o número. (RU-15)
-7. The system SHALL exibir cada recurso, no seletor e na lista de recursos, só pelo nome (`dsVerba`), sem `#<cdVerba>` nem outro identificador, mesmo quando o nome repete. (RU-16)
+7. The system SHALL identificar cada recurso, no seletor e na lista de recursos, só pelo nome (`dsVerba`), sem `#<cdVerba>` nem outro identificador, mesmo quando o nome repete; o seletor de "Nova Formação" acrescenta ao nome o saldo (`<nome> — saldo R$ x`) e, para o AM, o nome do ofertante na frente (`<ofertante> — <nome> — saldo R$ x`). (RU-16)
 8. IF o nome da formação em "Nova Formação" está vazio ou só com espaços THEN o sistema SHALL recusar com "Nome da formação é obrigatório" e não SHALL criar a formação. (RU-57)
 9. WHEN uma formação é criada THEN `POST /api/cursos` SHALL gravar o nome, sem espaços nas pontas, na P8 do Cadastro de Formação, na mesma transação que cria curso, pré e pós. (RU-58)
 10. IF um `PATCH` do Cadastro de Formação envia a pergunta 8 vazia ou só com espaços THEN a API SHALL responder 400 com `erro` "Nome da formação é obrigatório" e `campo` `qualifNomeCurso`. (RU-59)
@@ -190,7 +190,7 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 3. The system SHALL nomear os itens do menu como "Gestão de Usuários", "Gestão de Recursos", "Nova Formação", "Cadastro de Formação", "Avaliação de Formação", "Avaliações Aluno" e "Editar Perfil". (RU-36)
 4. WHILE o perfil é GO ou VO o título da lista de recursos SHALL ser "Recursos Recebidos"; para AM e GT SHALL ser "Recursos". (RU-37)
 5. The system SHALL intitular a lista da gestão de usuários "Usuários Cadastrados". (RU-38)
-6. The system SHALL usar "recurso" no lugar de "verba", "formação" no lugar de "curso", "Cadastro de Formação" no lugar de "pré-curso", "Avaliação de Formação" no lugar de "pós-curso" em toda mensagem visível, inclusive as de erro da API. (RU-39)
+6. The system SHALL usar "recurso" no lugar de "verba", "formação" no lugar de "curso", "Cadastro de Formação" no lugar de "pré-curso", "Avaliação de Formação" no lugar de "pós-curso" nos menus, títulos de tela, botões, rótulos de campo de cadastro, avisos e mensagens de erro da API; ficam fora o texto das perguntas, das opções e dos cabeçalhos de parte dos questionários em papel (ex.: "Parte 2 — Avaliação Pós-Curso", AD-035) e os nomes de tabela e coluna do Power BI. (RU-39)
 
 **Independent Test**: Logar como AM e conferir os textos do painel e do menu; como GO, ver "Recursos Recebidos".
 

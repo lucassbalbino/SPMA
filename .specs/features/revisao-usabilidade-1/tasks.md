@@ -1070,10 +1070,11 @@ T36
 
 **Done when**:
 
-- [ ] `validate_spec.py` sem erros
+- [x] `validate_spec.py` sem erros
 
 **Tests**: none
 **Gate**: build
+**Status**: Done
 
 **Commit**: `docs(revisao-usabilidade): settle the wording of RU-16 and RU-39`
 
