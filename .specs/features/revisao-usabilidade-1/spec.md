@@ -283,70 +283,70 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| RU-01 | P1: Salvar e concluir | T1 | Implementing |
-| RU-02 | P1: Salvar e concluir | T1 | Implementing |
-| RU-03 | P1: Salvar e concluir | T1 | Implementing |
-| RU-04 | P1: Mensagens | T2 | Implementing |
-| RU-05 | P1: Mensagens | T2 | Implementing |
-| RU-06 | P1: Mensagens | T3 | Implementing |
-| RU-07 | P1: Mensagens | T4 | Implementing |
-| RU-08 | P1: Mensagens | T5 | Implementing |
-| RU-09 | P1: Mensagens | T5 | Implementing |
-| RU-10 | P1: Nome da formação | T6 | Implementing |
-| RU-11 | P1: Nome da formação | T7 | Implementing |
-| RU-12 | P1: Nome da formação | T8 | Implementing |
-| RU-13 | P1: Nome da formação | T8 | Implementing |
-| RU-14 | P1: Nome da formação | T8 | Implementing |
-| RU-15 | P1: Nome da formação | T9 | Implementing |
-| RU-16 | P1: Nome da formação | T9 | Implementing |
-| RU-17 | P1: Concluir | T12 | Implementing |
-| RU-18 | P1: Concluir | T12 | Implementing |
-| RU-19 | P1: Concluir | T12 | Implementing |
-| RU-20 | P1: Concluir | T12 | Implementing |
-| RU-21 | P1: Excluir formação | T15 | Implementing |
-| RU-22 | P1: Excluir formação | T15 | Implementing |
-| RU-23 | P1: Excluir formação | T13 | Implementing |
-| RU-24 | P1: Excluir formação | T13 | Implementing |
-| RU-25 | P1: Excluir formação | T13 | Implementing |
-| RU-26 | P1: Excluir formação | T13 | Implementing |
-| RU-27 | P1: Excluir formação | T13 | Implementing |
-| RU-28 | P1: Excluir aluno | T18 | Implementing |
-| RU-29 | P1: Excluir aluno | T18 | Implementing |
-| RU-30 | P1: Excluir aluno | T17 | Implementing |
-| RU-31 | P1: Excluir aluno | T16 | Implementing |
-| RU-32 | P1: Excluir aluno | T16 | Implementing |
-| RU-33 | P1: Excluir aluno | T17 | Implementing |
-| RU-34 | P2: Nomes | T20 | Implementing |
-| RU-35 | P2: Nomes | T19 | Implementing |
-| RU-36 | P2: Nomes | T19 | Implementing |
-| RU-37 | P2: Nomes | T21 | Implementing |
-| RU-38 | P2: Nomes | T21 | Implementing |
-| RU-39 | P2: Nomes | T22 | Implementing |
-| RU-40 | P2: Datas | T23 | Implementing |
-| RU-41 | P2: Datas | T23 | Implementing |
-| RU-42 | P2: Datas | T23 | Implementing |
-| RU-43 | P2: Telefone | T25 | Implementing |
-| RU-44 | P2: Telefone | T24 | Implementing |
-| RU-45 | P2: Telefone | T24 | Implementing |
-| RU-46 | P2: Telefone | T24 | Implementing |
-| RU-47 | P2: Editar Perfil | T30 | Implementing |
-| RU-48 | P2: Editar Perfil | T29 | Implementing |
-| RU-49 | P2: Editar Perfil | T27 | Implementing |
-| RU-50 | P2: Editar Perfil | T27 | Implementing |
-| RU-51 | P2: Editar Perfil | T27 | Implementing |
-| RU-52 | P2: Editar Perfil | T29 | Implementing |
-| RU-53 | P2: Editar Perfil | T29 | Implementing |
-| RU-54 | P2: Editar Perfil | T27 | Implementing |
-| RU-55 | P2: Valor previsto | T26 | Implementing |
-| RU-56 | P2: Valor previsto | T26 | Implementing |
-| RU-57 | P1: Nome da formação | T32 | Implementing |
-| RU-58 | P1: Nome da formação | T32 | Implementing |
-| RU-59 | P1: Nome da formação | T32 | Implementing |
-| RU-60 | P1: Nome da formação | T21 | Implementing |
-| RU-61 | P2: Datas | T23 | Implementing |
-| RU-62 | P2: Datas | T23 | Implementing |
+| RU-01 | P1: Salvar e concluir | T1 | Verified |
+| RU-02 | P1: Salvar e concluir | T1 | Verified |
+| RU-03 | P1: Salvar e concluir | T1 | Verified |
+| RU-04 | P1: Mensagens | T2 | Verified |
+| RU-05 | P1: Mensagens | T2 | Verified |
+| RU-06 | P1: Mensagens | T3 | Verified |
+| RU-07 | P1: Mensagens | T4 | Verified |
+| RU-08 | P1: Mensagens | T5 | Verified |
+| RU-09 | P1: Mensagens | T5 | Verified |
+| RU-10 | P1: Nome da formação | T6 | Verified |
+| RU-11 | P1: Nome da formação | T7 | Verified |
+| RU-12 | P1: Nome da formação | T8 | Verified |
+| RU-13 | P1: Nome da formação | T8 | Verified |
+| RU-14 | P1: Nome da formação | T8 | Verified |
+| RU-15 | P1: Nome da formação | T9 | Verified |
+| RU-16 | P1: Nome da formação | T9 | Verified |
+| RU-17 | P1: Concluir | T12 | Verified |
+| RU-18 | P1: Concluir | T12 | Verified |
+| RU-19 | P1: Concluir | T12 | Verified |
+| RU-20 | P1: Concluir | T12 | Verified |
+| RU-21 | P1: Excluir formação | T15 | Verified |
+| RU-22 | P1: Excluir formação | T15 | Verified |
+| RU-23 | P1: Excluir formação | T13 | Verified |
+| RU-24 | P1: Excluir formação | T13 | Verified |
+| RU-25 | P1: Excluir formação | T13 | Verified |
+| RU-26 | P1: Excluir formação | T13 | Verified |
+| RU-27 | P1: Excluir formação | T13 | Verified |
+| RU-28 | P1: Excluir aluno | T18 | Verified |
+| RU-29 | P1: Excluir aluno | T18 | Verified |
+| RU-30 | P1: Excluir aluno | T17 | Verified |
+| RU-31 | P1: Excluir aluno | T16 | Verified |
+| RU-32 | P1: Excluir aluno | T16 | Verified |
+| RU-33 | P1: Excluir aluno | T17 | Verified |
+| RU-34 | P2: Nomes | T20 | Verified |
+| RU-35 | P2: Nomes | T19 | Verified |
+| RU-36 | P2: Nomes | T19 | Verified |
+| RU-37 | P2: Nomes | T21 | Verified |
+| RU-38 | P2: Nomes | T21 | Verified |
+| RU-39 | P2: Nomes | T22 | Verified |
+| RU-40 | P2: Datas | T23 | Verified |
+| RU-41 | P2: Datas | T23 | Verified |
+| RU-42 | P2: Datas | T23 | Verified |
+| RU-43 | P2: Telefone | T25 | Verified |
+| RU-44 | P2: Telefone | T24 | Verified |
+| RU-45 | P2: Telefone | T24 | Verified |
+| RU-46 | P2: Telefone | T24 | Verified |
+| RU-47 | P2: Editar Perfil | T30 | Verified |
+| RU-48 | P2: Editar Perfil | T29 | Verified |
+| RU-49 | P2: Editar Perfil | T27 | Verified |
+| RU-50 | P2: Editar Perfil | T27 | Verified |
+| RU-51 | P2: Editar Perfil | T27 | Verified |
+| RU-52 | P2: Editar Perfil | T29 | Verified |
+| RU-53 | P2: Editar Perfil | T29 | Verified |
+| RU-54 | P2: Editar Perfil | T27 | Verified |
+| RU-55 | P2: Valor previsto | T26 | Verified |
+| RU-56 | P2: Valor previsto | T26 | Verified |
+| RU-57 | P1: Nome da formação | T32 | Verified |
+| RU-58 | P1: Nome da formação | T32 | Verified |
+| RU-59 | P1: Nome da formação | T32 | Verified |
+| RU-60 | P1: Nome da formação | T21 | Verified |
+| RU-61 | P2: Datas | T23 | Verified |
+| RU-62 | P2: Datas | T23 | Verified |
 
-**Coverage:** 62 total, 62 mapped to tasks, 0 unmapped.
+**Coverage:** 62 total, 62 mapped to tasks, 62 verified (Verifier PASS, iteração 2) to tasks, 0 unmapped.
 
 ---
 

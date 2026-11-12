@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/revisao-usabilidade-1/design.md`
-**Status**: In Progress
+**Status**: Done
 
 **Branch**: `feat/revisao-usabilidade-1`, a partir da `main`. Push na `main` = deploy (AD-047): nada sai do local sem ordem explícita.
 

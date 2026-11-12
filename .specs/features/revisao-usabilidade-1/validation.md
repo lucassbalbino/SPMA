@@ -1,6 +1,59 @@
 # revisao-usabilidade-1 Validation
 
-## Validation: revisao-usabilidade-1 - FAIL
+## Validation: revisao-usabilidade-1 - PASS (iteration 2 of 3)
+
+**Date**: 2026-11-12
+**Spec**: `.specs/features/revisao-usabilidade-1/spec.md` (RU-01..RU-62; RU-16 and RU-39 reworded in `a7b15f4`, new assumption row for legacy phones in `2d98c31`)
+**Diff range**: `main..a7b15f4` (iteration 1 covered `main..2714d42`; iteration 2 re-checks the fix commits `03056af..a7b15f4`)
+**Verifier**: independent sub-agent (author != verifier), fresh detached scratch worktree at `a7b15f4`.
+
+### Iteration 2: re-verification of Fix 1-4
+
+| Iter-1 gap | Fix commit | New evidence (`file:line` + assertion) | Result |
+| --- | --- | --- | --- |
+| RU-05 / RU-07: `campo` unproven on the avaliação and pós-curso PATCH routes (M14 survived) | `7d24ddc` | `e2e/avaliacoes-id.spec.ts:194-199` `status).toBe(400)` + `toEqual({ erro: "Selecione no máximo 3 motivos", campo: "avalMotivMotivosParticipacao" })` + respostas unchanged; `e2e/pos-cursos-id.spec.ts:184-189` `toEqual({ erro: "Muito pequeno: esperado que number fosse >=0", campo: "posFinValorTotal" })` + respostas unchanged | ✅ PASS (M14, M14b killed) |
+| Edge case: legacy phone rewritten on display and on save | `2d98c31` | display: `src/lib/validation/telefone.test.ts:48` rule-conforming digits masked, `:54` legacy values (`"(61) 3333-4444 ramal 2"`, `"11 4000-0002"`, `"999281374"`, `""`) returned as stored; GT `e2e/meus-dados.spec.ts:251` `toHaveValue(TELEFONE_ANTIGO)` and `:257-258` name changed, `telefone).toBe(TELEFONE_ANTIGO)`; Aluno `:267` and `:272-273`; absent phone stays absent `src/lib/validation/schemas/perfil.schema.test.ts:31` `toBeUndefined()` | ✅ PASS (M22-M26, M28 killed) |
+| RU-34: "Olá, <nome>" unasserted | `02fbf90` | `e2e/painel.spec.ts:54` `getByText("Olá, Lucia Gestora", { exact: true })).toBeVisible()`, alongside `:55-57` (profile, "apto", modules) | ✅ PASS (M27 killed) |
+| RU-16 spec-precision gap | `a7b15f4` (spec) | Spec now states the selector label `<nome> — saldo R$ x` and, for AM, `<ofertante> — <nome> — saldo R$ x`. Matches the asserted text exactly: `e2e/cursos-novo.spec.ts:97-98`, `:115`, `:126-130`; list without `#<cdVerba>` `e2e/verbas-page.spec.ts:106`, `:223`, `:316` | ✅ PASS |
+| RU-39 spec-precision gap | `a7b15f4` (spec) | Spec now scopes menus, screen titles, buttons, registration-form labels, notices and API errors; it excludes paper-questionnaire question, option and part-heading texts (AD-035) and BI names. Verifier grep of `src/app` and `src/components` `.tsx` finds the old terms only in excluded questionnaire texts (e.g. `PreCursoForm.tsx:243` "Diagnóstico Pré-Curso", question labels) and in the product name in page metadata (`src/app/layout.tsx:18`). API `erroHttp` messages are clean. Asserted examples as in iteration 1 (`e2e/avaliacoes-id.spec.ts:330`, `e2e/verbas-page.spec.ts:273`, `e2e/usuarios-page.spec.ts:251`) | ✅ PASS (note: the metadata product name is outside the enumerated scope) |
+
+**Review of the Fix 2 design**: the stored phone opens unmasked unless it already follows the rule (`src/components/perfil/PerfilForm.tsx:34`, `src/components/dados-pessoais/DadosPessoaisForm.tsx:102`). It is sent only after the person edits the field (`PerfilForm.tsx:48`, `DadosPessoaisForm.tsx:127`). The route writes it only when present (`src/app/api/usuarios/me/perfil/route.ts:39`), and a GO clearing it is still refused (RU-51, `e2e/perfil.spec.ts:80-82`). RU-45 and RU-46 still apply to every edited value. This matches the spec's own edge case and the new assumption row; no user decision was needed.
+
+#### Iteration 2 sensor
+
+Same harness as iteration 1 (fresh `git worktree add --detach` at `a7b15f4`, `node_modules` junction, `.env`/`.env.test`/`src/generated` copies, scratch-only `turbopack.root`). Unmutated baseline in the scratch: `e2e/avaliacoes-id.spec.ts`, `e2e/pos-cursos-id.spec.ts`, `e2e/meus-dados.spec.ts`, `e2e/painel.spec.ts` = **42/42 passed**.
+
+| # | File:line | Mutation | Tests run | Result |
+| - | --------- | -------- | --------- | ------ |
+| M14 | `src/app/api/avaliacoes/[cpf]/[cdCurso]/route.ts:107` | drop `informarCampo: true` (survived in iteration 1) | `e2e/avaliacoes-id.spec.ts -g RU-05` | ✅ Killed (`:195`) |
+| M14b | `src/app/api/pos-cursos/[cdCurso]/route.ts:74` | drop `informarCampo: true` | `e2e/pos-cursos-id.spec.ts -g RU-05` | ✅ Killed (`:185`) |
+| M22 | `src/components/perfil/PerfilForm.tsx:48` | always send `telefone` | `e2e/meus-dados.spec.ts -g "telefone antigo"` | ✅ Killed (`:258`, stored became `"61333344442"`) |
+| M23 | `src/components/perfil/PerfilForm.tsx:34` | mask the initial value (`mascaraTelefone`) | same | ✅ Killed (`:251`, field showed `"(61) 33334-4442"`) |
+| M24 | `src/components/dados-pessoais/DadosPessoaisForm.tsx:127` | always send `telefone` | same | ✅ Killed (`:273`) |
+| M25 | `src/app/api/usuarios/me/perfil/route.ts:39` | absent phone written as `null` | same | ✅ Killed (`:258`, stored became `null`) |
+| M26 | `src/lib/validation/telefone.ts:53` | `exibirTelefone` always re-masks | `telefone.test.ts`, `perfil.schema.test.ts` | ✅ Killed (3 tests) |
+| M27 | `src/app/(protegido)/painel/page.tsx:19` | greeting drops the name | `e2e/painel.spec.ts -g RU-34` | ✅ Killed (`:54`) |
+| M28 | `src/lib/validation/schemas/perfil.schema.ts:16` | drop the outer `.optional()` (absent becomes `null`) | `perfil.schema.test.ts` | ✅ Killed (`:31`) |
+
+**Result**: iteration 2, 9 injected, 9 killed, 0 survived. Cumulative over both iterations: 29 injected, 27 killed, 1 equivalent (M01), and the only non-equivalent survivor (M14) is now killed. Real tree `git status --porcelain` was empty before and after.
+
+#### Iteration 2 gate
+
+- Verifier, real tree at `a7b15f4`: `npm run lint` 0 errors / 51 pre-existing warnings; `npm run typecheck` exit 0; `npm run test:unit` **939/939**; `npm run db:test:reset && npm run test:integration` **154/154** (19 files).
+- Verifier, scratch: the 4 changed e2e specs 42/42 (above).
+- Not re-run by anyone after the fixes: `npm run build` and the full 347-test e2e suite. The fix diff touches only `PerfilForm`, `DadosPessoaisForm`, the profile route/schema, `telefone.ts`, 4 e2e specs and docs, and every spec that exercises those files ran green.
+
+#### Iteration 2 traceability
+
+All 62 requirements → ✅ Verified (RU-05, RU-07, RU-34 closed by Fix 1 and Fix 3; RU-16 and RU-39 closed by the spec wording in Fix 4); the legacy-phone edge case → ✅ handled.
+
+**Residual, non-blocking observations**: RU-11's absence check targets the old prefixes (`"Pré-curso #"` etc.), not a bare `#<cdCurso>` (`e2e/pre-cursos-page.spec.ts:142`). The product name in `src/app/layout.tsx:18` still says "Cursos", outside RU-39's enumerated scope. Neither is a spec violation.
+
+---
+
+## Iteration 1 report (superseded by iteration 2 above)
+
+### Iteration 1 verdict: did not pass (5 ranked gaps, routed as Fix 1-4)
 
 **Date**: 2026-11-12
 **Spec**: `.specs/features/revisao-usabilidade-1/spec.md` (RU-01..RU-62)
