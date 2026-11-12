@@ -823,11 +823,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e `pos-cursos-formulario`: curso com R$ 60.000,00 alocado mostra "Estava previsto inicialmente R$ 60.000,00"; gravar a 19 com valor diferente passa
-- [ ] Gate E2E passa
+- [x] e2e `pos-cursos-formulario`: curso com R$ 60.000,00 alocado mostra "Estava previsto inicialmente R$ 60.000,00"; gravar a 19 com valor diferente passa
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(pos-curso): show the planned amount under question 19`
 

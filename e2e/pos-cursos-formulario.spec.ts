@@ -409,3 +409,31 @@ test("GO de outro Ofertante tentando acessar diretamente recebe não encontrado"
 
   expect(res?.status()).toBe(404);
 });
+
+// RU-55/RU-56 (doc 11): a pergunta 19 lembra o valor previsto na criação, e o
+// valor realizado pode ser diferente dele.
+test("RU-55/56: a pergunta 19 mostra o valor previsto e aceita um valor diferente", async ({
+  page,
+}) => {
+  const cdCurso = criarPreCurso({
+    cdOfertante: CNPJ_GO_A,
+    cdVerba: cdVerbaA,
+    vlCursoAlocado: 60000,
+    criadoPor: CNPJ_GO_A,
+  }).cdCurso;
+  criarPosCurso({ cdCurso, criadoPor: CNPJ_GO_A });
+  encerrarPreCursoFixture(cdCurso);
+
+  await login(page, CNPJ_GO_A);
+  await page.goto(`/pos-cursos/${cdCurso}`);
+  await abrirBloco(page, 4);
+
+  await expect(page.getByTestId("valor-previsto")).toHaveText(
+    "Estava previsto inicialmente R$ 60.000,00",
+  );
+
+  await page.getByTestId("campo-posFinValorTotal").fill("400000");
+  const resposta = await salvarRascunho(page);
+  expect(resposta.ok()).toBe(true);
+  await expect(page.getByTestId("salvo-pos-curso")).toHaveText("Alterações salvas.");
+});

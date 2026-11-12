@@ -32,7 +32,13 @@ export default async function PosCursoPage({ params }: Props) {
   const posCurso = await prisma.posCurso.findUnique({
     where: { cdCurso },
     include: {
-      curso: { select: { cdOfertante: true, preCurso: { select: { status: true, p8: true } } } },
+      curso: {
+        select: {
+          cdOfertante: true,
+          vlCursoAlocado: true,
+          preCurso: { select: { status: true, p8: true } },
+        },
+      },
     },
   });
 
@@ -76,6 +82,7 @@ export default async function PosCursoPage({ params }: Props) {
       <PosCursoForm
         cdCurso={posCurso.cdCurso}
         nomeFormacao={nomeFormacao}
+        valorPrevisto={posCurso.curso.vlCursoAlocado.toNumber()}
         status={posCurso.status}
         respostasIniciais={respostasIniciais}
         podeEditar={podeEditar}

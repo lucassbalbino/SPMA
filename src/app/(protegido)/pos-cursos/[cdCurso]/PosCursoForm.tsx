@@ -231,9 +231,18 @@ const ROTULOS: Partial<Record<Chave, string>> = Object.fromEntries(
   BLOCOS.flatMap((bloco) => bloco.campos).map((campo) => [campo.chave, campo.rotulo]),
 );
 
+// "R$ 60.000,00". O Intl separa o símbolo com espaço não separável; o texto
+// exibido usa o espaço comum.
+function formatarReal(valor: number): string {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
+    .format(valor)
+    .replace(/\u00a0/g, " ");
+}
+
 export function PosCursoForm({
   cdCurso,
   nomeFormacao,
+  valorPrevisto,
   status,
   respostasIniciais,
   podeEditar,
@@ -241,6 +250,8 @@ export function PosCursoForm({
   cdCurso: number;
   /** Nome exibido no título (RU-13), já resolvido por `nomeDaFormacao`. */
   nomeFormacao: string;
+  /** Valor alocado à formação na criação (`TB_Curso`), lembrado na pergunta 19 (RU-55). */
+  valorPrevisto: number;
   status: StatusFormulario;
   respostasIniciais: RespostasPosCursoParcial;
   podeEditar: boolean;
@@ -290,7 +301,15 @@ export function PosCursoForm({
                       invalido={form.pendentes.includes(campo.chave)}
                       aoAlterar={form.setCampo}
                       aoAlternarOpcao={form.toggleCheckbox}
-                    />
+                    >
+                      {/* RU-55/RU-56 (doc 11): só um lembrete - o valor realizado
+                          pode ser diferente do previsto. */}
+                      {campo.chave === "posFinValorTotal" && (
+                        <p className="text-sm text-muted-foreground" data-testid="valor-previsto">
+                          Estava previsto inicialmente {formatarReal(valorPrevisto)}
+                        </p>
+                      )}
+                    </CampoResposta>
                   ))}
               </FieldGroup>
             </AccordionContent>
