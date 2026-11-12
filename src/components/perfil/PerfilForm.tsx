@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { perfilSchema } from "@/lib/validation/schemas/perfil.schema";
-import { mascaraTelefone } from "@/lib/validation/telefone";
+import { exibirTelefone, mascaraTelefone } from "@/lib/validation/telefone";
 import { headerCSRF } from "@/lib/security/csrf-client";
 import { AVISO_SENHA } from "@/lib/ui/perfil";
 
@@ -29,7 +29,10 @@ export function PerfilForm({
   const router = useRouter();
   const [nome, setNome] = useState(inicial.nome);
   const [email, setEmail] = useState(inicial.email);
-  const [telefone, setTelefone] = useState(() => mascaraTelefone(inicial.telefone));
+  // Telefone antigo aparece como foi gravado (edge case da spec) e só vai no
+  // corpo se a pessoa mexer nele - trocar o nome não o reescreve.
+  const [telefone, setTelefone] = useState(() => exibirTelefone(inicial.telefone));
+  const [telefoneAlterado, setTelefoneAlterado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [salvo, setSalvo] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -39,7 +42,11 @@ export function PerfilForm({
     setErro(null);
     setSalvo(false);
 
-    const entrada = perfilSchema.safeParse({ nome, email, telefone });
+    const entrada = perfilSchema.safeParse({
+      nome,
+      email,
+      ...(telefoneAlterado && { telefone }),
+    });
     if (!entrada.success) {
       setErro(entrada.error.issues[0]?.message ?? "Dados inválidos");
       return;
@@ -113,7 +120,10 @@ export function PerfilForm({
                 autoComplete="tel"
                 placeholder="(61) 99999-9999"
                 value={telefone}
-                onChange={(event) => setTelefone(mascaraTelefone(event.target.value))}
+                onChange={(event) => {
+                  setTelefone(mascaraTelefone(event.target.value));
+                  setTelefoneAlterado(true);
+                }}
                 disabled={enviando}
               />
             </Field>

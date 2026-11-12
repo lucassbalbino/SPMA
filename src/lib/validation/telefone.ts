@@ -43,6 +43,17 @@ export function mascaraTelefone(valor: string): string {
   return `(${ddd}) ${numero.slice(0, corte)}-${numero.slice(corte)}`;
 }
 
+/**
+ * Como um telefone gravado aparece no campo: com máscara quando já segue a
+ * regra (só dígitos, com DDD); como foi gravado quando é antigo, de antes da
+ * regra (edge case da spec: nada é reescrito sem a pessoa mexer).
+ */
+export function exibirTelefone(gravado: string): string {
+  return gravado === soDigitosTelefone(gravado) && telefoneValido(gravado)
+    ? mascaraTelefone(gravado)
+    : gravado;
+}
+
 /** Telefone obrigatório: vazio cai em `obrigatorio`, formato errado em MENSAGEM_TELEFONE. */
 export function telefoneObrigatorioSchema(obrigatorio: string) {
   return z

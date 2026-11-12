@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  exibirTelefone,
   MENSAGEM_TELEFONE,
   mascaraTelefone,
   telefoneObrigatorioSchema,
@@ -40,6 +41,19 @@ describe("mascaraTelefone (RU-44)", () => {
   ])("%s vira %s", (entrada, esperado) => {
     expect(mascaraTelefone(entrada)).toBe(esperado);
   });
+});
+
+describe("exibirTelefone", () => {
+  it("telefone gravado pela regra (só dígitos, com DDD) aparece com máscara", () => {
+    expect(exibirTelefone("61999281374")).toBe("(61) 99928-1374");
+  });
+
+  it.each([["(61) 3333-4444 ramal 2"], ["11 4000-0002"], ["999281374"], [""]])(
+    "telefone antigo %o aparece como foi gravado",
+    (gravado) => {
+      expect(exibirTelefone(gravado)).toBe(gravado);
+    },
+  );
 });
 
 describe("telefoneObrigatorioSchema (RU-45, RU-46)", () => {

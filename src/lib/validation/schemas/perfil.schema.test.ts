@@ -26,6 +26,11 @@ describe("perfilSchema (RU-49, RU-50)", () => {
     expect(resultado.error?.issues[0]?.message).toBe(mensagem);
   });
 
+  // Telefone ausente = não mexer no gravado (telefone antigo, Fix 2).
+  it("sem `telefone` no corpo, o resultado não traz telefone", () => {
+    expect(perfilSchema.parse({ nome: "Maria", email: "maria@exemplo.org" }).telefone).toBeUndefined();
+  });
+
   // RU-54: documento no corpo não passa adiante.
   it("descarta `documento` do corpo", () => {
     expect(perfilSchema.parse({ ...VALIDO, documento: "52998224725" })).not.toHaveProperty(

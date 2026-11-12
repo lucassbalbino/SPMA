@@ -9,8 +9,11 @@ import "../zod-pt";
 import { telefoneOpcionalSchema } from "../telefone";
 import { dadosCadastraisSchema } from "./dados-cadastrais.schema";
 
+// Telefone ausente = "não mexer" (a tela só o envia quando a pessoa o
+// altera, para não reescrever um telefone antigo, gravado antes da regra de
+// DDD). Vazio apaga; preenchido segue a regra de DDD.
 export const perfilSchema = dadosCadastraisSchema.extend({
-  telefone: telefoneOpcionalSchema,
+  telefone: telefoneOpcionalSchema.optional(),
 });
 
 export type PerfilInput = z.output<typeof perfilSchema>;

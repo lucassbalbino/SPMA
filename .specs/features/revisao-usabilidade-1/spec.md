@@ -44,6 +44,7 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | Recurso com nome repetido | Seletor e lista mostram só o nome, sem nenhuma informação extra, mesmo quando o nome repete. Supera IDV-12/13 | Decisão do usuário (2026-11-11) | y |
 | Telefone dos perfis que não são GO | Grava na coluna `Usuario.telefone` (`Tel_Organizacao`), que já existe e é opcional | Evita migration. A coluna fica com nome de organização; renomear é pedido separado | n |
 | Formato gravado do telefone novo | Só dígitos (10 ou 11, com DDD). Valores antigos ficam como estão e são exibidos como foram gravados | Não reescreve dado existente | n |
+| Telefone antigo no Editar Perfil | Aparece como foi gravado (com máscara só se já segue a regra) e só é enviado, e revalidado pela RU-45, quando a pessoa o altera | Corrigido na verificação (Fix 2, 2026-11-12): a tela reescrevia o telefone antigo de quem só trocava o nome. Segue o edge case de telefone antigo desta spec | n |
 | Telefone obrigatório | Obrigatório para GO (como hoje); opcional para os demais | Hoje só o GO tem telefone | n |
 | Aviso de senha | "A troca de senha deve ser pedida ao gestor do seu curso." para todos menos AM | Texto do usuário. O AM não tem gestor acima | n |
 | Concluir com alteração não salva | Concluir é bloqueado com "Salve antes de concluir." | Decisão do usuário (2026-11-11). É a causa do [doc 12]: o botão concluía o que estava no servidor, sem o que estava na tela | y |

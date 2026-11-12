@@ -1017,12 +1017,13 @@ T36
 
 **Done when**:
 
-- [ ] Unit: `perfilSchema` sem `telefone` não o devolve (fica `undefined`)
-- [ ] e2e `meus-dados`: GT com telefone antigo `"(61) 3333-4444 ramal 2"` vê esse texto, troca só o nome, salva, e o telefone gravado não muda; o mesmo para o Aluno
-- [ ] Gate E2E passa
+- [x] Unit: `perfilSchema` sem `telefone` não o devolve (fica `undefined`)
+- [x] e2e `meus-dados`: GT com telefone antigo `"(61) 3333-4444 ramal 2"` vê esse texto, troca só o nome, salva, e o telefone gravado não muda; o mesmo para o Aluno
+- [x] Gate E2E passa
 
 **Tests**: unit, e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `fix(perfil): keep a legacy phone as stored unless it is edited`
 

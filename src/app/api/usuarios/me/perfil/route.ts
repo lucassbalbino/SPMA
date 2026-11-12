@@ -26,14 +26,18 @@ async function gravarPerfil(request: Request) {
   const entrada = await corpoValidado(request, perfilSchema);
 
   // RU-51: para o GO o telefone é o contato da organização, obrigatório desde
-  // o cadastro (OGO-04).
+  // o cadastro (OGO-04) - apagá-lo é recusado. Ausente não mexe no gravado.
   if (sessao.usuario.tipo === "GO" && entrada.telefone === null) {
     throw erroHttp(400, "Telefone é obrigatório");
   }
 
   const usuario = await prisma.usuario.update({
     where: { documento: sessao.usuario.documento },
-    data: { nome: entrada.nome, email: entrada.email, telefone: entrada.telefone },
+    data: {
+      nome: entrada.nome,
+      email: entrada.email,
+      ...(entrada.telefone !== undefined && { telefone: entrada.telefone }),
+    },
     select: { documento: true, nome: true, email: true, telefone: true },
   });
 

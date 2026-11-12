@@ -36,7 +36,7 @@ import {
   type RespostasDadosPessoais,
 } from "@/lib/validation/schemas/dados-pessoais.schema";
 import { headerCSRF } from "@/lib/security/csrf-client";
-import { mascaraTelefone } from "@/lib/validation/telefone";
+import { exibirTelefone, mascaraTelefone } from "@/lib/validation/telefone";
 
 type Chave = keyof RespostasDadosPessoais;
 type TipoCampo = "texto" | "select" | "radio";
@@ -98,7 +98,9 @@ export function DadosPessoaisForm({
   const [nome, setNome] = useState(cadastroInicial.nome);
   const [email, setEmail] = useState(cadastroInicial.email);
   // RU-52: o Aluno também informa o telefone, opcional (Editar Perfil).
-  const [telefone, setTelefone] = useState(() => mascaraTelefone(cadastroInicial.telefone ?? ""));
+  // Telefone antigo aparece como foi gravado e só vai no corpo se for alterado.
+  const [telefone, setTelefone] = useState(() => exibirTelefone(cadastroInicial.telefone ?? ""));
+  const [telefoneAlterado, setTelefoneAlterado] = useState(false);
   const [respostas, setRespostas] =
     useState<Partial<RespostasDadosPessoais>>(respostasIniciais);
   const [erro, setErro] = useState<string | null>(null);
@@ -119,7 +121,12 @@ export function DadosPessoaisForm({
       const res = await fetch("/api/usuarios/me/dados-pessoais", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...headerCSRF() },
-        body: JSON.stringify({ nome, email, telefone, ...respostas }),
+        body: JSON.stringify({
+          nome,
+          email,
+          ...(telefoneAlterado && { telefone }),
+          ...respostas,
+        }),
       });
       const corpo = await res.json();
 
@@ -196,6 +203,7 @@ export function DadosPessoaisForm({
                 onChange={(event) => {
                   setSucesso(false);
                   setTelefone(mascaraTelefone(event.target.value));
+                  setTelefoneAlterado(true);
                 }}
                 disabled={enviando}
               />
