@@ -17,12 +17,12 @@ describe("NovaVerbaForm sem GO cadastrado (GV-10)", () => {
 
   it("mostra o aviso de que não há Ofertante", () => {
     expect(html).toContain(
-      "Nenhum Ofertante cadastrado - cadastre um GO antes de criar uma verba.",
+      "Nenhum Ofertante cadastrado - cadastre um GO antes de criar um recurso.",
     );
   });
 
-  it("desabilita o botão 'Criar verba'", () => {
-    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Criar verba<\/button>/);
+  it("desabilita o botão 'Criar recurso'", () => {
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Criar recurso<\/button>/);
   });
 });
 
@@ -34,8 +34,8 @@ describe("NovaVerbaForm com GO cadastrado", () => {
 
   it("não mostra o aviso e deixa o botão habilitado", () => {
     expect(html).not.toContain("Nenhum Ofertante cadastrado");
-    expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>Criar verba<\/button>/);
-    expect(html).toContain(">Criar verba</button>");
+    expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>Criar recurso<\/button>/);
+    expect(html).toContain(">Criar recurso</button>");
   });
 });
 
@@ -46,7 +46,7 @@ describe("NovaVerbaForm - campo Identificação (IDV-01)", () => {
 
   it("fica entre o GO e o Valor", () => {
     const go = html.indexOf('for="cdOfertante"');
-    const identificacao = html.indexOf('for="dsVerba">Identificação</label>');
+    const identificacao = html.indexOf('for="dsVerba">Nome do recurso</label>');
     const valor = html.indexOf('for="vlVerba"');
 
     expect(go).toBeGreaterThanOrEqual(0);
