@@ -325,9 +325,9 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-41 | P2: Datas | T23 | Implementing |
 | RU-42 | P2: Datas | T23 | Implementing |
 | RU-43 | P2: Telefone | Tasks | Pending |
-| RU-44 | P2: Telefone | Tasks | Pending |
-| RU-45 | P2: Telefone | Tasks | Pending |
-| RU-46 | P2: Telefone | Tasks | Pending |
+| RU-44 | P2: Telefone | T24 | Implementing |
+| RU-45 | P2: Telefone | T24 | Implementing |
+| RU-46 | P2: Telefone | T24 | Implementing |
 | RU-47 | P2: Editar Perfil | Tasks | Pending |
 | RU-48 | P2: Editar Perfil | Tasks | Pending |
 | RU-49 | P2: Editar Perfil | Tasks | Pending |

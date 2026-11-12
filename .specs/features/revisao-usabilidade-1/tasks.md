@@ -770,11 +770,12 @@ T31
 
 **Done when**:
 
-- [ ] `telefone.test.ts`: 10 e 11 dígitos válidos; 9 e 12 inválidos; DDD 10 e 00 inválidos; máscara parcial durante a digitação; schema devolve só dígitos
-- [ ] Gate Quick passa
+- [x] `telefone.test.ts`: 10 e 11 dígitos válidos; 9 e 12 inválidos; DDD 10 e 00 inválidos; máscara parcial durante a digitação; schema devolve só dígitos
+- [x] Gate Quick passa
 
 **Tests**: unit
 **Gate**: quick
+**Status**: Done
 
 **Commit**: `feat(validation): phone number with area code`
 
