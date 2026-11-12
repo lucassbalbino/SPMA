@@ -5,7 +5,7 @@
 // requireSession, sem passar por fetch interno - ver design.md). O
 // Ofertante é do curso (`TB_Curso`, AD-052) - o filtro vai pela relação. O escopo em si vem de `escopoDeLeitura`, a mesma função que a
 // rota usa. Antes de o pré-curso ser encerrado o pós-curso continua listado,
-// como "Aguardando pré-curso" (AD-050).
+// como "Aguardando Cadastro de Formação" (AD-050).
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/guards";
 import { escopoDeLeitura, whereDeEscopo } from "@/lib/api/escopo";
@@ -32,11 +32,11 @@ export default async function PosCursosPage() {
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>Pós-cursos</CardTitle>
+        <CardTitle>Avaliação de Formação</CardTitle>
       </CardHeader>
       <CardContent>
         {posCursos.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum pós-curso cadastrado.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma formação cadastrada.</p>
         ) : (
           <ul data-testid="lista-pos-cursos" className="flex flex-col gap-2">
             {posCursos.map((posCurso) => (
@@ -51,7 +51,7 @@ export default async function PosCursosPage() {
                       ? "Encerrado"
                       : posCursoLiberado(posCurso.curso.preCurso)
                         ? "Em andamento"
-                        : "Aguardando pré-curso"}
+                        : "Aguardando Cadastro de Formação"}
                   </span>
                 </Link>
               </li>

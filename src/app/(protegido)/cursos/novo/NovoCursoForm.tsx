@@ -65,7 +65,7 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
         setErro(
           corpo.saldoDisponivel !== undefined
             ? `${corpo.erro} (saldo disponível: ${corpo.saldoDisponivel})`
-            : (corpo.erro ?? "Não foi possível criar o curso"),
+            : (corpo.erro ?? "Não foi possível criar a formação"),
         );
         return;
       }
@@ -90,7 +90,7 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
   if (opcoesVerba.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Nenhuma verba disponível para criar um curso.
+        Nenhum recurso disponível para criar uma formação.
       </p>
     );
   }
@@ -109,14 +109,14 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
           />
         </Field>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="cdVerba">Verba</FieldLabel>
+          <FieldLabel htmlFor="cdVerba">Recurso</FieldLabel>
           <Select
             items={itens}
             value={cdVerba}
             onValueChange={(valor) => setCdVerba(valor as string)}
           >
             <SelectTrigger id="cdVerba" data-testid="select-verba" disabled={enviando}>
-              <SelectValue placeholder="Selecione uma verba" />
+              <SelectValue placeholder="Selecione um recurso" />
             </SelectTrigger>
             <SelectContent>
               {itens.map((item) => (
@@ -132,7 +132,7 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
           </Select>
         </Field>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="vlCursoAlocado">Valor alocado ao curso</FieldLabel>
+          <FieldLabel htmlFor="vlCursoAlocado">Valor alocado à formação</FieldLabel>
           <Input
             id="vlCursoAlocado"
             name="vlCursoAlocado"
@@ -145,7 +145,7 @@ export function NovoCursoForm({ opcoesVerba }: { opcoesVerba: OpcaoVerba[] }) {
         </Field>
         {erro && <FieldError data-testid="erro-novo-curso">{erro}</FieldError>}
         <Button type="submit" disabled={enviando}>
-          Criar curso
+          Criar formação
         </Button>
       </FieldGroup>
     </form>

@@ -51,7 +51,7 @@ export function ListaVerbas({
   const [editando, setEditando] = useState<number | null>(null);
 
   if (verbas.length === 0) {
-    return <p className="text-sm text-muted-foreground">Nenhuma verba cadastrada.</p>;
+    return <p className="text-sm text-muted-foreground">Nenhum recurso cadastrado.</p>;
   }
 
   return (
@@ -137,14 +137,14 @@ function EdicaoVerba({ verba, aoFechar }: { verba: VerbaDaTela; aoFechar: () => 
       if (!res.ok) {
         // GV-19: o 409 de "abaixo do já alocado" chega aqui; a linha continua
         // aberta com o valor digitado, para corrigir.
-        setErro(corpo.erro ?? "Não foi possível salvar a verba");
+        setErro(corpo.erro ?? "Não foi possível salvar o recurso");
         return;
       }
 
       aoFechar();
       router.refresh();
     } catch {
-      setErro("Não foi possível salvar a verba");
+      setErro("Não foi possível salvar o recurso");
     } finally {
       setEnviando(false);
     }
@@ -154,7 +154,7 @@ function EdicaoVerba({ verba, aoFechar }: { verba: VerbaDaTela; aoFechar: () => 
     <form onSubmit={handleSubmit} noValidate>
       <FieldGroup>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor={`${id}-dsVerba`}>Identificação</FieldLabel>
+          <FieldLabel htmlFor={`${id}-dsVerba`}>Nome do recurso</FieldLabel>
           <Input
             id={`${id}-dsVerba`}
             maxLength={60}
@@ -164,7 +164,7 @@ function EdicaoVerba({ verba, aoFechar }: { verba: VerbaDaTela; aoFechar: () => 
           />
         </Field>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor={`${id}-vlVerba`}>Valor da verba</FieldLabel>
+          <FieldLabel htmlFor={`${id}-vlVerba`}>Valor do recurso</FieldLabel>
           <Input
             id={`${id}-vlVerba`}
             type="number"

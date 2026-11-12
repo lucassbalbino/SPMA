@@ -36,11 +36,11 @@ export default async function NovoCursoPage() {
       <>
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Novo curso</CardTitle>
+            <CardTitle>Nova Formação</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Seu perfil não pode criar cursos.
+              Seu perfil não pode criar formações.
             </p>
           </CardContent>
         </Card>
@@ -70,7 +70,7 @@ export default async function NovoCursoPage() {
     <>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Novo curso</CardTitle>
+          <CardTitle>Nova Formação</CardTitle>
         </CardHeader>
         <CardContent>
           <NovoCursoForm opcoesVerba={opcoesVerba} />

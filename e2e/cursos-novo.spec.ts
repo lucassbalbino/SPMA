@@ -140,8 +140,8 @@ test("GO cria curso dentro do saldo e é redirecionado para o questionário pré
   await page.getByLabel("Nome da formação").fill("Mecânica Básica");
   await page.getByTestId("select-verba").click();
   await page.getByTestId(`opcao-verba-${cdVerba}`).click();
-  await page.getByLabel("Valor alocado ao curso").fill("500");
-  await page.getByRole("button", { name: "Criar curso" }).click();
+  await page.getByLabel("Valor alocado à formação").fill("500");
+  await page.getByRole("button", { name: "Criar formação" }).click();
 
   await expect(page).toHaveURL(/\/pre-cursos\/\d+$/);
 
@@ -163,8 +163,8 @@ test("RU-57: criar sem nome mostra 'Nome da formação é obrigatório' e não c
   await page.getByLabel("Nome da formação").fill("   ");
   await page.getByTestId("select-verba").click();
   await page.getByTestId(`opcao-verba-${cdVerba}`).click();
-  await page.getByLabel("Valor alocado ao curso").fill("100");
-  await page.getByRole("button", { name: "Criar curso" }).click();
+  await page.getByLabel("Valor alocado à formação").fill("100");
+  await page.getByRole("button", { name: "Criar formação" }).click();
 
   await expect(page.getByTestId("erro-novo-curso")).toHaveText("Nome da formação é obrigatório");
   await expect(page).toHaveURL(/\/cursos\/novo$/);
@@ -180,8 +180,8 @@ test("valor acima do saldo disponível exibe erro com o saldo informado, sem nav
   await page.getByLabel("Nome da formação").fill("Formação acima do saldo");
   await page.getByTestId("select-verba").click();
   await page.getByTestId(`opcao-verba-${cdVerba}`).click();
-  await page.getByLabel("Valor alocado ao curso").fill("999999");
-  await page.getByRole("button", { name: "Criar curso" }).click();
+  await page.getByLabel("Valor alocado à formação").fill("999999");
+  await page.getByRole("button", { name: "Criar formação" }).click();
 
   await expect(page.getByTestId("erro-novo-curso")).toContainText("saldo disponível");
   await expect(page).toHaveURL(/\/cursos\/novo$/);
@@ -194,7 +194,7 @@ test("GT não pode criar curso: a tela mostra a mensagem de acesso negado, sem s
   await page.goto("/cursos/novo");
 
   await expect(page.getByTestId("select-verba")).toHaveCount(0);
-  await expect(page.getByText("Seu perfil não pode criar cursos.")).toBeVisible();
+  await expect(page.getByText("Seu perfil não pode criar formações.")).toBeVisible();
 });
 
 test("GO sem nenhuma Verba vê a mensagem de lista vazia, sem seletor", async ({ page }) => {
@@ -202,7 +202,7 @@ test("GO sem nenhuma Verba vê a mensagem de lista vazia, sem seletor", async ({
   await page.goto("/cursos/novo");
 
   await expect(page.getByTestId("select-verba")).toHaveCount(0);
-  await expect(page.getByText("Nenhuma verba disponível para criar um curso.")).toBeVisible();
+  await expect(page.getByText("Nenhum recurso disponível para criar uma formação.")).toBeVisible();
 });
 
 // GV-32 (gestao-de-verbas, AD-046): um GO pode ter várias verbas, e o seletor

@@ -31,11 +31,11 @@ export default async function PreCursosPage() {
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>Pré-cursos</CardTitle>
+        <CardTitle>Cadastro de Formação</CardTitle>
       </CardHeader>
       <CardContent>
         {preCursos.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum pré-curso cadastrado.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma formação cadastrada.</p>
         ) : (
           <ul data-testid="lista-pre-cursos" className="flex flex-col gap-2">
             {preCursos.map((preCurso) => (

@@ -318,8 +318,8 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-34 | P2: Nomes | T20 | Implementing |
 | RU-35 | P2: Nomes | T19 | Implementing |
 | RU-36 | P2: Nomes | T19 | Implementing |
-| RU-37 | P2: Nomes | Tasks | Pending |
-| RU-38 | P2: Nomes | Tasks | Pending |
+| RU-37 | P2: Nomes | T21 | Implementing |
+| RU-38 | P2: Nomes | T21 | Implementing |
 | RU-39 | P2: Nomes | Tasks | Pending |
 | RU-40 | P2: Datas | Tasks | Pending |
 | RU-41 | P2: Datas | Tasks | Pending |
@@ -341,7 +341,7 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-57 | P1: Nome da formação | T32 | Implementing |
 | RU-58 | P1: Nome da formação | T32 | Implementing |
 | RU-59 | P1: Nome da formação | T32 | Implementing |
-| RU-60 | P1: Nome da formação | Tasks | Pending |
+| RU-60 | P1: Nome da formação | T21 | Implementing |
 | RU-61 | P2: Datas | Tasks | Pending |
 | RU-62 | P2: Datas | Tasks | Pending |
 

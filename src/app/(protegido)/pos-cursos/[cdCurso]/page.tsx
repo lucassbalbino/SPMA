@@ -52,7 +52,7 @@ export default async function PosCursoPage({ params }: Props) {
         <CardContent className="flex flex-col gap-2 text-sm">
           <p>{MENSAGEM_PRE_CURSO_EM_ANDAMENTO}.</p>
           <p className="text-muted-foreground">
-            O pós-curso abre quando o pré-curso deste curso estiver terminado e encerrado.
+            A Avaliação de Formação abre quando o Cadastro de Formação estiver preenchido e concluído.
           </p>
           <Link href={`/pre-cursos/${posCurso.cdCurso}`} className="w-fit underline">
             Ir para o Cadastro de Formação

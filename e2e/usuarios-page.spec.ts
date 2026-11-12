@@ -242,12 +242,13 @@ test("AVAL-01: o GO só vê no seletor os cursos do próprio Ofertante e não en
 
   await page.locator("select#tipo").selectOption("AL");
   const opcoes = await page.locator("select#cdCurso option").allTextContents();
-  expect(opcoes).toEqual(["Selecione", `Curso #${cdCursoDoGo}`]);
+  // RU-11: sem P8, a formação aparece pelo texto de reserva, sem "#".
+  expect(opcoes).toEqual(["Selecione", `Formação sem nome (nº ${cdCursoDoGo})`]);
 
   await page.getByLabel("CPF").fill(CPF_NOVO_AL_SEM_CURSO);
   await page.getByRole("button", { name: "Criar usuário" }).click();
 
-  await expect(page.getByText("Curso é obrigatório")).toBeVisible();
+  await expect(page.getByText("Formação é obrigatória")).toBeVisible();
   expect(getUsuario(CPF_NOVO_AL_SEM_CURSO)).toBeNull();
 });
 
@@ -714,6 +715,8 @@ test.describe("edição na linha da Gestão de usuários", () => {
     page,
   }) => {
     await abrirListaDoGT(page);
+    // RU-38 (doc 4): o título da lista.
+    await expect(page.getByText("Usuários Cadastrados", { exact: true })).toBeVisible();
 
     const editar = { name: "Editar" };
     await expect(linhaDe(page, CPF_VT_EDICAO).getByRole("button", editar)).toHaveCount(1);

@@ -121,7 +121,7 @@ test("cada item lista o status e linka para a tela de detalhe", async ({ page })
   // AD-050: o pré-curso deste curso segue em andamento, então o pós-curso
   // aparece na lista, mas aguardando.
   await expect(page.getByTestId(`status-pos-curso-${cdCursoDoGo}`)).toHaveText(
-    "Aguardando pré-curso",
+    "Aguardando Cadastro de Formação",
   );
 
   // A tela de detalhe em si (T9) ainda não existe nesta tarefa - checa só

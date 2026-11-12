@@ -33,6 +33,7 @@ import {
   TAMANHO_MASCARA,
 } from "@/lib/validation/mascara-documento";
 import { headerCSRF } from "@/lib/security/csrf-client";
+import { nomeDaFormacao } from "@/lib/cursos/nome";
 import type { TipoUsuario } from "@/generated/prisma/enums";
 
 type OpcaoGo = { documento: string; nome: string | null };
@@ -105,7 +106,7 @@ export function NovoUsuarioForm({
     }
 
     if (pedeCurso && !cdCurso) {
-      setErro("Curso é obrigatório");
+      setErro("Formação é obrigatória");
       return;
     }
 
@@ -242,7 +243,7 @@ export function NovoUsuarioForm({
             )}
             {pedeCurso && (
               <Field data-invalid={!!erro}>
-                <FieldLabel htmlFor="cdCurso">Curso</FieldLabel>
+                <FieldLabel htmlFor="cdCurso">Formação</FieldLabel>
                 <select
                   id="cdCurso"
                   name="cdCurso"
@@ -254,13 +255,13 @@ export function NovoUsuarioForm({
                   <option value="">Selecione</option>
                   {cursosDisponiveis.map((curso) => (
                     <option key={curso.cdCurso} value={curso.cdCurso}>
-                      {curso.nome ?? `Curso #${curso.cdCurso}`}
+                      {nomeDaFormacao(curso.nome, curso.cdCurso)}
                     </option>
                   ))}
                 </select>
                 {cursosDisponiveis.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    Nenhum curso disponível - crie um pré-curso antes de criar o aluno.
+                    Nenhuma formação disponível - crie uma formação antes de criar o aluno.
                   </p>
                 )}
               </Field>

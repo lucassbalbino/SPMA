@@ -689,12 +689,13 @@ T31
 
 **Done when**:
 
-- [ ] `grep -rn "erba\|urso" src/app src/components --include=*.tsx` só encontra identificadores, nenhum texto visível
-- [ ] e2e `verbas-page` (GO vê "Recursos Recebidos", AM vê "Recursos"), `usuarios-page`, `cursos-novo` atualizados
-- [ ] Gate E2E passa
+- [x] `grep -rn "erba\|urso" src/app src/components --include=*.tsx` só encontra identificadores, nenhum texto visível
+- [x] e2e `verbas-page` (GO vê "Recursos Recebidos", AM vê "Recursos"), `usuarios-page`, `cursos-novo` atualizados
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(ui): client terminology in screen titles and buttons`
 
