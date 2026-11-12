@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { podeAcessarOfertante, podeGerenciarPreCurso } from "@/lib/auth/guards";
 import {
-  ordemDatasValida,
+  CHAVES_DATAS_PLANEJAMENTO,
+  violacaoOrdemDatas,
   respostasPreCursoSchema,
 } from "@/lib/validation/schemas/pre-curso.schema";
 import { comTratamentoDeErro } from "@/lib/errors/api-error";
@@ -71,9 +72,16 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
   const { registro, respostas } = await aplicarPatchRespostas({
     alvo: { formulario: "preCurso", cdCurso },
     patch,
+    // RU-61 (decisão do usuário): a ordem só é conferida quando o PATCH traz
+    // uma das 4 datas. Um cadastro antigo com datas fora de ordem continua
+    // gravando as outras perguntas; a conclusão confere sempre (RU-62).
     validarMesclado: (mescladas) => {
-      if (!ordemDatasValida(mescladas)) {
-        throw erroHttp(400, "Data de término não pode ser anterior à data de início");
+      if (!CHAVES_DATAS_PLANEJAMENTO.some((chave) => chave in patch)) {
+        return;
+      }
+      const violacao = violacaoOrdemDatas(mescladas);
+      if (violacao) {
+        throw erroHttp(400, violacao);
       }
     },
     gravarRegistro: (tx) =>

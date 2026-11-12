@@ -149,6 +149,32 @@ test("REQ-PC-06: valor de infraestrutura fora de 0-5 é rejeitado com 400, nada 
   await cliente.dispose();
 });
 
+// RU-40 (doc 9, imagem 9): a inscrição começava depois da formação e o
+// sistema aceitava.
+test("RU-40: inscrição começando depois do início da formação -> 400 com a mensagem, nada gravado", async () => {
+  const { cdCurso } = criarPreCurso({
+    cdOfertante: CNPJ_GO,
+    cdVerba,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO,
+  });
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
+  const cliente = await novoCliente();
+
+  const res = await cliente.patch(`/api/pre-cursos/${cdCurso}`, {
+    data: { planejDataInicioPrevista: "2026-10-14", planejDataInicioInscricao: "2026-10-20" },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  expect((await res.json()).erro).toBe(
+    "A data de início da inscrição deve ser anterior à data de início da formação.",
+  );
+  expect(getPreCurso(cdCurso)?.respostas).toBeNull();
+
+  await cliente.dispose();
+});
+
 // RU-59: a pergunta 8 guarda o nome da formação e não pode ficar em branco.
 test("RU-59: pergunta 8 em branco -> 400 com a mensagem e o campo, nome anterior intacto", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);

@@ -321,9 +321,9 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-37 | P2: Nomes | T21 | Implementing |
 | RU-38 | P2: Nomes | T21 | Implementing |
 | RU-39 | P2: Nomes | T22 | Implementing |
-| RU-40 | P2: Datas | Tasks | Pending |
-| RU-41 | P2: Datas | Tasks | Pending |
-| RU-42 | P2: Datas | Tasks | Pending |
+| RU-40 | P2: Datas | T23 | Implementing |
+| RU-41 | P2: Datas | T23 | Implementing |
+| RU-42 | P2: Datas | T23 | Implementing |
 | RU-43 | P2: Telefone | Tasks | Pending |
 | RU-44 | P2: Telefone | Tasks | Pending |
 | RU-45 | P2: Telefone | Tasks | Pending |
@@ -342,8 +342,8 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-58 | P1: Nome da formação | T32 | Implementing |
 | RU-59 | P1: Nome da formação | T32 | Implementing |
 | RU-60 | P1: Nome da formação | T21 | Implementing |
-| RU-61 | P2: Datas | Tasks | Pending |
-| RU-62 | P2: Datas | Tasks | Pending |
+| RU-61 | P2: Datas | T23 | Implementing |
+| RU-62 | P2: Datas | T23 | Implementing |
 
 **Coverage:** 62 total, 62 mapped to tasks, 0 unmapped.
 

@@ -354,16 +354,50 @@ export type RespostasPreCursoParcial = z.infer<
 // da requisição. Comparação lexicográfica é válida porque `z.iso.date()`
 // garante o formato `YYYY-MM-DD`. Vale para os dois pares: curso (Q13/Q14)
 // e inscrição (Q17b/Q17c, AD-049), cada um avaliado por si.
-export function ordemDatasValida(dados: {
+//
+// Revisão de usabilidade (doc 9, RU-40 a RU-42): cada regra tem a própria
+// mensagem, e entra uma terceira - a inscrição começa ANTES da formação.
+// Supera, nesse ponto, a AD-049.4 ("nenhuma regra cruza inscrição com início
+// do curso").
+type DatasPlanejamento = {
   planejDataInicioPrevista?: string;
   planejDataTerminoPrevista?: string;
   planejDataInicioInscricao?: string;
   planejDataTerminoInscricao?: string;
-}): boolean {
-  return (
-    parEmOrdem(dados.planejDataInicioPrevista, dados.planejDataTerminoPrevista) &&
-    parEmOrdem(dados.planejDataInicioInscricao, dados.planejDataTerminoInscricao)
-  );
+};
+
+/** As 4 datas do planejamento (Q13, Q14, Q17b, Q17c). */
+export const CHAVES_DATAS_PLANEJAMENTO = [
+  "planejDataInicioPrevista",
+  "planejDataTerminoPrevista",
+  "planejDataInicioInscricao",
+  "planejDataTerminoInscricao",
+] as const;
+
+export const MENSAGEM_TERMINO_FORMACAO =
+  "A data de término da formação não pode ser anterior à data de início.";
+export const MENSAGEM_TERMINO_INSCRICAO =
+  "A data de término da inscrição não pode ser anterior à data de início.";
+export const MENSAGEM_INSCRICAO_ANTES_DA_FORMACAO =
+  "A data de início da inscrição deve ser anterior à data de início da formação.";
+
+/** A mensagem da primeira regra de ordem violada, ou `null` se todas valem. */
+export function violacaoOrdemDatas(dados: DatasPlanejamento): string | null {
+  if (!parEmOrdem(dados.planejDataInicioPrevista, dados.planejDataTerminoPrevista)) {
+    return MENSAGEM_TERMINO_FORMACAO;
+  }
+  if (!parEmOrdem(dados.planejDataInicioInscricao, dados.planejDataTerminoInscricao)) {
+    return MENSAGEM_TERMINO_INSCRICAO;
+  }
+  const { planejDataInicioInscricao: inscricao, planejDataInicioPrevista: formacao } = dados;
+  if (inscricao && formacao && inscricao >= formacao) {
+    return MENSAGEM_INSCRICAO_ANTES_DA_FORMACAO;
+  }
+  return null;
+}
+
+export function ordemDatasValida(dados: DatasPlanejamento): boolean {
+  return violacaoOrdemDatas(dados) === null;
 }
 
 function parEmOrdem(inicio?: string, termino?: string): boolean {

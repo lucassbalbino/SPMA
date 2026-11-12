@@ -266,3 +266,47 @@ test("condicionais órfãs (Q7d.Qual, Q9.Qual e Q25.1/25.2/25.3) são descartada
 
   await cliente.dispose();
 });
+
+// RU-61/RU-62 (decisão do usuário, doc 9): um cadastro antigo com a inscrição
+// começando depois da formação - gravado antes da regra nova, aqui direto no
+// banco - continua salvando as outras perguntas, mas só conclui com as datas
+// corrigidas. Um PATCH que traz uma das datas confere a ordem de novo.
+test("RU-61/RU-62: datas fora de ordem não travam o Salvar de outras perguntas, mas impedem a conclusão", async () => {
+  const cdCurso = criarPreCurso({
+    cdOfertante: CNPJ_GO,
+    cdVerba,
+    vlCursoAlocado: 100,
+    criadoPor: CNPJ_GO,
+    respostas: {
+      ...RESPOSTA_COMPLETA,
+      planejDataInicioInscricao: "2026-03-10",
+      planejDataTerminoInscricao: "2026-03-20",
+    },
+  }).cdCurso;
+  const mensagem = "A data de início da inscrição deve ser anterior à data de início da formação.";
+
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
+  const cliente = await novoCliente();
+  const headers = cabecalhosAutenticados(idSessao, idCsrf);
+
+  const outraPergunta = await cliente.patch(`/api/pre-cursos/${cdCurso}`, {
+    data: { qualifMunicipio: "Outro município" },
+    headers,
+  });
+  expect(outraPergunta.status()).toBe(200);
+  expect(getPreCurso(cdCurso)?.respostas?.qualifMunicipio).toBe("Outro município");
+
+  const comData = await cliente.patch(`/api/pre-cursos/${cdCurso}`, {
+    data: { planejDataTerminoPrevista: "2026-06-01" },
+    headers,
+  });
+  expect(comData.status()).toBe(400);
+  expect((await comData.json()).erro).toBe(mensagem);
+
+  const conclusao = await cliente.post(`/api/pre-cursos/${cdCurso}/encerrar`, { headers });
+  expect(conclusao.status()).toBe(400);
+  expect((await conclusao.json()).erro).toBe(mensagem);
+  expect(getPreCurso(cdCurso)?.status).toBe("EM_ANDAMENTO");
+
+  await cliente.dispose();
+});

@@ -742,13 +742,14 @@ T31
 
 **Done when**:
 
-- [ ] `pre-curso.schema.test.ts`: 17b < 13 passa; 17b = 13 e 17b > 13 recusam com RU-40; 13 ou 17b ausente não aplica; 14 < 13 → RU-41; 17c < 17b → RU-42
-- [ ] e2e `pre-cursos-id`: PATCH com 13 = 2026-10-14 e 17b = 2026-10-20 → 400 com a mensagem exata
-- [ ] e2e: com datas fora de ordem já gravadas (fixture direta no banco), PATCH de outra pergunta → 200; conclusão → 400 com a mensagem e status segue em andamento
-- [ ] Gate E2E passa
+- [x] `pre-curso.schema.test.ts`: 17b < 13 passa; 17b = 13 e 17b > 13 recusam com RU-40; 13 ou 17b ausente não aplica; 14 < 13 → RU-41; 17c < 17b → RU-42
+- [x] e2e `pre-cursos-id`: PATCH com 13 = 2026-10-14 e 17b = 2026-10-20 → 400 com a mensagem exata
+- [x] e2e: com datas fora de ordem já gravadas (fixture direta no banco), PATCH de outra pergunta → 200; conclusão → 400 com a mensagem e status segue em andamento
+- [x] Gate E2E passa
 
 **Tests**: unit, e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(pre-curso): enrollment must start before the course`
 
