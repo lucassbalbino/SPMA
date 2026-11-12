@@ -849,12 +849,13 @@ T31
 
 **Done when**:
 
-- [ ] Unit do schema: nome vazio, e-mail inválido, GO sem telefone
-- [ ] e2e request: 200 grava os 3 campos; 400 nada muda; AL → 403; `documento` no corpo é ignorado e não altera outro usuário
-- [ ] Gate E2E passa
+- [x] Unit do schema: nome vazio, e-mail inválido, GO sem telefone
+- [x] e2e request no spec novo `e2e/perfil.spec.ts`: 200 grava os 3 campos; 400 nada muda; GO sem telefone → 400; AL → 403; `documento` no corpo é ignorado e não altera outro usuário
+- [x] Gate E2E passa
 
 **Tests**: unit, e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(api): self-service profile update`
 
