@@ -329,12 +329,12 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-45 | P2: Telefone | T24 | Implementing |
 | RU-46 | P2: Telefone | T24 | Implementing |
 | RU-47 | P2: Editar Perfil | Tasks | Pending |
-| RU-48 | P2: Editar Perfil | Tasks | Pending |
+| RU-48 | P2: Editar Perfil | T29 | Implementing |
 | RU-49 | P2: Editar Perfil | T27 | Implementing |
 | RU-50 | P2: Editar Perfil | T27 | Implementing |
 | RU-51 | P2: Editar Perfil | T27 | Implementing |
-| RU-52 | P2: Editar Perfil | Tasks | Pending |
-| RU-53 | P2: Editar Perfil | Tasks | Pending |
+| RU-52 | P2: Editar Perfil | T29 | Implementing |
+| RU-53 | P2: Editar Perfil | T29 | Implementing |
 | RU-54 | P2: Editar Perfil | T27 | Implementing |
 | RU-55 | P2: Valor previsto | T26 | Implementing |
 | RU-56 | P2: Valor previsto | T26 | Implementing |

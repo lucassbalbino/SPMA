@@ -902,11 +902,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e `meus-dados`: GT edita e vê o valor novo após recarregar; GO vê o aviso de senha; AM não vê; teste antigo "não-AL recebe 404" substituído pelo novo comportamento
-- [ ] Gate E2E passa
+- [x] e2e `meus-dados`: GT edita e vê o valor novo após recarregar; GO vê o aviso de senha; AM não vê; teste antigo "não-AL recebe 404" substituído pelo novo comportamento
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(perfil): edit own name, email and phone for every profile`
 
