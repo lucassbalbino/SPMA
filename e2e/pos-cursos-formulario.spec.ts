@@ -226,7 +226,7 @@ test("AD-050: com o pré-curso em andamento, a página mostra o aviso no lugar d
   await page.goto(`/pos-cursos/${cdCurso}`);
 
   await expect(page.getByTestId("aviso-pre-curso-em-andamento")).toContainText(
-    "Encerre o pré-curso antes de preencher o pós-curso",
+    "Conclua o Cadastro de Formação antes de preencher a Avaliação de Formação",
   );
   await expect(page.getByTestId("form-pos-curso")).toHaveCount(0);
   // RU-13: o título do aviso também usa o nome (aqui, o de reserva, sem P8)

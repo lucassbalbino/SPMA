@@ -28,7 +28,7 @@ async function criarCurso(request: Request) {
   const verba = await prisma.verba.findUnique({ where: { cdVerba: dados.cdVerba } });
 
   if (!verba) {
-    throw erroHttp(400, "Verba informada não existe");
+    throw erroHttp(400, "Recurso informado não existe");
   }
 
   // REQ-PC-01/03: só o GO vinculado ao Ofertante da Verba cria o curso (e o
@@ -44,7 +44,7 @@ async function criarCurso(request: Request) {
   );
 
   if (!valido) {
-    throw erroHttp(400, "Valor alocado excede o saldo disponível da verba", {
+    throw erroHttp(400, "Valor alocado excede o saldo disponível do recurso", {
       saldoDisponivel,
     });
   }

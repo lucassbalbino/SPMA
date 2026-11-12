@@ -716,11 +716,12 @@ T31
 
 **Done when**:
 
-- [ ] Testes unit/integration/e2e que comparam essas mensagens atualizados (nenhum apagado)
-- [ ] Gate Build passa
+- [x] Testes unit/integration/e2e que comparam essas mensagens atualizados (nenhum apagado)
+- [x] Gate Build passa
 
 **Tests**: unit, integration, e2e
 **Gate**: build
+**Status**: Done
 
 **Commit**: `feat(api): client terminology in error messages`
 

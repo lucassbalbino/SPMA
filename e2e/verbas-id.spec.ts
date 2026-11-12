@@ -222,8 +222,8 @@ test("IDV-07/08/11: PATCH grava a identificação sem espaços e o GET a devolve
   expect((await get.json()).verba.dsVerba).toBe("Repasse Março");
 
   for (const [dsVerba, mensagem] of [
-    ["   ", "Identificação é obrigatória"],
-    ["a".repeat(61), "Identificação deve ter no máximo 60 caracteres"],
+    ["   ", "Nome do recurso é obrigatório"],
+    ["a".repeat(61), "Nome do recurso deve ter no máximo 60 caracteres"],
   ]) {
     const invalido = await cliente.patch(`/api/verbas/${cdVerbaSemCurso}`, {
       data: { dsVerba, vlVerba: 8000 },

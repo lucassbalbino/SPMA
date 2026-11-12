@@ -17,7 +17,7 @@ function nomeDaFormacaoObrigatorio() {
 // PreCurso e PosCurso na mesma transação. O nome vai para a P8 do pré.
 export const criarCursoSchema = z.object({
   nome: nomeDaFormacaoObrigatorio(),
-  cdVerba: z.number().int().positive({ message: "Verba é obrigatória" }),
+  cdVerba: z.number().int().positive({ message: "Recurso é obrigatório" }),
   vlCursoAlocado: z.number().positive({ message: "Valor alocado deve ser positivo" }),
 });
 

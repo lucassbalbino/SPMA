@@ -41,7 +41,7 @@ export const usuarioSchema = z
     // Curso em que o Aluno é matriculado no mesmo passo em que é criado
     // (AVAL-01): todo AL nasce com uma AvaliacaoAluno. Opcional aqui porque a
     // obrigatoriedade depende do tipo criado - a rota é quem exige.
-    cdCurso: z.number().int().positive({ message: "Curso é obrigatório" }).optional(),
+    cdCurso: z.number().int().positive({ message: "Formação é obrigatória" }).optional(),
     // Declarado só para ser REJEITADO (CAMPOS_NUNCA_NA_CRIACAO, GV-26).
     verba: z.unknown().optional(),
     responsavel: z.string().optional(),

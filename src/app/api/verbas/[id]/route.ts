@@ -27,7 +27,7 @@ async function consultarVerba(_request: Request, { params }: Contexto) {
   const verba = await prisma.verba.findUnique({ where: { cdVerba } });
 
   if (!verba) {
-    throw erroHttp(404, "Verba não encontrada");
+    throw erroHttp(404, "Recurso não encontrado");
   }
 
   if (!podeAcessarOfertante(sessao.usuario, verba.cdOfertante)) {
@@ -51,7 +51,7 @@ async function editarVerba(request: Request, { params }: Contexto) {
   const verbaExistente = await prisma.verba.findUnique({ where: { cdVerba } });
 
   if (!verbaExistente) {
-    throw erroHttp(404, "Verba não encontrada");
+    throw erroHttp(404, "Recurso não encontrado");
   }
 
   const dados = await corpoValidado(request, edicaoVerbaSchema);
@@ -63,7 +63,7 @@ async function editarVerba(request: Request, { params }: Contexto) {
   if (!valido) {
     throw erroHttp(
       409,
-      "Novo valor não pode ser menor que o já alocado a cursos desta verba",
+      "Novo valor não pode ser menor que o já alocado a formações deste recurso",
       { totalAlocado },
     );
   }

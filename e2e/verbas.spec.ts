@@ -276,9 +276,9 @@ test("IDV-03/IDV-04: POST sem identificação, só com espaços ou com 61 caract
   const cliente = await novoCliente();
 
   const casos: [string | undefined, string][] = [
-    [undefined, "Identificação é obrigatória"],
-    ["   ", "Identificação é obrigatória"],
-    ["a".repeat(61), "Identificação deve ter no máximo 60 caracteres"],
+    [undefined, "Nome do recurso é obrigatório"],
+    ["   ", "Nome do recurso é obrigatório"],
+    ["a".repeat(61), "Nome do recurso deve ter no máximo 60 caracteres"],
   ];
   for (const [dsVerba, mensagem] of casos) {
     const res = await cliente.post("/api/verbas", {

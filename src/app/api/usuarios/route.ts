@@ -121,13 +121,13 @@ async function criarUsuario(request: Request) {
   // AVAL-01: todo Aluno nasce matriculado - o curso é obrigatório e é
   // conferido aqui, não só no formulário.
   if (dados.tipo === "AL" && !dados.cdCurso) {
-    throw erroHttp(400, "Curso é obrigatório para Aluno");
+    throw erroHttp(400, "Formação é obrigatória para Aluno");
   }
 
   // Curso informado na criação de quem não é Aluno seria silenciosamente
   // descartado - é erro de quem chama, não um padrão a assumir.
   if (dados.cdCurso && dados.tipo !== "AL") {
-    throw erroHttp(400, "Curso só se aplica à criação de Aluno");
+    throw erroHttp(400, "Formação só se aplica à criação de Aluno");
   }
 
   const curso = dados.cdCurso
@@ -135,7 +135,7 @@ async function criarUsuario(request: Request) {
     : null;
 
   if (dados.cdCurso && !curso) {
-    throw erroHttp(404, "Curso não encontrado");
+    throw erroHttp(404, "Formação não encontrada");
   }
 
   // AVAL-05/06: o escopo da matrícula é o Ofertante do curso, não o do Aluno
@@ -144,7 +144,7 @@ async function criarUsuario(request: Request) {
   // (2026-10-09), então matricular só acontece aqui. A tela só oferece cursos
   // do escopo; o servidor é quem decide (AD-033).
   if (curso && !podeMatricularAluno(criador, curso.cdOfertante)) {
-    throw erroHttp(403, "Você não pode matricular alunos neste curso");
+    throw erroHttp(403, "Você não pode matricular alunos nesta formação");
   }
 
   // Usuário e matrícula são um passo só: um erro no meio não pode deixar um

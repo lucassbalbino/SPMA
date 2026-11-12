@@ -123,7 +123,7 @@ async function gravarRespostasAvaliacao(request: Request, { params }: Contexto) 
   );
 
   if (temChaveDeParte2 && !parte1CompletaResultante) {
-    throw erroHttp(400, "Complete a Parte 1 antes de responder a avaliação do curso");
+    throw erroHttp(400, "Complete a Parte 1 antes de responder a avaliação da formação");
   }
 
   const { registro, respostas } = await aplicarPatchRespostas({

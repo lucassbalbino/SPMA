@@ -169,15 +169,15 @@ test("GV-03/IDV-03/GV-04/GV-05: AM envia o formulário incompleto e vê a mensag
   await page.getByLabel("GO").selectOption(CNPJ_GO_C);
   await page.getByLabel("Nome do recurso").fill("   ");
   await criar.click();
-  await expect(page.getByText("Identificação é obrigatória")).toBeVisible();
+  await expect(page.getByText("Nome do recurso é obrigatório")).toBeVisible();
 
   await page.getByLabel("Nome do recurso").fill("Verba C");
   await criar.click();
-  await expect(page.getByText("Valor da verba é obrigatório")).toBeVisible();
+  await expect(page.getByText("Valor do recurso é obrigatório")).toBeVisible();
 
   await page.getByLabel("Valor do recurso").fill("0");
   await criar.click();
-  await expect(page.getByText("Valor da verba deve ser positivo")).toBeVisible();
+  await expect(page.getByText("Valor do recurso deve ser positivo")).toBeVisible();
 
   expect(getVerbasPorOfertante(CNPJ_GO_C)).toEqual([]);
 });
@@ -270,7 +270,7 @@ test("GV-18/GV-19/GV-20/GV-22: GT edita valor e data na linha - abaixo do alocad
   await linha.getByLabel("Valor do recurso").fill("300");
   await linha.getByRole("button", { name: "Salvar" }).click();
   await expect(
-    linha.getByText("Novo valor não pode ser menor que o já alocado a cursos desta verba"),
+    linha.getByText("Novo valor não pode ser menor que o já alocado a formações deste recurso"),
   ).toBeVisible();
   expect(Number(getVerba(cdVerbaD)?.vlVerba)).toBe(1000);
 
@@ -306,7 +306,7 @@ test("IDV-06/IDV-07/IDV-08: GT edita a identificação na linha - vazia é recus
   // IDV-08: só espaços é recusado e o banco não muda.
   await campo.fill("   ");
   await linha.getByRole("button", { name: "Salvar" }).click();
-  await expect(linha.getByText("Identificação é obrigatória")).toBeVisible();
+  await expect(linha.getByText("Nome do recurso é obrigatório")).toBeVisible();
   expect(getVerba(cdVerbaE)?.dsVerba).toBe("Verba E original");
 
   // IDV-07: grava e a lista mostra o novo nome sem recarregar.

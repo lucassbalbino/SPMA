@@ -25,7 +25,7 @@ async function consultarPreCurso(_request: Request, { params }: Contexto) {
   const preCurso = await prisma.preCurso.findUnique({ where: { cdCurso }, include: incluirCurso("preCurso") });
 
   if (!preCurso) {
-    throw erroHttp(404, "Pré-curso não encontrado");
+    throw erroHttp(404, "Cadastro de Formação não encontrado");
   }
 
   if (!podeAcessarOfertante(sessao.usuario, preCurso.curso.cdOfertante)) {
@@ -47,7 +47,7 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
   });
 
   if (!preCursoExistente) {
-    throw erroHttp(404, "Pré-curso não encontrado");
+    throw erroHttp(404, "Cadastro de Formação não encontrado");
   }
 
   if (!podeGerenciarPreCurso(sessao.usuario, preCursoExistente.curso.cdOfertante)) {
@@ -56,7 +56,7 @@ async function gravarRespostasPreCurso(request: Request, { params }: Contexto) {
 
   // REQ-PC-12: somente leitura depois de encerrado, sem exceção.
   if (preCursoExistente.status === "ENCERRADO") {
-    throw erroHttp(409, "Pré-curso já encerrado, somente leitura");
+    throw erroHttp(409, "Cadastro de Formação já encerrado, somente leitura");
   }
 
   const patch = await corpoValidado(request, respostasPreCursoSchema.partial(), {

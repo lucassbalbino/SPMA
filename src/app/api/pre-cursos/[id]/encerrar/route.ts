@@ -25,7 +25,7 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
   });
 
   if (!preCurso) {
-    throw erroHttp(404, "Pré-curso não encontrado");
+    throw erroHttp(404, "Cadastro de Formação não encontrado");
   }
 
   if (!podeGerenciarPreCurso(sessao.usuario, preCurso.curso.cdOfertante)) {
@@ -34,7 +34,7 @@ async function encerrarPreCurso(request: Request, { params }: Contexto) {
 
   // AD-018/RN-09: transição irreversível - encerrar de novo é rejeitado.
   if (preCurso.status === "ENCERRADO") {
-    throw erroHttp(409, "Pré-curso já está encerrado");
+    throw erroHttp(409, "Cadastro de Formação já está encerrado");
   }
 
   // Respostas de perguntas condicionais que a resposta-mãe tornou

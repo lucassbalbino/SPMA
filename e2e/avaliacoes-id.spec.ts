@@ -298,7 +298,7 @@ test("SPR-08: sem Situação Profissional, chave de Parte 2 rejeitada com 400 e 
   });
 
   expect(res.status()).toBe(400);
-  expect((await res.json()).erro).toBe("Complete a Parte 1 antes de responder a avaliação do curso");
+  expect((await res.json()).erro).toBe("Complete a Parte 1 antes de responder a avaliação da formação");
   const depois = getAvaliacao(CPF_AL_SEM_SITUACAO, cdCurso);
   expect(depois?.respostas).toEqual(antes?.respostas);
   expect(depois?.respostas?.avalCursoDinamicasInclusao).toBe(5);

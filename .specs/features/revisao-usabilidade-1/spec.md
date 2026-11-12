@@ -320,7 +320,7 @@ O sistema vai ser usado por pessoas leigas no país inteiro, e a revisão do cli
 | RU-36 | P2: Nomes | T19 | Implementing |
 | RU-37 | P2: Nomes | T21 | Implementing |
 | RU-38 | P2: Nomes | T21 | Implementing |
-| RU-39 | P2: Nomes | Tasks | Pending |
+| RU-39 | P2: Nomes | T22 | Implementing |
 | RU-40 | P2: Datas | Tasks | Pending |
 | RU-41 | P2: Datas | Tasks | Pending |
 | RU-42 | P2: Datas | Tasks | Pending |
