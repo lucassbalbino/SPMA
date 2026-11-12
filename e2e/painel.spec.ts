@@ -16,7 +16,7 @@ async function logar(page: Page, cpf: string) {
 
 test.beforeAll(() => {
   deleteUsuarios(CPFS);
-  upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false });
+  upsertUsuario({ cpf: CPF_GT, tipo: "GT", senha: SENHA, primeiraVez: false, nome: "Lucia Gestora" });
   upsertUsuario({ cpf: CPF_AL, tipo: "AL", senha: SENHA, primeiraVez: false });
 });
 
@@ -51,6 +51,7 @@ test("RU-34: o painel do GT diz o perfil por extenso e o que ele está apto a re
   await logar(page, CPF_GT);
   await page.goto("/painel");
 
+  await expect(page.getByText("Olá, Lucia Gestora", { exact: true })).toBeVisible();
   await expect(page.getByTestId("painel-perfil")).toHaveText("Você está no perfil de Gestor Turismo");
   await expect(page.getByTestId("painel-apto")).toHaveText("Portanto, está apto a realizar:");
   await expect(page.getByTestId("painel-modulos").getByRole("listitem")).toHaveText([

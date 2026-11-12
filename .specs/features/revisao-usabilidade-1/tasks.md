@@ -1044,11 +1044,12 @@ T36
 
 **Done when**:
 
-- [ ] `toHaveText("Olá, <nome do GT>")`
-- [ ] Gate E2E passa
+- [x] `toHaveText("Olá, <nome do GT>")`
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `test(painel): assert the greeting with the user name`
 
