@@ -36,7 +36,10 @@ const POS_CURSOS: ItemNavegacao = { rotulo: "Avaliação de Formação", href: "
 const AVALIACOES: ItemNavegacao = { rotulo: "Avaliações Aluno", href: "/avaliacoes" };
 // Mesma rota, nome diferente: para o Aluno ela nunca lista mais que a própria.
 const MINHA_AVALIACAO: ItemNavegacao = { rotulo: "Minha avaliação", href: "/avaliacoes" };
-const MEUS_DADOS: ItemNavegacao = { rotulo: "Meus dados", href: "/meus-dados" };
+// RU-47 (comentário 2): todo perfil gerencia o próprio cadastro. Mesma rota
+// para os seis; a página escolhe o formulário pelo perfil.
+const EDITAR_PERFIL: ItemNavegacao = { rotulo: "Editar Perfil", href: "/meus-dados" };
+const MODULO_EDITAR_PERFIL: Modulo = { rotulo: "Editar Perfil", itens: [EDITAR_PERFIL] };
 // AD-046: AM/GT criam e editam verbas ali; GO/VO veem as do próprio escopo.
 // VT e AL ficam sem o item - eles não leem verba (`podeLerVerba`).
 const VERBAS: ItemNavegacao = { rotulo: "Gestão de Recursos", href: "/verbas" };
@@ -62,27 +65,35 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
     { rotulo: "Gestão de Recursos", itens: [VERBAS] },
     { rotulo: "Gestão de Formações", itens: CURSOS_COM_CRIACAO },
     { rotulo: "Visualização de Relatórios", itens: [] },
+    MODULO_EDITAR_PERFIL,
   ],
   [TipoUsuario.GT]: [
     { rotulo: "Gestão de Usuários", itens: [GESTAO_USUARIOS] },
     { rotulo: "Gestão de Ofertante", itens: [] },
     { rotulo: "Gestão de Recursos", itens: [VERBAS] },
     { rotulo: "Gestão de Formações", itens: CURSOS },
+    MODULO_EDITAR_PERFIL,
   ],
   [TipoUsuario.VT]: [
     { rotulo: "Gestão de Formações", itens: CURSOS },
     { rotulo: "Visualização de Relatórios", itens: [] },
+    MODULO_EDITAR_PERFIL,
   ],
   [TipoUsuario.GO]: [
     { rotulo: "Gestão de Usuários", itens: [GESTAO_USUARIOS] },
     { rotulo: "Gestão de Recursos", itens: [VERBAS] },
     { rotulo: "Minhas Formações", itens: CURSOS_COM_CRIACAO },
+    MODULO_EDITAR_PERFIL,
   ],
   [TipoUsuario.VO]: [
     { rotulo: "Gestão de Recursos", itens: [VERBAS] },
     { rotulo: "Minhas Formações", itens: CURSOS },
+    MODULO_EDITAR_PERFIL,
   ],
-  [TipoUsuario.AL]: [{ rotulo: "Minha avaliação", itens: [MINHA_AVALIACAO, MEUS_DADOS] }],
+  [TipoUsuario.AL]: [
+    { rotulo: "Minha avaliação", itens: [MINHA_AVALIACAO] },
+    MODULO_EDITAR_PERFIL,
+  ],
 };
 
 /**

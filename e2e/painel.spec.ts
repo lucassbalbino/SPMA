@@ -58,5 +58,6 @@ test("RU-34: o painel do GT diz o perfil por extenso e o que ele está apto a re
     "Gestão de Ofertante",
     "Gestão de Recursos",
     "Gestão de Formações",
+    "Editar Perfil",
   ]);
 });

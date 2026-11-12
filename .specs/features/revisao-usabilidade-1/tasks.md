@@ -928,12 +928,13 @@ T31
 
 **Done when**:
 
-- [ ] `navegacao.test.ts`: os 6 perfis têm o item; `ROTAS_COM_SESSAO` inalterado (a rota já existia)
-- [ ] e2e `identidade-visual`: listas de links por perfil atualizadas
-- [ ] Gate E2E passa
+- [x] `navegacao.test.ts`: os 6 perfis têm o item; `ROTAS_COM_SESSAO` inalterado (a rota já existia)
+- [x] e2e `identidade-visual`: listas de links por perfil atualizadas
+- [x] Gate E2E passa
 
 **Tests**: unit, e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(ui): Editar Perfil in every profile menu`
 

@@ -263,6 +263,8 @@ test.describe("casca comum", () => {
       "Cadastro de Formação",
       "Avaliação de Formação",
       "Avaliações Aluno",
+      // RU-47: Editar Perfil fecha o menu de todos os perfis.
+      "Editar Perfil",
     ]);
     await contexto.close();
   });
@@ -331,6 +333,8 @@ test.describe("menu de navegação por perfil", () => {
       "Cadastro de Formação",
       "Avaliação de Formação",
       "Avaliações Aluno",
+      // RU-47: Editar Perfil fecha o menu de todos os perfis.
+      "Editar Perfil",
     ]);
   });
 
@@ -342,7 +346,8 @@ test.describe("menu de navegação por perfil", () => {
     await logar(page, CPF_NAV_AL, SENHA);
     await page.goto("/painel");
 
-    await expect(linksDoMenu(page)).toHaveText(["Painel", "Minha avaliação", "Meus dados"]);
+    // RU-47: "Meus dados" passou a se chamar "Editar Perfil".
+    await expect(linksDoMenu(page)).toHaveText(["Painel", "Minha avaliação", "Editar Perfil"]);
   });
 
   test("UI-02: AL não vê Pré-cursos nem Pós-cursos", async ({ page }) => {
