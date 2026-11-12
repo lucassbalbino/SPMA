@@ -876,11 +876,12 @@ T31
 
 **Done when**:
 
-- [ ] e2e `meus-dados`: aluno grava telefone com DDD; sem DDD → mensagem de RU-45; vazio continua aceito
-- [ ] Gate E2E passa
+- [x] e2e `meus-dados`: aluno grava telefone com DDD; sem DDD → mensagem de RU-45; vazio continua aceito
+- [x] Gate E2E passa
 
 **Tests**: e2e
 **Gate**: e2e
+**Status**: Done
 
 **Commit**: `feat(dados-pessoais): optional phone for students`
 

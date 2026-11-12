@@ -26,10 +26,14 @@ import { exigirMutacao } from "@/lib/api/guardas";
 import { corpoValidado } from "@/lib/api/requisicao";
 import { erroHttp } from "@/lib/api/erro-http";
 import { aplicarPatchRespostas } from "@/lib/respostas/patch";
+import { telefoneOpcionalSchema } from "@/lib/validation/telefone";
 
-const corpoDadosPessoaisSchema = respostasDadosPessoaisSchema.extend(
-  dadosCadastraisSchema.partial().shape,
-);
+// RU-52: o telefone entra opcional. Chave ausente não mexe no gravado;
+// string vazia apaga (`telefoneOpcionalSchema` devolve null).
+const corpoDadosPessoaisSchema = respostasDadosPessoaisSchema.extend({
+  ...dadosCadastraisSchema.partial().shape,
+  telefone: telefoneOpcionalSchema.optional(),
+});
 
 async function gravarDadosPessoais(request: Request) {
   const sessao = await exigirMutacao(request);
@@ -40,7 +44,10 @@ async function gravarDadosPessoais(request: Request) {
     throw erroHttp(403, "Acesso negado");
   }
 
-  const { nome, email, ...patch } = await corpoValidado(request, corpoDadosPessoaisSchema);
+  const { nome, email, telefone, ...patch } = await corpoValidado(
+    request,
+    corpoDadosPessoaisSchema,
+  );
   const cpf = sessao.usuario.documento;
   const cadastro = {
     nome: nome ?? sessao.usuario.nome,
@@ -65,7 +72,12 @@ async function gravarDadosPessoais(request: Request) {
     gravarRegistro: (tx) =>
       tx.usuario.update({
         where: { documento: cpf },
-        data: { dadosPessoaisCompletos: true, nome: cadastro.nome, email: cadastro.email },
+        data: {
+          dadosPessoaisCompletos: true,
+          nome: cadastro.nome,
+          email: cadastro.email,
+          ...(telefone !== undefined && { telefone }),
+        },
       }),
   });
 

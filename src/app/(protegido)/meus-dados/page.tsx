@@ -29,7 +29,11 @@ export default async function MeusDadosPage() {
 
   return (
     <DadosPessoaisForm
-      cadastroInicial={{ nome: usuario.nome ?? "", email: usuario.email ?? "" }}
+      cadastroInicial={{
+        nome: usuario.nome ?? "",
+        email: usuario.email ?? "",
+        telefone: usuario.telefone ?? "",
+      }}
       respostasIniciais={respostasIniciais}
       modo="perfil"
     />

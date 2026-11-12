@@ -142,3 +142,30 @@ test("PESSOAL-20: um não-Aluno acessando /meus-dados diretamente recebe não en
 
   expect(res?.status()).toBe(404);
 });
+
+// RU-52 (comentário 2): o Aluno informa o telefone pelos próprios dados,
+// opcional, com a mesma regra de DDD do resto do sistema.
+test("RU-52: Aluno grava o telefone com DDD; sem DDD é recusado; vazio apaga", async ({ page }) => {
+  await login(page, CPF_AL_A);
+  await page.goto("/meus-dados");
+  const campo = page.getByTestId("campo-telefone");
+  const salvar = page.getByTestId("botao-salvar-dados-pessoais");
+
+  await campo.fill("61999281374");
+  await expect(campo).toHaveValue("(61) 99928-1374");
+  await salvar.click();
+  await expect(page.getByTestId("sucesso-dados-pessoais")).toBeVisible();
+  expect(getUsuario(CPF_AL_A)?.telefone).toBe("61999281374");
+
+  await campo.fill("99928-1374");
+  await salvar.click();
+  await expect(page.getByTestId("erro-dados-pessoais")).toHaveText(
+    "Informe o telefone com DDD, ex.: (61) 99999-9999",
+  );
+  expect(getUsuario(CPF_AL_A)?.telefone).toBe("61999281374");
+
+  await campo.fill("");
+  await salvar.click();
+  await expect(page.getByTestId("sucesso-dados-pessoais")).toBeVisible();
+  expect(getUsuario(CPF_AL_A)?.telefone).toBeNull();
+});
