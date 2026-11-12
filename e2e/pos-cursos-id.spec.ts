@@ -170,6 +170,27 @@ test("REQ-PO-06: valor monetário negativo é rejeitado com 400, nada persistido
   await cliente.dispose();
 });
 
+// RU-05 (Fix 1 da validação): o 400 do pós-curso diz qual pergunta falhou.
+test("RU-05: valor recusado -> 400 com a mensagem em português e o campo, nada persistido", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
+  const antes = getPosCurso(cdCursoEmAndamento);
+
+  const cliente = await novoCliente();
+  const res = await cliente.patch(`/api/pos-cursos/${cdCursoEmAndamento}`, {
+    data: { posFinValorTotal: -1 },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  expect(await res.json()).toEqual({
+    erro: "Muito pequeno: esperado que number fosse >=0",
+    campo: "posFinValorTotal",
+  });
+  expect(getPosCurso(cdCursoEmAndamento)?.respostas).toEqual(antes?.respostas);
+
+  await cliente.dispose();
+});
+
 test("edge case (Execução): término anterior ao início é rejeitado com 400, nada persistido", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CNPJ_GO);
   const antes = getPosCurso(cdCursoEmAndamento);

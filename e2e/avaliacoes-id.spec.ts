@@ -172,6 +172,35 @@ test.afterAll(() => {
   deleteUsuarios(CPFS);
 });
 
+// RU-05/RU-07 (Independent Test da história, Fix 1 da validação): 4 motivos
+// na pergunta 17 saem como 400 em português, com a chave da pergunta.
+test("RU-05/RU-07: 4 motivos na pergunta 17 -> 400 com a mensagem e o campo, nada gravado", async () => {
+  const { idSessao, idCsrf } = await logarComCsrf(CPF_AL_GATE_FECHADO);
+  const antes = getAvaliacao(CPF_AL_GATE_FECHADO, cdCurso);
+
+  const cliente = await novoCliente();
+  const res = await cliente.patch(`/api/avaliacoes/${CPF_AL_GATE_FECHADO}/${cdCurso}`, {
+    data: {
+      avalMotivMotivosParticipacao: [
+        "Conseguir um emprego/trabalho",
+        "Abrir o meu próprio negócio",
+        "Aplicar o conhecimento adquirido",
+        "Contribuir com o turismo no meu território",
+      ],
+    },
+    headers: cabecalhosAutenticados(idSessao, idCsrf),
+  });
+
+  expect(res.status()).toBe(400);
+  expect(await res.json()).toEqual({
+    erro: "Selecione no máximo 3 motivos",
+    campo: "avalMotivMotivosParticipacao",
+  });
+  expect(getAvaliacao(CPF_AL_GATE_FECHADO, cdCurso)?.respostas).toEqual(antes?.respostas);
+
+  await cliente.dispose();
+});
+
 test("AVAL-07: Aluno grava um bloco parcial de Parte 1 -> 200, parte1Completa permanece false", async () => {
   const { idSessao, idCsrf } = await logarComCsrf(CPF_AL_PROGRESSIVO);
 

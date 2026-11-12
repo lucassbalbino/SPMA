@@ -113,6 +113,15 @@ T19 → T30
 T31
 ```
 
+### Phase 10: Correções da validação (iteração 1)
+
+```
+T33
+T34
+T35
+T36
+```
+
 ---
 
 ## Task Breakdown
@@ -966,6 +975,108 @@ T31
 
 ---
 
+### T33: `campo` provado nas rotas da avaliação e do pós-curso (Fix 1)
+
+**What**: e2e de request que afirmam o corpo `{ erro, campo }` do 400 nos `PATCH` da avaliação (4 motivos, o Independent Test da história) e do pós-curso.
+**Where**: `e2e/avaliacoes-id.spec.ts`
+**Depends on**: None
+**Reuses**: helpers de request do próprio spec; idem em `e2e/pos-cursos-id.spec.ts`
+**Requirement**: RU-05, RU-07
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] Avaliação: 4 motivos → `toEqual({ erro: "Selecione no máximo 3 motivos", campo: "avalMotivMotivosParticipacao" })`, nada gravado
+- [x] Pós-curso: valor fora do limite → `toEqual({ erro, campo })` com a chave
+- [x] Gate E2E passa
+
+**Tests**: e2e
+**Gate**: e2e
+**Status**: Done
+
+**Commit**: `test(api): pin the failing field on the evaluation and post-course routes`
+
+---
+
+### T34: Telefone antigo exibido como gravado (Fix 2)
+
+**What**: `PerfilForm` e `DadosPessoaisForm` abrem o telefone gravado sem máscara e só o enviam quando a pessoa o altera; `perfilSchema` e a rota do perfil tratam telefone ausente como "não mexer".
+**Where**: `src/components/perfil/PerfilForm.tsx`
+**Depends on**: None
+**Reuses**: `telefoneOpcionalSchema`; mesmo padrão já usado na rota de dados pessoais
+**Requirement**: RU-45, RU-49 (edge case de telefone antigo)
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] Unit: `perfilSchema` sem `telefone` não o devolve (fica `undefined`)
+- [ ] e2e `meus-dados`: GT com telefone antigo `"(61) 3333-4444 ramal 2"` vê esse texto, troca só o nome, salva, e o telefone gravado não muda; o mesmo para o Aluno
+- [ ] Gate E2E passa
+
+**Tests**: unit, e2e
+**Gate**: e2e
+
+**Commit**: `fix(perfil): keep a legacy phone as stored unless it is edited`
+
+---
+
+### T35: "Olá, <nome>" afirmado no painel (Fix 3)
+
+**What**: e2e do painel afirma a saudação com o nome.
+**Where**: `e2e/painel.spec.ts`
+**Depends on**: None
+**Reuses**: teste RU-34 existente
+**Requirement**: RU-34
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] `toHaveText("Olá, <nome do GT>")`
+- [ ] Gate E2E passa
+
+**Tests**: e2e
+**Gate**: e2e
+
+**Commit**: `test(painel): assert the greeting with the user name`
+
+---
+
+### T36: Redação de RU-16 e RU-39 (Fix 4)
+
+**What**: RU-16 passa a descrever o seletor (nome + saldo, e ofertante para o AM, sem número); RU-39 delimita o que é "mensagem visível" (fora: texto das perguntas, opções e cabeçalhos de parte dos questionários em papel, AD-035).
+**Where**: `.specs/features/revisao-usabilidade-1/spec.md`
+**Depends on**: None
+**Reuses**: -
+**Requirement**: RU-16, RU-39
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] `validate_spec.py` sem erros
+
+**Tests**: none
+**Gate**: build
+
+**Commit**: `docs(revisao-usabilidade): settle the wording of RU-16 and RU-39`
+
+---
+
 ## Phase Execution Map
 
 ```
@@ -1004,6 +1115,10 @@ Execução sequencial. Lotes de ~7 tarefas por fases inteiras: Fases 1-2 (11), 3
 | T9 | None | - | ✅ |
 | T10 | None | - | ✅ |
 | T32 | None | - | ✅ |
+| T33 | None | - | ✅ |
+| T34 | None | - | ✅ |
+| T35 | None | - | ✅ |
+| T36 | None | - | ✅ |
 | T11 | None | - | ✅ |
 | T12 | T11 | T11 → T12 | ✅ |
 | T13 | None | - | ✅ |
