@@ -274,7 +274,7 @@ Preenchido pelo Gestor Ofertante durante e após a execução do curso. Permanec
 
 ## 6. Formulário de Avaliação do Aluno
 
-Preenchido pelo próprio aluno. Contém 38 itens de dado (45 até a revisão do MTur de 2026-10, `docs/Alteracoes_MTur_1.md`, que retirou 11, dos quais os 4 da Situação Profissional voltaram em 2026-11), organizados em duas partes: os dados pessoais e de motivação (Parte 1) e a avaliação do curso (Parte 2). A Parte 1 deve estar completa antes de o aluno acessar a Parte 2.
+Preenchido pelo próprio aluno. Contém 44 itens de dado (45 até a revisão do MTur de 2026-10, `docs/Alteracoes_MTur_1.md`, que retirou 11, dos quais 10 voltaram em 2026-11: os 4 da Situação Profissional e os 6 de Oportunidades, Efetivação e Renda), organizados em duas partes: os dados pessoais e de motivação (Parte 1) e a avaliação do curso (Parte 2). A Parte 1 deve estar completa antes de o aluno acessar a Parte 2.
 
 ### 6.1 Parte 1 — Dados Pessoais e Motivação
 
@@ -296,6 +296,8 @@ O preenchimento desta parte não é exigido no momento da criação do aluno, ma
 | Avaliação do Curso | 8 itens avaliados em escala (dinâmicas de inclusão, material didático, conteúdo, clareza, conhecimento dos instrutores, organização, infraestrutura básica e de sala de aula) | Escala de avaliação |
 | Aprendizado | Ampliação de conhecimento, atendimento de expectativas, sensação de preparo | Seleção única |
 | Motivações Pós-Curso | Percepções e motivações desenvolvidas após o curso | Seleção múltipla |
+| Oportunidades de Trabalho | Situação de trabalho após o curso, intenção de atuar em Turismo | Seleção, condicional |
+| Efetivação e Renda | Efetivação no emprego, aumento de renda, melhoria de padrão de vida | Seleção única |
 | Avaliação Geral | Nota de 0 a 10, avaliação de melhorias na comunidade, recomendação do curso, comentários finais | Número, texto livre, seleção |
 
 ### 6.3 Campos Condicionais
@@ -304,8 +306,9 @@ O preenchimento desta parte não é exigido no momento da criação do aluno, ma
 |---|---|---|
 | Atualmente trabalha em Turismo? | Igual a "Sim" | Atividade específica em que atua |
 | Já realizou cursos de Turismo? | Igual a "Sim" | Tipo de curso realizado |
+| Situação de trabalho após o curso | Igual a "Outra" | Quais? |
 | Concluiu o curso? | Igual a "Não" | Motivo(s) de não conclusão |
-| Concluiu o curso? | Igual a "Sim" | Libera toda a Parte 2 de avaliação (escala de avaliação, aprendizado, motivações, avaliação geral) |
+| Concluiu o curso? | Igual a "Sim" | Libera toda a Parte 2 de avaliação (escala de avaliação, aprendizado, motivações, oportunidades, efetivação e renda, avaliação geral) |
 
 ### 6.4 Escala de Avaliação do Curso
 
