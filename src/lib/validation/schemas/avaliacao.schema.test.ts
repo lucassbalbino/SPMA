@@ -2,20 +2,12 @@ import { describe, expect, it } from "vitest";
 import { CHAVES_DADOS_PESSOAIS } from "./dados-pessoais.schema";
 import { CHAVES_PARTE_1, respostasAvaliacaoSchema } from "./avaliacao.schema";
 
-// As 7 chaves dos blocos que continuam removidos (Q28, Q30, Q30.j, Q31-Q34),
-// escritas aqui em vez de derivadas do código: o teste tem de quebrar se
-// alguma delas voltar ao schema. Q10-Q13 voltaram (AD-053).
-const CHAVES_REMOVIDAS_MTUR = [
-  "avalContinuidadeRetomadaEstudos",
-  "avalOportunSituacaoTrabalho",
-  "avalOportunSituacaoTrabalhoOutra",
-  "avalOportunIntencaoAtuarTurismo",
-  "avalEfetivEmprego",
-  "avalEfetivAumentoRenda",
-  "avalEfetivMelhoriaPadraoVida",
-];
+// A chave do bloco que continua removido (Q28), escrita aqui em vez de
+// derivada do código: o teste tem de quebrar se ela voltar ao schema.
+// Q10-Q13 voltaram na AD-053 e Q30-Q34 na AD-055.
+const CHAVES_REMOVIDAS_MTUR = ["avalContinuidadeRetomadaEstudos"];
 
-// Fixture com as 31 chaves do questionário fonte
+// Fixture com as 37 chaves do questionário fonte
 // (`docs/Questionario_do_Aluno_1.md`) preenchidas com valores válidos,
 // incluindo os condicionais aplicáveis - usada como base para os testes de
 // campo individual (spread + override). Valores transcritos literalmente do
@@ -70,6 +62,14 @@ const RESPOSTA_VALIDA = {
     "desenvolveu novas percepções de mundo",
   ],
 
+  // Parte 2 - Oportunidades, Efetivação e Renda (Q30-Q34)
+  avalOportunSituacaoTrabalho: "Outra",
+  avalOportunSituacaoTrabalhoOutra: "Guia voluntário no parque",
+  avalOportunIntencaoAtuarTurismo: "Sim",
+  avalEfetivEmprego: "Não",
+  avalEfetivAumentoRenda: "Sim",
+  avalEfetivMelhoriaPadraoVida: "Sim, parcialmente",
+
   // Parte 2 - Avaliação geral (Q35-Q38)
   avalGeralNota: 9,
   avalGeralMelhoriasComunidade: "Mais gente da comunidade trabalhando com receptivo",
@@ -83,13 +83,13 @@ describe("respostasAvaliacaoSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("tem exatamente 31 chaves (12 na Parte 1, 19 na Parte 2)", () => {
-    expect(Object.keys(respostasAvaliacaoSchema.shape)).toHaveLength(31);
+  it("tem exatamente 37 chaves (12 na Parte 1, 25 na Parte 2)", () => {
+    expect(Object.keys(respostasAvaliacaoSchema.shape)).toHaveLength(37);
   });
 
-  // MTUR-09: os 3 blocos que o aluno só responde depois do certificado
-  // (Alteracoes_MTur_1, itens 3.4 a 3.6) continuam fora do schema.
-  it("não tem nenhuma das 7 chaves que seguem removidas pelo MTur", () => {
+  // MTUR-09: o bloco Continuidade nos Estudos (Alteracoes_MTur_1, item 3.6)
+  // continua fora do schema.
+  it("não tem a chave que segue removida pelo MTur", () => {
     const chaves = Object.keys(respostasAvaliacaoSchema.shape);
     for (const chave of CHAVES_REMOVIDAS_MTUR) {
       expect(chaves).not.toContain(chave);
@@ -353,6 +353,56 @@ describe("Situação Profissional (Q10-Q13, AD-053)", () => {
     "avalProfissFaixaRenda",
   ])("%s recusa um valor fora das opções", (chave) => {
     expect(respostasAvaliacaoSchema.safeParse({ [chave]: "Talvez" }).success).toBe(false);
+  });
+});
+
+describe("Oportunidades, Efetivação e Renda (Q30-Q34, AD-055)", () => {
+  // OPT-02: as opções do questionário original, na ordem do papel, escritas
+  // aqui para o teste quebrar se alguém mudar uma opção só no código.
+  it.each([
+    [
+      "avalOportunSituacaoTrabalho",
+      [
+        "Consegui um emprego, com carteira assinada, na área de Turismo.",
+        "Consegui um emprego, sem carteira assinada, na área de Turismo.",
+        "Consegui um emprego, com carteira assinada, fora da área de Turismo.",
+        "Consegui um emprego, sem carteira assinada, fora da área de Turismo.",
+        "Estou trabalhando por conta própria (autônomo).",
+        "Estou trabalhando como MEI (próprio negócio).",
+        "Continuo na posição em que estava a trabalhar antes do curso.",
+        "Estou desempregado.",
+        "Estou estudando.",
+        "Outra",
+      ],
+    ],
+    ["avalOportunIntencaoAtuarTurismo", ["Sim", "Não"]],
+    ["avalEfetivEmprego", ["Sim", "Não"]],
+    ["avalEfetivAumentoRenda", ["Sim", "Não"]],
+    ["avalEfetivMelhoriaPadraoVida", ["Sim, totalmente", "Sim, parcialmente", "Não"]],
+  ] as const)("%s aceita exatamente as opções do papel, nessa ordem", (chave, opcoes) => {
+    expect(respostasAvaliacaoSchema.shape[chave].unwrap().options).toEqual(opcoes);
+    for (const opcao of opcoes) {
+      expect(respostasAvaliacaoSchema.safeParse({ [chave]: opcao }).success).toBe(true);
+    }
+  });
+
+  // OPT-03: valor fora da lista é recusado.
+  it.each([
+    "avalOportunSituacaoTrabalho",
+    "avalOportunIntencaoAtuarTurismo",
+    "avalEfetivEmprego",
+    "avalEfetivAumentoRenda",
+    "avalEfetivMelhoriaPadraoVida",
+  ])("%s recusa um valor fora das opções", (chave) => {
+    expect(respostasAvaliacaoSchema.safeParse({ [chave]: "Talvez" }).success).toBe(false);
+  });
+
+  // OPT-03: o "Outra. Quais?" é texto livre, mas não vazio.
+  it("avalOportunSituacaoTrabalhoOutra aceita texto e recusa vazio", () => {
+    expect(
+      respostasAvaliacaoSchema.safeParse({ avalOportunSituacaoTrabalhoOutra: "Guia voluntário" }).success,
+    ).toBe(true);
+    expect(respostasAvaliacaoSchema.safeParse({ avalOportunSituacaoTrabalhoOutra: "" }).success).toBe(false);
   });
 });
 

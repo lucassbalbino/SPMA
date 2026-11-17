@@ -474,6 +474,13 @@ model AvaliacaoAluno {
   p29d     Boolean?  @map("P29d")
   p29e     Boolean?  @map("P29e")
   p29f     Boolean?  @map("P29f")
+  // P30-P34 (Oportunidades, Efetivação e Renda) voltaram na AD-055.
+  p30      String?   @map("P30") @db.Char(1)
+  p30Qual  String?   @map("P30Qual") @db.Text
+  p31      String?   @map("P31") @db.Char(1)
+  p32      String?   @map("P32") @db.Char(1)
+  p33      String?   @map("P33") @db.Char(1)
+  p34      String?   @map("P34") @db.Char(1)
   p35      Int?      @map("P35") @db.TinyInt
   p36      String?   @map("P36") @db.Text
   p37      String?   @map("P37") @db.Char(1)

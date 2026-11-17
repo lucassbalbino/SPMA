@@ -41,7 +41,9 @@ const anteriores = pastas.slice(0, pastas.indexOf(nova!));
 // atual lê essas colunas, então o banco descartável precisa delas depois da
 // migration nova. A da AD-052 (tabela_curso) não mexe em coluna de resposta
 // e fica de fora.
-const posterioresComColunas = pastas.filter((nome) => nome.endsWith("_situacao_profissional"));
+const posterioresComColunas = pastas.filter(
+  (nome) => nome.endsWith("_situacao_profissional") || nome.endsWith("_oportunidades_trabalho"),
+);
 
 let banco: PrismaClient | undefined;
 let temporario: string | undefined;
@@ -204,12 +206,19 @@ async function semearTodos(cursoComRespostas: number, extras: { pre?: Respostas;
 
 // Perguntas que entraram no mapa depois desta migration. Ela não as conhece,
 // então não entram na semeadura nem na leitura esperada: Situação
-// Profissional (P10-P13) voltou na AD-053, com as colunas vazias.
+// Profissional (P10-P13) voltou na AD-053 e Oportunidades, Efetivação e Renda
+// (P30-P34) na AD-055, com as colunas vazias.
 const POSTERIORES = new Set([
   "avalProfissCondicaoTrabalho",
   "avalProfissAtuaTurismo",
   "avalProfissAtividadeEspecifica",
   "avalProfissFaixaRenda",
+  "avalOportunSituacaoTrabalho",
+  "avalOportunSituacaoTrabalhoOutra",
+  "avalOportunIntencaoAtuarTurismo",
+  "avalEfetivEmprego",
+  "avalEfetivAumentoRenda",
+  "avalEfetivMelhoriaPadraoVida",
 ]);
 const mapaDaMigration = (formulario: Formulario) =>
   MAPA[formulario].filter((entrada) => !POSTERIORES.has(entrada.chave));

@@ -429,6 +429,23 @@ WHERE Status = 'EM_ANDAMENTO' AND P13 IS NOT NULL AND P17b IS NOT NULL AND P17b 
 Formações criadas antes do deploy sem a pergunta 8 respondida aparecem nas
 listas como "Formação sem nome (nº X)" até alguém preenchê-la.
 
+### Oportunidades, Efetivação e Renda de volta (AD-055)
+
+A migration `20261117120000_oportunidades_trabalho` só acrescenta as colunas
+`P30`, `P30Qual`, `P31`, `P32`, `P33` e `P34` em `TB_Avaliacao_Aluno`, vazias.
+Ela não altera nenhuma linha e não remove nada, então nenhuma VIEW do `bi`
+quebra. Faça o backup antes do merge na `main`, como de costume:
+
+```bash
+sudo /opt/spma/backup.sh && ls -lh /opt/spma/backups | tail -1
+```
+
+**Depois do deploy, aplique as VIEWs do `bi`** (seção seguinte). Sem isso, o
+Power BI não vê as seis colunas.
+
+Depois do deploy, o aluno que concluiu o curso precisa responder 30 a 34 para
+encerrar a avaliação. As avaliações encerradas não mudam.
+
 ### VIEWs do banco `bi` (Power BI)
 
 O Power BI do cliente não lê o banco `spma`: ele lê o banco `bi`, que tem uma

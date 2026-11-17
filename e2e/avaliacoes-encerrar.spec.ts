@@ -62,7 +62,7 @@ const PARTE_1_COMPLETA = {
   avalExpectRenda: "Média",
 };
 
-// As 15 chaves de Q24-Q27, Q29 e Q35-Q37 exigidas quando avalParticipConcluiuCurso="Sim",
+// As 20 chaves de Q24-Q27, Q29-Q34 e Q35-Q37 exigidas quando avalParticipConcluiuCurso="Sim",
 // mais as 2 do bloco "Participação" (Q22 e Q23), que todo aluno responde.
 const PARTE_2_COMPLETA_CONCLUIU = {
   avalParticipConcluiuCurso: "Sim",
@@ -79,6 +79,11 @@ const PARTE_2_COMPLETA_CONCLUIU = {
   avalAprendizAtendimentoExpectativas: "Sim",
   avalAprendizSensacaoPreparo: "Parcialmente",
   avalMotivacoesPosPercepcoes: ["tem condições de atuar na área do Turismo"],
+  avalOportunSituacaoTrabalho: "Estou trabalhando como MEI (próprio negócio).",
+  avalOportunIntencaoAtuarTurismo: "Sim",
+  avalEfetivEmprego: "Não",
+  avalEfetivAumentoRenda: "Sim",
+  avalEfetivMelhoriaPadraoVida: "Sim, totalmente",
   avalGeralNota: 9,
   avalGeralMelhoriasComunidade: "Mais gente da comunidade trabalhando com receptivo",
   avalGeralRecomendaCurso: "Sim",
@@ -334,6 +339,9 @@ test("Concluiu='Sim'->'Não': o PATCH preserva as respostas de concluinte, o enc
   expect(respostas).not.toHaveProperty("avalGeralNota");
   expect(respostas).not.toHaveProperty("avalCursoConteudo");
   expect(respostas).not.toHaveProperty("avalMotivacoesPosPercepcoes");
+  // OPT-09: Q30-Q34 também são "apenas para quem concluiu".
+  expect(respostas).not.toHaveProperty("avalOportunSituacaoTrabalho");
+  expect(respostas).not.toHaveProperty("avalEfetivMelhoriaPadraoVida");
   // Q23 (frequência) e a Parte 1 continuam: não são "apenas para quem concluiu"
   expect(respostas?.avalParticipPercentualFrequencia).toBeDefined();
   expect(respostas?.avalExpectRenda).toBeDefined();

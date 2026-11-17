@@ -236,6 +236,46 @@
 - e) se sente motivado(a) a combater práticas de violência (física, psicológica, moral, sexual ou patrimonial) contra você
 - f) melhorou as suas percepções/ações sobre as mudanças climáticas
 
+## Oportunidades Reais de Trabalho e Emprego
+
+**30.** Após a conclusão do Curso:
+
+- a) Consegui um emprego, **com carteira assinada**, na área de Turismo.
+- b) Consegui um emprego, **sem carteira assinada**, na área de Turismo.
+- c) Consegui um emprego, **com carteira assinada**, fora da área de Turismo.
+- d) Consegui um emprego, **sem carteira assinada**, fora da área de Turismo.
+- e) Estou trabalhando por conta própria (autônomo).
+- f) Estou trabalhando como MEI (próprio negócio).
+- g) Continuo na posição em que estava a trabalhar antes do curso.
+- h) Estou desempregado.
+- i) Estou estudando.
+- j) Outra. Quais?
+
+**31.** Caso não esteja trabalhando no Turismo, você pretende trabalhar no setor?
+
+- a) Sim
+- b) Não
+
+## Efetivação no Emprego
+
+**32.** Caso não esteja efetivado no emprego, após a conclusão do Curso você foi efetivado?
+
+- a) Sim
+- b) Não
+
+## Aumento da Renda
+
+**33.** Após a conclusão do Curso sua renda aumentou?
+
+- a) Sim
+- b) Não
+
+**34.** Após a conclusão do Curso, o seu padrão de vida melhorou?
+
+- a) Sim, totalmente
+- b) Sim, parcialmente
+- c) Não
+
 ## Avaliação geral
 
 **35.** Qual nota você dá para o Curso (0 a 10)?

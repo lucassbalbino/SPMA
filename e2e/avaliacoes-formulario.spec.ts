@@ -211,15 +211,30 @@ async function preencherParte2Concluiu(page: Page) {
   await marcarOpcao(page, "avalMotivacoesPosPercepcoes", 0);
   await abrirBloco(b4, "bloco-parte2-4");
 
-  // Avaliação geral (Q35-Q37) - Q30-Q34 saíram com a revisão do MTur.
+  // Oportunidades Reais de Trabalho e Emprego (Q30-Q31) - voltou na AD-055.
   const b5 = blocoParte2(page, 5);
   await abrirBloco(b5, "bloco-parte2-5");
+  await marcarOpcao(page, "avalOportunSituacaoTrabalho", 5); // MEI
+  await marcarOpcao(page, "avalOportunIntencaoAtuarTurismo", 0); // Sim
+  await abrirBloco(b5, "bloco-parte2-5");
+
+  // Efetivação no Emprego e Aumento da Renda (Q32-Q34) - voltou na AD-055.
+  const b6 = blocoParte2(page, 6);
+  await abrirBloco(b6, "bloco-parte2-6");
+  await marcarOpcao(page, "avalEfetivEmprego", 1); // Não
+  await marcarOpcao(page, "avalEfetivAumentoRenda", 0); // Sim
+  await marcarOpcao(page, "avalEfetivMelhoriaPadraoVida", 0); // Sim, totalmente
+  await abrirBloco(b6, "bloco-parte2-6");
+
+  // Avaliação geral (Q35-Q37)
+  const b7 = blocoParte2(page, 7);
+  await abrirBloco(b7, "bloco-parte2-7");
   await marcarOpcao(page, "avalGeralNota", 9);
   await page
     .getByTestId("campo-avalGeralMelhoriasComunidade")
     .fill("Mais gente da comunidade trabalhando com receptivo");
   await marcarOpcao(page, "avalGeralRecomendaCurso", 0); // Sim
-  await abrirBloco(b5, "bloco-parte2-5");
+  await abrirBloco(b7, "bloco-parte2-7");
 }
 
 // PESSOAL-11: as 7 perguntas de dados pessoais não existem mais nesta tela -
@@ -280,9 +295,9 @@ test("SPR-01: a Parte 1 abre com Situação Profissional, perguntas 10 a 13", as
   await expect(page.getByText("12. Se sim, em qual atividade?", { exact: true })).toHaveCount(0);
 });
 
-// MTUR-08/MTUR-12: os 3 blocos que o aluno só responde depois do certificado
-// não são renderizados, e as perguntas restantes mantêm o número do papel.
-test("MTUR-08: a tela de avaliação não renderiza os 3 blocos que seguem removidos pelo MTur", async ({
+// MTUR-08/MTUR-12: o bloco Continuidade nos Estudos (Q28) segue fora, e as
+// perguntas restantes mantêm o número do papel.
+test("MTUR-08: a tela de avaliação não renderiza o bloco que segue removido pelo MTur", async ({
   page,
 }) => {
   const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
@@ -292,34 +307,92 @@ test("MTUR-08: a tela de avaliação não renderiza os 3 blocos que seguem remov
 
   await expect(page.getByTestId("bloco-parte1-2")).toHaveText(/Experiência/);
   await expect(page.getByTestId("bloco-parte2-4")).toHaveText(/Motivações após o Curso/);
-  await expect(page.getByTestId("bloco-parte2-5")).toHaveText(/Avaliação geral/);
-  await expect(page.getByTestId("bloco-parte2-6")).toHaveCount(0);
-
-  for (const titulo of [
-    "Continuidade nos Estudos",
-    "Oportunidades Reais de Trabalho e Emprego",
-    "Efetivação no Emprego e Aumento da Renda",
-  ]) {
-    await expect(page.getByText(titulo)).toHaveCount(0);
-  }
+  await expect(page.getByTestId("bloco-parte2-7")).toHaveText(/Avaliação geral/);
+  await expect(page.getByTestId("bloco-parte2-8")).toHaveCount(0);
+  await expect(page.getByText("Continuidade nos Estudos")).toHaveCount(0);
 
   await abrirBloco(blocoParte1(page, 2), "bloco-parte1-2");
   await expect(
     page.getByText("14. Já trabalhou no setor de Turismo?", { exact: true }),
   ).toBeVisible();
 
-  // MTUR-12: a Parte 2 pula de Q27 para Q29 e de Q29 para Q35, sem renumerar.
+  // MTUR-12: a Parte 2 pula de Q27 para Q29, sem renumerar.
   await abrirBloco(blocoParte2(page, 4), "bloco-parte2-4");
   await expect(
     page.getByText("29. Após a conclusão do Curso, você sente que:", { exact: true }),
   ).toBeVisible();
-  await abrirBloco(blocoParte2(page, 5), "bloco-parte2-5");
+  await abrirBloco(blocoParte2(page, 7), "bloco-parte2-7");
   await expect(
     page.getByText("35. Qual nota você dá para o Curso (0 a 10)?", { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText(/^38\. A partir da sua experiência como aluno do Curso/),
   ).toBeVisible();
+});
+
+// OPT-01/OPT-04/OPT-05: Oportunidades e Efetivação voltam entre Motivações e
+// Avaliação geral, com 30 a 34 numeradas como no papel. O "Quais?" só aparece
+// com "Outra", e tudo fica desabilitado enquanto a 22 não é "Sim".
+test("OPT-01: a Parte 2 traz as perguntas 30 a 34 depois de Motivações", async ({ page }) => {
+  const cdCurso = criarAvaliacaoFixture(CPF_AL_A);
+
+  await login(page, CPF_AL_A);
+  await page.goto(`/avaliacoes/${CPF_AL_A}/${cdCurso}`);
+  await preencherParte1(page);
+  const respostaParte1 = await salvarRascunho(page);
+  expect(respostaParte1.ok()).toBe(true);
+
+  await expect(page.getByTestId("bloco-parte2-4")).toHaveText("Motivações após o Curso");
+  await expect(page.getByTestId("bloco-parte2-5")).toHaveText(
+    "Oportunidades Reais de Trabalho e Emprego",
+  );
+  await expect(page.getByTestId("bloco-parte2-6")).toHaveText(
+    "Efetivação no Emprego e Aumento da Renda",
+  );
+  await expect(page.getByTestId("bloco-parte2-7")).toHaveText("Avaliação geral");
+
+  const b5 = blocoParte2(page, 5);
+  await abrirBloco(b5, "bloco-parte2-5");
+  await expect(page.getByText("30. Após a conclusão do Curso:", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("31. Caso não esteja trabalhando no Turismo, você pretende trabalhar no setor?", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("30. Outra. Quais?", { exact: true })).toHaveCount(0);
+
+  // OPT-05: com a 22 em branco, 30 e 31 ficam desabilitadas.
+  await expect(page.getByTestId("campo-avalOportunSituacaoTrabalho-opcao-0")).toBeDisabled();
+  await expect(page.getByTestId("campo-avalOportunIntencaoAtuarTurismo-opcao-0")).toBeDisabled();
+  await abrirBloco(b5, "bloco-parte2-5");
+
+  const b1 = blocoParte2(page, 1);
+  await abrirBloco(b1, "bloco-parte2-1");
+  await marcarOpcao(page, "avalParticipConcluiuCurso", 0); // Sim
+  await abrirBloco(b1, "bloco-parte2-1");
+
+  // OPT-04: o "Quais?" só aparece com "Outra".
+  await abrirBloco(b5, "bloco-parte2-5");
+  await marcarOpcao(page, "avalOportunSituacaoTrabalho", 9); // Outra
+  await expect(page.getByText("30. Outra. Quais?", { exact: true })).toBeVisible();
+  await marcarOpcao(page, "avalOportunSituacaoTrabalho", 0);
+  await expect(page.getByText("30. Outra. Quais?", { exact: true })).toHaveCount(0);
+  await abrirBloco(b5, "bloco-parte2-5");
+
+  await abrirBloco(blocoParte2(page, 6), "bloco-parte2-6");
+  await expect(
+    page.getByText(
+      "32. Caso não esteja efetivado no emprego, após a conclusão do Curso você foi efetivado?",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByText("33. Após a conclusão do Curso sua renda aumentou?", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("34. Após a conclusão do Curso, o seu padrão de vida melhorou?", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByTestId("campo-avalEfetivEmprego-opcao-0")).toBeEnabled();
 });
 
 // RU-14 (doc 15): o título traz o nome da formação e o CPF, não "#N Avaliação".

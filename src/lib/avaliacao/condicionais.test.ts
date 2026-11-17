@@ -7,10 +7,10 @@ import {
 } from "./condicionais";
 
 // Valores transcritos literalmente de `docs/Questionario_do_Aluno_1.md`.
-// MTUR-11: com Q28 e Q30-Q34 fora do questionário, o bloco de quem concluiu
-// é Q24-Q27, Q29 e Q35-Q38.
+// Com Q28 fora do questionário (MTUR-11) e Q30-Q34 de volta (AD-055), o
+// bloco de quem concluiu é Q24-Q27, Q29-Q34 e Q35-Q38.
 describe("CHAVES_SOMENTE_CONCLUINTE", () => {
-  it("lista exatamente as 16 chaves de Q24-Q27, Q29 e Q35-Q38", () => {
+  it("lista exatamente as 22 chaves de Q24-Q27, Q29-Q34 e Q35-Q38", () => {
     expect([...CHAVES_SOMENTE_CONCLUINTE]).toEqual([
       "avalCursoDinamicasInclusao",
       "avalCursoMaterialDidatico",
@@ -24,6 +24,12 @@ describe("CHAVES_SOMENTE_CONCLUINTE", () => {
       "avalAprendizAtendimentoExpectativas",
       "avalAprendizSensacaoPreparo",
       "avalMotivacoesPosPercepcoes",
+      "avalOportunSituacaoTrabalho",
+      "avalOportunSituacaoTrabalhoOutra",
+      "avalOportunIntencaoAtuarTurismo",
+      "avalEfetivEmprego",
+      "avalEfetivAumentoRenda",
+      "avalEfetivMelhoriaPadraoVida",
       "avalGeralNota",
       "avalGeralMelhoriasComunidade",
       "avalGeralRecomendaCurso",
@@ -80,7 +86,32 @@ describe("normalizarCondicionaisAvaliacao", () => {
     });
   });
 
-  it("Q22='Não' -> as 16 chaves de 'apenas para quem concluiu' são descartadas, Q22.1 e Q23 ficam", () => {
+  // OPT-08: o "Quais?" órfão sai no encerramento.
+  it("Q30 diferente de 'Outra' com Q30.j respondida -> Q30.j descartada", () => {
+    const respostas = {
+      avalParticipConcluiuCurso: "Sim",
+      avalOportunSituacaoTrabalho: "Estou estudando.",
+      avalOportunSituacaoTrabalhoOutra: "Guia voluntário",
+    };
+
+    expect(normalizarCondicionaisAvaliacao(respostas)).toEqual({
+      avalParticipConcluiuCurso: "Sim",
+      avalOportunSituacaoTrabalho: "Estou estudando.",
+    });
+  });
+
+  it("Q30='Outra' com Q30.j respondida -> Q30.j fica", () => {
+    const respostas = {
+      avalParticipConcluiuCurso: "Sim",
+      avalOportunSituacaoTrabalho: "Outra",
+      avalOportunSituacaoTrabalhoOutra: "Guia voluntário",
+    };
+
+    expect(normalizarCondicionaisAvaliacao(respostas)).toEqual(respostas);
+  });
+
+  // OPT-09: as 22 chaves de concluinte, Q30-Q34 inclusive, saem quando Q22 = "Não".
+  it("Q22='Não' -> as 22 chaves de 'apenas para quem concluiu' são descartadas, Q22.1 e Q23 ficam", () => {
     const respostas: Record<string, unknown> = {
       avalParticipConcluiuCurso: "Não",
       avalParticipMotivoNaoConclusao: ["Horário inapropriado das aulas"],

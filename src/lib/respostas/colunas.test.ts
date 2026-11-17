@@ -32,7 +32,7 @@ describe("cobertura do mapa (COL-03)", () => {
   it.each([
     ["preCurso", 63, 122],
     ["posCurso", 26, 45],
-    ["avaliacao", 31, 50],
+    ["avaliacao", 37, 56],
     ["dadosPessoais", 7, 7],
   ] as const)("%s mapeia todas as chaves do schema em colunas únicas", (formulario, chaves, total) => {
     expect(MAPA[formulario].map((e) => e.chave)).toEqual(Object.keys(SCHEMAS[formulario].shape));
@@ -49,7 +49,7 @@ describe("cobertura do mapa (COL-03)", () => {
       ]),
     );
     expect(colunas("avaliacao")).toEqual(
-      expect.arrayContaining(["P10", "P11", "P12", "P13", "P14", "P22.1a", "P22.1j", "P24.1", "P24.8", "P29f", "P35", "P38"]),
+      expect.arrayContaining(["P10", "P11", "P12", "P13", "P14", "P22.1a", "P22.1j", "P24.1", "P24.8", "P29f", "P30", "P30Qual", "P31", "P34", "P35", "P38"]),
     );
     expect(colunas("dadosPessoais")).toEqual(["P3", "P4", "P5", "P6", "P7", "P8", "P9"]);
     for (const formulario of Object.keys(MAPA) as Formulario[]) {
@@ -177,6 +177,35 @@ describe("Situação Profissional (P10-P13)", () => {
   });
 
   it("lê de volta o texto da opção gravada", () => {
+    expect(deColunas("avaliacao", CAMPOS)).toEqual(RESPOSTAS);
+  });
+});
+
+// OPT-10/OPT-11: P30-P34 gravam a letra da opção, o "Quais?" grava o texto, e
+// tudo volta como foi enviado.
+describe("Oportunidades, Efetivação e Renda (P30-P34)", () => {
+  const RESPOSTAS = {
+    avalOportunSituacaoTrabalho: "Outra",
+    avalOportunSituacaoTrabalhoOutra: "Guia voluntário no parque",
+    avalOportunIntencaoAtuarTurismo: "Não",
+    avalEfetivEmprego: "Sim",
+    avalEfetivAumentoRenda: "Não",
+    avalEfetivMelhoriaPadraoVida: "Sim, parcialmente",
+  };
+  const CAMPOS = {
+    p30: "j",
+    p30Qual: "Guia voluntário no parque",
+    p31: "b",
+    p32: "a",
+    p33: "b",
+    p34: "b",
+  };
+
+  it("grava a letra da opção em P30-P34 e o texto em P30Qual", () => {
+    expect(paraColunas("avaliacao", RESPOSTAS)).toEqual(CAMPOS);
+  });
+
+  it("lê de volta o texto da opção e o texto do Quais?", () => {
     expect(deColunas("avaliacao", CAMPOS)).toEqual(RESPOSTAS);
   });
 });

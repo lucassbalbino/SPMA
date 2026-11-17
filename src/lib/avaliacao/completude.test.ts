@@ -29,8 +29,8 @@ const PARTE_1_COMPLETA = {
   avalExpectRenda: "Média",
 };
 
-// As 15 chaves de Q24-Q27, Q29 e Q35-Q37 exigidas quando
-// avalParticipConcluiuCurso="Sim" (MTUR-11), mais as 2 do bloco
+// As 20 chaves de Q24-Q27, Q29-Q34 e Q35-Q37 exigidas quando
+// avalParticipConcluiuCurso="Sim" (Q30-Q34 voltaram na AD-055), mais as 2 do bloco
 // "Participação" (Q22 e Q23), que todo aluno responde.
 const PARTE_2_COMPLETA_CONCLUIU = {
   avalParticipConcluiuCurso: "Sim",
@@ -47,6 +47,11 @@ const PARTE_2_COMPLETA_CONCLUIU = {
   avalAprendizAtendimentoExpectativas: "Sim",
   avalAprendizSensacaoPreparo: "Parcialmente",
   avalMotivacoesPosPercepcoes: ["tem condições de atuar na área do Turismo"],
+  avalOportunSituacaoTrabalho: "Estou trabalhando como MEI (próprio negócio).",
+  avalOportunIntencaoAtuarTurismo: "Sim",
+  avalEfetivEmprego: "Não",
+  avalEfetivAumentoRenda: "Sim",
+  avalEfetivMelhoriaPadraoVida: "Sim, totalmente",
   avalGeralNota: 9,
   avalGeralMelhoriasComunidade: "Mais gente da comunidade trabalhando com receptivo",
   avalGeralRecomendaCurso: "Sim",
@@ -182,7 +187,7 @@ describe("validarCompletudeParte2", () => {
     );
   });
 
-  it("avalParticipConcluiuCurso='Não' + motivo + frequência -> completo=true, mesmo com as 15 chaves de concluinte ausentes", () => {
+  it("avalParticipConcluiuCurso='Não' + motivo + frequência -> completo=true, mesmo com as 20 chaves de concluinte ausentes", () => {
     const resultado = validarCompletudeParte2({
       avalParticipConcluiuCurso: "Não",
       avalParticipMotivoNaoConclusao: ["Dificuldades financeiras"],
@@ -192,7 +197,7 @@ describe("validarCompletudeParte2", () => {
     expect(resultado).toEqual({ completo: true, pendentes: [] });
   });
 
-  it("avalParticipConcluiuCurso='Não' sem avalParticipMotivoNaoConclusao -> incompleto (as 15 de concluinte não aparecem)", () => {
+  it("avalParticipConcluiuCurso='Não' sem avalParticipMotivoNaoConclusao -> incompleto (as 20 de concluinte não aparecem)", () => {
     const resultado = validarCompletudeParte2({
       avalParticipConcluiuCurso: "Não",
       avalParticipPercentualFrequencia: "26% a 50%",
@@ -240,18 +245,18 @@ describe("validarCompletudeParte2", () => {
     expect(resultado).toEqual({ completo: true, pendentes: [] });
   });
 
-  // MTUR-11: Q22, Q23 e as 15 de concluinte bastam - nenhuma das 7 chaves
-  // removidas da Parte 2 é cobrada.
-  it("avalParticipConcluiuCurso='Sim' com as 17 chaves preenchidas -> completo=true", () => {
-    expect(Object.keys(PARTE_2_COMPLETA_CONCLUIU)).toHaveLength(17);
+  // MTUR-11 e OPT-06: Q22, Q23 e as 20 de concluinte bastam - a Q28, que
+  // segue removida, não é cobrada.
+  it("avalParticipConcluiuCurso='Sim' com as 22 chaves preenchidas -> completo=true", () => {
+    expect(Object.keys(PARTE_2_COMPLETA_CONCLUIU)).toHaveLength(22);
     expect(validarCompletudeParte2(PARTE_2_COMPLETA_CONCLUIU)).toEqual({
       completo: true,
       pendentes: [],
     });
   });
 
-  // MTUR-11: cada uma das 16 além do gate continua exigida - a pendência é
-  // exatamente a chave que falta.
+  // MTUR-11 e OPT-06: cada uma das 21 além do gate é exigida - a pendência é
+  // exatamente a chave que falta. Inclui Q30, Q31, Q32, Q33 e Q34.
   it.each(
     Object.keys(PARTE_2_COMPLETA_CONCLUIU).filter((c) => c !== "avalParticipConcluiuCurso"),
   )("avalParticipConcluiuCurso='Sim' sem %s -> pendente lista exatamente essa chave", (chave) => {
@@ -262,6 +267,23 @@ describe("validarCompletudeParte2", () => {
       completo: false,
       pendentes: [chave],
     });
+  });
+
+  // OPT-07: Q30 = "Outra" exige o "Quais?".
+  it("avalOportunSituacaoTrabalho='Outra' sem avalOportunSituacaoTrabalhoOutra -> pendente", () => {
+    expect(
+      validarCompletudeParte2({ ...PARTE_2_COMPLETA_CONCLUIU, avalOportunSituacaoTrabalho: "Outra" }),
+    ).toEqual({ completo: false, pendentes: ["avalOportunSituacaoTrabalhoOutra"] });
+  });
+
+  it("avalOportunSituacaoTrabalho='Outra' com a especificação preenchida -> completo=true", () => {
+    expect(
+      validarCompletudeParte2({
+        ...PARTE_2_COMPLETA_CONCLUIU,
+        avalOportunSituacaoTrabalho: "Outra",
+        avalOportunSituacaoTrabalhoOutra: "Trabalho voluntário no centro cultural",
+      }),
+    ).toEqual({ completo: true, pendentes: [] });
   });
 
   it("avalGeralComentariosFinais ausente nunca aparece em pendentes, mesmo com tudo o resto completo", () => {
