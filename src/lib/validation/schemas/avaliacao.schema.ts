@@ -17,15 +17,15 @@ export const OPCOES_SIM_NAO = ["Sim", "Não"] as const;
 // `dados-pessoais.schema.ts`, coletadas uma vez só, fora do questionário do
 // curso (PESSOAL-11).
 //
-// Q28 (Continuidade nos Estudos) e Q30-Q34 (Oportunidades de Trabalho,
-// Efetivação e Renda) saíram com a revisão do MTur (`docs/Alteracoes_MTur_1.md`,
-// itens 3.4 a 3.6): o aluno não tem essas informações antes de obter o
-// certificado. As perguntas restantes mantêm a numeração original. As
-// respostas já gravadas dessas chaves foram apagadas pela migration
+// Q28 (Continuidade nos Estudos) saiu com a revisão do MTur
+// (`docs/Alteracoes_MTur_1.md`, item 3.6): o aluno não tem essa informação
+// antes de obter o certificado. As perguntas restantes mantêm a numeração
+// original. As respostas já gravadas foram apagadas pela migration
 // `20261020120000_alteracoes_mtur_1`.
 //
-// Q10-Q13 (Situação Profissional) saíram na mesma revisão (item 3.3) e
-// voltaram a pedido do cliente (AD-053, SPR-02), com o texto e as opções do
+// Q10-Q13 (Situação Profissional, item 3.3) e Q30-Q34 (Oportunidades de
+// Trabalho, Efetivação e Renda, itens 3.4 e 3.5) saíram na mesma revisão e
+// voltaram a pedido do cliente (AD-053 e AD-055), com o texto e as opções do
 // questionário original.
 
 // Q10 - condição atual de trabalho.
@@ -150,13 +150,37 @@ export const OPCOES_MOTIVACOES_POS = [
   "melhorou as suas percepções/ações sobre as mudanças climáticas",
 ] as const;
 
+// Q30 - situação de trabalho após a conclusão. A última opção revela o campo
+// condicional "Quais?".
+export const SITUACAO_TRABALHO_OUTRA = "Outra";
+
+export const OPCOES_SITUACAO_TRABALHO = [
+  "Consegui um emprego, com carteira assinada, na área de Turismo.",
+  "Consegui um emprego, sem carteira assinada, na área de Turismo.",
+  "Consegui um emprego, com carteira assinada, fora da área de Turismo.",
+  "Consegui um emprego, sem carteira assinada, fora da área de Turismo.",
+  "Estou trabalhando por conta própria (autônomo).",
+  "Estou trabalhando como MEI (próprio negócio).",
+  "Continuo na posição em que estava a trabalhar antes do curso.",
+  "Estou desempregado.",
+  "Estou estudando.",
+  SITUACAO_TRABALHO_OUTRA,
+] as const;
+
+// Q34 - melhoria do padrão de vida.
+export const OPCOES_MELHORIA_PADRAO_VIDA = [
+  "Sim, totalmente",
+  "Sim, parcialmente",
+  "Não",
+] as const;
+
 // Escala de Avaliação do Curso, Q24 (AD-020): 1=Péssimo .. 5=Ótimo, sem "não
 // há disponibilidade" (diferente da escala de infraestrutura do Pré-Curso).
 // A tabela do papel lista as colunas de Ótimo a Péssimo; o valor armazenado
 // segue crescente, e é a UI que apresenta na ordem do papel.
 export const escalaAvaliacaoCurso = z.number().int().min(1).max(5);
 
-// ---- Forma das 31 chaves do questionário (12 na Parte 1, 19 na Parte 2) ----
+// ---- Forma das 37 chaves do questionário (12 na Parte 1, 25 na Parte 2) ----
 //
 // Diferente do Pré-Curso/Pós-Curso, TODAS as chaves ficam `.optional()`
 // aqui: a maior parte da Parte 2 só é exigida quando
@@ -214,6 +238,16 @@ export const respostasAvaliacaoSchema = z.object({
 
   // Parte 2 - Motivações após o Curso (Q29)
   avalMotivacoesPosPercepcoes: z.array(z.enum(OPCOES_MOTIVACOES_POS)).min(1).optional(),
+
+  // Parte 2 - Oportunidades Reais de Trabalho e Emprego (Q30, Q30.j, Q31)
+  avalOportunSituacaoTrabalho: z.enum(OPCOES_SITUACAO_TRABALHO).optional(),
+  avalOportunSituacaoTrabalhoOutra: z.string().min(1).optional(),
+  avalOportunIntencaoAtuarTurismo: z.enum(OPCOES_SIM_NAO).optional(),
+
+  // Parte 2 - Efetivação no Emprego e Aumento da Renda (Q32-Q34)
+  avalEfetivEmprego: z.enum(OPCOES_SIM_NAO).optional(),
+  avalEfetivAumentoRenda: z.enum(OPCOES_SIM_NAO).optional(),
+  avalEfetivMelhoriaPadraoVida: z.enum(OPCOES_MELHORIA_PADRAO_VIDA).optional(),
 
   // Parte 2 - Avaliação geral (Q35-Q38)
   avalGeralNota: z.number().int().min(0).max(10).optional(),

@@ -45,6 +45,24 @@ describe("VIEWs do banco bi", () => {
     ]);
   });
 
+  // OPT-12: P30-P34 e P30Qual entram na VIEW da avaliação entre P29f e P35.
+  it("expõe P30, P30Qual e P31-P34 em bi.TB_Avaliacao_Aluno depois de P29f e antes de P35", () => {
+    const colunas = viewDe("TB_Avaliacao_Aluno");
+    const inicio = colunas.indexOf("P29f");
+
+    expect(inicio).toBeGreaterThan(-1);
+    expect(colunas.slice(inicio, inicio + 8)).toEqual([
+      "P29f",
+      "P30",
+      "P30Qual",
+      "P31",
+      "P32",
+      "P33",
+      "P34",
+      "P35",
+    ]);
+  });
+
   // CUR-19: a dimensão de curso, com todas as colunas de TB_Curso.
   it("cria bi.TB_Curso com todas as colunas de TB_Curso", () => {
     expect(viewDe("TB_Curso")).toEqual([

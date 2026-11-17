@@ -1,15 +1,15 @@
-// As regras condicionais do questionário do Aluno: 3 perguntas reveladas
-// por outra pergunta (Q12, Q16, Q22.1) e o gate de bloco "Concluiu o curso?"
-// (Q22), que governa as 16 chaves de Q24-Q27, Q29 e Q35-Q38. Q30.j saiu com
-// a revisão do MTur (MTUR-08); Q12 voltou com a Situação Profissional
-// (AD-053).
+// As regras condicionais do questionário do Aluno: 4 perguntas reveladas
+// por outra pergunta (Q12, Q16, Q22.1, Q30.j) e o gate de bloco "Concluiu o
+// curso?" (Q22), que governa as 22 chaves de Q24-Q27, Q29-Q34 e Q35-Q38. Q12
+// e Q30.j saíram com a revisão do MTur (MTUR-08) e voltaram (AD-053, AD-055).
 //
 // Fonte única das condições: `completude.ts` (exigência), `AvaliacaoForm.tsx`
 // (`visivelSe` e o bloqueio das chaves de "apenas para quem concluiu") e a
 // limpeza de órfãs do encerramento leem daqui.
-import type {
-  RespostasAvaliacao,
-  RespostasAvaliacaoParcial,
+import {
+  SITUACAO_TRABALHO_OUTRA,
+  type RespostasAvaliacao,
+  type RespostasAvaliacaoParcial,
 } from "../validation/schemas/avaliacao.schema";
 import {
   condicaoDe,
@@ -33,13 +33,18 @@ export const REGRAS_CONDICIONAIS_PARTE_1: readonly RegraCondicional<RespostasAva
     },
   ];
 
-// Q22.1 - Parte 2.
+// Q22.1 e Q30.j - Parte 2.
 export const REGRAS_CONDICIONAIS_PARTE_2: readonly RegraCondicional<RespostasAvaliacaoParcial>[] =
   [
     {
       chave: "avalParticipMotivoNaoConclusao",
       dependeDe: ["avalParticipConcluiuCurso"],
       exigidaQuando: (dados) => dados.avalParticipConcluiuCurso === "Não",
+    },
+    {
+      chave: "avalOportunSituacaoTrabalhoOutra",
+      dependeDe: ["avalOportunSituacaoTrabalho"],
+      exigidaQuando: (dados) => dados.avalOportunSituacaoTrabalho === SITUACAO_TRABALHO_OUTRA,
     },
   ];
 
@@ -56,9 +61,10 @@ export function condicaoAvaliacao(chave: ChaveCondicionalAvaliacao) {
 }
 
 // AVAL-12/13: as chaves que o cabeçalho "Avaliação do curso (apenas para
-// quem concluiu)" governa - Q24-Q27, Q29 e Q35-Q37 (15 exigidas, MTUR-11)
-// mais Q38 (comentário livre, opcional). Q22, Q22.1 e Q23 ficam FORA: são do
-// bloco "Participação", que todo aluno responde.
+// quem concluiu)" governa - Q24-Q27, Q29-Q34 e Q35-Q37 (20 exigidas), mais
+// Q30.j (condicional dentro de Q30) e Q38 (comentário livre, opcional). Q22,
+// Q22.1 e Q23 ficam FORA: são do bloco "Participação", que todo aluno
+// responde.
 export const CHAVES_SOMENTE_CONCLUINTE = [
   "avalCursoDinamicasInclusao",
   "avalCursoMaterialDidatico",
@@ -72,6 +78,12 @@ export const CHAVES_SOMENTE_CONCLUINTE = [
   "avalAprendizAtendimentoExpectativas",
   "avalAprendizSensacaoPreparo",
   "avalMotivacoesPosPercepcoes",
+  "avalOportunSituacaoTrabalho",
+  "avalOportunSituacaoTrabalhoOutra",
+  "avalOportunIntencaoAtuarTurismo",
+  "avalEfetivEmprego",
+  "avalEfetivAumentoRenda",
+  "avalEfetivMelhoriaPadraoVida",
   "avalGeralNota",
   "avalGeralMelhoriasComunidade",
   "avalGeralRecomendaCurso",
@@ -99,8 +111,8 @@ export function pendenciasCondicionaisParte2(respostas: unknown): string[] {
 }
 
 // Descarta as respostas que a própria avaliação tornou inaplicáveis: as
-// condicionais órfãs (Q12/Q16/Q22.1) e, quando o aluno declarou não ter
-// concluído, as 16 chaves de "apenas para quem concluiu".
+// condicionais órfãs (Q12/Q16/Q22.1/Q30.j) e, quando o aluno declarou não ter
+// concluído, as 22 chaves de "apenas para quem concluiu".
 //
 // Chamada só no ENCERRAMENTO. No PATCH os valores são preservados de
 // propósito - é edge case explícito da spec (`avalParticipConcluiuCurso`

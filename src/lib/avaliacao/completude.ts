@@ -55,8 +55,9 @@ const parte2SchemaSempre = respostasAvaliacaoSchema
   })
   .required();
 
-// As 15 chaves de Q24-Q27, Q29 e Q35-Q37, exigidas só quando
-// avalParticipConcluiuCurso="Sim" (AVAL-13, MTUR-11). Q38
+// As 20 chaves de Q24-Q27, Q29-Q34 e Q35-Q37, exigidas só quando
+// avalParticipConcluiuCurso="Sim" (AVAL-13; Q30-Q34 voltaram na AD-055).
+// Q30.j é condicional e vem de `condicionais.ts`. Q38
 // (`avalGeralComentariosFinais`) fica de fora: é comentário livre opcional.
 const parte2SchemaQuandoConcluiu = respostasAvaliacaoSchema.pick({
   avalCursoDinamicasInclusao: true,
@@ -71,6 +72,11 @@ const parte2SchemaQuandoConcluiu = respostasAvaliacaoSchema.pick({
   avalAprendizAtendimentoExpectativas: true,
   avalAprendizSensacaoPreparo: true,
   avalMotivacoesPosPercepcoes: true,
+  avalOportunSituacaoTrabalho: true,
+  avalOportunIntencaoAtuarTurismo: true,
+  avalEfetivEmprego: true,
+  avalEfetivAumentoRenda: true,
+  avalEfetivMelhoriaPadraoVida: true,
   avalGeralNota: true,
   avalGeralMelhoriasComunidade: true,
   avalGeralRecomendaCurso: true,
