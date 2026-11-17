@@ -43,6 +43,7 @@ import {
   OPCOES_EXPECTATIVA_RENDA,
   OPCOES_FAIXA_RENDA,
   OPCOES_FORMA_CONHECIMENTO,
+  OPCOES_MELHORIA_PADRAO_VIDA,
   OPCOES_MOTIVACOES_POS,
   OPCOES_MOTIVOS_PARTICIPACAO,
   OPCOES_MOTIVO_NAO_CONCLUSAO,
@@ -50,6 +51,7 @@ import {
   OPCOES_SIM_NAO,
   OPCOES_SIM_PARCIAL_NAO,
   OPCOES_SIM_TALVEZ_NAO,
+  OPCOES_SITUACAO_TRABALHO,
   OPCOES_TIPO_CURSO_ANTERIOR,
   type RespostasAvaliacao,
   type RespostasAvaliacaoParcial,
@@ -302,6 +304,55 @@ const BLOCOS_PARTE_2: BlocoDef[] = [
         rotulo: "29. Após a conclusão do Curso, você sente que:",
         tipo: "checkboxes",
         opcoes: OPCOES_MOTIVACOES_POS,
+      },
+    ],
+  },
+  // Q30-Q34 saíram com a revisão do MTur e voltaram a pedido do cliente
+  // (AD-055, OPT-01), com os rótulos de antes.
+  {
+    titulo: "Oportunidades Reais de Trabalho e Emprego",
+    campos: [
+      {
+        chave: "avalOportunSituacaoTrabalho",
+        rotulo: "30. Após a conclusão do Curso:",
+        tipo: "radio",
+        opcoes: OPCOES_SITUACAO_TRABALHO,
+      },
+      {
+        chave: "avalOportunSituacaoTrabalhoOutra",
+        rotulo: "30. Outra. Quais?",
+        tipo: "texto",
+        visivelSe: condicaoAvaliacao("avalOportunSituacaoTrabalhoOutra"),
+      },
+      {
+        chave: "avalOportunIntencaoAtuarTurismo",
+        rotulo: "31. Caso não esteja trabalhando no Turismo, você pretende trabalhar no setor?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
+      },
+    ],
+  },
+  {
+    titulo: "Efetivação no Emprego e Aumento da Renda",
+    campos: [
+      {
+        chave: "avalEfetivEmprego",
+        rotulo:
+          "32. Caso não esteja efetivado no emprego, após a conclusão do Curso você foi efetivado?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
+      },
+      {
+        chave: "avalEfetivAumentoRenda",
+        rotulo: "33. Após a conclusão do Curso sua renda aumentou?",
+        tipo: "radio",
+        opcoes: OPCOES_SIM_NAO,
+      },
+      {
+        chave: "avalEfetivMelhoriaPadraoVida",
+        rotulo: "34. Após a conclusão do Curso, o seu padrão de vida melhorou?",
+        tipo: "radio",
+        opcoes: OPCOES_MELHORIA_PADRAO_VIDA,
       },
     ],
   },

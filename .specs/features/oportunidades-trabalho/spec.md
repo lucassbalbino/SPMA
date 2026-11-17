@@ -90,11 +90,11 @@ Outras dimensões implícitas: N/A neste escopo. Autorização, concorrência e 
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| OPT-01 | P1: Aluno responde | Execute | Pending |
+| OPT-01 | P1: Aluno responde | Execute | Implementing |
 | OPT-02 | P1: Aluno responde | Execute | Implementing |
 | OPT-03 | P1: Aluno responde | Execute | Implementing |
-| OPT-04 | P1: Aluno responde | Execute | Pending |
-| OPT-05 | P1: Aluno responde | Execute | Pending |
+| OPT-04 | P1: Aluno responde | Execute | Implementing |
+| OPT-05 | P1: Aluno responde | Execute | Implementing |
 | OPT-06 | P1: Aluno responde | Execute | Implementing |
 | OPT-07 | P1: Aluno responde | Execute | Implementing |
 | OPT-08 | P1: Aluno responde | Execute | Implementing |
