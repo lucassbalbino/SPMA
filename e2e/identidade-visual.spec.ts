@@ -13,7 +13,7 @@ async function logar(page: Page, cpf: string, senha: string) {
   expect(res.ok()).toBe(true);
 }
 
-test("UI-20: o corpo do documento renderiza na Geist, não na serifada de fallback", async ({
+test("UI-20: o corpo do documento renderiza na Nunito Sans (design system SPMA), não na serifada de fallback", async ({
   page,
 }) => {
   await page.goto("/login");
@@ -26,7 +26,9 @@ test("UI-20: o corpo do documento renderiza na Geist, não na serifada de fallba
   // o navegador cai na família inicial (serifada). As duas metades do
   // critério são afirmadas separadamente (L-014): a fonte certa chegou E a
   // de fallback não é a que está valendo.
-  expect(fontFamily).toContain("Geist");
+  // Design system SPMA (docs/design-system.md): Nunito Sans no texto,
+  // Lexend nos títulos - a Geist saiu quando a identidade foi aplicada.
+  expect(fontFamily).toContain("Nunito Sans");
   expect(fontFamily).not.toMatch(/Times|^serif$/i);
 });
 
@@ -104,17 +106,22 @@ test.describe("casca comum", () => {
     deleteUsuarios(CPFS_CASCA);
   });
 
-  test("UI-01: o cabeçalho com a marca aparece em /painel e em /avaliacoes", async ({
+  // Design system SPMA (docs/design-system.md): a casca segue a tela de
+  // referência do painel. A marca e a navegação moram no menu lateral
+  // (`casca-menu`); quem está logado e o Sair, no cabeçalho
+  // (`casca-cabecalho`), dentro do menu da conta que a seta abre. Os quatro
+  // elementos de UI-01 continuam na casca, não na página.
+  test("UI-01: a marca aparece na casca em /painel e em /avaliacoes", async ({
     page,
   }) => {
     await logar(page, CPF_CASCA, SENHA);
 
-    // Duas rotas diferentes: prova que o cabeçalho é da casca, não da página.
+    // Duas rotas diferentes: prova que a marca é da casca, não da página.
     await page.goto("/painel");
-    await expect(page.getByTestId("casca-cabecalho")).toContainText("SPMA");
+    await expect(page.getByTestId("casca-menu")).toContainText("SPMA");
 
     await page.goto("/avaliacoes");
-    await expect(page.getByTestId("casca-cabecalho")).toContainText("SPMA");
+    await expect(page.getByTestId("casca-menu")).toContainText("SPMA");
   });
 
   test("UI-01: o cabeçalho identifica o usuário logado por nome e sigla do perfil", async ({
@@ -126,9 +133,10 @@ test.describe("casca comum", () => {
     const cabecalho = page.getByTestId("casca-cabecalho");
     await expect(cabecalho).toContainText(NOME_CASCA);
     await expect(cabecalho).toContainText("GT");
-    // UI-01 exige os quatro elementos NO cabecalho, nao apenas na pagina.
-    await expect(cabecalho.getByTestId("navegacao-perfil")).toHaveCount(1);
-    await expect(cabecalho.getByRole("button", { name: "Sair" })).toHaveCount(1);
+    // UI-01 exige os quatro elementos NA casca, nao apenas na pagina.
+    await expect(menuDaCasca(page)).toHaveCount(1);
+    await abrirMenuDaConta(page);
+    await expect(botaoSair(page)).toHaveCount(1);
   });
 
   test("REQ-SEC-12: o CPF do usuário logado não aparece em lugar nenhum do documento", async ({
@@ -153,14 +161,18 @@ test.describe("casca comum", () => {
 
     // Contar o <main> nao prova "centralizado e de largura maxima fixa".
     // Medir max-width e a simetria das margens prova.
+    // Com o menu lateral do design system SPMA o conteúdo ocupa a coluna à
+    // direita do menu: "centralizado" passa a ser medido dentro dessa coluna
+    // (o pai do <main>), não na viewport inteira.
     const medidas = await page.locator("main").evaluate((elemento) => {
       const estilo = getComputedStyle(elemento);
       const caixa = elemento.getBoundingClientRect();
+      const coluna = elemento.parentElement!.getBoundingClientRect();
       return {
         maxWidth: estilo.maxWidth,
         paddingTop: estilo.paddingTop,
-        folgaEsquerda: caixa.left,
-        folgaDireita: document.documentElement.clientWidth - caixa.right,
+        folgaEsquerda: caixa.left - coluna.left,
+        folgaDireita: coluna.right - caixa.right,
       };
     });
 
@@ -208,6 +220,8 @@ test.describe("casca comum", () => {
     await logar(page, CPF_CASCA, SENHA);
     await page.goto("/painel");
 
+    // No celular o menu lateral vira um bloco no topo e o cabeçalho fica só
+    // com o usuário: os dois seguem visíveis.
     const cabecalho = page.getByTestId("casca-cabecalho");
     await expect(cabecalho).toBeVisible();
     await expect(menuDaCasca(page)).toBeVisible();
@@ -233,7 +247,9 @@ test.describe("casca comum", () => {
     await logar(page, CPF_NOME_LONGO, SENHA);
     await page.goto("/painel");
 
-    const nome = page.getByTestId("casca-cabecalho").getByText(NOME_LONGO);
+    // O gatilho do menu da conta: o nome visível no cabeçalho (o painel do
+    // menu, fechado, repete o nome).
+    const nome = page.getByTestId("menu-da-conta-gatilho").getByText(NOME_LONGO);
     const medidas = await nome.evaluate((elemento) => ({
       scrollWidth: elemento.scrollWidth,
       clientWidth: elemento.clientWidth,
@@ -297,13 +313,17 @@ const CPF_NAV_AL = "50102031037";
 const CPF_NAV_VT = "50102031118";
 const CPFS_NAV = [CPF_NAV_GT, CPF_NAV_AL, CPF_NAV_VT];
 
-// Escopado no cabecalho de proposito: um localizador de documento acharia a
-// nav mesmo que ela fosse renderizada fora da casca, e UI-01 exige que ela
-// esteja DENTRO do cabecalho.
+// Escopado no menu lateral de proposito: um localizador de documento acharia
+// a nav mesmo que ela fosse renderizada fora da casca, e UI-01 exige que ela
+// esteja DENTRO da casca.
 const menuDaCasca = (page: Page) =>
-  page.getByTestId("casca-cabecalho").getByTestId("navegacao-perfil");
+  page.getByTestId("casca-menu").getByTestId("navegacao-perfil");
 
 const linksDoMenu = (page: Page) => menuDaCasca(page).getByRole("link");
+
+// O Sair fica no menu da conta do cabeçalho (a seta ao lado do nome).
+const abrirMenuDaConta = (page: Page) =>
+  page.getByTestId("casca-cabecalho").getByTestId("menu-da-conta-gatilho").click();
 
 const botaoSair = (page: Page) =>
   page.getByTestId("casca-cabecalho").getByRole("button", { name: "Sair" });
@@ -482,6 +502,7 @@ test.describe("botão Sair", () => {
     const sessaoAntes = cookies.find((c) => c.name === "spma_sessao");
     expect(sessaoAntes).toBeDefined();
 
+    await abrirMenuDaConta(page);
     await botaoSair(page).click();
     await expect(page).toHaveURL(/\/login$/);
 
@@ -504,6 +525,7 @@ test.describe("botão Sair", () => {
       rota.fulfill({ status: 403, contentType: "application/json", body: "{}" }),
     );
 
+    await abrirMenuDaConta(page);
     await botaoSair(page).click();
 
     await expect(page.getByTestId("erro-sair")).toBeVisible();
@@ -519,6 +541,7 @@ test.describe("botão Sair", () => {
     // O ramo do catch: a requisicao nem chega a ter status.
     await page.route("**/api/auth/logout", (rota) => rota.abort());
 
+    await abrirMenuDaConta(page);
     await botaoSair(page).click();
 
     await expect(page.getByTestId("erro-sair")).toBeVisible();
@@ -535,6 +558,7 @@ test.describe("botão Sair", () => {
       rota.fulfill({ status: 401, contentType: "application/json", body: "{}" }),
     );
 
+    await abrirMenuDaConta(page);
     await botaoSair(page).click();
 
     await expect(page).toHaveURL(/\/login$/);

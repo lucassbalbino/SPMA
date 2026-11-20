@@ -13,3 +13,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 **Camada visual em arquivo único (AD-039).** Toda cor, raio e fonte vive em `src/app/globals.css`, como token. Nenhum `.tsx` carrega cor literal — use os tokens (`bg-background`, `text-muted-foreground`, `border-border`) em vez de valores hexadecimais ou `oklch()` soltos no componente. É o que permite trocar a estética depois editando só `:root` e `@theme inline`, sem tocar em tela nenhuma. Convenção documentada, não gate de CI.
 
 **Navegação tem fonte única (AD-039).** Os itens de menu e os módulos do painel saem de `src/lib/ui/navegacao.ts`. Não escreva lista de módulos direto numa página. Esconder um item ali é conveniência de UI e **nunca** autorização: os guards de backend seguem valendo a cada request.
+
+**Design system SPMA.** Cores, fontes, raios e sombras vêm do design system SPMA: os tokens `--spma-*` estão em `src/app/spma-design-system.css` e são mapeados para as variáveis do shadcn em `src/app/globals.css`. Antes de criar ou alterar uma tela, leia `docs/design-system.md`. Use os componentes shadcn e os utilitários `*-spma-*` / `text-spma-*`, e não invente cores novas.

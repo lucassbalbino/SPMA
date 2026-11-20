@@ -1,0 +1,201 @@
+/*
+ * SPMA — Design System
+ * Fonte: artefato "SPMA" (Design System) — https://claude.ai/artifact/TMPCux84JLVQSCogEti61W
+ * Guia: docs/design-system.md
+ *
+ * Todas as variáveis levam o prefixo --spma- para não colidir com as do shadcn
+ * (--background, --border...). O mapeamento shadcn -> SPMA fica em globals.css (:root),
+ * como manda o AD-039. Para atualizar, troque os valores aqui pelos do design system.
+ */
+
+:root {
+  /* Cores */
+  --spma-primary-50: #ebf2f4; /* Fundo do item ativo do menu lateral. */
+  --spma-primary-100: #e6f4f4; /* Fundo de avisos informativos (ex.: Compromisso com a veracidade) e realces suaves. */
+  --spma-primary-300: #89b9b9; /* Ícones e ornamentos decorativos sobre fundo claro; nunca para texto. */
+  --spma-primary-600: #067e87; /* Ícone do item ativo no menu, barra indicadora ativa, anel de foco. */
+  --spma-primary-700: #0a7176; /* Cor da marca: logotipo SPMA, botão primário, links, checkbox marcado. Texto branco sobre ela: 5.8:1. */
+  --spma-primary-800: #085c60; /* Hover/pressionado do botão primário; texto de link sobre primary-100. */
+  --spma-primary-900: #074547; /* Títulos de destaque em verde-petróleo (ex.: PNQT) quando é preciso mais contraste. */
+  --spma-ink-900: #0f1a24; /* Títulos e rótulos de formulário sobre surface ou background. */
+  --spma-ink-800: #1f2b4d; /* Texto do menu lateral, nome do usuário, ícones de navegação (azul-marinho). */
+  --spma-ink-600: #4a5568; /* Texto secundário: subtítulos, placeholders, rodapé. 7.5:1 sobre surface. */
+  --spma-ink-500: #5f6b85; /* Metadados pequenos (perfil 'Administrador', versão). 5.3:1 sobre surface. */
+  --spma-ink-0: #ffffff; /* Texto e ícones sobre primary-700. */
+  --spma-surface: #ffffff; /* Cartão de login, cabeçalho, menu lateral, campos de formulário. */
+  --spma-background: #f4f6f9; /* Fundo da página e da área de conteúdo. */
+  --spma-border: #d1d5db; /* Borda de campos de formulário, como nas telas de referência. Atenção: 1.5:1 sobre surface, abaixo dos 3:1 da WCAG para bordas de controle — se a acessibilidade for requisito do contrato, escurecer para #8a94a6. No foco usar primary-600. */
+  --spma-divider: #e7eaf0; /* Linhas divisórias do menu, cabeçalho e rodapé; borda do cartão. */
+  --spma-unb-blue: #003b75; /* Azul institucional da UnB — apenas no logotipo e em referências à universidade. */
+  --spma-unb-green: #018137; /* Verde institucional da UnB — apenas no logotipo. */
+  --spma-danger-600: #b42318; /* Mensagens de erro de validação (assumido; não aparece nas telas de referência). */
+
+  /* Fontes (variáveis emitidas por next/font em src/app/layout.tsx) */
+  --spma-font-display: var(--font-lexend), "Segoe UI", system-ui, sans-serif;
+  --spma-font-text: var(--font-nunito-sans), "Segoe UI", system-ui, sans-serif;
+
+  /* spacing */
+  --spma-space-1: 4px; /* Espaço entre ícone e texto pequeno. */
+  --spma-space-2: 8px; /* Gap entre rótulo e campo; entre itens compactos. */
+  --spma-space-3: 12px; /* Padding interno de itens de menu; gap ícone–texto no campo. */
+  --spma-space-4: 16px; /* Padding horizontal de campos; gap entre itens do menu. */
+  --spma-space-6: 24px; /* Padding de avisos; gap entre grupos de campos. */
+  --spma-space-8: 32px; /* Padding lateral do menu e da área de conteúdo. */
+  --spma-space-12: 48px; /* Espaço entre blocos do login; padding do cartão de login. */
+  --spma-space-16: 64px; /* Margem externa da tela de login. */
+
+  /* radius */
+  --spma-radius-sm: 4px; /* Checkbox, selos. */
+  --spma-radius-md: 6px; /* Campos, botões, item ativo do menu. */
+  --spma-radius-lg: 10px; /* Avisos e cartões internos. */
+  --spma-radius-xl: 20px; /* Cartão de login e painéis grandes. */
+  --spma-radius-full: 9999px; /* Avatares. */
+
+  /* shadow */
+  --spma-shadow-card: 0 8px 32px rgba(15, 26, 36, 0.06); /* Cartão de login. */
+  --spma-shadow-header: 0 1px 3px rgba(15, 26, 36, 0.06); /* Cabeçalho fixo do painel. */
+  --spma-shadow-focus: 0 0 0 3px rgba(6, 126, 135, 0.25); /* Anel de foco de campos e botões. */
+
+  /* size */
+  --spma-sidebar-width: 276px; /* Largura do menu lateral expandido. */
+  --spma-header-height: 74px; /* Altura do cabeçalho do painel. */
+  --spma-control-height: 52px; /* Altura de campos de formulário. */
+  --spma-button-height-lg: 64px; /* Altura do botão primário do login. */
+  --spma-icon-md: 22px; /* Ícones de menu e de campos. */
+}
+
+/* Utilitários Tailwind: bg-spma-primary-700, text-spma-ink-600, shadow-spma-card, w-spma-sidebar ... */
+@theme inline {
+  --color-spma-primary-50: var(--spma-primary-50);
+  --color-spma-primary-100: var(--spma-primary-100);
+  --color-spma-primary-300: var(--spma-primary-300);
+  --color-spma-primary-600: var(--spma-primary-600);
+  --color-spma-primary-700: var(--spma-primary-700);
+  --color-spma-primary-800: var(--spma-primary-800);
+  --color-spma-primary-900: var(--spma-primary-900);
+  --color-spma-ink-900: var(--spma-ink-900);
+  --color-spma-ink-800: var(--spma-ink-800);
+  --color-spma-ink-600: var(--spma-ink-600);
+  --color-spma-ink-500: var(--spma-ink-500);
+  --color-spma-ink-0: var(--spma-ink-0);
+  --color-spma-surface: var(--spma-surface);
+  --color-spma-background: var(--spma-background);
+  --color-spma-border: var(--spma-border);
+  --color-spma-divider: var(--spma-divider);
+  --color-spma-unb-blue: var(--spma-unb-blue);
+  --color-spma-unb-green: var(--spma-unb-green);
+  --color-spma-danger-600: var(--spma-danger-600);
+  --shadow-spma-card: var(--spma-shadow-card);
+  --shadow-spma-header: var(--spma-shadow-header);
+  --shadow-spma-focus: var(--spma-shadow-focus);
+  --font-display: var(--spma-font-display);
+}
+
+/* Estilos de texto do design system: className="text-spma-heading-lg" etc. */
+@utility text-spma-brand-xl { font-family: var(--spma-font-display); font-size: 72px; line-height: 1; font-weight: 700; letter-spacing: -1px; }
+@utility text-spma-brand-md { font-family: var(--spma-font-display); font-size: 32px; line-height: 1; font-weight: 700; letter-spacing: -0.5px; }
+@utility text-spma-heading-xl { font-family: var(--spma-font-display); font-size: 32px; line-height: 40px; font-weight: 500; }
+@utility text-spma-heading-lg { font-family: var(--spma-font-display); font-size: 26px; line-height: 32px; font-weight: 500; }
+@utility text-spma-heading-md { font-family: var(--spma-font-display); font-size: 22px; line-height: 30px; font-weight: 600; }
+@utility text-spma-heading-sm { font-family: var(--spma-font-display); font-size: 18px; line-height: 24px; font-weight: 500; }
+@utility text-spma-body-lg { font-family: var(--spma-font-text); font-size: 16px; line-height: 24px; font-weight: 400; }
+@utility text-spma-body-md { font-family: var(--spma-font-text); font-size: 14px; line-height: 22px; font-weight: 400; }
+@utility text-spma-label { font-family: var(--spma-font-text); font-size: 16px; line-height: 20px; font-weight: 600; }
+@utility text-spma-label-sm { font-family: var(--spma-font-text); font-size: 14px; line-height: 20px; font-weight: 700; }
+@utility text-spma-button { font-family: var(--spma-font-text); font-size: 18px; line-height: 24px; font-weight: 600; }
+@utility text-spma-caption { font-family: var(--spma-font-text); font-size: 12px; line-height: 16px; font-weight: 400; }
+@utility text-spma-overline { font-family: var(--spma-font-text); font-size: 10px; line-height: 14px; font-weight: 700; letter-spacing: 1.5px; }
+
+/* Classes de componente (prefixo spma-), equivalentes às prévias do design system.
+   Para telas novas prefira os componentes shadcn em src/components/ui, que já herdam os tokens. */
+@layer components {
+  .spma { font-family: var(--spma-font-text); color: var(--spma-ink-900); -webkit-font-smoothing: antialiased; }
+  .spma *, .spma *::before, .spma *::after { box-sizing: border-box; }
+  .spma svg.i { width: var(--spma-icon-md); height: var(--spma-icon-md); flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Marca */
+  .spma-brand { font-family: var(--spma-font-display); font-weight: 700; color: var(--spma-primary-700); letter-spacing: -0.5px; line-height: 1; }
+
+  /* Botões */
+  .spma-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--spma-space-3); height: 48px; padding: 0 var(--spma-space-6); border-radius: var(--spma-radius-md); border: 1px solid transparent; font: 600 16px/24px var(--spma-font-text); cursor: pointer; text-decoration: none; transition: background .15s, border-color .15s; }
+  .spma-btn--primary { background: var(--spma-primary-700); color: var(--spma-ink-0); }
+  .spma-btn--primary:hover { background: var(--spma-primary-800); }
+  .spma-btn--secondary { background: var(--spma-surface); color: var(--spma-primary-700); border-color: var(--spma-primary-700); }
+  .spma-btn--secondary:hover { background: var(--spma-primary-100); }
+  .spma-btn--ghost { background: transparent; color: var(--spma-ink-800); }
+  .spma-btn--ghost:hover { background: var(--spma-primary-50); }
+  .spma-btn--lg { height: var(--spma-button-height-lg); font-size: 18px; width: 100%; position: relative; }
+  .spma-btn--lg .i { position: absolute; right: var(--spma-space-8); }
+  .spma-btn:focus-visible { outline: none; box-shadow: var(--spma-shadow-focus); }
+  .spma-btn[disabled] { background: var(--spma-divider); color: var(--spma-ink-500); border-color: transparent; cursor: not-allowed; }
+
+  /* Link */
+  .spma-link { color: var(--spma-primary-700); font: 600 15px/20px var(--spma-font-text); text-decoration: none; }
+  .spma-link:hover { color: var(--spma-primary-800); text-decoration: underline; }
+
+  /* Campos */
+  .spma-field { display: flex; flex-direction: column; gap: var(--spma-space-3); }
+  .spma-field__label { font: 600 16px/20px var(--spma-font-text); color: var(--spma-ink-900); }
+  .spma-input { display: flex; align-items: center; gap: var(--spma-space-3); height: var(--spma-control-height); padding: 0 var(--spma-space-4); background: var(--spma-surface); border: 1px solid var(--spma-border); border-radius: var(--spma-radius-md); color: var(--spma-ink-800); }
+  .spma-input input, .spma-input select { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 400 16px/24px var(--spma-font-text); color: var(--spma-ink-900); appearance: none; }
+  .spma-input input::placeholder { color: var(--spma-ink-600); }
+  .spma-input:focus-within { border-color: var(--spma-primary-600); box-shadow: var(--spma-shadow-focus); }
+  .spma-input--error { border-color: var(--spma-danger-600); }
+  .spma-field__error { font: 400 13px/18px var(--spma-font-text); color: var(--spma-danger-600); }
+  .spma-input__action { background: none; border: 0; padding: 0; color: var(--spma-ink-800); cursor: pointer; display: inline-flex; }
+
+  /* Checkbox */
+  .spma-check { display: inline-flex; align-items: center; gap: var(--spma-space-3); font: 400 16px/20px var(--spma-font-text); color: var(--spma-ink-900); cursor: pointer; }
+  .spma-check input { appearance: none; width: 22px; height: 22px; margin: 0; border: 1.5px solid var(--spma-border); border-radius: var(--spma-radius-sm); background: var(--spma-surface) center/16px no-repeat; }
+  .spma-check input:checked { background-color: var(--spma-primary-700); border-color: var(--spma-primary-700); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E"); }
+  .spma-check input:focus-visible { outline: none; box-shadow: var(--spma-shadow-focus); }
+
+  /* Aviso */
+  .spma-notice { display: flex; gap: var(--spma-space-6); padding: var(--spma-space-6); background: var(--spma-primary-100); border-radius: var(--spma-radius-lg); }
+  .spma .spma-notice > .i { width: 36px; height: 36px; color: var(--spma-primary-700); stroke-width: 1.5; }
+  .spma-notice__title { font: 700 15px/20px var(--spma-font-text); color: var(--spma-ink-900); margin: 0 0 var(--spma-space-1); }
+  .spma-notice__body { font: 400 14px/22px var(--spma-font-text); color: var(--spma-ink-900); margin: 0; }
+
+  /* Cartão */
+  .spma-card { background: var(--spma-surface); border: 1px solid var(--spma-divider); border-radius: var(--spma-radius-xl); box-shadow: var(--spma-shadow-card); padding: var(--spma-space-12) 56px; }
+
+  /* Avatar */
+  .spma-avatar { width: 40px; height: 40px; border-radius: var(--spma-radius-full); background: var(--spma-divider); color: var(--spma-ink-800); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+
+  /* Menu lateral */
+  .spma-sidebar { width: var(--spma-sidebar-width); background: var(--spma-surface); border-right: 1px solid var(--spma-divider); display: flex; flex-direction: column; }
+  .spma-sidebar__brand { padding: var(--spma-space-6) var(--spma-space-8) var(--spma-space-4); background: var(--spma-background); border-bottom: 1px solid var(--spma-divider); }
+  .spma-sidebar__brand .spma-brand { font-size: 32px; }
+  .spma-sidebar__brand p { margin: var(--spma-space-2) 0 0; font: 400 11px/15px var(--spma-font-text); color: var(--spma-ink-800); }
+  .spma-profile { display: flex; align-items: center; gap: var(--spma-space-3); padding: var(--spma-space-4) var(--spma-space-6); border-bottom: 1px solid var(--spma-divider); }
+  .spma-profile__meta { flex: 1; }
+  .spma-profile__meta small { display: block; font: 400 12px/16px var(--spma-font-text); color: var(--spma-ink-500); }
+  .spma-profile__meta strong { white-space: nowrap; font: 700 14px/20px var(--spma-font-text); color: var(--spma-ink-900); }
+  .spma-nav { list-style: none; margin: 0; padding: var(--spma-space-3) var(--spma-space-3); display: flex; flex-direction: column; gap: var(--spma-space-1); }
+  .spma-nav__sep { height: 1px; background: var(--spma-divider); margin: var(--spma-space-2) var(--spma-space-1); }
+  .spma-nav__item { position: relative; display: flex; align-items: center; gap: var(--spma-space-6); height: 44px; padding: 0 var(--spma-space-4); border-radius: var(--spma-radius-md); color: var(--spma-ink-800); font: 400 15px/20px var(--spma-font-text); text-decoration: none; }
+  .spma-nav__item:hover { background: var(--spma-primary-50); }
+  .spma-nav__item[aria-current="page"] { background: var(--spma-primary-50); color: var(--spma-primary-700); font-weight: 700; }
+  .spma-nav__item[aria-current="page"] .i { color: var(--spma-primary-600); fill: var(--spma-primary-600); stroke: var(--spma-primary-600); }
+  .spma-nav__item[aria-current="page"]::before { content: ""; position: absolute; left: -12px; top: 0; bottom: 0; width: 3px; background: var(--spma-primary-600); border-radius: 0 2px 2px 0; }
+  .spma-sidebar__collapse { margin-top: auto; border-top: 1px solid var(--spma-divider); padding: var(--spma-space-4) var(--spma-space-6); display: flex; gap: var(--spma-space-3); align-items: center; color: var(--spma-ink-800); font: 400 14px/20px var(--spma-font-text); }
+
+  /* Cabeçalho */
+  .spma-topbar { height: var(--spma-header-height); background: var(--spma-surface); box-shadow: var(--spma-shadow-header); display: flex; align-items: center; justify-content: flex-end; gap: var(--spma-space-8); padding: 0 var(--spma-space-8); }
+  .spma-topbar__partners { display: flex; align-items: center; gap: var(--spma-space-6); padding-right: var(--spma-space-8); border-right: 1px solid var(--spma-divider); height: 44px; }
+  .spma-topbar__user { display: flex; align-items: center; gap: var(--spma-space-3); color: var(--spma-ink-800); }
+  .spma-topbar__user strong { display: block; font: 600 15px/20px var(--spma-font-text); color: var(--spma-ink-800); }
+  .spma-topbar__user small { font: 400 12px/16px var(--spma-font-text); color: var(--spma-ink-500); }
+
+  /* Selo de parceiro (substituir pelo logotipo oficial) */
+  .spma-partner-slot { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 var(--spma-space-3); border: 1px dashed var(--spma-border); border-radius: var(--spma-radius-sm); font: 700 10px/14px var(--spma-font-text); letter-spacing: 1.2px; text-transform: uppercase; color: var(--spma-ink-600); text-align: center; }
+
+  /* Pontilhado decorativo da tela de login (à esquerda da colagem de losangos) */
+  .spma-pontilhado { background-image: radial-gradient(var(--spma-border) 1.5px, transparent 1.5px); background-size: 14px 14px; }
+
+  /* Rodapé */
+  .spma-footer { display: flex; justify-content: space-between; align-items: center; padding: var(--spma-space-6) var(--spma-space-8); border-top: 1px solid var(--spma-divider); font: 400 12px/16px var(--spma-font-text); color: var(--spma-ink-600); background: var(--spma-surface); }
+  .spma-legal { display: flex; align-items: center; gap: var(--spma-space-12); font: 400 14px/20px var(--spma-font-text); color: var(--spma-ink-600); }
+  .spma-legal a { color: inherit; text-decoration: none; }
+  .spma-legal a:hover { color: var(--spma-primary-700); }
+}
