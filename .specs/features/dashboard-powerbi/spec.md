@@ -157,12 +157,12 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
 | PBI-01 | P1: Dashboard do escopo | Tasks | Pending |
-| PBI-02 | P1: Dashboard do escopo | Tasks | Pending |
+| PBI-02 | P1: Dashboard do escopo | Execute | Implementing |
 | PBI-03 | P1: Dashboard do escopo | Execute | Implementing |
 | PBI-04 | P1: Dashboard do escopo | Execute | Implementing |
-| PBI-05 | P1: Dashboard do escopo | Tasks | Pending |
+| PBI-05 | P1: Dashboard do escopo | Execute | Implementing |
 | PBI-06 | P1: Dashboard do escopo | Execute | Implementing |
-| PBI-07 | P1: Só quem pode | Tasks | Pending |
+| PBI-07 | P1: Só quem pode | Execute | Implementing |
 | PBI-08 | P1: Só quem pode | Execute | Implementing |
 | PBI-09 | P1: Só quem pode | Execute | Implementing |
 | PBI-10 | P1: Só quem pode | Tasks | Pending |
@@ -177,7 +177,7 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 | PBI-19 | P1: Falhas externas | Execute | Implementing |
 | PBI-20 | P1: Falhas externas | Execute | Implementing |
 | PBI-21 | P1: Segurança transversal | Tasks | Pending |
-| PBI-22 | P1: Segurança transversal | Tasks | Pending |
+| PBI-22 | P1: Segurança transversal | Execute | Implementing |
 | PBI-23 | P1: Segurança transversal | Execute | Implementing |
 
 **Coverage:** 23 total, 23 mapped to tasks, 0 unmapped.

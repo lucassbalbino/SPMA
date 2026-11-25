@@ -190,19 +190,20 @@ T9 → T10 → T11
 
 **Done when**:
 
-- [ ] Sem sessão → 401 `{ erro: "Não autenticado" }`, serviço não chamado
-- [ ] AL → 403 `{ erro: "Acesso negado" }`; VO sem vínculo → 403; serviço não chamado
-- [ ] 21º pedido da mesma sessão em 60 s → 429 com a mensagem da spec, serviço não chamado
-- [ ] Config ausente ou inválida → 503 `{ erro: "Dashboard não configurado" }`, log com o nome da variável e sem valor
-- [ ] `ErroMicrosoft` → 502 `{ erro: "Dashboard temporariamente indisponível" }`, sem detalhe no corpo; log com id de correlação e status
-- [ ] 200 para cada um de AM, GT, VT, GO, VO: corpo com exatamente as 4 chaves (asserção das chaves e de cada valor, L-030), `Cache-Control: no-store`, `username` enviado = documento (AM/GT/VT/GO) ou CNPJ do GO (VO), relatório do painel do perfil
-- [ ] Pedido com `?documento=…&reportId=…&username=…` produz exatamente a mesma chamada ao serviço que o pedido sem query
-- [ ] Log de sucesso tem perfil e painel; nenhuma chamada de `console.*` recebe documento, token ou segredo
-- [ ] Gate quick passa
+- [x] Sem sessão → 401 `{ erro: "Não autenticado" }`, serviço não chamado
+- [x] AL → 403 `{ erro: "Acesso negado" }`; VO sem vínculo → 403; serviço não chamado
+- [x] 21º pedido da mesma sessão em 60 s → 429 com a mensagem da spec, serviço não chamado
+- [x] Config ausente ou inválida → 503 `{ erro: "Dashboard não configurado" }`, log com o nome da variável e sem valor
+- [x] `ErroMicrosoft` → 502 `{ erro: "Dashboard temporariamente indisponível" }`, sem detalhe no corpo; log com id de correlação e status
+- [x] 200 para cada um de AM, GT, VT, GO, VO: corpo com exatamente as 4 chaves (asserção das chaves e de cada valor, L-030), `Cache-Control: no-store`, `username` enviado = documento (AM/GT/VT/GO) ou CNPJ do GO (VO), relatório do painel do perfil
+- [x] Pedido com `?documento=…&reportId=…&username=…` produz exatamente a mesma chamada ao serviço que o pedido sem query
+- [x] Log de sucesso tem perfil e painel; nenhuma chamada de `console.*` recebe documento, token ou segredo
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(powerbi): add the embed token endpoint`
+**Status**: ✅ Done. route.test.ts: 17 testes; unit 1040 → 1057.
 
 ---
 
