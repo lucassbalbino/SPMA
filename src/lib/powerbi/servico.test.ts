@@ -233,6 +233,7 @@ describe("nova tentativa em 429/503 (PBI-17)", () => {
     ["30", 5000],
     [undefined, 1000],
     ["abc", 1000],
+    ["-1", 1000],
   ])("Retry-After %s → espera %i ms e tenta uma vez mais", async (retryAfter, esperaMs) => {
     const ms = microsoft({
       gerar: (n, corpo) =>
@@ -335,6 +336,15 @@ describe("falhas da Microsoft (PBI-16, PBI-23)", () => {
     const servico = criarServicoPowerBi(CONFIG, { http: ms.http });
 
     expect(await falha(servico.gerarEmbed(pedido("52998224725")))).toBeInstanceOf(ErroMicrosoft);
+  });
+
+  // Sem `expires_in` o cache nunca valeria e todo pedido iria ao Entra.
+  it("Entra sem expires_in → ErroMicrosoft, sem chegar ao GenerateToken", async () => {
+    const ms = microsoft({ entra: () => ({ status: 200, corpo: { access_token: "aad-1" } }) });
+    const servico = criarServicoPowerBi(CONFIG, { http: ms.http });
+
+    expect(await falha(servico.gerarEmbed(pedido("52998224725")))).toBeInstanceOf(ErroMicrosoft);
+    expect(ms.chamadas.gerar).toBe(0);
   });
 
   it("nenhum erro carrega o segredo nem o token do Entra", async () => {

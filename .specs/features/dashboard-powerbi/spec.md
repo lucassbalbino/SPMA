@@ -44,7 +44,7 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 | Sessão e renovação | A renovação do token (~1 vez por hora) passa pela sessão normal e a estende. | Resposta do usuário: "sim, mantém viva". | y |
 | Homologação real | Feita pelo usuário com as credenciais reais no `.env` local (segredo já trocado), seguindo o roteiro da T11. | Resposta do usuário. | y |
 | Nomes das variáveis | Os do manual do cliente (`SPMA_TENANT_ID`, `SPMA_CLIENT_ID`, `SPMA_CLIENT_SECRET`, `SPMA_DATASET_ID`, `SPMA_REPORT_ID`, `SPMA_EMBED_URL`) mais o par opcional `SPMA_REPORT_ID_<PAINEL>` / `SPMA_EMBED_URL_<PAINEL>`. `SPMA_WORKSPACE_ID` não é lido. | Continuidade com o manual; o `GenerateToken` usado não precisa do workspace. | n |
-| Limite de pedidos | 20 pedidos por sessão a cada 60 s, em memória. | Uso normal é 1 abertura + ~1 renovação/hora; produção roda um processo só (AD-047). | n |
+| Limite de pedidos | 20 pedidos por sessão numa janela fixa de 60 s, em memória. Na virada de duas janelas passam até 40 pedidos em poucos segundos. | Uso normal é 1 abertura + ~1 renovação/hora; produção roda um processo só (AD-047). Limite de abuso, não de cota. Lacuna de precisão apontada pelo Verifier (iteração 1). | n |
 
 **Open questions:** none - all resolved or logged above.
 
@@ -118,7 +118,7 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 3. WHEN o Entra ID ou o `GenerateToken` responde 429 ou 503 THEN the system SHALL repetir a chamada uma única vez, depois de `Retry-After` segundos (máximo 5 s; 1 s quando o cabeçalho falta ou é inválido). (PBI-17)
 4. The system SHALL reaproveitar o token do Entra até 120 s antes da expiração e, enquanto ele é obtido, fazer uma única chamada ao Entra para qualquer número de pedidos simultâneos. (PBI-18)
 5. The system SHALL fazer uma chamada ao `GenerateToken` por pedido ao endpoint e SHALL NOT reaproveitar um embed token entre pedidos. (PBI-19)
-6. IF uma mesma sessão faz mais de 20 pedidos ao endpoint dentro de 60 s THEN the system SHALL responder 429 `{ "erro": "Muitas requisições. Tente novamente em instantes." }` sem chamar a Microsoft. (PBI-20)
+6. IF uma mesma sessão faz mais de 20 pedidos ao endpoint dentro de uma janela fixa de 60 s, contada a partir do primeiro pedido da janela, THEN the system SHALL responder 429 `{ "erro": "Muitas requisições. Tente novamente em instantes." }` sem chamar a Microsoft. (PBI-20)
 
 **Independent Test**: Testes unitários do serviço e da rota com Microsoft simulada.
 

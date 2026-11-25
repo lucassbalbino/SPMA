@@ -356,6 +356,20 @@ T9 → T10 → T11
 
 ---
 
+## Correções do Verifier
+
+**Iteração 1 (2026-11-25): FAIL só por mutantes sobreviventes, código correto.** 29 mutações, 25 mortas. As 4 sobreviventes eram lacunas de teste, fechadas sem tocar em código de produção:
+
+- M12 (PBI-16): Entra com `access_token` e sem `expires_in` → `servico.test.ts`, "Entra sem expires_in".
+- M23 (PBI-12): fronteira de 30 000 ms → `painel-cliente.test.ts`, "exatamente 30 000 ms".
+- M24 (PBI-13): `fetch` que rejeita com AbortError depois do `parar()` → `painel-cliente.test.ts`, "fetch abortado pelo parar".
+- M29 (PBI-17): `Retry-After` negativo → caso `["-1", 1000]` no `it.each`.
+- Lacuna de precisão do PBI-20: a spec passou a dizer "janela fixa de 60 s".
+
+Unit 1087 → 1091.
+
+---
+
 ## Phase Execution Map
 
 ```

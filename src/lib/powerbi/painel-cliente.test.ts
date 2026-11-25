@@ -147,6 +147,15 @@ describe("falhas (PBI-12)", () => {
     expect(c.status).toEqual([MENSAGEM_INDISPONIVEL]);
   });
 
+  it("ingresso com exatamente 30 000 ms de validade ainda é montado (fronteira)", async () => {
+    const c = cenario([ingresso("token-1")], Date.parse(EXPIRACAO) - 30_000);
+    await tarefas();
+
+    expect(c.sdk.embed).toHaveBeenCalledTimes(1);
+    expect(c.sdk.reset).not.toHaveBeenCalled();
+    expect(c.status).toEqual([""]);
+  });
+
   it("sessão vencida na renovação (401) → remove o relatório já montado e avisa (edge case)", async () => {
     const c = cenario([ingresso("token-1"), new Response("{}", { status: 401 })]);
     await tarefas();
@@ -169,6 +178,33 @@ describe("parar (PBI-13)", () => {
     expect(c.sdk.reset).toHaveBeenCalledWith(CONTAINER);
     expect(c.cancelados).toEqual([c.agendados[0].handle]);
     expect(c.inits[0].signal?.aborted).toBe(true);
+  });
+
+  // O caminho real: o `fetch` do navegador rejeita com AbortError quando o
+  // sinal é abortado. Desmontar não pode virar "indisponível" nem um segundo reset.
+  it("fetch abortado pelo parar não avisa nem remove de novo", async () => {
+    const status: string[] = [];
+    const sdk = { embed: vi.fn(), reset: vi.fn() };
+    const parar = iniciarPainelPowerBi(CONTAINER, (t) => void status.push(t), {
+      sdk,
+      models: { TokenType: { Embed: 7 }, Permissions: { Read: 9 } },
+      buscar: ((_url: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, rejeitar) => {
+          init?.signal?.addEventListener("abort", () =>
+            rejeitar(new DOMException("The operation was aborted.", "AbortError")),
+          );
+        })) as typeof fetch,
+      agendar: () => 1,
+      cancelar: () => {},
+      agora: () => AGORA_1H_ANTES,
+    });
+
+    parar();
+    await tarefas();
+
+    expect(status).toEqual([]);
+    expect(sdk.reset).toHaveBeenCalledTimes(1);
+    expect(sdk.embed).not.toHaveBeenCalled();
   });
 
   it("resposta que chega depois de parar não monta o relatório nem muda o status", async () => {
