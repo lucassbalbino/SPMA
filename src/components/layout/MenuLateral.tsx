@@ -37,10 +37,10 @@ export function MenuLateral({
       data-testid="casca-menu"
       data-recolhido={recolhido}
       aria-label="Menu do sistema"
-      className="group/menu flex w-full shrink-0 flex-col border-b border-spma-divider bg-spma-surface lg:sticky lg:top-0 lg:h-screen lg:w-(--spma-sidebar-width) lg:border-r lg:border-b-0 lg:data-[recolhido=true]:w-20"
+      className="group/menu flex w-full shrink-0 flex-col border-b border-spma-divider bg-spma-surface lg:h-full lg:min-h-0 lg:w-(--spma-sidebar-width) lg:border-r lg:border-b-0 lg:data-[recolhido=true]:w-20"
     >
       {/* Marca */}
-      <div className="border-b border-spma-divider bg-spma-background px-4 py-4 lg:px-[30px] lg:pt-6 lg:pb-4 lg:group-data-[recolhido=true]/menu:px-0 lg:group-data-[recolhido=true]/menu:text-center">
+      <div className="shrink-0 border-b border-spma-divider bg-spma-background px-4 py-4 lg:px-[30px] lg:pt-[clamp(12px,2.8svh,24px)] lg:pb-[clamp(10px,1.9svh,16px)] lg:group-data-[recolhido=true]/menu:px-0 lg:group-data-[recolhido=true]/menu:text-center">
         {/* Recolhido, o menu tem 80px e a marca em brand-md (~90px) vazaria
             sobre o conteúdo: cai para 20px. */}
         <span className="block text-spma-brand-md text-spma-primary-700 lg:group-data-[recolhido=true]/menu:text-xl">
@@ -53,7 +53,7 @@ export function MenuLateral({
       </div>
 
       {/* Perfil */}
-      <div className="mx-3.5 hidden border-b border-spma-divider py-4 lg:block lg:group-data-[recolhido=true]/menu:mx-2">
+      <div className="mx-3.5 hidden shrink-0 border-b border-spma-divider py-[clamp(8px,1.9svh,16px)] lg:block lg:group-data-[recolhido=true]/menu:mx-2">
         <MenuDaConta
           nome={usuario.nome}
           perfil={perfil}
@@ -79,7 +79,9 @@ export function MenuLateral({
       </div>
 
       {/* Navegação */}
-      <div className="px-3 py-3 lg:flex-1 lg:overflow-y-auto">
+      {/* Numa janela muito baixa, com o menu mais longo (AM), a lista rola
+          sozinha e a marca, o Perfil e o Recolher ficam no lugar. */}
+      <div className="px-3 py-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:py-[clamp(6px,1.4svh,12px)]">
         <NavegacaoPerfil itens={itens} />
       </div>
 
@@ -88,7 +90,7 @@ export function MenuLateral({
         type="button"
         onClick={() => setRecolhido((valor) => !valor)}
         aria-expanded={!recolhido}
-        className="mx-3.5 hidden items-center gap-3.5 border-t border-spma-divider px-2.5 py-5 text-spma-body-md text-spma-ink-800 transition-colors hover:text-spma-primary-700 focus-visible:shadow-spma-focus focus-visible:outline-none lg:flex lg:group-data-[recolhido=true]/menu:mx-2 lg:group-data-[recolhido=true]/menu:justify-center lg:group-data-[recolhido=true]/menu:px-0"
+        className="mx-3.5 hidden shrink-0 items-center gap-3.5 border-t border-spma-divider px-2.5 py-[clamp(10px,2.3svh,20px)] text-spma-body-md text-spma-ink-800 transition-colors hover:text-spma-primary-700 focus-visible:shadow-spma-focus focus-visible:outline-none lg:flex lg:group-data-[recolhido=true]/menu:mx-2 lg:group-data-[recolhido=true]/menu:justify-center lg:group-data-[recolhido=true]/menu:px-0"
       >
         <IconeRecolher aria-hidden="true" strokeWidth={1.75} className="size-[18px] shrink-0" />
         <span className="lg:group-data-[recolhido=true]/menu:sr-only">

@@ -208,9 +208,11 @@ test.describe("casca comum", () => {
       );
     }
 
-    // py-8 = 2rem = 32px. Valor fixo, nao "diferente de zero": assim uma
-    // troca de py-8 por py-2 tambem derruba o teste.
-    expect(espacamentos).toEqual(rotas.map(() => "32px"));
+    // O espaçamento acompanha a altura da janela (clamp(16px, 3.4svh, 32px),
+    // "Caber na tela" em docs/design-system.md): na janela de 1280x720 do
+    // Desktop Chrome sai 3.4% de 720 = 24.48px. Valor fixo, nao "diferente de
+    // zero": assim uma troca do clamp por py-2 tambem derruba o teste.
+    expect(espacamentos).toEqual(rotas.map(() => "24.48px"));
   });
 
   test("UI-07: a 375px o cabeçalho continua visível e não há scroll horizontal", async ({
@@ -241,6 +243,26 @@ test.describe("casca comum", () => {
       const caixa = await link.boundingBox();
       expect(caixa!.x + caixa!.width).toBeLessThanOrEqual(larguraViewport);
     }
+  });
+
+  test("caber na tela: numa janela de notebook (1366x768, ~641px úteis) login e painel não rolam", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1366, height: 641 });
+
+    // Rola o documento ou o próprio container: os dois contam como rolagem.
+    const sobra = (seletor: string) =>
+      page.locator(seletor).evaluate((elemento) => ({
+        documento: document.documentElement.scrollHeight - innerHeight,
+        container: elemento.scrollHeight - elemento.clientHeight,
+      }));
+
+    await page.goto("/login");
+    expect(await sobra("main")).toEqual({ documento: 0, container: 0 });
+
+    await logar(page, CPF_CASCA, SENHA);
+    await page.goto("/painel");
+    expect(await sobra('[data-testid="casca-conteudo"]')).toEqual({ documento: 0, container: 0 });
   });
 
   test("nome longo trunca com reticencias, sem quebrar o cabecalho", async ({ page }) => {

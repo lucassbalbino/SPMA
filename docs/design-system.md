@@ -65,9 +65,21 @@ As duas telas seguem as prints do artefato (grupo **Telas**: `spma-login.png` e 
 | Menu: itens de exemplo (Usuários, Cursos e Projetos…) | Os itens reais de `navegacao.ts`, com os nomes aprovados na revisão de usabilidade |
 | Rodapé: "Versão 1.0.0" | A versão do `package.json` |
 
+## Caber na tela
+
+A partir de `lg` (1024px) **a página nunca rola**: o login e a casca ocupam exatamente a janela (`h-dvh`). As prints foram desenhadas para uma janela de ~950px úteis (1920x1080). Num notebook 1366x768 sobram ~640px depois da barra do navegador, então as medidas verticais encolhem com a altura da janela:
+
+- Espaços, margens e alguns tamanhos usam `clamp(piso, N svh, valor da print)`. Numa janela alta o resultado é o valor da print; numa baixa, encolhe até o piso.
+- As alturas de cabeçalho, campo, botão e item do menu ficam em `globals.css` (`--altura-cabecalho`, `--altura-campo`, `--altura-botao`, `--altura-item-menu`). O teto de cada uma é o token do design system.
+- A colagem do login é medida em % e encolhe por inteiro para nunca cobrir o texto. A faixa de parceiros fica numa linha só; entre 1024 e 1280px os rótulos sobem para cima dos logos.
+- Na casca, menu, cabeçalho e rodapé ficam fixos, e só o `casca-conteudo` rola. Isso só acontece quando a tela é mais longa que a janela, como nas listas e nos formulários longos, cujo tamanho depende dos dados.
+- Abaixo de `lg` (celular e tablet em pé) a página rola normalmente.
+
+Conferido sem rolagem no login e no painel em 1024x640, 1280x585, 1366x641, 1440x790, 1536x730 e 1920x950. O e2e `caber na tela` (`e2e/identidade-visual.spec.ts`) confere 1366x641.
+
 ## Casca e painel
 
-- `src/components/layout/CascaProtegida.tsx` monta a estrutura da print do painel: o menu lateral (`MenuLateral`) à esquerda; o cabeçalho de 74px com os selos dos parceiros, a UnB e o usuário com a seta; o `<main>` (máximo de 60rem, centralizado na coluna, `py-8`) em fundo branco; e o rodapé com créditos e versão.
+- `src/components/layout/CascaProtegida.tsx` monta a estrutura da print do painel: o menu lateral (`MenuLateral`) à esquerda; o cabeçalho de 74px com os selos dos parceiros, a UnB e o usuário com a seta; o `<main>` (máximo de 60rem, centralizado na coluna, espaço vertical de 16 a 32px conforme a altura da janela, dentro do `casca-conteudo`, que é quem rola) em fundo branco; e o rodapé com créditos e versão.
 - `MenuLateral` é o `casca-menu` dos testes: a marca com o nome do sistema, o bloco "Perfil" com a seta, a navegação e o "Recolher menu" (seta para a esquerda). O bloco Perfil e o Recolher só aparecem a partir de `lg`. Abaixo de `lg` o menu vira um bloco no topo e os links quebram linha, sem JavaScript (UI-07).
 - O cabeçalho é o `casca-cabecalho` dos testes: nome e perfil do usuário. A seta do usuário (e a do bloco Perfil) abre o `MenuDaConta`, um `<details>` nativo com nome, perfil, sigla e o **Sair**. Abre sem JavaScript; o JS só fecha ao clicar fora ou com Esc.
 - Item ativo do menu: fundo `primary-50`, texto `primary-700` em negrito, ícone preenchido em `primary-600` e a barra de 3px na borda. A linha divisória entra antes de "Editar Perfil" (`separadorAntes` em `icones-navegacao.ts`).

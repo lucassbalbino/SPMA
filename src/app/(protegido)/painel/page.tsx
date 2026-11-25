@@ -28,11 +28,14 @@ export default async function PainelPage() {
   const hoje = DATA_POR_EXTENSO.format(new Date());
 
   return (
-    <div className="flex flex-col gap-8">
+    // Espaços verticais em `svh`: o painel cabe inteiro na janela, sem
+    // rolagem, de um notebook 1366x768 a um monitor 1920x1080, e numa janela
+    // alta fica igual à referência (docs/design-system.md, "Caber na tela").
+    <div className="flex flex-col gap-8 lg:gap-[clamp(14px,3.2svh,32px)]">
       {/* Boas-vindas */}
       <section
         aria-labelledby="painel-saudacao"
-        className="relative isolate overflow-hidden rounded-xl bg-spma-primary-700 px-6 py-8 sm:px-10 sm:py-10"
+        className="relative isolate overflow-hidden rounded-xl bg-spma-primary-700 px-6 py-8 sm:px-10 sm:py-10 lg:py-[clamp(16px,4svh,40px)]"
       >
         {/* Losangos: o recorte das fotos da tela de login, motivo da marca. */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 -z-10 hidden w-80 md:block">
@@ -43,7 +46,10 @@ export default async function PainelPage() {
         </div>
 
         <p className="text-spma-overline uppercase text-spma-primary-100">Painel geral · {hoje}</p>
-        <h1 id="painel-saudacao" className="mt-3 text-spma-heading-xl text-spma-ink-0">
+        <h1
+          id="painel-saudacao"
+          className="mt-3 text-spma-heading-xl text-spma-ink-0 lg:mt-[clamp(4px,1.2svh,12px)] lg:text-[clamp(24px,3.6svh,32px)] lg:leading-[1.25]"
+        >
           Olá, {usuario.nome}
         </h1>
         {/* RU-34 (doc 1): o perfil por extenso, não a sigla. */}
@@ -54,18 +60,21 @@ export default async function PainelPage() {
       </section>
 
       {/* Módulos do perfil */}
-      <section aria-labelledby="painel-apto" className="flex flex-col gap-4">
+      <section aria-labelledby="painel-apto" className="flex flex-col gap-4 lg:gap-[clamp(8px,1.8svh,16px)]">
         <h2 id="painel-apto" className="text-spma-heading-sm text-spma-ink-900" data-testid="painel-apto">
           Portanto, está apto a realizar:
         </h2>
-        <ul data-testid="painel-modulos" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul
+          data-testid="painel-modulos"
+          className="grid gap-4 sm:grid-cols-2 lg:gap-[clamp(10px,1.8svh,16px)] lg:max-xl:gap-2 xl:grid-cols-3"
+        >
           {modulos.map((modulo) => {
             const Icone = iconeDoModulo(modulo);
             const destino = destinoDoModulo(modulo);
 
             const conteudo = (
               <>
-                <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg bg-spma-primary-100 text-spma-primary-700 group-data-[sem-tela=true]/modulo:bg-spma-background group-data-[sem-tela=true]/modulo:text-spma-ink-500">
+                <span className="inline-flex size-11 shrink-0 items-center lg:size-[clamp(36px,6svh,44px)] justify-center rounded-lg bg-spma-primary-100 text-spma-primary-700 group-data-[sem-tela=true]/modulo:bg-spma-background group-data-[sem-tela=true]/modulo:text-spma-ink-500">
                   <Icone aria-hidden="true" strokeWidth={1.75} className="size-[22px]" />
                 </span>
                 <span className="flex-1 text-spma-label text-spma-ink-900 group-data-[sem-tela=true]/modulo:text-spma-ink-600">
@@ -86,7 +95,7 @@ export default async function PainelPage() {
                 {destino ? (
                   <Link
                     href={destino.href}
-                    className="group/modulo flex h-full items-center gap-4 rounded-lg border border-border bg-spma-surface p-5 transition-colors hover:border-spma-primary-600 hover:bg-spma-primary-50 focus-visible:shadow-spma-focus focus-visible:outline-none"
+                    className="group/modulo flex h-full items-center gap-4 rounded-lg border border-border bg-spma-surface p-5 transition-colors lg:py-[clamp(10px,2svh,20px)] lg:max-xl:py-2 hover:border-spma-primary-600 hover:bg-spma-primary-50 focus-visible:shadow-spma-focus focus-visible:outline-none"
                   >
                     {conteudo}
                   </Link>
@@ -96,7 +105,7 @@ export default async function PainelPage() {
                   <div
                     data-sem-tela="true"
                     title="Disponível em breve"
-                    className="group/modulo flex h-full items-center gap-4 rounded-lg border border-dashed border-spma-border bg-spma-surface p-5"
+                    className="group/modulo flex h-full items-center gap-4 rounded-lg border border-dashed border-spma-border bg-spma-surface p-5 lg:py-[clamp(10px,2svh,20px)] lg:max-xl:py-2"
                   >
                     {conteudo}
                   </div>
@@ -108,7 +117,7 @@ export default async function PainelPage() {
       </section>
 
       {/* Compromisso com a veracidade (identidade da tela de login). */}
-      <aside className="flex gap-4 rounded-lg bg-spma-primary-100 p-6 sm:gap-6">
+      <aside className="flex gap-4 rounded-lg bg-spma-primary-100 p-6 sm:gap-6 lg:py-[clamp(12px,2.4svh,24px)]">
         <ShieldCheck aria-hidden="true" strokeWidth={1.5} className="size-9 shrink-0 text-spma-primary-700" />
         <div>
           <p className="text-spma-label-sm text-spma-ink-900">Compromisso com a veracidade das informações</p>

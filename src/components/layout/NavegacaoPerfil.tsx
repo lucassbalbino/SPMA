@@ -2,7 +2,8 @@
 
 // Os links do perfil, com o item da rota atual marcado (UI-02, UI-03), no
 // estilo do menu lateral da tela de referência do design system SPMA
-// (docs/design-system.md): itens de 44px, ícone de 22px a 24px do texto,
+// (docs/design-system.md): itens de 44px (menos numa janela baixa), ícone de
+// 22px a 24px do texto,
 // item ativo com fundo `primary-50`, texto em negrito, ícone preenchido e a
 // barra de 3px na borda do menu, e a linha divisória antes do grupo da conta.
 //
@@ -30,7 +31,7 @@ export function NavegacaoPerfil({ itens }: { itens: ItemNavegacao[] }) {
     <nav
       aria-label="Navegação principal"
       data-testid="navegacao-perfil"
-      className="flex flex-wrap gap-1 lg:flex-col lg:flex-nowrap lg:gap-2"
+      className="flex flex-wrap gap-1 lg:flex-col lg:flex-nowrap lg:gap-[clamp(2px,0.9svh,8px)]"
     >
       {itens.map((item) => {
         const Icone = iconeDoHref(item.href);
@@ -50,7 +51,9 @@ export function NavegacaoPerfil({ itens }: { itens: ItemNavegacao[] }) {
               className={cn(
                 "relative flex h-9 items-center gap-2 rounded-md px-3 text-spma-body-md text-spma-ink-800 transition-colors",
                 "hover:bg-spma-primary-50 focus-visible:shadow-spma-focus focus-visible:outline-none",
-                "lg:h-11 lg:gap-6 lg:px-4 lg:text-[15px] lg:leading-5",
+                // 44px da referência numa janela alta; encolhe numa baixa
+                // (--altura-item-menu em globals.css) para o menu caber.
+                "lg:h-(--altura-item-menu) lg:shrink-0 lg:gap-6 lg:px-4 lg:text-[15px] lg:leading-5",
                 "lg:group-data-[recolhido=true]/menu:justify-center lg:group-data-[recolhido=true]/menu:px-0",
                 atual && [
                   "bg-spma-primary-50 font-bold text-spma-primary-700",

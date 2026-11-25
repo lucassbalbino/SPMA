@@ -46,13 +46,21 @@ export function CascaProtegida({
   const visivel = { nome: usuario.nome, tipo: usuario.tipo };
 
   return (
-    <div className="flex min-h-screen w-full flex-1 flex-col bg-spma-surface lg:flex-row">
+    // A partir de `lg` a casca ocupa exatamente a janela (h-dvh) e a página
+    // nunca rola: menu, cabeçalho e rodapé ficam no lugar, e só a área de
+    // conteúdo rola quando a tela é mais longa que a janela (um formulário de
+    // 56 perguntas não cabe em tela nenhuma). Abaixo de `lg` o menu vira um
+    // bloco no topo e a página rola normalmente.
+    //
+    // `lg:flex-none`: o <body> é flex em coluna sem altura definida, e ali o
+    // `flex-1` (base 0%) vira a altura do conteúdo e passa por cima do h-dvh.
+    <div className="flex min-h-dvh w-full flex-1 flex-col bg-spma-surface lg:h-dvh lg:flex-none lg:flex-row lg:overflow-hidden">
       <MenuLateral usuario={visivel} itens={navegacaoDoPerfil(visivel.tipo)} />
 
-      <div className="flex min-w-0 flex-1 flex-col bg-spma-surface">
+      <div className="flex min-w-0 flex-1 flex-col bg-spma-surface lg:min-h-0">
         <header
           data-testid="casca-cabecalho"
-          className="sticky top-0 z-20 flex h-(--spma-header-height) shrink-0 items-center justify-end gap-8 bg-spma-surface px-4 shadow-spma-header lg:px-8"
+          className="sticky top-0 z-20 flex h-(--altura-cabecalho) shrink-0 items-center justify-end gap-8 bg-spma-surface px-4 shadow-spma-header lg:px-8"
         >
           <div
             role="group"
@@ -107,9 +115,19 @@ export function CascaProtegida({
           </MenuDaConta>
         </header>
 
-        <main className="mx-auto w-full max-w-[60rem] flex-1 px-4 py-8 lg:px-8">{children}</main>
+        {/* A rolagem fica neste invólucro de largura total, não no <main>: a
+            barra encosta na borda da janela e o <main> segue centralizado,
+            com largura máxima (UI-06). */}
+        <div
+          data-testid="casca-conteudo"
+          className="flex flex-1 flex-col lg:min-h-0 lg:overflow-y-auto"
+        >
+          <main className="mx-auto w-full max-w-[60rem] flex-1 px-4 py-8 lg:px-8 lg:py-[clamp(16px,3.4svh,32px)]">
+            {children}
+          </main>
+        </div>
 
-        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-spma-divider bg-spma-surface px-4 py-6 text-spma-caption text-spma-ink-600 lg:px-8">
+        <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-spma-divider bg-spma-surface px-4 py-6 text-spma-caption lg:py-[clamp(10px,2svh,24px)] text-spma-ink-600 lg:px-8">
           <span>
             SPMA © {new Date().getFullYear()} - Secretaria Nacional de Políticas de Turismo /
             Ministério do Turismo

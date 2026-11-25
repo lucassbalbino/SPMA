@@ -74,7 +74,7 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
     <form onSubmit={handleSubmit} noValidate>
       <FieldGroup>
         <Field data-invalid={!!erro}>
-          <FieldLabel htmlFor="cdOfertante">GO</FieldLabel>
+          <FieldLabel htmlFor="cdOfertante">Gestor Ofertante</FieldLabel>
           <select
             id="cdOfertante"
             name="cdOfertante"
@@ -83,7 +83,7 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
             disabled={enviando || semGo}
             className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none md:text-sm dark:bg-input/30"
           >
-            <option value="">Selecione o GO</option>
+            <option value="">Selecione o Gestor Ofertante</option>
             {gos.map((go) => (
               <option key={go.documento} value={go.documento}>
                 {go.nome
@@ -94,7 +94,7 @@ export function NovaVerbaForm({ gos }: { gos: OpcaoGo[] }) {
           </select>
           {semGo && (
             <p className="text-sm text-muted-foreground">
-              Nenhum Ofertante cadastrado - cadastre um GO antes de criar um recurso.
+              Nenhum Ofertante cadastrado - cadastre um Gestor Ofertante antes de criar um recurso.
             </p>
           )}
         </Field>

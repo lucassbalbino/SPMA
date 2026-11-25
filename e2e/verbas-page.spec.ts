@@ -166,7 +166,7 @@ test("GV-03/IDV-03/GV-04/GV-05: AM envia o formulário incompleto e vê a mensag
   await criar.click();
   await expect(page.getByText("Ofertante é obrigatório")).toBeVisible();
 
-  await page.getByLabel("GO").selectOption(CNPJ_GO_C);
+  await page.getByLabel("Gestor Ofertante").selectOption(CNPJ_GO_C);
   await page.getByLabel("Nome do recurso").fill("   ");
   await criar.click();
   await expect(page.getByText("Nome do recurso é obrigatório")).toBeVisible();
@@ -189,12 +189,12 @@ test("GV-01/GV-02/GV-07/IDV-01/IDV-02: AM cria uma segunda verba para um GO que 
   await page.goto("/verbas");
 
   // GV-01 + IDV-01: os campos do formulário.
-  await expect(page.getByLabel("GO")).toBeVisible();
+  await expect(page.getByLabel("Gestor Ofertante")).toBeVisible();
   await expect(page.getByLabel("Nome do recurso")).toBeVisible();
   await expect(page.getByLabel("Valor do recurso")).toBeVisible();
   await expect(page.getByLabel("Data de liberação")).toBeVisible();
 
-  await page.getByLabel("GO").selectOption(CNPJ_GO_B);
+  await page.getByLabel("Gestor Ofertante").selectOption(CNPJ_GO_B);
   await page.getByLabel("Nome do recurso").fill("Repasse Maio");
   await page.getByLabel("Valor do recurso").fill("1500.75");
   await page.getByLabel("Data de liberação").fill("2026-05-01");
@@ -239,7 +239,7 @@ test("GV-09: o botão 'Criar recurso' fica desabilitado enquanto o envio está e
     await rota.continue();
   });
 
-  await page.getByLabel("GO").selectOption(CNPJ_GO_B);
+  await page.getByLabel("Gestor Ofertante").selectOption(CNPJ_GO_B);
   await page.getByLabel("Nome do recurso").fill("Verba GV-09");
   await page.getByLabel("Valor do recurso").fill("10");
 
@@ -264,7 +264,7 @@ test("GV-18/GV-19/GV-20/GV-22: GT edita valor e data na linha - abaixo do alocad
   await expect(linha.getByLabel("Valor do recurso")).toBeVisible();
   await expect(linha.getByLabel("Data de liberação")).toBeVisible();
   await expect(linha.locator("select")).toHaveCount(0);
-  await expect(linha.getByLabel("GO", { exact: true })).toHaveCount(0);
+  await expect(linha.getByLabel("Gestor Ofertante", { exact: true })).toHaveCount(0);
 
   // GV-19: 300 < 400 alocados - recusado, o valor no banco não muda.
   await linha.getByLabel("Valor do recurso").fill("300");

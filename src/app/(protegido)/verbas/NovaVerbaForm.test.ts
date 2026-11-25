@@ -17,7 +17,7 @@ describe("NovaVerbaForm sem GO cadastrado (GV-10)", () => {
 
   it("mostra o aviso de que não há Ofertante", () => {
     expect(html).toContain(
-      "Nenhum Ofertante cadastrado - cadastre um GO antes de criar um recurso.",
+      "Nenhum Ofertante cadastrado - cadastre um Gestor Ofertante antes de criar um recurso.",
     );
   });
 

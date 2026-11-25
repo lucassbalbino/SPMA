@@ -29,11 +29,12 @@ import {
 } from "@/lib/validation/mascara-documento";
 
 const CLASSE_CAIXA =
-  "flex h-(--spma-control-height) items-center gap-3 rounded-md border border-spma-border bg-spma-surface px-4 text-spma-ink-800 transition-shadow focus-within:border-spma-primary-600 focus-within:shadow-spma-focus has-disabled:opacity-60";
+  "flex h-(--altura-campo) items-center gap-3 rounded-md border border-spma-border bg-spma-surface px-4 text-spma-ink-800 transition-shadow focus-within:border-spma-primary-600 focus-within:shadow-spma-focus has-disabled:opacity-60";
 const CLASSE_CAIXA_INVALIDA = "border-destructive";
 const CLASSE_CAMPO =
   "min-w-0 flex-1 bg-transparent text-spma-body-lg text-spma-ink-900 outline-none placeholder:text-spma-ink-600 disabled:cursor-not-allowed";
 const CLASSE_ROTULO = "text-spma-label text-spma-ink-900";
+const CLASSE_GRUPO = "flex flex-col gap-3 lg:gap-[clamp(6px,1.2svh,12px)]";
 
 export function LoginForm() {
   const router = useRouter();
@@ -88,8 +89,11 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col">
-      <div className="flex flex-col gap-9">
-        <div className="flex flex-col gap-3">
+      {/* Espaços em `svh` e alturas de --altura-campo/--altura-botao
+          (globals.css): iguais à referência numa janela alta, menores numa
+          baixa, para o login caber sem rolagem. */}
+      <div className="flex flex-col gap-9 lg:gap-[clamp(12px,3svh,36px)]">
+        <div className={CLASSE_GRUPO}>
           <label htmlFor="cpf" className={CLASSE_ROTULO}>
             CPF ou CNPJ
           </label>
@@ -115,7 +119,7 @@ export function LoginForm() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className={CLASSE_GRUPO}>
           <label htmlFor="senha" className={CLASSE_ROTULO}>
             Senha
           </label>
@@ -151,7 +155,7 @@ export function LoginForm() {
       </div>
 
       {/* PASB-06: a senha em branco é o pedido de 1º acesso. */}
-      <p id="senha-dica" className="mt-6 text-spma-body-md text-spma-ink-600">
+      <p id="senha-dica" className="mt-6 text-spma-body-md text-spma-ink-600 lg:mt-[clamp(6px,2svh,24px)]">
         Primeiro acesso? Deixe a senha em branco.
       </p>
 
@@ -160,7 +164,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={enviando}
-        className="relative mt-9 flex h-(--spma-button-height-lg) w-full items-center justify-center rounded-md bg-spma-primary-700 text-spma-button text-spma-ink-0 transition-colors hover:bg-spma-primary-800 focus-visible:shadow-spma-focus focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-spma-divider disabled:text-spma-ink-500"
+        className="relative mt-9 flex h-(--altura-botao) w-full lg:mt-[clamp(10px,2.6svh,36px)] items-center justify-center rounded-md bg-spma-primary-700 text-spma-button text-spma-ink-0 transition-colors hover:bg-spma-primary-800 focus-visible:shadow-spma-focus focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-spma-divider disabled:text-spma-ink-500"
       >
         Entrar
         <ArrowRight

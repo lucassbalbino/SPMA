@@ -38,11 +38,20 @@ function SeloReservado({ children, className }: { children: React.ReactNode; cla
   );
 }
 
-/** Um losango da colagem: espaço reservado para a foto. */
+/** Grupo da faixa de parceiros: rótulo ao lado do logo, ou acima entre lg e xl. */
+const GRUPO_PARCEIRO =
+  "flex shrink-0 items-center gap-4 lg:max-xl:flex-col lg:max-xl:items-start lg:max-xl:gap-1.5";
+const DIVISOR_PARCEIRO = "hidden h-14 w-px shrink-0 bg-spma-divider sm:block lg:max-xl:h-11";
+
+/**
+ * Um losango da colagem: espaço reservado para a foto. Tamanho, posição e
+ * raio em % da colagem (198px, 18px e as posições sobre 560px na
+ * referência), para a composição encolher inteira junto com a janela.
+ */
 function Losango({ className }: { className: string }) {
   return (
     <span
-      className={`absolute flex size-[198px] rotate-45 items-center justify-center rounded-[18px] ${className}`}
+      className={`absolute flex size-[35.36%] rotate-45 items-center justify-center rounded-[9%] ${className}`}
     >
       <ImageIcon aria-hidden="true" strokeWidth={1.5} className="size-9 -rotate-45 text-spma-primary-300" />
     </span>
@@ -52,8 +61,13 @@ function Losango({ className }: { className: string }) {
 export default async function LoginPage() {
   await connection();
 
+  // A partir de `lg` a tela ocupa exatamente a janela (h-dvh), sem rolagem: as
+  // medidas verticais são `clamp(piso, N svh, valor da referência)`, então
+  // numa janela de ~950px úteis (1920x1080) tudo fica como na print e numa
+  // de ~640px (notebook 1366x768) encolhe até caber (docs/design-system.md,
+  // "Caber na tela"). No celular a tela rola normalmente.
   return (
-    <div className="relative isolate flex min-h-screen flex-col overflow-hidden bg-spma-background lg:grid lg:grid-cols-[minmax(0,53fr)_minmax(0,47fr)] lg:grid-rows-[1fr_auto]">
+    <div className="relative isolate flex min-h-dvh flex-col overflow-hidden bg-spma-background lg:grid lg:h-dvh lg:min-h-0 lg:grid-cols-[minmax(0,53fr)_minmax(0,47fr)] lg:grid-rows-[minmax(0,1fr)_auto]">
       {/* Círculo decorativo atrás do topo do cartão. */}
       <span
         aria-hidden="true"
@@ -61,48 +75,68 @@ export default async function LoginPage() {
       />
 
       {/* Marca e apresentação */}
-      <section className="relative px-6 pt-10 pb-8 sm:px-10 lg:col-start-1 lg:row-start-1 lg:min-h-[880px] lg:px-[60px] lg:pt-[70px] lg:pb-0">
-        <p className="text-[56px] leading-none font-bold tracking-[-1px] text-spma-primary-700 sm:text-spma-brand-xl">
+      <section className="relative px-6 pt-10 pb-8 sm:px-10 lg:col-start-1 lg:row-start-1 lg:min-h-0 lg:px-[60px] lg:pt-[clamp(20px,6.5svh,70px)] lg:pb-0">
+        <p className="text-[56px] leading-none font-bold tracking-[-1px] text-spma-primary-700 sm:text-spma-brand-xl lg:text-[clamp(44px,7.6svh,72px)]">
           SPMA
         </p>
         {/* Quebras da referência a partir de lg; abaixo disso o texto corre. */}
-        <p className="mt-4 max-w-[640px] text-spma-heading-md text-spma-ink-900 sm:text-spma-heading-xl">
+        <p className="mt-4 max-w-[640px] text-spma-heading-md text-spma-ink-900 sm:text-spma-heading-xl lg:mt-[clamp(8px,1.7svh,16px)] lg:text-[clamp(21px,3.4svh,32px)] lg:leading-[1.25]">
           Sistema Nacional de Planejamento, <br className="max-lg:hidden" />
           Monitoramento e Avaliação <br className="max-lg:hidden" />
           da Qualificação Profissional no Turismo
         </p>
-        <p className="mt-9 text-[18px] leading-6 text-spma-ink-600">De acordo com a</p>
-        <p className="mt-1 max-w-[400px] font-heading text-[22px] leading-[29px] font-semibold text-spma-primary-700">
+        <p className="mt-9 text-[18px] leading-6 text-spma-ink-600 lg:mt-[clamp(12px,3.8svh,36px)] lg:text-[clamp(15px,1.9svh,18px)] lg:leading-[1.35]">
+          De acordo com a
+        </p>
+        <p className="mt-1 max-w-[400px] font-heading text-[22px] leading-[29px] font-semibold text-spma-primary-700 lg:text-[clamp(17px,2.3svh,22px)] lg:leading-[1.3]">
           Política Nacional de Qualificação no Turismo (PNQT)
         </p>
-        <span aria-hidden="true" className="mt-6 block h-[3px] w-[70px] rounded-full bg-spma-primary-700" />
-        <p className="mt-8 max-w-[270px] text-spma-body-md text-spma-ink-900">
+        <span
+          aria-hidden="true"
+          className="mt-6 block h-[3px] w-[70px] rounded-full bg-spma-primary-700 lg:mt-[clamp(10px,2.5svh,24px)]"
+        />
+        <p className="mt-8 max-w-[270px] text-spma-body-md text-spma-ink-900 lg:mt-[clamp(12px,3.4svh,32px)]">
           Uma plataforma integrada para planejar, monitorar e avaliar ações de qualificação
           profissional no turismo em todo o Brasil.
         </p>
 
         {/* Pontilhado decorativo à esquerda da colagem. */}
-        <span aria-hidden="true" className="spma-pontilhado absolute top-[600px] left-0 hidden h-40 w-[136px] lg:block" />
+        <span
+          aria-hidden="true"
+          className="spma-pontilhado absolute top-[72%] left-0 hidden h-[clamp(96px,17svh,160px)] w-[136px] lg:block"
+        />
 
-        {/* Colagem de fotos em losango (espaço reservado). */}
-        <div aria-hidden="true" className="absolute right-0 bottom-0 hidden h-[560px] w-[560px] overflow-hidden lg:block">
-          <Losango className="top-[51px] left-[191px] bg-spma-primary-100" />
-          <Losango className="top-[201px] left-[49px] bg-spma-primary-50" />
-          <Losango className="top-[206px] left-[337px] bg-spma-primary-50" />
-          <Losango className="top-[341px] left-[199px] bg-spma-primary-100" />
+        {/* Colagem de fotos em losango (espaço reservado): 560px na
+            referência. Numa janela baixa ou estreita ela encolhe para nunca
+            cobrir o texto, ficando com o maior destes dois espaços:
+            - ao lado da PNQT, abaixo do título: até 57svh de altura e a
+              largura da coluna (53vw) menos os 480px do texto da PNQT;
+            - abaixo do traço: até 40svh.
+            E nunca passa da largura que sobra ao lado da descrição (350px). */}
+        <div
+          aria-hidden="true"
+          className="absolute right-0 bottom-0 -z-10 hidden size-[min(560px,53vw_-_350px,max(min(57svh,53vw_-_480px),40svh))] overflow-hidden lg:block"
+        >
+          <Losango className="top-[9.1%] left-[34.1%] bg-spma-primary-100" />
+          <Losango className="top-[35.9%] left-[8.75%] bg-spma-primary-50" />
+          <Losango className="top-[36.8%] left-[60.2%] bg-spma-primary-50" />
+          <Losango className="top-[60.9%] left-[35.5%] bg-spma-primary-100" />
         </div>
       </section>
 
-      {/* Acesso */}
-      <main className="flex flex-col items-center px-4 pb-10 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:items-start lg:pt-[55px] lg:pr-14 lg:pb-8">
-        <Card className="w-full max-w-[670px] gap-0 border border-spma-divider py-0 shadow-spma-card ring-0">
-          <CardContent className="px-6 py-10 sm:px-14 sm:pt-[84px] sm:pb-11">
-            <div className="mb-12 flex items-center gap-5">
-              <span className="inline-flex size-[68px] shrink-0 items-center justify-center rounded-full border-2 border-spma-primary-700 text-spma-primary-700">
-                <User aria-hidden="true" strokeWidth={1.5} className="size-[38px]" />
+      {/* Acesso. `overflow-y-auto` só como rede: numa janela abaixo de ~600px
+          úteis, rola o cartão, não a página. */}
+      <main className="flex flex-col items-center px-4 pb-10 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:min-h-0 lg:items-start lg:overflow-y-auto lg:pt-[clamp(12px,3.6svh,55px)] lg:max-xl:pt-4 lg:pr-[clamp(16px,3.6vw,56px)] lg:pb-[clamp(10px,2.4svh,32px)] lg:max-xl:pb-2">
+        <Card className="w-full max-w-[670px] shrink-0 gap-0 border border-spma-divider py-0 shadow-spma-card ring-0">
+          <CardContent className="px-6 py-10 sm:px-14 sm:pt-[84px] sm:pb-11 lg:px-[clamp(24px,3.6vw,56px)] lg:pt-[clamp(18px,5.6svh,84px)] lg:pb-[clamp(16px,3.6svh,44px)]">
+            <div className="mb-12 flex items-center gap-5 lg:mb-[clamp(12px,3.2svh,48px)]">
+              <span className="inline-flex size-[68px] shrink-0 items-center justify-center rounded-full border-2 border-spma-primary-700 text-spma-primary-700 lg:size-[clamp(48px,7svh,68px)]">
+                <User aria-hidden="true" strokeWidth={1.5} className="size-[38px] lg:size-[clamp(26px,3.9svh,38px)]" />
               </span>
               <div>
-                <h1 className="text-spma-heading-lg text-spma-ink-900">Acesso ao sistema</h1>
+                <h1 className="text-spma-heading-lg text-spma-ink-900 lg:text-[clamp(21px,3svh,26px)] lg:leading-[1.25]">
+                  Acesso ao sistema
+                </h1>
                 <p className="mt-1 text-[15px] leading-[22px] text-spma-ink-600">
                   Informe suas credenciais para acessar o SPMA
                 </p>
@@ -111,7 +145,7 @@ export default async function LoginPage() {
 
             <LoginForm />
 
-            <aside className="mt-10 flex gap-6 rounded-lg bg-spma-primary-100 p-6">
+            <aside className="mt-10 flex gap-6 rounded-lg bg-spma-primary-100 p-6 lg:mt-[clamp(10px,2.6svh,40px)] lg:gap-[clamp(12px,1.6vw,24px)] lg:px-[clamp(14px,1.6vw,24px)] lg:py-[clamp(10px,2.2svh,24px)]">
               <ShieldCheck aria-hidden="true" strokeWidth={1.5} className="size-9 shrink-0 text-spma-primary-700" />
               <div>
                 <p className="text-[15px] leading-5 font-bold text-spma-ink-900">
@@ -127,7 +161,7 @@ export default async function LoginPage() {
         </Card>
 
         {/* Links legais: as páginas ainda não existem, então são texto. */}
-        <div className="mt-10 flex w-full max-w-[670px] flex-wrap items-center justify-around gap-4 text-spma-body-md text-spma-ink-600">
+        <div className="mt-10 flex w-full max-w-[670px] shrink-0 flex-wrap items-center justify-around gap-4 text-spma-body-md text-spma-ink-600 lg:mt-[clamp(8px,2.6svh,40px)]">
           <span>Política de Privacidade</span>
           <span aria-hidden="true" className="h-5 w-px bg-spma-border max-sm:hidden" />
           <span>Termos de Uso</span>
@@ -140,8 +174,11 @@ export default async function LoginPage() {
       </main>
 
       {/* Parceiros */}
-      <footer className="order-last flex flex-wrap items-center gap-x-6 gap-y-4 bg-spma-surface px-6 py-8 sm:px-[52px] lg:order-none lg:col-start-1 lg:row-start-2 lg:h-36 lg:flex-nowrap lg:py-0">
-        <div className="flex items-center gap-4">
+      {/* Uma linha só. A partir de xl os espaços e o selo do Apoio encolhem
+          com a largura; entre lg e xl a coluna é estreita demais e os rótulos
+          sobem para cima dos logos, como no "Desenvolvido por". */}
+      <footer className="order-last flex flex-wrap items-center gap-x-6 gap-y-4 bg-spma-surface px-6 py-8 sm:px-[52px] lg:order-none lg:col-start-1 lg:row-start-2 lg:h-[clamp(84px,14svh,144px)] lg:flex-nowrap lg:gap-x-[clamp(12px,1.2vw,24px)] lg:px-[clamp(20px,2.6vw,52px)] lg:py-0">
+        <div className={GRUPO_PARCEIRO}>
           <span className="text-spma-caption text-spma-ink-900">Realização:</span>
           <span className="flex items-center gap-2">
             {/* <img> simples: o next/image grava style= e a CSP bloqueia. */}
@@ -150,16 +187,16 @@ export default async function LoginPage() {
             <span className="font-heading text-[24px] leading-none font-bold text-spma-unb-blue">UnB</span>
           </span>
         </div>
-        <span aria-hidden="true" className="hidden h-14 w-px bg-spma-divider sm:block" />
-        <div className="flex items-center gap-4">
+        <span aria-hidden="true" className={DIVISOR_PARCEIRO} />
+        <div className={GRUPO_PARCEIRO}>
           <span className="text-spma-caption text-spma-ink-900">Apoio:</span>
-          <SeloReservado className="h-14 w-[250px]">
+          <SeloReservado className="h-14 w-[250px] lg:w-[clamp(170px,14vw,250px)] lg:max-2xl:tracking-[0.5px] lg:max-xl:h-11 lg:max-xl:px-1.5">
             Ministério do Turismo
             <br />+ Logo Governo Federal
           </SeloReservado>
         </div>
-        <span aria-hidden="true" className="hidden h-14 w-px bg-spma-divider sm:block" />
-        <div className="flex flex-col gap-1.5">
+        <span aria-hidden="true" className={DIVISOR_PARCEIRO} />
+        <div className="flex shrink-0 flex-col gap-1.5">
           <span className="text-spma-caption text-spma-ink-900">Desenvolvido por:</span>
           <SeloReservado className="h-9 w-[112px]">
             Nome da
