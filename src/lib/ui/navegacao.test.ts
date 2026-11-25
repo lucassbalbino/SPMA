@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { TipoUsuario } from "../../generated/prisma/enums";
+import { painelDoPerfil } from "../powerbi/catalogo";
 import {
   hrefAtivo,
   modulosDoPerfil,
@@ -14,6 +17,8 @@ import {
 // depois de "Gestão de usuários" - a ordem dos módulos do painel.
 // RU-47 (revisão de usabilidade): "/meus-dados" (Editar Perfil) fecha o menu
 // dos seis perfis - antes era só do AL (PESSOAL-16).
+// PBI-10 (dashboard-powerbi): "/relatorios" antes de "/meus-dados" para todo
+// perfil menos o AL.
 const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
   AM: [
     "/painel",
@@ -23,10 +28,20 @@ const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
     "/pre-cursos",
     "/pos-cursos",
     "/avaliacoes",
+    "/relatorios",
     "/meus-dados",
   ],
-  GT: ["/painel", "/usuarios", "/verbas", "/pre-cursos", "/pos-cursos", "/avaliacoes", "/meus-dados"],
-  VT: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes", "/meus-dados"],
+  GT: [
+    "/painel",
+    "/usuarios",
+    "/verbas",
+    "/pre-cursos",
+    "/pos-cursos",
+    "/avaliacoes",
+    "/relatorios",
+    "/meus-dados",
+  ],
+  VT: ["/painel", "/pre-cursos", "/pos-cursos", "/avaliacoes", "/relatorios", "/meus-dados"],
   GO: [
     "/painel",
     "/usuarios",
@@ -35,9 +50,10 @@ const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
     "/pre-cursos",
     "/pos-cursos",
     "/avaliacoes",
+    "/relatorios",
     "/meus-dados",
   ],
-  VO: ["/painel", "/verbas", "/pre-cursos", "/pos-cursos", "/avaliacoes", "/meus-dados"],
+  VO: ["/painel", "/verbas", "/pre-cursos", "/pos-cursos", "/avaliacoes", "/relatorios", "/meus-dados"],
   AL: ["/painel", "/avaliacoes", "/meus-dados"],
 };
 
@@ -58,11 +74,18 @@ const MODULOS_ESPERADOS: Record<TipoUsuario, string[]> = {
     "Gestão de Ofertante",
     "Gestão de Recursos",
     "Gestão de Formações",
+    "Visualização de Relatórios",
     "Editar Perfil",
   ],
   VT: ["Gestão de Formações", "Visualização de Relatórios", "Editar Perfil"],
-  GO: ["Gestão de Usuários", "Gestão de Recursos", "Minhas Formações", "Editar Perfil"],
-  VO: ["Gestão de Recursos", "Minhas Formações", "Editar Perfil"],
+  GO: [
+    "Gestão de Usuários",
+    "Gestão de Recursos",
+    "Minhas Formações",
+    "Visualização de Relatórios",
+    "Editar Perfil",
+  ],
+  VO: ["Gestão de Recursos", "Minhas Formações", "Visualização de Relatórios", "Editar Perfil"],
   AL: ["Minha avaliação", "Editar Perfil"],
 };
 
@@ -79,6 +102,7 @@ const ROTAS_IMPLEMENTADAS = [
   "/avaliacoes/[cpf]/[cdCurso]",
   "/meus-dados",
   "/verbas",
+  "/relatorios",
 ];
 
 const TODOS_OS_TIPOS = Object.values(TipoUsuario);
@@ -145,8 +169,31 @@ describe("navegacaoDoPerfil", () => {
       "Cadastro de Formação",
       "Avaliação de Formação",
       "Avaliações Aluno",
+      "Visualização de Relatórios",
       "Editar Perfil",
     ]);
+  });
+
+  // PBI-10: o menu acompanha o catálogo do Power BI, a fonte única de quem
+  // tem dashboard. Um perfil novo no catálogo sem o módulo (ou o contrário)
+  // quebra aqui.
+  it.each(TODOS_OS_TIPOS)(
+    "PBI-10: %s tem o módulo de relatórios se, e só se, tem painel no catálogo",
+    (tipo) => {
+      const temPainel = painelDoPerfil(tipo) !== null;
+      expect(modulosDoPerfil(tipo).includes("Visualização de Relatórios")).toBe(temPainel);
+      expect(rotuloDe(tipo, "/relatorios") === "Visualização de Relatórios").toBe(temPainel);
+    },
+  );
+
+  it("PBI-10: o AL não recebe /relatorios", () => {
+    expect(hrefsDe(TipoUsuario.AL)).not.toContain("/relatorios");
+  });
+
+  it("navegacao.ts continua importando só os enums gerados (o proxy o lê)", () => {
+    const fonte = readFileSync(path.join(__dirname, "navegacao.ts"), "utf8");
+    const imports = [...fonte.matchAll(/from\s+["']([^"']+)["']/g)].map((m) => m[1]);
+    expect(imports).toEqual(["../../generated/prisma/enums"]);
   });
 
   it("o item de /avaliacoes se chama 'Minha avaliação' para AL", () => {
@@ -281,6 +328,10 @@ describe("ROTAS_COM_SESSAO", () => {
   // GV-30: sem sessão, o proxy manda /verbas para o login.
   it("GV-30: inclui /verbas", () => {
     expect(ROTAS_COM_SESSAO).toContain("/verbas");
+  });
+
+  it("PBI-10: inclui /relatorios", () => {
+    expect(ROTAS_COM_SESSAO).toContain("/relatorios");
   });
 
   it("nao repete href (varios perfis compartilham as mesmas telas)", () => {

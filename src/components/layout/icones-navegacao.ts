@@ -30,12 +30,12 @@ const ICONE_POR_HREF: Record<string, LucideIcon> = {
   "/pos-cursos": ClipboardCheck,
   "/avaliacoes": GraduationCap,
   "/meus-dados": UserCog,
+  "/relatorios": ChartColumn,
 };
 
 /** Módulos que ainda não têm tela: não há href para indexar. */
 const ICONE_POR_MODULO_SEM_TELA: Record<string, LucideIcon> = {
   "Gestão de Ofertante": Building2,
-  "Visualização de Relatórios": ChartColumn,
 };
 
 /**

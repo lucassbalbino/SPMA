@@ -165,7 +165,7 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 | PBI-07 | P1: Só quem pode | Execute | Implementing |
 | PBI-08 | P1: Só quem pode | Execute | Implementing |
 | PBI-09 | P1: Só quem pode | Execute | Implementing |
-| PBI-10 | P1: Só quem pode | Tasks | Pending |
+| PBI-10 | P1: Só quem pode | Execute | Implementing |
 | PBI-11 | P1: Renovação e parada | Execute | Implementing |
 | PBI-12 | P1: Renovação e parada | Execute | Implementing |
 | PBI-13 | P1: Renovação e parada | Execute | Implementing |

@@ -271,17 +271,18 @@ T9 → T10 → T11
 
 **Done when**:
 
-- [ ] AM e VT: módulo com link para `/relatorios` (antes sem tela)
-- [ ] GT: módulo depois de "Gestão de Formações"; GO e VO: depois de "Minhas Formações"; AL: sem o módulo
-- [ ] Teste de coerência: para os 6 perfis, módulo presente ⇔ `painelDoPerfil(tipo) !== null`
-- [ ] `/relatorios` em `ROTAS_COM_SESSAO` e em `ROTAS_IMPLEMENTADAS` do teste
-- [ ] `navegacao.ts` continua importando só `generated/prisma/enums`
-- [ ] e2e do GT no painel lista os 6 módulos na ordem nova
-- [ ] Gate full passa
+- [x] AM e VT: módulo com link para `/relatorios` (antes sem tela)
+- [x] GT: módulo depois de "Gestão de Formações"; GO e VO: depois de "Minhas Formações"; AL: sem o módulo
+- [x] Teste de coerência: para os 6 perfis, módulo presente ⇔ `painelDoPerfil(tipo) !== null`
+- [x] `/relatorios` em `ROTAS_COM_SESSAO` e em `ROTAS_IMPLEMENTADAS` do teste
+- [x] `navegacao.ts` continua importando só `generated/prisma/enums`
+- [x] e2e do GT no painel lista os 6 módulos na ordem nova
+- [x] Gate full passa
 
 **Tests**: unit + e2e
 **Gate**: full
 **Commit**: `feat(navegacao): link the reports module for every profile but the student`
+**Status**: ✅ Done. unit 1078 → 1087 (navegacao.test.ts +9); e2e relatorios + painel + identidade-visual: 29 passed. Desvio do plano: e2e/identidade-visual.spec.ts também conferia a lista exata do menu do GT (2 testes) e recebeu o item novo; não estava no Where.
 
 ---
 

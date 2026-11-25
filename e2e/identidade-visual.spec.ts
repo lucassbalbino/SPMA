@@ -301,6 +301,8 @@ test.describe("casca comum", () => {
       "Cadastro de Formação",
       "Avaliação de Formação",
       "Avaliações Aluno",
+      // PBI-10 (dashboard-powerbi): o GT ganhou o dashboard Power BI.
+      "Visualização de Relatórios",
       // RU-47: Editar Perfil fecha o menu de todos os perfis.
       "Editar Perfil",
     ]);
@@ -363,8 +365,9 @@ test.describe("menu de navegação por perfil", () => {
   });
 
   // GV-27 (gestao-de-verbas, AD-046): "Verbas" entrou depois de "Gestão de
-  // usuários" - o total de itens do GT subiu de 5 para 6.
-  test("UI-02/GV-27: GT vê os 6 itens da tabela do design", async ({ page }) => {
+  // usuários" - o total de itens do GT subiu de 5 para 6. PBI-10
+  // (dashboard-powerbi): "Visualização de Relatórios" antes de "Editar Perfil".
+  test("UI-02/GV-27: GT vê os itens da tabela do design", async ({ page }) => {
     await logar(page, CPF_NAV_GT, SENHA);
     await page.goto("/painel");
 
@@ -375,6 +378,7 @@ test.describe("menu de navegação por perfil", () => {
       "Cadastro de Formação",
       "Avaliação de Formação",
       "Avaliações Aluno",
+      "Visualização de Relatórios",
       // RU-47: Editar Perfil fecha o menu de todos os perfis.
       "Editar Perfil",
     ]);

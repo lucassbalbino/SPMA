@@ -43,6 +43,12 @@ const MODULO_EDITAR_PERFIL: Modulo = { rotulo: "Editar Perfil", itens: [EDITAR_P
 // AD-046: AM/GT criam e editam verbas ali; GO/VO veem as do próprio escopo.
 // VT e AL ficam sem o item - eles não leem verba (`podeLerVerba`).
 const VERBAS: ItemNavegacao = { rotulo: "Gestão de Recursos", href: "/verbas" };
+// AD-056 (dashboard-powerbi): o relatório Power BI do cliente. Todo perfil com
+// painel em `lib/powerbi/catalogo.ts` recebe o módulo, e só eles (o teste de
+// navegação confere); o AL fica de fora. A rota `GET /api/powerbi/embed`
+// continua sendo a autoridade (AD-033).
+const RELATORIOS: ItemNavegacao = { rotulo: "Visualização de Relatórios", href: "/relatorios" };
+const MODULO_RELATORIOS: Modulo = { rotulo: "Visualização de Relatórios", itens: [RELATORIOS] };
 
 const CURSOS = [PRE_CURSOS, POS_CURSOS, AVALIACOES];
 // AD-040: quem pode criar curso (AM e GO, `podeGerenciarPreCurso`) ganha o
@@ -56,15 +62,15 @@ const CURSOS_COM_CRIACAO = [NOVO_CURSO, ...CURSOS];
 // Formação e Pós-Curso vira Avaliação de Formação. Só o rótulo muda - as
 // rotas continuam as mesmas.
 //
-// "Gestão de Ofertante" e "Visualização de Relatórios" ainda não têm tela:
-// ficam listados no painel e não viram link.
+// "Gestão de Ofertante" ainda não tem tela: fica listado no painel e não
+// vira link.
 export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
   [TipoUsuario.AM]: [
     { rotulo: "Gestão de Usuários", itens: [GESTAO_USUARIOS] },
     { rotulo: "Gestão de Ofertante", itens: [] },
     { rotulo: "Gestão de Recursos", itens: [VERBAS] },
     { rotulo: "Gestão de Formações", itens: CURSOS_COM_CRIACAO },
-    { rotulo: "Visualização de Relatórios", itens: [] },
+    MODULO_RELATORIOS,
     MODULO_EDITAR_PERFIL,
   ],
   [TipoUsuario.GT]: [
@@ -72,22 +78,25 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
     { rotulo: "Gestão de Ofertante", itens: [] },
     { rotulo: "Gestão de Recursos", itens: [VERBAS] },
     { rotulo: "Gestão de Formações", itens: CURSOS },
+    MODULO_RELATORIOS,
     MODULO_EDITAR_PERFIL,
   ],
   [TipoUsuario.VT]: [
     { rotulo: "Gestão de Formações", itens: CURSOS },
-    { rotulo: "Visualização de Relatórios", itens: [] },
+    MODULO_RELATORIOS,
     MODULO_EDITAR_PERFIL,
   ],
   [TipoUsuario.GO]: [
     { rotulo: "Gestão de Usuários", itens: [GESTAO_USUARIOS] },
     { rotulo: "Gestão de Recursos", itens: [VERBAS] },
     { rotulo: "Minhas Formações", itens: CURSOS_COM_CRIACAO },
+    MODULO_RELATORIOS,
     MODULO_EDITAR_PERFIL,
   ],
   [TipoUsuario.VO]: [
     { rotulo: "Gestão de Recursos", itens: [VERBAS] },
     { rotulo: "Minhas Formações", itens: CURSOS },
+    MODULO_RELATORIOS,
     MODULO_EDITAR_PERFIL,
   ],
   [TipoUsuario.AL]: [
