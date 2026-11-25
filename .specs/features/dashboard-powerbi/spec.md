@@ -159,7 +159,7 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 | PBI-01 | P1: Dashboard do escopo | Tasks | Pending |
 | PBI-02 | P1: Dashboard do escopo | Tasks | Pending |
 | PBI-03 | P1: Dashboard do escopo | Execute | Implementing |
-| PBI-04 | P1: Dashboard do escopo | Tasks | Pending |
+| PBI-04 | P1: Dashboard do escopo | Execute | Implementing |
 | PBI-05 | P1: Dashboard do escopo | Tasks | Pending |
 | PBI-06 | P1: Dashboard do escopo | Execute | Implementing |
 | PBI-07 | P1: Só quem pode | Tasks | Pending |
@@ -171,14 +171,14 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 | PBI-13 | P1: Renovação e parada | Tasks | Pending |
 | PBI-14 | P1: Renovação e parada | Tasks | Pending |
 | PBI-15 | P1: Falhas externas | Execute | Implementing |
-| PBI-16 | P1: Falhas externas | Tasks | Pending |
-| PBI-17 | P1: Falhas externas | Tasks | Pending |
-| PBI-18 | P1: Falhas externas | Tasks | Pending |
-| PBI-19 | P1: Falhas externas | Tasks | Pending |
+| PBI-16 | P1: Falhas externas | Execute | Implementing |
+| PBI-17 | P1: Falhas externas | Execute | Implementing |
+| PBI-18 | P1: Falhas externas | Execute | Implementing |
+| PBI-19 | P1: Falhas externas | Execute | Implementing |
 | PBI-20 | P1: Falhas externas | Tasks | Pending |
 | PBI-21 | P1: Segurança transversal | Tasks | Pending |
 | PBI-22 | P1: Segurança transversal | Tasks | Pending |
-| PBI-23 | P1: Segurança transversal | Tasks | Pending |
+| PBI-23 | P1: Segurança transversal | Execute | Implementing |
 
 **Coverage:** 23 total, 23 mapped to tasks, 0 unmapped.
 

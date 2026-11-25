@@ -139,20 +139,21 @@ T9 → T10 → T11
 
 **Done when**:
 
-- [ ] Corpo do `GenerateToken`: `datasets[0].id`, `reports[0].id` do relatório pedido, `allowEdit: false`, `identities[0]` com `username`, `roles: [role]` e `datasets`
-- [ ] 200 pedidos simultâneos com cache frio → 1 chamada ao Entra, 200 ao `GenerateToken`, cada resposta com o token do próprio `username`
-- [ ] Token do Entra reaproveitado até `expires_in − 120 s`; vencido no meio de uma rajada → 1 renovação
-- [ ] Entra falha com 50 pedidos esperando → os 50 rejeitam com `ErroMicrosoft`; o pedido seguinte chama o Entra de novo
-- [ ] 429/503 → 1 nova tentativa após `Retry-After` (2 → espera 2000 ms; 30 → 5000 ms; ausente/inválido → 1000 ms); segunda falha → `ErroMicrosoft`; 403 não tenta de novo
-- [ ] `AbortSignal.timeout(10000)` em cada chamada; timeout → `ErroMicrosoft` com `status: null`
-- [ ] Resposta sem `token` ou com `expiration` inválida → `ErroMicrosoft`
-- [ ] O retorno tem só `reportId`, `embedUrl`, `embedToken`, `expiration`; a mensagem de nenhum erro contém o segredo nem o token do Entra
-- [ ] `obterServicoPowerBi` sem config → `{ ok: false }` sem lançar; com config → a mesma instância nas chamadas seguintes
-- [ ] Gate quick passa
+- [x] Corpo do `GenerateToken`: `datasets[0].id`, `reports[0].id` do relatório pedido, `allowEdit: false`, `identities[0]` com `username`, `roles: [role]` e `datasets`
+- [x] 200 pedidos simultâneos com cache frio → 1 chamada ao Entra, 200 ao `GenerateToken`, cada resposta com o token do próprio `username`
+- [x] Token do Entra reaproveitado até `expires_in − 120 s`; vencido no meio de uma rajada → 1 renovação
+- [x] Entra falha com 50 pedidos esperando → os 50 rejeitam com `ErroMicrosoft`; o pedido seguinte chama o Entra de novo
+- [x] 429/503 → 1 nova tentativa após `Retry-After` (2 → espera 2000 ms; 30 → 5000 ms; ausente/inválido → 1000 ms); segunda falha → `ErroMicrosoft`; 403 não tenta de novo
+- [x] `AbortSignal.timeout(10000)` em cada chamada; timeout → `ErroMicrosoft` com `status: null`
+- [x] Resposta sem `token` ou com `expiration` inválida → `ErroMicrosoft`
+- [x] O retorno tem só `reportId`, `embedUrl`, `embedToken`, `expiration`; a mensagem de nenhum erro contém o segredo nem o token do Entra
+- [x] `obterServicoPowerBi` sem config → `{ ok: false }` sem lançar; com config → a mesma instância nas chamadas seguintes
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(powerbi): generate embed tokens with a shared entra token`
+**Status**: ✅ Done. servico.test.ts: 24 testes; unit 1012 → 1036.
 
 ---
 
