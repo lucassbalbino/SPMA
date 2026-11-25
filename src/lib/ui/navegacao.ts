@@ -62,12 +62,12 @@ const CURSOS_COM_CRIACAO = [NOVO_CURSO, ...CURSOS];
 // Formação e Pós-Curso vira Avaliação de Formação. Só o rótulo muda - as
 // rotas continuam as mesmas.
 //
-// "Gestão de Ofertante" ainda não tem tela: fica listado no painel e não
-// vira link.
+// "Gestão de Ofertante" saiu do painel de AM e GT em 2026-11-25: o módulo
+// não existe no sistema (o Ofertante é o próprio GO, criado em Gestão de
+// Usuários), e listá-lo prometia uma tela que não há.
 export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
   [TipoUsuario.AM]: [
     { rotulo: "Gestão de Usuários", itens: [GESTAO_USUARIOS] },
-    { rotulo: "Gestão de Ofertante", itens: [] },
     { rotulo: "Gestão de Recursos", itens: [VERBAS] },
     { rotulo: "Gestão de Formações", itens: CURSOS_COM_CRIACAO },
     MODULO_RELATORIOS,
@@ -75,7 +75,6 @@ export const MODULOS_POR_PERFIL: Record<TipoUsuario, Modulo[]> = {
   ],
   [TipoUsuario.GT]: [
     { rotulo: "Gestão de Usuários", itens: [GESTAO_USUARIOS] },
-    { rotulo: "Gestão de Ofertante", itens: [] },
     { rotulo: "Gestão de Recursos", itens: [VERBAS] },
     { rotulo: "Gestão de Formações", itens: CURSOS },
     MODULO_RELATORIOS,

@@ -6,7 +6,6 @@
 // não existe lista de navegação, só a figura de cada href que já está lá
 // (AD-039: a fonte única continua sendo navegacao.ts).
 import {
-  Building2,
   ChartColumn,
   ClipboardCheck,
   ClipboardList,
@@ -31,11 +30,6 @@ const ICONE_POR_HREF: Record<string, LucideIcon> = {
   "/avaliacoes": GraduationCap,
   "/meus-dados": UserCog,
   "/relatorios": ChartColumn,
-};
-
-/** Módulos que ainda não têm tela: não há href para indexar. */
-const ICONE_POR_MODULO_SEM_TELA: Record<string, LucideIcon> = {
-  "Gestão de Ofertante": Building2,
 };
 
 /**
@@ -64,8 +58,5 @@ export function destinoDoModulo(modulo: Modulo) {
 
 export function iconeDoModulo(modulo: Modulo): LucideIcon {
   const destino = destinoDoModulo(modulo);
-  if (destino) {
-    return iconeDoHref(destino.href);
-  }
-  return ICONE_POR_MODULO_SEM_TELA[modulo.rotulo] ?? LayoutGrid;
+  return destino ? iconeDoHref(destino.href) : LayoutGrid;
 }

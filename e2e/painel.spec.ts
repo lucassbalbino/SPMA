@@ -56,7 +56,6 @@ test("RU-34: o painel do GT diz o perfil por extenso e o que ele está apto a re
   await expect(page.getByTestId("painel-apto")).toHaveText("Portanto, está apto a realizar:");
   await expect(page.getByTestId("painel-modulos").getByRole("listitem")).toHaveText([
     "Gestão de Usuários",
-    "Gestão de Ofertante",
     "Gestão de Recursos",
     "Gestão de Formações",
     // PBI-10 (dashboard-powerbi): o GT ganhou o dashboard Power BI.

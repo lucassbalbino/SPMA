@@ -63,7 +63,6 @@ const HREFS_ESPERADOS: Record<TipoUsuario, string[]> = {
 const MODULOS_ESPERADOS: Record<TipoUsuario, string[]> = {
   AM: [
     "Gestão de Usuários",
-    "Gestão de Ofertante",
     "Gestão de Recursos",
     "Gestão de Formações",
     "Visualização de Relatórios",
@@ -71,7 +70,6 @@ const MODULOS_ESPERADOS: Record<TipoUsuario, string[]> = {
   ],
   GT: [
     "Gestão de Usuários",
-    "Gestão de Ofertante",
     "Gestão de Recursos",
     "Gestão de Formações",
     "Visualização de Relatórios",
