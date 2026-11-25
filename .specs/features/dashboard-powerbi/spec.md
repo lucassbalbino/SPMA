@@ -158,13 +158,13 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 | --- | --- | --- | --- |
 | PBI-01 | P1: Dashboard do escopo | Tasks | Pending |
 | PBI-02 | P1: Dashboard do escopo | Tasks | Pending |
-| PBI-03 | P1: Dashboard do escopo | Tasks | Pending |
+| PBI-03 | P1: Dashboard do escopo | Execute | Implementing |
 | PBI-04 | P1: Dashboard do escopo | Tasks | Pending |
 | PBI-05 | P1: Dashboard do escopo | Tasks | Pending |
 | PBI-06 | P1: Dashboard do escopo | Tasks | Pending |
 | PBI-07 | P1: Só quem pode | Tasks | Pending |
-| PBI-08 | P1: Só quem pode | Tasks | Pending |
-| PBI-09 | P1: Só quem pode | Tasks | Pending |
+| PBI-08 | P1: Só quem pode | Execute | Implementing |
+| PBI-09 | P1: Só quem pode | Execute | Implementing |
 | PBI-10 | P1: Só quem pode | Tasks | Pending |
 | PBI-11 | P1: Renovação e parada | Tasks | Pending |
 | PBI-12 | P1: Renovação e parada | Tasks | Pending |

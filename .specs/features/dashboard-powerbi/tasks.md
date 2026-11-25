@@ -89,16 +89,17 @@ T9 → T10 → T11
 
 **Done when**:
 
-- [ ] AM/GT/VT → `nacional`; GO/VO → `ofertante`; AL → `null`
-- [ ] Os dois painéis com role `"segurança_SPMA"` (asserção da string exata, com "ç")
-- [ ] `identidadePowerBi`: AM/GT/VT e GO → o próprio documento; VO → `cdOfertante`; VO sem `cdOfertante` → `null`; AL → `null`
-- [ ] Documento com zero à esquerda sai igual, como string (edge case)
-- [ ] O módulo não importa Prisma nem `next/*`
-- [ ] Gate quick passa; test count = base + N novos
+- [x] AM/GT/VT → `nacional`; GO/VO → `ofertante`; AL → `null`
+- [x] Os dois painéis com role `"segurança_SPMA"` (asserção da string exata, com "ç")
+- [x] `identidadePowerBi`: AM/GT/VT e GO → o próprio documento; VO → `cdOfertante`; VO sem `cdOfertante` → `null`; AL → `null`
+- [x] Documento com zero à esquerda sai igual, como string (edge case)
+- [x] O módulo não importa Prisma nem `next/*`
+- [x] Gate quick passa; test count = base + N novos
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(powerbi): add the profile to dashboard catalog`
+**Status**: ✅ Done. catalogo.test.ts: 17 testes; unit 962 → 979.
 
 ---
 
