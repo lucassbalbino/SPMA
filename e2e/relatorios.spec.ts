@@ -47,6 +47,30 @@ test("PBI-01/PBI-12: o GT vê o título e o contêiner e, sem configuração, o 
   );
 });
 
+test("PBI-21: a CSP de /relatorios libera o iframe do Power BI e mantém as demais diretivas", async ({
+  page,
+}) => {
+  await logar(page, CPF_GT);
+  const resposta = await page.goto("/relatorios");
+  const diretivas = (resposta?.headers()["content-security-policy"] ?? "")
+    .split(";")
+    .map((d) => d.trim())
+    .filter(Boolean);
+
+  expect(diretivas).toContain("frame-src https://app.powerbi.com");
+  expect(diretivas).toContain("default-src 'self'");
+  expect(diretivas).toContain("object-src 'none'");
+  expect(diretivas).toContain("frame-ancestors 'none'");
+  expect(diretivas).toContain("base-uri 'self'");
+  expect(diretivas).toContain("form-action 'self'");
+  expect(diretivas.find((d) => d.startsWith("script-src "))).toMatch(
+    /^script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/,
+  );
+  expect(diretivas.find((d) => d.startsWith("style-src "))).toMatch(
+    /^style-src 'self' 'nonce-[A-Za-z0-9+/=]+'$/,
+  );
+});
+
 test("PBI-08: o AL vê que o perfil não tem acesso, sem o contêiner do relatório", async ({ page }) => {
   await logar(page, CPF_AL);
   await page.goto("/relatorios");

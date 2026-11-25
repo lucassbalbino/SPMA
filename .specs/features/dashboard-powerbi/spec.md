@@ -176,7 +176,7 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 | PBI-18 | P1: Falhas externas | Execute | Implementing |
 | PBI-19 | P1: Falhas externas | Execute | Implementing |
 | PBI-20 | P1: Falhas externas | Execute | Implementing |
-| PBI-21 | P1: Segurança transversal | Tasks | Pending |
+| PBI-21 | P1: Segurança transversal | Execute | Implementing |
 | PBI-22 | P1: Segurança transversal | Execute | Implementing |
 | PBI-23 | P1: Segurança transversal | Execute | Implementing |
 

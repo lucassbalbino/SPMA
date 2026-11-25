@@ -37,6 +37,10 @@ export function proxy(request: NextRequest) {
   // node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md).
   // 'unsafe-eval' só em dev: React usa eval para reconstruir stacks de erro
   // do servidor no console do navegador; não é necessário em produção.
+  // `frame-src`: o relatório Power BI de /relatorios é um iframe de
+  // app.powerbi.com (dashboard-powerbi, PBI-21). Sem ela o iframe cai em
+  // `default-src 'self'` e é bloqueado. `frame-ancestors 'none'` segue: ele
+  // impede o SPMA de ser embutido, não de embutir.
   const nonce = Buffer.from(randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
   const cspHeader = `
@@ -46,6 +50,7 @@ export function proxy(request: NextRequest) {
     img-src 'self' blob: data:;
     font-src 'self';
     object-src 'none';
+    frame-src https://app.powerbi.com;
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';

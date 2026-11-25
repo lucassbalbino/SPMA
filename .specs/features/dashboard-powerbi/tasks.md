@@ -296,14 +296,15 @@ T9 → T10 → T11
 
 **Done when**:
 
-- [ ] e2e: o cabeçalho `content-security-policy` de `/relatorios` contém `frame-src https://app.powerbi.com`
-- [ ] e2e: as demais diretivas continuam presentes, cada uma conferida pelo valor (`default-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`, `script-src` com nonce)
-- [ ] `e2e/security-headers.spec.ts` passa sem alteração
-- [ ] Gate full passa
+- [x] e2e: o cabeçalho `content-security-policy` de `/relatorios` contém `frame-src https://app.powerbi.com`
+- [x] e2e: as demais diretivas continuam presentes, cada uma conferida pelo valor (`default-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`, `script-src` com nonce)
+- [x] `e2e/security-headers.spec.ts` passa sem alteração
+- [x] Gate full passa
 
 **Tests**: e2e
 **Gate**: full
 **Commit**: `feat(seguranca): allow the power bi frame in the csp`
+**Status**: ✅ Done. relatorios.spec.ts +1 (CSP); e2e relatorios + painel + security-headers: 6 passed; build gate da Fase 3 verde (lint 0 erros / 51 avisos já existentes).
 
 ---
 
