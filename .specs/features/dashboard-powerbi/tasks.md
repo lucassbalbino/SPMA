@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/dashboard-powerbi/design.md`
-**Status**: Draft
+**Status**: Done (T1-T10 + correções do Verifier). T11 pendente: homologação do usuário com o Power BI real.
 
 ---
 

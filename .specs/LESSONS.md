@@ -174,6 +174,42 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: RU-39 src/app/(protegido)/avaliacoes/[cpf]/[cdCurso]/AvaliacaoForm.tsx:468 (spec)
 - last seen: 2026-11-12T20:20:03Z
 
+### L-065 - Test the exact boundary value of every threshold comparison, not only a value on one side of it.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: dashboard-powerbi
+- evidence: M23 src/lib/powerbi/painel-cliente.ts:83 (tests)
+- last seen: 2026-11-25T15:16:32Z
+
+### L-066 - A fake fetch must reject when its AbortSignal is aborted, or the abort path of the code under test is never exercised.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: dashboard-powerbi
+- evidence: M24 src/lib/powerbi/painel-cliente.ts:111 (tests)
+- last seen: 2026-11-25T15:16:32Z
+
+### L-067 - When an external response has several required fields, test each one missing on its own.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: dashboard-powerbi
+- evidence: M12 src/lib/powerbi/servico.ts:126 (tests)
+- last seen: 2026-11-25T15:16:32Z
+
+### L-068 - For an invalid-value-falls-back-to-default rule, include negative numbers among the invalid inputs.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: dashboard-powerbi
+- evidence: M29 src/lib/powerbi/servico.ts:60 (tests)
+- last seen: 2026-11-25T15:16:33Z
+
+### L-069 - A rate-limit AC must say whether the window is fixed or sliding; N per T seconds lets 2N through at a fixed-window boundary.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: dashboard-powerbi
+- evidence: PBI-20 (spec)
+- last seen: 2026-11-25T15:16:33Z
+
+### L-070 - Before changing the navigation table, grep every e2e spec for exact menu or module lists; they live in more than painel.spec.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: dashboard-powerbi
+- evidence: T8 e2e/identidade-visual.spec.ts (e2e)
+- last seen: 2026-11-25T15:16:34Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

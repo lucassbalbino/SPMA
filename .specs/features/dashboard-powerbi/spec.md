@@ -156,31 +156,31 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| PBI-01 | P1: Dashboard do escopo | Execute | Implementing |
-| PBI-02 | P1: Dashboard do escopo | Execute | Implementing |
-| PBI-03 | P1: Dashboard do escopo | Execute | Implementing |
-| PBI-04 | P1: Dashboard do escopo | Execute | Implementing |
-| PBI-05 | P1: Dashboard do escopo | Execute | Implementing |
-| PBI-06 | P1: Dashboard do escopo | Execute | Implementing |
-| PBI-07 | P1: Só quem pode | Execute | Implementing |
-| PBI-08 | P1: Só quem pode | Execute | Implementing |
-| PBI-09 | P1: Só quem pode | Execute | Implementing |
-| PBI-10 | P1: Só quem pode | Execute | Implementing |
-| PBI-11 | P1: Renovação e parada | Execute | Implementing |
-| PBI-12 | P1: Renovação e parada | Execute | Implementing |
-| PBI-13 | P1: Renovação e parada | Execute | Implementing |
-| PBI-14 | P1: Renovação e parada | Execute | Implementing |
-| PBI-15 | P1: Falhas externas | Execute | Implementing |
-| PBI-16 | P1: Falhas externas | Execute | Implementing |
-| PBI-17 | P1: Falhas externas | Execute | Implementing |
-| PBI-18 | P1: Falhas externas | Execute | Implementing |
-| PBI-19 | P1: Falhas externas | Execute | Implementing |
-| PBI-20 | P1: Falhas externas | Execute | Implementing |
-| PBI-21 | P1: Segurança transversal | Execute | Implementing |
-| PBI-22 | P1: Segurança transversal | Execute | Implementing |
-| PBI-23 | P1: Segurança transversal | Execute | Implementing |
+| PBI-01 | P1: Dashboard do escopo | T11 | Verified (automático); montagem real pendente da T11 |
+| PBI-02 | P1: Dashboard do escopo | Validate | Verified |
+| PBI-03 | P1: Dashboard do escopo | Validate | Verified |
+| PBI-04 | P1: Dashboard do escopo | Validate | Verified |
+| PBI-05 | P1: Dashboard do escopo | Validate | Verified |
+| PBI-06 | P1: Dashboard do escopo | Validate | Verified |
+| PBI-07 | P1: Só quem pode | Validate | Verified |
+| PBI-08 | P1: Só quem pode | Validate | Verified |
+| PBI-09 | P1: Só quem pode | Validate | Verified |
+| PBI-10 | P1: Só quem pode | Validate | Verified |
+| PBI-11 | P1: Renovação e parada | Validate | Verified |
+| PBI-12 | P1: Renovação e parada | Validate | Verified |
+| PBI-13 | P1: Renovação e parada | Validate | Verified |
+| PBI-14 | P1: Renovação e parada | Validate | Verified |
+| PBI-15 | P1: Falhas externas | Validate | Verified |
+| PBI-16 | P1: Falhas externas | Validate | Verified |
+| PBI-17 | P1: Falhas externas | Validate | Verified |
+| PBI-18 | P1: Falhas externas | Validate | Verified |
+| PBI-19 | P1: Falhas externas | Validate | Verified |
+| PBI-20 | P1: Falhas externas | Validate | Verified |
+| PBI-21 | P1: Segurança transversal | Validate | Verified |
+| PBI-22 | P1: Segurança transversal | Validate | Verified |
+| PBI-23 | P1: Segurança transversal | Validate | Verified |
 
-**Coverage:** 23 total, 23 mapped to tasks, 0 unmapped.
+**Coverage:** 23 total, 23 mapped to tasks, 0 unmapped. Verifier PASS na iteração 2 (`validation.md`).
 
 ---
 

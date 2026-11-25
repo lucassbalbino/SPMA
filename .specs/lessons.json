@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 65,
+  "next_id": 71,
   "lessons": [
     {
       "id": "L-014",
@@ -497,6 +497,114 @@
       ],
       "created": "2026-11-12T20:20:03Z",
       "last_seen": "2026-11-12T20:20:03Z"
+    },
+    {
+      "id": "L-065",
+      "key": "surviving_mutant::test the exact boundary value of every threshold comparison not only a value on one side of it",
+      "text": "Test the exact boundary value of every threshold comparison, not only a value on one side of it.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "dashboard-powerbi"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M23 src/lib/powerbi/painel-cliente.ts:83 (tests)"
+      ],
+      "created": "2026-11-25T15:16:32Z",
+      "last_seen": "2026-11-25T15:16:32Z"
+    },
+    {
+      "id": "L-066",
+      "key": "surviving_mutant::a fake fetch must reject when its abortsignal is aborted or the abort path of the code under test is never exercised",
+      "text": "A fake fetch must reject when its AbortSignal is aborted, or the abort path of the code under test is never exercised.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "dashboard-powerbi"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M24 src/lib/powerbi/painel-cliente.ts:111 (tests)"
+      ],
+      "created": "2026-11-25T15:16:32Z",
+      "last_seen": "2026-11-25T15:16:32Z"
+    },
+    {
+      "id": "L-067",
+      "key": "surviving_mutant::when an external response has several required fields test each one missing on its own",
+      "text": "When an external response has several required fields, test each one missing on its own.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "dashboard-powerbi"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M12 src/lib/powerbi/servico.ts:126 (tests)"
+      ],
+      "created": "2026-11-25T15:16:32Z",
+      "last_seen": "2026-11-25T15:16:32Z"
+    },
+    {
+      "id": "L-068",
+      "key": "surviving_mutant::for an invalid value falls back to default rule include negative numbers among the invalid inputs",
+      "text": "For an invalid-value-falls-back-to-default rule, include negative numbers among the invalid inputs.",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "dashboard-powerbi"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M29 src/lib/powerbi/servico.ts:60 (tests)"
+      ],
+      "created": "2026-11-25T15:16:33Z",
+      "last_seen": "2026-11-25T15:16:33Z"
+    },
+    {
+      "id": "L-069",
+      "key": "spec_precision_gap::a rate limit ac must say whether the window is fixed or sliding n per t seconds lets 2n through at a fixed window boundary",
+      "text": "A rate-limit AC must say whether the window is fixed or sliding; N per T seconds lets 2N through at a fixed-window boundary.",
+      "signal": "spec_precision_gap",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "dashboard-powerbi"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "PBI-20 (spec)"
+      ],
+      "created": "2026-11-25T15:16:33Z",
+      "last_seen": "2026-11-25T15:16:33Z"
+    },
+    {
+      "id": "L-070",
+      "key": "spec_deviation::before changing the navigation table grep every e2e spec for exact menu or module lists they live in more than painel spec",
+      "text": "Before changing the navigation table, grep every e2e spec for exact menu or module lists; they live in more than painel.spec.",
+      "signal": "spec_deviation",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "dashboard-powerbi"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "T8 e2e/identidade-visual.spec.ts (e2e)"
+      ],
+      "created": "2026-11-25T15:16:34Z",
+      "last_seen": "2026-11-25T15:16:34Z"
     }
   ]
 }
