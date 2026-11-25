@@ -227,6 +227,23 @@ Roteiro da T11 (`tasks.md`). Rodar com o segredo já trocado no `.env` local e `
 - [ ] Desligar a rede por um instante na renovação → mensagem de indisponível
 - [ ] Usuário criado depois do último refresh do dataset: anotar o que ele vê (documenta o comportamento da role do cliente)
 
+### Ativação local (2026-11-25, Claude, a pedido do usuário)
+
+Variáveis `SPMA_*` do arquivo do cliente no `.env` local (ignorado pelo git), `npm run dev`, usuários do cenário de demonstração. **Primeira chamada real à Microsoft: a rotina funciona de ponta a ponta.** O segredo antigo ainda é aceito pelo Entra ID, então a troca dele continua pendente.
+
+| Perfil (demo) | Painel | `GET /api/powerbi/embed` |
+| --- | --- | --- |
+| AM 70000000159 | 200, cartão "Visualização de Relatórios" presente | 200, 4 campos, `reportId` confere, `no-store` |
+| GT 40200030094 | 200, cartão presente | 200, idem |
+| VT 70000000230 | 200, cartão presente | 200, idem |
+| GO 60000369000126 (CNPJ) | 200, cartão presente | 200, idem |
+| VO 70000000310 | 200, cartão presente | 200, idem |
+| AL 60000383643 | 307 (gate de onboarding do aluno) | 403 `{"erro":"Acesso negado"}` |
+
+Navegador (Chromium sem interface, GT): o clique no cartão do painel abre `/relatorios`, e o iframe `https://app.powerbi.com/reportEmbed?reportId=c9a243a7…` monta no contêiner com 894×502 px. O relatório do cliente aparece com as abas Visão Executiva, Oferta e Distribuição, Público-Alvo, Planejamento, Formação, Aluno e Efetividade. Nenhum bloqueio de `frame-src`. Os indicadores mostram "--" porque os documentos de demonstração não existem no modelo do cliente (regra "documento inexistente não apresenta dados"). Há 33 avisos de `style-src` iguais em `/painel` e em `/relatorios`: vêm das ferramentas de desenvolvimento do Next (`NEXTJS-PORTAL`, só no `npm run dev`), não da rotina.
+
+Ainda pendente com o usuário: os recortes por perfil com documentos que existam no modelo (itens 1 a 4 acima), logout, renovação e queda de rede.
+
 ---
 
 ## Summary
