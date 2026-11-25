@@ -10,7 +10,7 @@ Lá ficam o guia da marca, os tokens, as prévias dos componentes e as telas de 
 | `src/app/spma-design-system.css` | Tokens brutos com prefixo `--spma-*` (cores, espaçamento, raios, sombras, tamanhos), utilitários Tailwind `*-spma-*`, estilos de texto `text-spma-*` e classes de componente `spma-*`. |
 | `src/app/globals.css` | Importa o arquivo acima e mapeia as variáveis do shadcn (`--primary`, `--background`, `--border`…) e os raios/fontes do `@theme` para os tokens SPMA (AD-039). |
 | `src/app/layout.tsx` | Carrega Lexend (`--font-lexend`) e Nunito Sans (`--font-nunito-sans`) com `next/font`. |
-| `public/brand/` | `spma-wordmark.svg`, `unb-horizontal.png`, `unb-simbolo.png`. |
+| `public/brand/` | `spma-wordmark.svg`, `unb-horizontal.png`, `unb-simbolo.png`, `mtur-governo-federal.png`, `sprint-dados.png`. |
 
 ## Como usar
 
@@ -47,7 +47,7 @@ Quando um token mudar no design system, copie o novo valor para a variável `--s
 
 ## Pendências
 
-- Os logotipos oficiais do Ministério do Turismo e do Governo Federal ainda não chegaram em arquivo.
+- Os logotipos do Ministério do Turismo, do Governo do Brasil e da Sprint Dados vieram como imagem (JPG com fundo cinza, fundo removido). Se chegarem os vetores oficiais (SVG), troque os PNG de `public/brand/`.
 - As fontes Lexend e Nunito Sans foram identificadas a partir das telas e precisam ser confirmadas.
 - A cor `--spma-border` (#d1d5db) tem contraste de 1.5:1. Se a acessibilidade WCAG AA for requisito, troque por `#8a94a6`.
 
@@ -61,7 +61,8 @@ As duas telas seguem as prints do artefato (grupo **Telas**: `spma-login.png` e 
 | Login: "Lembrar-me" e "Esqueci minha senha" | Fora até existirem no backend; no lugar vai a dica "Primeiro acesso? Deixe a senha em branco." |
 | Login: fotos em losango | Espaço reservado (losangos em `primary-50`/`primary-100` com ícone de imagem) até chegarem as fotos originais |
 | Login: Política de Privacidade, Termos de Uso, Suporte | Texto, sem link, até as páginas existirem |
-| Logotipos do Ministério do Turismo, do Governo Federal e da empresa desenvolvedora | Selo tracejado de espaço reservado (`spma-partner-slot`) |
+| Logotipos do Ministério do Turismo e do Governo Federal | Um arquivo só, `public/brand/mtur-governo-federal.png`, no cabeçalho da casca e no "Apoio" do login |
+| Logotipo da empresa desenvolvedora | `public/brand/sprint-dados.png` (Sprint Dados), no "Desenvolvido por" do login |
 | Menu: itens de exemplo (Usuários, Cursos e Projetos…) | Os itens reais de `navegacao.ts`, com os nomes aprovados na revisão de usabilidade |
 | Rodapé: "Versão 1.0.0" | A versão do `package.json` |
 
