@@ -60,7 +60,8 @@ As duas telas seguem as prints do artefato (grupo **Telas**: `spma-login.png` e 
 | Login: "Perfil de acesso" + "E-mail" | Um campo só, **CPF ou CNPJ**: o login identifica o perfil sozinho |
 | Login: "Lembrar-me" e "Esqueci minha senha" | Fora até existirem no backend; no lugar vai a dica "Primeiro acesso? Deixe a senha em branco." |
 | Login: fotos em losango | Espaço reservado (losangos em `primary-50`/`primary-100` com ícone de imagem) até chegarem as fotos originais |
-| Login: Política de Privacidade, Termos de Uso, Suporte | Texto, sem link, até as páginas existirem |
+| Login: Política de Privacidade, Termos de Uso, Suporte | Fora da tela (pedido do cliente, 2026-11-25) |
+| Login: faixa de parceiros só sob a coluna da marca | A faixa branca atravessa a tela toda; os logos seguem sob a coluna da marca e o cartão fica por cima |
 | Logotipos do Ministério do Turismo e do Governo Federal | Um arquivo só, `public/brand/mtur-governo-federal.png`, no cabeçalho da casca e no "Apoio" do login |
 | Logotipo da empresa desenvolvedora | `public/brand/sprint-dados.png` (Sprint Dados), no "Desenvolvido por" do login |
 | Menu: itens de exemplo (Usuários, Cursos e Projetos…) | Os itens reais de `navegacao.ts`, com os nomes aprovados na revisão de usabilidade |
@@ -72,7 +73,7 @@ A partir de `lg` (1024px) **a página nunca rola**: o login e a casca ocupam exa
 
 - Espaços, margens e alguns tamanhos usam `clamp(piso, N svh, valor da print)`. Numa janela alta o resultado é o valor da print; numa baixa, encolhe até o piso.
 - As alturas de cabeçalho, campo, botão e item do menu ficam em `globals.css` (`--altura-cabecalho`, `--altura-campo`, `--altura-botao`, `--altura-item-menu`). O teto de cada uma é o token do design system.
-- A colagem do login é medida em % e encolhe por inteiro para nunca cobrir o texto. A faixa de parceiros fica numa linha só; entre 1024 e 1280px os rótulos sobem para cima dos logos.
+- A colagem do login é medida em % e fica ancorada embaixo à direita da coluna da marca, sangrando 15% para fora da coluna (os losangos da direita e de baixo aparecem cortados), o maior possível sem que um losango encoste no texto: o canto vazio do diamante acomoda as últimas linhas do título, da PNQT e da descrição (a fórmula está comentada em `login/page.tsx`). O lado vai de ~300px (1024x640) e ~450px (1366x768) a 1100px em monitores grandes. A faixa de parceiros fica numa linha só; entre 1024 e 1280px os rótulos sobem para cima dos logos.
 - Na casca, menu, cabeçalho e rodapé ficam fixos, e só o `casca-conteudo` rola. Isso só acontece quando a tela é mais longa que a janela, como nas listas e nos formulários longos, cujo tamanho depende dos dados.
 - Abaixo de `lg` (celular e tablet em pé) a página rola normalmente.
 
@@ -91,4 +92,4 @@ Conferido sem rolagem no login e no painel em 1024x640, 1280x585, 1366x641, 1440
 
 ## Login
 
-`src/app/(public)/login/page.tsx` segue a print do login: à esquerda a marca (`brand-xl`), o nome do sistema, a PNQT, a descrição, o pontilhado (`spma-pontilhado`), a colagem em losangos e a faixa de parceiros (Realização · Apoio · Desenvolvido por); à direita o cartão de acesso (ícone, "Acesso ao sistema", campos de 52px com ícone, olho na senha, botão "Entrar" de 64px, aviso de veracidade) e os links legais abaixo dele. No celular a ordem é marca, cartão, links e parceiros, e a colagem some.
+`src/app/(public)/login/page.tsx` segue a print do login: à esquerda a marca (`brand-xl`), o nome do sistema, a PNQT, a descrição, o pontilhado (`spma-pontilhado`), a colagem em losangos e a faixa de parceiros (Realização · Apoio · Desenvolvido por), cuja faixa branca atravessa a tela toda; à direita o cartão de acesso (ícone, "Acesso ao sistema", campos de 52px com ícone, olho na senha, botão "Entrar" de 64px, aviso de veracidade). No celular a ordem é marca, cartão e parceiros, e a colagem some.
