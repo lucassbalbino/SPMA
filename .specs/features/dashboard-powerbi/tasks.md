@@ -217,18 +217,19 @@ T9 → T10 → T11
 
 **Done when**:
 
-- [ ] `calcularEspera`: 3 600 000 → 3 480 000; 180 000 → 90 000; 40 000 → 20 000; 1 500 → 1 000
-- [ ] Primeiro ingresso → `sdk.embed` uma vez, com `tokenType` Embed e `permissions` Read; o renovado → `setAccessToken`, sem novo `embed`
-- [ ] Próximo pedido agendado com `calcularEspera(restante)`
-- [ ] 401, 403, 502, erro de rede ou validade < 30 000 ms → `sdk.reset` e status = `MENSAGEM_INDISPONIVEL` (um teste por causa)
-- [ ] `parar()` → `reset`, timer cancelado, fetch abortado; resposta que chega depois não chama `embed` nem altera o status
-- [ ] Evento `error` do relatório → `MENSAGEM_FALHA_RELATORIO`; depois de `parar()` não altera mais nada
-- [ ] `fetch` com `credentials: "same-origin"` e `cache: "no-store"`
-- [ ] Gate quick passa
+- [x] `calcularEspera`: 3 600 000 → 3 480 000; 180 000 → 90 000; 40 000 → 20 000; 1 500 → 1 000
+- [x] Primeiro ingresso → `sdk.embed` uma vez, com `tokenType` Embed e `permissions` Read; o renovado → `setAccessToken`, sem novo `embed`
+- [x] Próximo pedido agendado com `calcularEspera(restante)`
+- [x] 401, 403, 502, erro de rede ou validade < 30 000 ms → `sdk.reset` e status = `MENSAGEM_INDISPONIVEL` (um teste por causa)
+- [x] `parar()` → `reset`, timer cancelado, fetch abortado; resposta que chega depois não chama `embed` nem altera o status
+- [x] Evento `error` do relatório → `MENSAGEM_FALHA_RELATORIO`; depois de `parar()` não altera mais nada
+- [x] `fetch` com `credentials: "same-origin"` e `cache: "no-store"`
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(powerbi): port the dashboard renewal controller`
+**Status**: ✅ Done. painel-cliente.test.ts: 21 testes; unit 1057 → 1078.
 
 ---
 
