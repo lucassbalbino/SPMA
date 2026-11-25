@@ -113,18 +113,19 @@ T9 → T10 → T11
 
 **Done when**:
 
-- [ ] Todas as 6 obrigatórias válidas → `ok: true`, os dois painéis com o relatório padrão
-- [ ] Cada obrigatória ausente ou só espaços → `{ ok: false, motivo: "ausente", variavel: <nome> }` (um caso por variável)
-- [ ] GUID malformado, embed URL de outra origem, outro caminho ou outro `reportId` → `motivo: "invalida"`
-- [ ] `reportId` da URL em maiúsculas é aceito
-- [ ] Par `SPMA_REPORT_ID_OFERTANTE` + `SPMA_EMBED_URL_OFERTANTE` → só o painel `ofertante` usa o relatório próprio; `nacional` segue no padrão
-- [ ] Só um lado do par → `motivo: "invalida"` (edge case)
-- [ ] Nenhum resultado contém o valor do segredo
-- [ ] Gate quick passa
+- [x] Todas as 6 obrigatórias válidas → `ok: true`, os dois painéis com o relatório padrão
+- [x] Cada obrigatória ausente ou só espaços → `{ ok: false, motivo: "ausente", variavel: <nome> }` (um caso por variável)
+- [x] GUID malformado, embed URL de outra origem, outro caminho ou outro `reportId` → `motivo: "invalida"`
+- [x] `reportId` da URL em maiúsculas é aceito
+- [x] Par `SPMA_REPORT_ID_OFERTANTE` + `SPMA_EMBED_URL_OFERTANTE` → só o painel `ofertante` usa o relatório próprio; `nacional` segue no padrão
+- [x] Só um lado do par → `motivo: "invalida"` (edge case)
+- [x] Nenhum resultado contém o valor do segredo
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(powerbi): read and validate the power bi settings`
+**Status**: ✅ Done. configuracao.test.ts: 33 testes; unit 979 → 1012.
 
 ---
 
