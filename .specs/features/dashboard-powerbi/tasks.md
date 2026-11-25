@@ -167,15 +167,16 @@ T9 → T10 → T11
 
 **Done when**:
 
-- [ ] 20 pedidos na janela passam; o 21º é negado
-- [ ] Depois de 60 000 ms a chave volta a passar
-- [ ] Chaves diferentes não se afetam
-- [ ] Entradas vencidas são removidas (o tamanho interno volta a 0 depois da janela)
-- [ ] Gate quick passa
+- [x] 20 pedidos na janela passam; o 21º é negado
+- [x] Depois de 60 000 ms a chave volta a passar
+- [x] Chaves diferentes não se afetam
+- [x] Entradas vencidas são removidas (o tamanho interno volta a 0 depois da janela)
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(powerbi): limit embed requests per session`
+**Status**: ✅ Done. limite.test.ts: 4 testes; unit 1036 → 1040; build gate da Fase 1 verde.
 
 ---
 
