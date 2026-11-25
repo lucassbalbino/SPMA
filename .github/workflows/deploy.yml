@@ -56,7 +56,11 @@ jobs:
         run: npm run build
 
       - name: Empacotar
+        # O server.js do standalone não leva `public/` nem `.next/static`:
+        # os dois são copiados aqui (doc do Next, next.config output.md).
+        # Sem `public/`, toda imagem de /brand responde 404 em produção.
         run: |
+          cp -r public .next/standalone/
           cp -r .next/static .next/standalone/.next/
           mkdir -p .next/standalone/prisma
           cp -r prisma/migrations prisma/schema.prisma .next/standalone/prisma/

@@ -12,7 +12,8 @@ navegador ──HTTPS──▶ nginx :443 ──▶ node server.js 127.0.0.1:300
 
 **Quem faz o build é o GitHub Actions**, não a VPS. A cada push na `main`,
 [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) roda typecheck, lint
-e testes unitários, gera o build `standalone`, envia o pacote por SSH e chama
+e testes unitários, gera o build `standalone` (copiando para dentro dele
+`public/` e `.next/static`, que o Next não leva sozinho), envia o pacote por SSH e chama
 [`deploy/deploy.sh`](../deploy/deploy.sh) no servidor, que:
 
 1. extrai o pacote em `/opt/spma/releases/<sha>/`;
