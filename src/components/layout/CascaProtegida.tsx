@@ -1,8 +1,8 @@
 // Casca comum de toda rota do grupo (protegido) - UI-01, UI-06, UI-07 -, igual
 // à tela de referência do painel no design system SPMA
 // (docs/design-system.md): menu lateral à esquerda; cabeçalho com os
-// parceiros (Ministério do Turismo e Governo Federal em espaço reservado até
-// chegarem os logotipos oficiais, e a UnB) e o usuário com a seta do menu da
+// parceiros (o logotipo do Ministério do Turismo com o do Governo do Brasil, e
+// a UnB) e o usuário com a seta do menu da
 // conta; área de conteúdo branca; rodapé com os créditos e a versão.
 //
 // Server Component: recebe o `usuario` já resolvido por requireSession() no
@@ -20,15 +20,6 @@ import { NOME_TIPO_USUARIO } from "@/lib/ui/tipos-usuario";
 import pacote from "../../../package.json";
 import { MenuDaConta } from "./MenuDaConta";
 import { MenuLateral } from "./MenuLateral";
-
-/** Espaço reservado tracejado para um logotipo de parceiro que ainda não chegou. */
-function SeloParceiro({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex h-[46px] items-center justify-center rounded-sm border border-dashed border-spma-border px-3 text-center text-[10px] leading-[14px] font-bold tracking-[1.2px] text-spma-ink-600 uppercase">
-      {children}
-    </span>
-  );
-}
 
 export function CascaProtegida({
   usuario,
@@ -67,16 +58,14 @@ export function CascaProtegida({
             aria-label="Realização e apoio"
             className="hidden h-11 items-center gap-2.5 border-r border-spma-divider pr-8 md:flex"
           >
-            <SeloParceiro>
-              Ministério
-              <br />
-              do Turismo
-            </SeloParceiro>
-            <SeloParceiro>
-              Logo Governo
-              <br />
-              Federal
-            </SeloParceiro>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/mtur-governo-federal.png"
+              alt="Ministério do Turismo e Governo do Brasil"
+              width={760}
+              height={180}
+              className="h-10 w-auto"
+            />
             <span className="ml-3.5 flex items-center gap-2">
               {/* <img> simples, não next/image: o next/image grava
                   style="color:transparent" no elemento, e a CSP do projeto

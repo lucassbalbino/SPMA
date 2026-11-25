@@ -15,10 +15,9 @@
 // Layout da tela de referência do design system SPMA (docs/design-system.md):
 // à esquerda a marca, o nome do sistema, a PNQT, a descrição, a colagem em
 // losangos e a faixa de parceiros; à direita o cartão de acesso, com o aviso
-// de veracidade, e os links legais abaixo dele. As fotos dos losangos, os
-// logotipos do Ministério do Turismo, do Governo Federal e da empresa
-// desenvolvedora e as páginas legais ainda não existem: entram como espaço
-// reservado e texto, até chegarem.
+// de veracidade, e os links legais abaixo dele. As fotos dos losangos e as
+// páginas legais ainda não existem: entram como espaço reservado e texto, até
+// chegarem.
 //
 // Nada de `style=` aqui: a CSP bloqueia atributo style (posições e tamanhos
 // vão em classe).
@@ -27,16 +26,6 @@ import { Headset, ImageIcon, ShieldCheck, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoginForm } from "./LoginForm";
 
-/** Espaço reservado tracejado para um logotipo que ainda não chegou. */
-function SeloReservado({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <span
-      className={`inline-flex items-center justify-center rounded-sm border border-dashed border-spma-border px-3 text-center text-[10px] leading-[14px] font-bold tracking-[1.2px] text-spma-ink-600 uppercase ${className ?? ""}`}
-    >
-      {children}
-    </span>
-  );
-}
 
 /** Grupo da faixa de parceiros: rótulo ao lado do logo, ou acima entre lg e xl. */
 const GRUPO_PARCEIRO =
@@ -190,19 +179,26 @@ export default async function LoginPage() {
         <span aria-hidden="true" className={DIVISOR_PARCEIRO} />
         <div className={GRUPO_PARCEIRO}>
           <span className="text-spma-caption text-spma-ink-900">Apoio:</span>
-          <SeloReservado className="h-14 w-[250px] lg:w-[clamp(170px,14vw,250px)] lg:max-2xl:tracking-[0.5px] lg:max-xl:h-11 lg:max-xl:px-1.5">
-            Ministério do Turismo
-            <br />+ Logo Governo Federal
-          </SeloReservado>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/mtur-governo-federal.png"
+            alt="Ministério do Turismo e Governo do Brasil"
+            width={760}
+            height={180}
+            className="h-auto w-[236px] lg:w-[clamp(170px,14vw,236px)]"
+          />
         </div>
         <span aria-hidden="true" className={DIVISOR_PARCEIRO} />
         <div className="flex shrink-0 flex-col gap-1.5">
           <span className="text-spma-caption text-spma-ink-900">Desenvolvido por:</span>
-          <SeloReservado className="h-9 w-[112px]">
-            Nome da
-            <br />
-            Empresa
-          </SeloReservado>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/sprint-dados.png"
+            alt="Sprint Dados"
+            width={560}
+            height={63}
+            className="h-auto w-[170px] lg:w-[clamp(120px,11vw,170px)]"
+          />
         </div>
       </footer>
     </div>
