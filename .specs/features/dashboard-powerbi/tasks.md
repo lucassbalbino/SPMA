@@ -19,6 +19,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 2. Linha de base no HEAD, pelo **PowerShell** (pelo Git Bash o Vitest não carrega): `npm run typecheck`, `npm run lint`, `npm run test:unit`, e os dois specs e2e tocados (`e2e/painel.spec.ts`, `e2e/security-headers.spec.ts`). Anotar as contagens aqui. Se algo já vier vermelho, parar e reportar.
 3. MySQL do Docker de pé (`docker compose up -d`) para o e2e.
 
+**Linha de base (2026-11-25).** Unit, typecheck e lint no HEAD `7b9918e`: **962** testes / 44 arquivos, typecheck limpo, lint 0 erros e 51 avisos já existentes. e2e de `painel.spec.ts` + `security-headers.spec.ts`: **3 passed**, medido antes da T7 (o Docker estava desligado no início; T1-T6 não tocam nada que esses specs exercitem).
+
 ---
 
 ## Test Coverage Matrix
@@ -243,18 +245,19 @@ T9 → T10 → T11
 
 **Done when**:
 
-- [ ] `npm i powerbi-client@^2.25.0` (só ele no diff do lock, mais as 4 dependências dele)
-- [ ] O SDK é importado só dentro do `useEffect`; o `usuario` não é passado ao Client Component
-- [ ] Nenhuma cor literal e nenhum `style=` no `.tsx` (AD-039)
-- [ ] e2e: GT abre `/relatorios` e vê o título "Visualização de Relatórios", o contêiner `relatorio-powerbi` e, como o `.env.test` desliga o Power BI, o status "Dashboard indisponível. Entre novamente ou tente mais tarde."
-- [ ] e2e: AL abre `/relatorios` e vê "Seu perfil não tem acesso a relatórios." e nenhum contêiner `relatorio-powerbi`
-- [ ] Conferido que, com credenciais no `.env` local, `npm run dev:test` continua respondendo 503 (a linha do `.env.test` vence)
-- [ ] CPFs do spec novo não usados em nenhum outro arquivo e2e
-- [ ] Gate full passa
+- [x] `npm i powerbi-client@^2.25.0` (só ele no diff do lock, mais as 4 dependências dele)
+- [x] O SDK é importado só dentro do `useEffect`; o `usuario` não é passado ao Client Component
+- [x] Nenhuma cor literal e nenhum `style=` no `.tsx` (AD-039)
+- [x] e2e: GT abre `/relatorios` e vê o título "Visualização de Relatórios", o contêiner `relatorio-powerbi` e, como o `.env.test` desliga o Power BI, o status "Dashboard indisponível. Entre novamente ou tente mais tarde."
+- [x] e2e: AL abre `/relatorios` e vê "Seu perfil não tem acesso a relatórios." e nenhum contêiner `relatorio-powerbi`
+- [x] Conferido que, com credenciais no `.env` local, `npm run dev:test` continua respondendo 503 (a linha do `.env.test` vence)
+- [x] CPFs do spec novo não usados em nenhum outro arquivo e2e
+- [x] Gate full passa
 
 **Tests**: e2e
 **Gate**: full
 **Commit**: `feat(powerbi): add the reports page with the embedded dashboard`
+**Status**: ✅ Done. relatorios.spec.ts: 2 testes e2e; e2e dos specs tocados 3 → 5 passed (relatorios + painel 4/4). Lock: powerbi-client + 4 dependências diretas + 2 transitivas (es6-promise, route-recognizer). Precedência do .env.test provada com um .env.local temporário de credenciais falsas: 503, removido depois.
 
 ---
 

@@ -156,7 +156,7 @@ O módulo "Visualização de Relatórios" existe no painel desde a revisão de u
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| PBI-01 | P1: Dashboard do escopo | Tasks | Pending |
+| PBI-01 | P1: Dashboard do escopo | Execute | Implementing |
 | PBI-02 | P1: Dashboard do escopo | Execute | Implementing |
 | PBI-03 | P1: Dashboard do escopo | Execute | Implementing |
 | PBI-04 | P1: Dashboard do escopo | Execute | Implementing |
