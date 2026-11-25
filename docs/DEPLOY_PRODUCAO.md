@@ -475,6 +475,46 @@ Para conferir se alguma VIEW ficou quebrada:
 SELECT CONCAT('CHECK TABLE bi.`', TABLE_NAME, '`;') FROM information_schema.VIEWS WHERE TABLE_SCHEMA = 'bi';
 ```
 
+### Dashboard Power BI (AD-056)
+
+`/relatorios` embute o relatório do cliente (Power BI Embedded, *App owns
+data*). Sem migration. Sem as variáveis abaixo o resto do sistema funciona
+igual e `/relatorios` mostra "Dashboard indisponível"; o log do serviço diz
+qual variável falta (`powerbi.config ausente SPMA_...`), sem o valor.
+
+Acrescente ao `/opt/spma/shared/.env.production` e reinicie
+(`sudo systemctl restart spma`). Os nomes e o formato estão em
+`.env.example`; os valores vêm do cliente (Entra ID e workspace), por canal
+seguro:
+
+```bash
+SPMA_TENANT_ID=...
+SPMA_CLIENT_ID=...
+SPMA_CLIENT_SECRET=...
+SPMA_DATASET_ID=...
+SPMA_REPORT_ID=...
+SPMA_EMBED_URL="https://app.powerbi.com/reportEmbed?reportId=...&groupId=...&w=2&config=..."
+```
+
+- **O segredo vence.** O segredo do cliente tem validade no Entra ID. Antes
+  da data, o cliente cria um novo, você troca no `.env.production` e
+  reinicia; só então o antigo é apagado. Vencido, o dashboard para.
+- **Relatório por perfil.** Para o painel nacional (AM/GT/VT) ou o do
+  ofertante (GO/VO) usar um relatório próprio, acrescente o par
+  `SPMA_REPORT_ID_NACIONAL` + `SPMA_EMBED_URL_NACIONAL` (ou `_OFERTANTE`). Os
+  dois juntos ou nenhum: só um deles desliga o dashboard. O modelo semântico
+  continua um só (`SPMA_DATASET_ID`).
+- **Dados do dashboard.** O Power BI mostra o banco `bi` na hora da última
+  atualização do dataset, não em tempo real. Se a role do modelo procura o
+  perfil em `TB_Usuario`, um usuário criado depois da última atualização vê
+  o dashboard vazio até a próxima.
+- **Iframe bloqueado.** Se o console do navegador mostrar o iframe barrado
+  pela CSP, troque `frame-src https://app.powerbi.com` por
+  `frame-src https://*.powerbi.com` em `src/proxy.ts`.
+- **Logs.** Cada ingresso emitido gera `powerbi.embed emitido` com perfil e
+  painel. Falha da Microsoft gera `<id> powerbi.embed falhou <status>`.
+  Nenhum dos dois leva documento, token ou segredo.
+
 ### Sistema operacional
 
 O suporte padrão do Ubuntu 22.04 termina em **abril de 2027**. Antes disso,

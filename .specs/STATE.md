@@ -7,6 +7,7 @@ Este arquivo é a fonte de verdade das decisões travadas. Não reabrir uma AD s
 
 ## Handoff (snapshot)
 
+- **`dashboard-powerbi`: implementado (2026-11-25), branch `feat/dashboard-powerbi`, sem push.** AD-056: `/relatorios` embute o relatório Power BI do cliente (*App owns data*) para AM, GT, VT, GO e VO; o AL não tem acesso. Rota `GET /api/powerbi/embed`, código em `src/lib/powerbi/`, menu ligado pelo catálogo, CSP com `frame-src https://app.powerbi.com`. **Sem migration.** Antes do deploy: variáveis `SPMA_*` no `.env.production` (`docs/DEPLOY_PRODUCAO.md`, seção AD-056) e o segredo do cliente trocado (circulou em `.txt`). Falta a homologação com o Power BI real (T11 de `tasks.md`, roteiro do usuário). Testes no HEAD: 1087 unit; e2e dos specs tocados verdes (`relatorios`, `painel`, `identidade-visual`, `security-headers`).
 - **`oportunidades-trabalho`: implementado (2026-11-17), branch `feat/oportunidades-trabalho`, sem push.** AD-055: a pedido do cliente, as perguntas 30 a 34 (Oportunidades, Efetivação e Renda) voltam ao formulário do aluno "na totalidade": no bloco de quem concluiu, exigidas para encerrar, com o "Outra. Quais?" condicional. Colunas `P30`, `P30Qual`, `P31`-`P34` e VIEW `bi.TB_Avaliacao_Aluno`. Só a P28 segue fora. A migration só acrescenta colunas. Backup antes e `scripts/views-bi.sql` depois do deploy (`docs/DEPLOY_PRODUCAO.md`, seção AD-055).
 - **`revisao-usabilidade-1`: DONE (2026-11-12), branch `feat/revisao-usabilidade-1`, sem push.** AD-054: revisão de usabilidade do cliente (`Verificacao_SPMA_07.11.26`, 15 itens + 2 comentários). Termos do cliente só no texto visível (Recurso, Formação, Cadastro/Avaliação de Formação, Concluir); nome da formação obrigatório e no lugar de `#N`; exclusão de formação e de aluno sem "filho"; Concluir com confirmação e bloqueado sem salvar; inscrição antes da formação; Telefone/WhatsApp com DDD; Editar Perfil para os seis perfis; mensagens de validação em português com a pergunta. Explicação item a item em `docs/Revisao_Usabilidade_07.11.26.md`. **Sem migration**: deploy só de código; antes ou depois, rodar a consulta da seção AD-054 de `docs/DEPLOY_PRODUCAO.md` para saber quais cadastros em andamento têm a inscrição fora de ordem (salvam, mas não concluem até corrigir). Verifier PASS na iteração 2/3: 62/62 ACs, 29 mutações (27 mortas, 1 equivalente; o sobrevivente M14 foi morto na iteração 2). Testes no HEAD: 939 unit / 154 integration / 351 e2e. Ambiente: rodar Vitest/Playwright pelo PowerShell com `C:\` maiúsculo e Playwright com `--workers=2` (a máquina não aguenta 4); intermitência conhecida em "63 chaves" (`e2e/pre-cursos-formulario.spec.ts`).
 - **`situacao-profissional`: DONE (2026-11-11), deploy feito no mesmo dia (`2f1df57`).** AD-053: a pedido do cliente, as perguntas 10 a 13 ("Situação Profissional") voltam ao formulário do aluno, obrigatórias (a 12 só quando a 11 é "Sim"), nas colunas `P10`-`P13` de `TB_Avaliacao_Aluno` e na VIEW `bi.TB_Avaliacao_Aluno`. P28 e P30-P34 continuam fora. **A migration `20261111120000_situacao_profissional` reabre a Parte 1 de toda avaliação em andamento no próximo deploy:** backup antes e `scripts/views-bi.sql` aplicado logo depois (`docs/DEPLOY_PRODUCAO.md`, seção AD-053).
@@ -172,7 +173,7 @@ Chave de TB_Avaliacao_Aluno é composta (CPF + CD_Curso). Enquanto houver avalia
 **AD-023 — Parte 1 da Avaliação do Aluno (dados pessoais/motivação) é gate da Parte 2.**
 Não obrigatória na criação do aluno, mas obrigatória e completa antes de responder qualquer pergunta da avaliação do curso (Parte 2).
 
-**AD-024 — Dashboard é feature adiada.**
+**AD-024 — Dashboard é feature adiada.** ⚠️ *superada pela AD-056 (2026-11-25): o dashboard é o relatório Power BI do cliente, embutido em `/relatorios`.*
 Indicadores não definidos. Fatiar e implementar o resto do sistema primeiro; voltar ao dashboard quando os dados já existirem.
 
 ### Tipos de campo resolvidos (eram ambíguos no documento fonte)
@@ -440,3 +441,17 @@ Feature `oportunidades-trabalho`. Pedido do usuário: "Retorne com as questões 
 4. **Armazenamento.** `P30` a `P34` em `CHAR(1)` com a letra da opção e o "Quais?" em `P30Qual` (`TEXT`), no padrão de `P27Qual` (AD-051). Ficam depois de `P29f`, na tabela e na VIEW `bi.TB_Avaliacao_Aluno`.
 
 **Custo aceito.** As respostas de 30 a 34 apagadas em 2026-10-20 não voltam: só existem no backup anterior ao deploy da AD-048.
+
+**AD-056 (2026-11-25) — O dashboard é o relatório Power BI do cliente, embutido no modelo *App owns data*. Supera a AD-024.**
+
+Feature `dashboard-powerbi`. O cliente entregou a rotina "SPMA Embedded 2.0" (Node, referência) com o relatório e o RLS (`segurança_SPMA` + `USERNAME()`) já validados num protótipo Python. A rotina foi portada para o padrão do SPMA, com a menor alteração possível no sistema.
+
+1. **Fluxo.** `GET /api/powerbi/embed` lê a sessão, decide painel e identidade, pede o token do Entra (client credentials, em cache até 120 s antes de vencer) e chama o `GenerateToken` com `allowEdit: false`. O navegador monta o relatório com `powerbi-client` e renova o ingresso sozinho.
+2. **Quem acessa.** AM, GT, VT, GO e VO; o AL não. A fonte única é `src/lib/powerbi/catalogo.ts`: AM/GT/VT no painel `nacional`, GO/VO no `ofertante`. O menu acompanha o catálogo por teste. A rota é a autoridade (AD-033).
+3. **Identidade.** `resolverEscopoOfertante(usuario) ?? documento`: o GO manda o próprio CNPJ e o VO manda o CNPJ do GO, para ver o mesmo recorte que ele. AM/GT/VT mandam o próprio documento. Nada do pedido do navegador entra na identidade.
+4. **Relatórios.** Um relatório padrão para os dois painéis até o cliente decidir; um par de variáveis por painel troca isso sem código. Modelo semântico único.
+5. **Sessão.** A renovação do ingresso (~1 vez por hora) passa pela sessão normal e a mantém viva enquanto `/relatorios` estiver aberta. Decisão do usuário: serve a um dashboard em TV ou monitor.
+6. **Falhas.** 401 sem sessão, 403 para AL ou VO sem GO, 429 acima de 20 pedidos por minuto na sessão (em memória), 503 sem configuração, 502 quando a Microsoft falha ou passa de 10 s (com uma nova tentativa em 429/503). Nenhum log leva documento, token ou segredo.
+7. **Infraestrutura.** Nenhuma tabela, migration ou mudança de sessão, layout ou `globals.css`. A CSP ganhou `frame-src https://app.powerbi.com`. O segredo fica só em `/opt/spma/shared/.env.production`.
+
+**Custo aceito.** Um embed token emitido vale até expirar (~1 h), mesmo depois do logout: a API não revoga. Uma aba de `/relatorios` esquecida aberta nunca deixa a sessão expirar. Se a role do cliente procura o perfil em `TB_Usuario`, usuário novo vê o dashboard vazio até a próxima atualização do dataset.

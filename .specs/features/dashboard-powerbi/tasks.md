@@ -318,13 +318,14 @@ T9 → T10 → T11
 
 **Done when**:
 
-- [ ] Nenhum valor real (ID ou segredo) em arquivo versionado: `git grep` pelos GUIDs do `.txt` do cliente não acha nada
-- [ ] AD-056 registrada, com a AD-024 marcada como superada
-- [ ] Gate build passa (`npm run build` sem nenhuma variável `SPMA_*` no ambiente)
+- [x] Nenhum valor real (ID ou segredo) em arquivo versionado: `git grep` pelos GUIDs do `.txt` do cliente não acha nada
+- [x] AD-056 registrada, com a AD-024 marcada como superada
+- [x] Gate build passa (`npm run build` sem nenhuma variável `SPMA_*` no ambiente)
 
 **Tests**: none
 **Gate**: build
 **Commit**: `docs(powerbi): document the power bi settings and record ad-056`
+**Status**: ✅ Done. Nenhum dos 5 GUIDs nem o segredo do .txt do cliente na árvore; build, lint, typecheck e 1087 unit verdes sem nenhuma variável SPMA_*.
 
 ---
 
